@@ -7,20 +7,14 @@
     <link rel="stylesheet" href="zuma.css">
     <style>
         #login-screen {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            padding: 40px;
-            text-align: center;
-            border: 3px solid #ff9800;
-            border-radius: 15px;
-            z-index: 100;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9); padding: 40px; text-align: center;
+            border: 3px solid #ff9800; border-radius: 15px; z-index: 100;
         }
         input { padding: 10px; margin: 10px; font-size: 16px; display: block; width: 80%; margin-left: auto; margin-right: auto;}
         
-        /* CSS BARU (Pindahan Inline) */
         .btn-menu { background-color: #555; }
+        .game-hidden { display: none; }
         
         .score-box {
             position: absolute; font-size: 24px; font-weight: bold;
@@ -51,9 +45,8 @@
         <button onclick="window.location.href='/'" class="btn-menu">Kembali ke Menu</button>
     </div>
 
-    <div id="game-container" style="display: none;"> 
+    <div id="game-container" class="game-hidden"> 
         <div id="ui-layer">
-            
             <div id="score-board" class="score-box score-left">
                 Kamu: <span id="score">0</span>
             </div>
@@ -62,9 +55,7 @@
                 Lawan: <span id="opponent-score" class="text-red">0</span>
             </div>
 
-            <button onclick="window.location.href='/'" class="btn-exit">
-                ✖ Keluar
-            </button>
+            <button onclick="window.location.href='/'" class="btn-exit">✖ Keluar</button>
 
             <div id="game-over-screen">
                 <h1>Game Over!</h1>
@@ -81,7 +72,6 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
     <script src="zuma.js"></script>
 </body>
 </html>
