@@ -18,6 +18,26 @@
             z-index: 100;
         }
         input { padding: 10px; margin: 10px; font-size: 16px; display: block; width: 80%; margin-left: auto; margin-right: auto;}
+        
+        /* CSS BARU (Pindahan Inline) */
+        .btn-menu { background-color: #555; }
+        
+        .score-box {
+            position: absolute; font-size: 24px; font-weight: bold;
+            background: rgba(0,0,0,0.6); padding: 10px 20px;
+            border-radius: 20px; pointer-events: none;
+        }
+        .score-left { top: 20px; left: 20px; border: 2px solid white; color: yellow; }
+        .score-right { top: 20px; right: 20px; border: 2px solid red; color: white; }
+        .text-red { color: red; }
+
+        .btn-exit {
+            position: absolute; bottom: 20px; right: 20px;
+            padding: 10px 20px; background-color: #ff4757;
+            color: white; border: 2px solid white; border-radius: 30px;
+            font-weight: bold; cursor: pointer; pointer-events: auto; z-index: 100;
+        }
+        .btn-replay { background-color: #4CAF50; }
     </style>
 </head>
 <body>
@@ -28,25 +48,30 @@
         <input type="text" id="room-code" placeholder="Kode Kamar (mis: ZUMA1)" required>
         <button onclick="startGameMultiplayer()">Masuk Arena</button>
         <br><br>
-        <button onclick="window.location.href='/'" style="background-color: #555;">Kembali ke Menu</button>
+        <button onclick="window.location.href='/'" class="btn-menu">Kembali ke Menu</button>
     </div>
 
     <div id="game-container" style="display: none;"> 
         <div id="ui-layer">
-            <div id="score-board" style="left: 20px; color: yellow;">
+            
+            <div id="score-board" class="score-box score-left">
                 Kamu: <span id="score">0</span>
             </div>
 
-            <div id="opponent-board" style="position: absolute; top: 20px; right: 20px; font-size: 24px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 20px; border: 2px solid red; color: white;">
-                Lawan: <span id="opponent-score" style="color: red;">0</span>
+            <div id="opponent-board" class="score-box score-right">
+                Lawan: <span id="opponent-score" class="text-red">0</span>
             </div>
+
+            <button onclick="window.location.href='/'" class="btn-exit">
+                ✖ Keluar
+            </button>
 
             <div id="game-over-screen">
                 <h1>Game Over!</h1>
                 <p>Skor Akhir: <span id="final-score">0</span></p>
                 <button onclick="location.reload()">Main Lagi</button>
                 <br><br>
-                <button onclick="window.location.href='/'" style="background-color: #4CAF50;">Kembali ke Menu</button>
+                <button onclick="window.location.href='/'" class="btn-replay">Kembali ke Menu</button>
             </div>
         </div>
         

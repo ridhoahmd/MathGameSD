@@ -31,10 +31,9 @@ io.on('connection', (socket) => {
     });
 });
 
-const PORT = process.env.PORT || 3000; // <-- Ini kuncinya!
+// server.js (Paling Bawah)
+const PORT = process.env.PORT || 3000; // 👈 INI KUNCINYA
 
 http.listen(PORT, () => {
-    console.log('------------------------------------------');
-    console.log(`🚀 SERVER SIAP! Jalan di Port ${PORT}`);
-    console.log('------------------------------------------');
+    console.log(`🚀 Server berjalan di Port ${PORT}`);
 });
