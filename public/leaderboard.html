@@ -12,54 +12,26 @@
             background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 100%, #fdbb2d 100%); 
             color: white; 
             min-height: 100vh; 
-            display: flex; 
-            justify-content: center; 
-            align-items: flex-start;
+            display: flex; justify-content: center; align-items: flex-start;
             padding-top: 50px;
         }
-
-        .leaderboard-container {
-            width: 90%;
-            max-width: 800px;
-            background: rgba(255, 255, 255, 0.15);
-            -webkit-backdrop-filter: blur(20px);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 30px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            margin-bottom: 50px;
-        }
-
+        .leaderboard-container { width: 90%; max-width: 800px; background: rgba(255, 255, 255, 0.15); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.2); padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); margin-bottom: 50px; }
         h1 { text-align: center; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-        
-        .back-btn {
-            display: inline-block; margin-bottom: 20px; text-decoration: none;
-            color: white; background: rgba(0,0,0,0.3); padding: 10px 20px;
-            border-radius: 30px; font-weight: bold; transition: 0.3s;
-        }
+        .back-btn { display: inline-block; margin-bottom: 20px; text-decoration: none; color: white; background: rgba(0,0,0,0.3); padding: 10px 20px; border-radius: 30px; font-weight: bold; transition: 0.3s; }
         .back-btn:hover { background: rgba(0,0,0,0.6); }
-
-        /* TABLE STYLE */
         .rank-table { width: 100%; border-collapse: collapse; }
         .rank-table th { text-align: left; padding: 15px; border-bottom: 2px solid rgba(255,255,255,0.2); color: #ffeb3b; font-size: 1.2rem; }
-        .rank-table th.th-right { text-align: right; } /* Class baru */
+        .rank-table th.th-right { text-align: right; } 
         .rank-table td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); align-items: center; }
-        
         .player-info { display: flex; align-items: center; gap: 15px; }
         .mini-avatar { width: 40px; height: 40px; border-radius: 50%; background: white; }
         .player-name { font-weight: bold; font-size: 1.1rem; }
         .total-score { font-weight: bold; font-size: 1.5rem; color: #4caf50; text-align: right;}
-
-        /* BADGES */
-        .rank-cell { font-weight: bold; } /* Class baru */
+        .rank-cell { font-weight: bold; } 
         .rank-1 { color: #FFD700; font-size: 1.5rem; text-shadow: 0 0 10px #FFD700; } 
         .rank-2 { color: #C0C0C0; font-size: 1.3rem; text-shadow: 0 0 10px #C0C0C0; } 
         .rank-3 { color: #CD7F32; font-size: 1.2rem; text-shadow: 0 0 10px #CD7F32; } 
-
         .row-highlight:hover { background: rgba(255,255,255,0.1); }
-        
-        /* Class untuk pesan kosong */
         .empty-msg { text-align: center; } 
     </style>
 </head>
@@ -90,12 +62,12 @@
         const firebaseConfig = {
             apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
             authDomain: "mathgamesd.firebaseapp.com",
+            // 👇 URL DATABASE ASLI ANDA
             databaseURL: "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app", 
             projectId: "mathgamesd",
             storageBucket: "mathgamesd.firebasestorage.app",
             messagingSenderId: "595640141584",
-            appId: "1:595640141584:web:d02523bc844e52550f4795",
-            measurementId: "G-GDZVLCJ4K2"
+            appId: "1:595640141584:web:d02523bc844e52550f4795"
         };
 
         try { firebase.initializeApp(firebaseConfig); } catch(e) {}
@@ -105,7 +77,6 @@
         database.ref('leaderboard').once('value', (snapshot) => {
             const data = snapshot.val();
             
-            // FIX: Gunakan Class, bukan Inline Style
             if (!data) {
                 rankList.innerHTML = "<tr><td colspan='3' class='empty-msg'>Belum ada data.</td></tr>";
                 return;
@@ -114,10 +85,18 @@
             let players = [];
             Object.keys(data).forEach(key => {
                 const user = data[key];
+                
+                // 👇 LOGIKA HITUNG TOTAL UPDATE DI SINI 👇
                 let skorMath = user.skor_math || 0;
                 let skorZuma = user.skor_zuma || 0;
+                let skorMemory = user.skor_memory || 0; // Tambah Memory
+                
                 if (user.skor && !user.skor_math) skorMath = user.skor; 
-                players.push({ nama: user.nama || "Tanpa Nama", total: skorMath + skorZuma });
+                
+                players.push({ 
+                    nama: user.nama || "Tanpa Nama", 
+                    total: skorMath + skorZuma + skorMemory 
+                });
             });
 
             players.sort((a, b) => b.total - a.total);
@@ -125,14 +104,13 @@
             
             players.forEach((player, index) => {
                 const rank = index + 1;
-                let rankClass = "rank-cell"; // Default Class
+                let rankClass = "rank-cell";
                 let icon = "#" + rank;
 
                 if (rank === 1) { rankClass += " rank-1"; icon = "🥇"; }
                 else if (rank === 2) { rankClass += " rank-2"; icon = "🥈"; }
                 else if (rank === 3) { rankClass += " rank-3"; icon = "🥉"; }
 
-                // FIX: Gunakan Class di TD
                 const row = `
                     <tr class="row-highlight">
                         <td class="${rankClass}">${icon}</td>

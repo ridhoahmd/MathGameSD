@@ -3,156 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Game Edukasi SD</title>
-
+    <title>Portal Game Videa Class</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <style>
-        /* CSS UTAMA (Desktop Base) */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 100%, #fdbb2d 100%); color: white; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
-        .dashboard-container { display: flex; width: 90%; max-width: 1200px; height: 85vh; background: rgba(255, 255, 255, 0.1); -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px); border-radius: 20px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255, 255, 255, 0.2); }
-        .sidebar { flex: 1; background: rgba(0, 0, 0, 0.3); padding: 30px; border-right: 1px solid rgba(255, 255, 255, 0.1); display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .avatar { width: 120px; height: 120px; border-radius: 50%; border: 4px solid #ff9800; margin-bottom: 20px; background-color: #fff; object-fit: cover; }
-        .profile-name { font-size: 1.5rem; font-weight: bold; margin-bottom: 5px; word-break: break-word;}
-        .level-label { font-size: 0.9rem; opacity: 0.7; }
-        .stats-box { background: rgba(255, 255, 255, 0.1); width: 100%; padding: 15px; border-radius: 10px; margin-top: 20px; box-sizing: border-box; }
-        .stat-item { margin: 10px 0; font-size: 1.1rem; }
-        .stat-value { display: block; font-size: 2rem; font-weight: bold; color: #ffeb3b; }
-        .separator { border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0; }
-        .score-detail { font-size: 0.8rem; text-align: left; }
-        .score-right { float: right; }
+        /* =========================================
+           TEMA: GALACTIC ARCADE (Dark Gaming)
+           Nuansa: Deep Purple, Neon Cyan, Glass
+        ========================================= */
+
+        /* 1. RESET & BACKGROUND */
+        body { 
+            font-family: 'Poppins', sans-serif; /* Font utama enak dibaca */
+            margin: 0; padding: 0; 
+            /* Background Gelap ala Galaxy */
+            background: radial-gradient(circle at top right, #2b1055, #7597de);
+            background-color: #1e1e2e;
+            background-image: 
+                linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                url("https://www.transparenttextures.com/patterns/stardust.png"); /* Tekstur bintang halus */
+            color: #e0e0e0; 
+            min-height: 100vh; 
+            display: flex; justify-content: center; align-items: center; 
+        }
+
+        /* 2. HEADER ATAS */
+        .main-header {
+            width: 100%; padding: 15px 40px;
+            background: rgba(18, 18, 28, 0.9); /* Gelap Transparan */
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2); /* Garis Neon Tipis */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5); 
+            display: flex; justify-content: space-between; align-items: center;
+            box-sizing: border-box; position: fixed; top: 0; z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo-area { display: flex; align-items: center; gap: 15px; }
+        .logo-img { height: 45px; width: auto; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); } 
+        
+        .portal-title { 
+            font-family: 'Orbitron', sans-serif; /* Font Judul Robotik */
+            font-size: 1.4rem; 
+            background: linear-gradient(to right, #00f2ff, #00c3ff); /* Teks Gradasi Neon */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-left: 2px solid #444; 
+            padding-left: 15px;
+        }
+
+        .role-badge { 
+            background: linear-gradient(45deg, #ff00cc, #333399); 
+            color: white; 
+            padding: 5px 20px; border-radius: 5px; 
+            font-family: 'Orbitron', sans-serif; font-size: 0.8rem; letter-spacing: 2px;
+            box-shadow: 0 0 10px rgba(255, 0, 204, 0.5);
+        }
+
+        /* 3. CONTAINER UTAMA */
+        .dashboard-container { 
+            display: flex; width: 90%; max-width: 1200px; 
+            height: auto; min-height: 80vh; padding-bottom: 20px;
+            margin: 110px auto 50px; 
+            /* Glassmorphism Gelap */
+            background: rgba(30, 30, 46, 0.7); 
+            border-radius: 20px; 
+            overflow: hidden; 
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.6); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        }
+
+        /* 4. SIDEBAR KIRI */
+        .sidebar { 
+            flex: 1; 
+            background: rgba(0, 0, 0, 0.3); 
+            padding: 30px; 
+            border-right: 1px solid rgba(255, 255, 255, 0.05); 
+            display: flex; flex-direction: column; align-items: center; text-align: center; 
+            overflow-y: auto; max-height: 100%;
+        }
+        .avatar { 
+            width: 100px; height: 100px; border-radius: 50%; 
+            border: 3px solid #00f2ff; /* Border Neon Cyan */
+            margin-bottom: 15px; background-color: #222; object-fit: cover; 
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+        }
+        .profile-name { font-size: 1.3rem; font-weight: 700; margin-bottom: 5px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        .level-label { font-size: 0.85rem; color: #aaa; margin-bottom: 25px; font-family: monospace; }
+        
+        .stats-box { 
+            background: rgba(255, 255, 255, 0.05); 
+            width: 100%; padding: 20px; border-radius: 12px; margin-bottom: 20px; 
+            box-sizing: border-box; border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .stat-item { font-size: 0.9rem; color: #ccc; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;}
+        .stat-value { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: #ffeb3b; display: block; text-shadow: 0 0 10px rgba(255, 235, 59, 0.5); }
+
+        /* MENU TOMBOL */
+        .menu-section { width: 100%; margin-top: 10px; text-align: left; }
+        .menu-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 10px; letter-spacing: 2px; }
+        .btn-menu { 
+            width: 100%; padding: 12px 15px; margin-bottom: 10px; border: none; border-radius: 8px; 
+            cursor: pointer; text-align: left; font-weight: 600; transition: 0.2s; 
+            display: flex; align-items: center; gap: 10px; font-size: 0.95rem;
+            color: white;
+        }
+        .btn-menu:hover { transform: translateX(5px); filter: brightness(1.2); }
+        
+        .btn-common { background: linear-gradient(90deg, #2b5876, #4e4376); }
+        .btn-guru { background: linear-gradient(90deg, #11998e, #38ef7d); }
+        .btn-admin { background: linear-gradient(90deg, #cb2d3e, #ef473a); }
+
         .profile-search { margin-top: auto; width: 100%; }
-        .search-label { font-size: 0.8rem; margin-bottom: 5px; margin-top: 0; }
-        .btn-google { background-color: white; color: #333; width: 100%; padding: 12px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
-        .btn-google:hover { background-color: #f1f1f1; }
-        .btn-logout { background-color: #d32f2f; color: white; width: 100%; padding: 10px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; display: none; }
+        .btn-google { 
+            background-color: #fff; color: #333; 
+            width: 100%; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; 
+            display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;
+        }
+        .btn-google:hover { background-color: #e0e0e0; }
+        .btn-logout { background-color: rgba(255,255,255,0.1); color: #ccc; width: 100%; padding: 10px; border: 1px solid #444; border-radius: 8px; cursor: pointer; margin-top: 10px; font-weight: bold; }
+        .btn-logout:hover { background-color: rgba(255,0,0,0.2); border-color: red; color: white; }
+
+        /* 5. KONTEN KANAN */
         .main-content { flex: 3; padding: 40px; overflow-y: auto; }
-        .main-title { margin-top: 0; }
-        .grid-games { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; }
-        .game-card { background: white; color: #333; border-radius: 15px; padding: 20px; text-align: center; text-decoration: none; transition: transform 0.3s; display: block; }
-        .game-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-        .game-card.locked { opacity: 0.6; cursor: not-allowed; }
-        .game-card.locked:hover { transform: none; box-shadow: none; }
-        .game-icon { font-size: 40px; display: block; margin-bottom: 10px; }
-        .game-title { font-weight: bold; font-size: 1.2rem; margin-bottom: 5px; color: #1a2a6c; }
-        .game-desc { font-size: 0.9rem; color: #666; margin-bottom: 15px; }
-        .btn-play { padding: 8px 15px; border-radius: 20px; display: inline-block; font-size: 0.9rem; color: white; }
-        .btn-math { background-color: #1a2a6c; }
-        .btn-zuma { background-color: #e91e63; }
-        .btn-locked { background-color: #777; }
-        .leaderboard-wrapper { margin-top: 20px; width: 100%; }
-        .leaderboard-link { text-decoration: none; }
-        .btn-leaderboard { width: 100%; padding: 12px; background: linear-gradient(45deg, #FFD700, #FFA500); border: none; border-radius: 10px; color: #333; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4); transition: transform 0.2s; }
-        .btn-leaderboard:hover { transform: scale(1.02); }
+        h2 { margin-top:0; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 1.5rem; margin-bottom: 25px; letter-spacing: 1px; border-bottom: 2px solid #00f2ff; display: inline-block; padding-bottom: 5px;}
+        
+        .grid-games { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px; }
+        
+        .game-card { 
+            background: rgba(255, 255, 255, 0.05); 
+            border-radius: 15px; padding: 25px; 
+            text-align: center; text-decoration: none; transition: all 0.3s ease; display: block; 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative; overflow: hidden;
+        }
+        /* Efek Hover Keren */
+        .game-card:hover { 
+            transform: translateY(-10px); 
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+            border-color: #00f2ff;
+        }
+        
+        .game-card.locked { opacity: 0.4; cursor: not-allowed; background: rgba(0,0,0,0.2); }
+        .game-card.locked:hover { transform: none; box-shadow: none; border-color: transparent; }
 
-        /* ========================================================= */
-        /* MEDIA QUERY: KHUSUS LAYAR HP (MAX WIDTH 800PX) */
-        /* ========================================================= */
+        .game-icon { font-size: 50px; display: block; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
+        .game-title { font-weight: 800; font-size: 1.2rem; color: #fff; margin-bottom: 8px; letter-spacing: 1px;}
+        .game-desc { font-size: 0.9rem; color: #aaa; margin-bottom: 20px; line-height: 1.4; }
+        
+        .btn-play { 
+            padding: 10px 30px; border-radius: 30px; display: inline-block; 
+            font-size: 0.9rem; font-weight: bold; color: white; 
+            background: linear-gradient(45deg, #ff0099, #493240);
+            box-shadow: 0 4px 15px rgba(255, 0, 153, 0.4);
+            border: none; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-play:hover { transform: scale(1.1); box-shadow: 0 0 20px rgba(255, 0, 153, 0.8); }
+        .btn-locked { background: #333; box-shadow: none; color: #777; cursor: not-allowed;}
+
+        /* RESPONSIVE HP */
         @media (max-width: 800px) {
-            
-            .dashboard-container {
-                flex-direction: column; 
-                width: 100%; 
-                height: auto; 
-                min-height: 100vh;
-                border-radius: 0; 
-                box-shadow: none;
-            }
-
-            .sidebar {
-                flex: none; 
-                padding: 25px 15px 15px; 
-                border-right: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            }
-
-            .main-content {
-                flex: none;
-                padding: 20px 15px; 
-            }
-            
-            .grid-games {
-                grid-template-columns: repeat(2, 1fr); 
-                gap: 15px;
-            }
-            
-            .avatar {
-                width: 80px; 
-                height: 80px; 
-            }
-
-            .profile-search {
-                margin-top: 20px;
-            }
-
-            .level-label {
-                display: none;
-            }
+            body { background: #1e1e2e; align-items: flex-start; }
+            .dashboard-container { flex-direction: column; height: auto; border-radius: 0; margin-top: 80px; box-shadow: none; border: none; width: 100%; background: transparent; backdrop-filter: none; }
+            .sidebar { flex: none; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 25px; background: rgba(30, 30, 46, 0.9); }
+            .main-content { flex: none; padding: 25px; }
+            .grid-games { grid-template-columns: repeat(1, 1fr); gap: 20px; }
+            .portal-title { font-size: 1rem; border: none; padding-left: 0; display: block; margin-top: 5px;}
+            .logo-area { flex-direction: column; align-items: flex-start; gap: 0;}
+            .logo-img { height: 30px; }
+            .main-header { padding: 10px 20px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="dashboard-container">
-        <aside class="sidebar">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guest" id="user-avatar" class="avatar" alt="Avatar Pemain">
+    <header class="main-header">
+        <div class="logo-area">
+            <img src="/logo-videa.png" class="logo-img" alt="Logo Videa Class">
+            <span class="portal-title">PORTAL GAME EDUKASI </span>
+        </div>
             
+        <div class="role-badge" id="role-display">GUEST</div>
+    </header>
+
+    <div class="dashboard-container">
+        
+        <aside class="sidebar">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guest" id="user-avatar" class="avatar" alt="Avatar">
             <div class="profile-name" id="display-name">Silakan Login</div>
             <div class="level-label" id="user-email">...</div>
 
             <div class="stats-box">
-                <div class="stat-item">
-                    Total Skor
-                    <span class="stat-value" id="total-score">-</span>
-                </div>
-                <hr class="separator">
-                <div class="score-detail">
-                    Math Battle: <span id="score-math" class="score-right">-</span><br>
-                    Zuma Math: <span id="score-zuma" class="score-right">-</span>
-                </div>
+                <div class="stat-item">Total Skor</div>
+                <span class="stat-value" id="total-score">-</span>
             </div>
 
-            <div class="leaderboard-wrapper">
-                <a href="leaderboard.html" class="leaderboard-link">
-                    <button class="btn-leaderboard">
-                        🏆 Lihat Leaderboard Global
-                    </button>
+            <div class="menu-section">
+                <div class="menu-title">Menu Siswa</div>
+                <a href="leaderboard.html" style="text-decoration: none;">
+                    <button class="btn-menu btn-common">🏆 Leaderboard</button>
                 </a>
+                <button class="btn-menu btn-common" onclick="alert('Chat Global segera hadir!')">💬 Chat Global</button>
+            </div>
+
+            <div class="menu-section" id="guru-panel" style="display: none;">
+                <div class="menu-title" style="color: #38ef7d;">Akses Guru</div>
+                <button class="btn-menu btn-guru" onclick="alert('Fitur: Lihat Riwayat Siswa & Nilai')">📋 Riwayat Siswa</button>
+                <button class="btn-menu btn-guru" onclick="alert('Fitur: Pilih Hak Akses Siswa')">🔑 Hak Akses</button>
+            </div>
+
+            <div class="menu-section" id="admin-panel" style="display: none;">
+                <div class="menu-title" style="color: #ef473a;">Full Admin</div>
+                <button class="btn-menu btn-admin">⚙️ Pengaturan Sistem</button>
+                <button class="btn-menu btn-admin">👥 Kelola User</button>
             </div>
 
             <div class="profile-search">
-                <p class="search-label">Masuk untuk menyimpan skor:</p>
                 <button onclick="loginGoogle()" class="btn-google" id="btn-login">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" alt="Google Logo">
-                    Masuk dengan Google
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" alt="G"> Masuk Google
                 </button>
-                <button onclick="logout()" class="btn-logout" id="btn-logout">Keluar / Logout</button>
+                <button onclick="logout()" class="btn-logout" id="btn-logout" style="display:none;">Keluar</button>
             </div>
         </aside>
 
         <main class="main-content">
-            <h1 class="main-title">🎮 Arcade Arena</h1>
-            <p>Pilih permainan dan kumpulkan skor sebanyak-banyaknya!</p>
-
+            <h2>PILIH MISI</h2>
             <div class="grid-games">
                 <a href="#" onclick="masukGame('math.html')" class="game-card">
-                    <span class="game-icon">🧮</span>
-                    <div class="game-title">Math Battle</div>
-                    <div class="game-desc">Duel matematika cepat.</div>
-                    <div class="btn-play btn-math">Main 🚀</div>
+                    <span class="game-icon">🚀</span>
+                    <div class="game-title">MATH BATTLE</div>
+                    <div class="game-desc">Duel matematika cepat antar galaksi!</div>
+                    <div class="btn-play">START</div>
                 </a>
 
                 <a href="#" onclick="masukGame('zuma.html')" class="game-card">
-                    <span class="game-icon">🐸</span>
-                    <div class="game-title">Zuma Math</div>
-                    <div class="game-desc">Tembak bola angka.</div>
-                    <div class="btn-play btn-zuma">Main 🎯</div>
+                    <span class="game-icon">☄️</span>
+                    <div class="game-title">ZUMA SPACE</div>
+                    <div class="game-desc">Hancurkan bola angka sebelum meledak!</div>
+                    <div class="btn-play">START</div>
                 </a>
 
-                <div class="game-card locked">
-                    <span class="game-icon">🔒</span>
-                    <div class="game-title">Tebak Kata</div>
-                    <div class="game-desc">Segera Hadir.</div>
-                    <div class="btn-play btn-locked">Terkunci</div>
-                </div>
+                <a href="#" onclick="masukGame('memory.html')" class="game-card">
+                    <span class="game-icon">🧩</span>
+                    <div class="game-title">MEMORY LAB</div>
+                    <div class="game-desc">Aktifkan sel otakmu dengan kartu memori.</div>
+                    <div class="btn-play">START</div>
+                </a>
             </div>
         </main>
     </div>
@@ -172,7 +271,7 @@
             appId: "1:595640141584:web:d02523bc844e52550f4795"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        try { firebase.initializeApp(firebaseConfig); } catch(e) {}
         const auth = firebase.auth();
         const database = firebase.database();
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -180,6 +279,7 @@
         function loginGoogle() {
             auth.signInWithPopup(provider).then((result) => {
                 localStorage.setItem("playerName", result.user.displayName); 
+                checkRole(result.user.displayName);
             }).catch((error) => { alert("Gagal Login: " + error.message); });
         }
 
@@ -190,6 +290,32 @@
             });
         }
 
+        function checkRole(name) {
+            database.ref('leaderboard/' + name).on('value', (snapshot) => {
+                const data = snapshot.val();
+                let role = "siswa"; 
+                if (data && data.role) {
+                    role = data.role;
+                } else {
+                    if(data) database.ref('leaderboard/' + name).update({ role: "siswa" });
+                }
+
+                document.getElementById('role-display').innerText = role.toUpperCase();
+                const guruPanel = document.getElementById('guru-panel');
+                const adminPanel = document.getElementById('admin-panel');
+
+                guruPanel.style.display = 'none';
+                adminPanel.style.display = 'none';
+
+                if (role === 'admin') {
+                    guruPanel.style.display = 'block';
+                    adminPanel.style.display = 'block';
+                } else if (role === 'guru') {
+                    guruPanel.style.display = 'block';
+                }
+            });
+        }
+
         auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('btn-login').style.display = 'none';
@@ -197,13 +323,14 @@
                 document.getElementById('display-name').innerText = user.displayName;
                 document.getElementById('user-email').innerText = user.email;
                 document.getElementById('user-avatar').src = user.photoURL;
+                
                 loadSkor(user.displayName);
+                checkRole(user.displayName);
             } else {
                 document.getElementById('btn-login').style.display = 'flex';
                 document.getElementById('btn-logout').style.display = 'none';
                 document.getElementById('display-name').innerText = "Silakan Login";
-                document.getElementById('user-email').innerText = "...";
-                document.getElementById('user-avatar').src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Guest";
+                document.getElementById('role-display').innerText = "GUEST";
             }
         });
 
@@ -211,24 +338,15 @@
             database.ref('leaderboard/' + name).on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    let skorMath = data.skor_math || 0;
-                    let skorZuma = data.skor_zuma || 0;
-                    if(data.skor && !data.skor_math) skorMath = data.skor;
-                    
-                    document.getElementById('total-score').innerText = skorMath + skorZuma;
-                    document.getElementById('score-math').innerText = skorMath;
-                    document.getElementById('score-zuma').innerText = skorZuma;
-                } else {
-                    document.getElementById('total-score').innerText = "0";
-                    document.getElementById('score-math').innerText = "0";
-                    document.getElementById('score-zuma').innerText = "0";
+                    let total = (data.skor_math || 0) + (data.skor_zuma || 0) + (data.skor_memory || 0);
+                    document.getElementById('total-score').innerText = total;
                 }
             });
         }
 
         function masukGame(url) {
             const user = auth.currentUser;
-            if (!user) { alert("Silakan login dulu agar skor tersimpan! 😉"); } 
+            if (!user) { alert("Silakan login dulu!"); } 
             else { window.location.href = url; }
         }
     </script>

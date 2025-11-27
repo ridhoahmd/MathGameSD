@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Math - Latih Ingatanmu</title>
+    <link rel="stylesheet" href="memory.css">
+</head>
+<body>
+
+    <a href="/" class="btn-back">⬅ Kembali</a>
+
+    <div class="game-container">
+        <h1>🧠 Memory Math</h1>
+        <p>Cari pasangan Soal dan Jawabannya!</p>
+        
+        <div class="info-panel">
+            <span>Langkah: <span id="moves">0</span></span>
+            <span>Waktu: <span id="time">00:00</span></span>
+        </div>
+
+        <div class="memory-board" id="board">
+            </div>
+
+        <div id="win-screen" style="display: none;">
+            <h2>🎉 Kamu Menang!</h2>
+            <p>Skor Akhir: <span id="final-score">0</span></p>
+            <button onclick="location.reload()">Main Lagi</button>
+            <button onclick="window.location.href='/'">Kembali ke Menu</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <script src="memory.js"></script>
+</body>
+</html>
