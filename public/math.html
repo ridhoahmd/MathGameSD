@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Battle SD</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Math Battle SD</h1>
+        
+        <div id="login-screen">
+            <h2>Masuk Game</h2>
+            <input type="text" id="username" placeholder="Nama Kamu (mis: Budi)" required>
+            <br>
+            <input type="text" id="room-code" placeholder="Kode Kamar (mis: KELAS1)" required>
+            <br><br>
+            <button onclick="startGame()">Masuk ke Arena</button>
+        </div>
+
+        <div id="game-screen" style="display: none;">
+            <h2 id="question-display">Soal Muncul Disini</h2>
+            
+            <input type="number" id="answer-input" placeholder="Jawab...">
+            <button onclick="checkAnswer()">Jawab</button>
+            
+            <hr>
+            
+            <p>Skor Kamu: <span id="score" style="font-weight: bold; color: green;">0</span></p>
+            <p>Skor Lawan: <span id="opponent-score" style="font-weight: bold; color: red;">0</span></p>
+
+            <hr>
+            <button onclick="downloadSertifikat()" style="background-color: #ff9800;">
+                🏆 Selesai & Download Sertifikat
+            </button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script> 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script src="game.js"></script>
+</body>
+</html>

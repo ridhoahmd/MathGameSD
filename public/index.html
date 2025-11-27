@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Game Edukasi SD</title>
+
+    <style>
+        /* CSS UTAMA (Desktop Base) */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 100%, #fdbb2d 100%); color: white; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .dashboard-container { display: flex; width: 90%; max-width: 1200px; height: 85vh; background: rgba(255, 255, 255, 0.1); -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px); border-radius: 20px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .sidebar { flex: 1; background: rgba(0, 0, 0, 0.3); padding: 30px; border-right: 1px solid rgba(255, 255, 255, 0.1); display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .avatar { width: 120px; height: 120px; border-radius: 50%; border: 4px solid #ff9800; margin-bottom: 20px; background-color: #fff; object-fit: cover; }
+        .profile-name { font-size: 1.5rem; font-weight: bold; margin-bottom: 5px; word-break: break-word;}
+        .level-label { font-size: 0.9rem; opacity: 0.7; }
+        .stats-box { background: rgba(255, 255, 255, 0.1); width: 100%; padding: 15px; border-radius: 10px; margin-top: 20px; box-sizing: border-box; }
+        .stat-item { margin: 10px 0; font-size: 1.1rem; }
+        .stat-value { display: block; font-size: 2rem; font-weight: bold; color: #ffeb3b; }
+        .separator { border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0; }
+        .score-detail { font-size: 0.8rem; text-align: left; }
+        .score-right { float: right; }
+        .profile-search { margin-top: auto; width: 100%; }
+        .search-label { font-size: 0.8rem; margin-bottom: 5px; margin-top: 0; }
+        .btn-google { background-color: white; color: #333; width: 100%; padding: 12px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
+        .btn-google:hover { background-color: #f1f1f1; }
+        .btn-logout { background-color: #d32f2f; color: white; width: 100%; padding: 10px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; display: none; }
+        .main-content { flex: 3; padding: 40px; overflow-y: auto; }
+        .main-title { margin-top: 0; }
+        .grid-games { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; }
+        .game-card { background: white; color: #333; border-radius: 15px; padding: 20px; text-align: center; text-decoration: none; transition: transform 0.3s; display: block; }
+        .game-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .game-card.locked { opacity: 0.6; cursor: not-allowed; }
+        .game-card.locked:hover { transform: none; box-shadow: none; }
+        .game-icon { font-size: 40px; display: block; margin-bottom: 10px; }
+        .game-title { font-weight: bold; font-size: 1.2rem; margin-bottom: 5px; color: #1a2a6c; }
+        .game-desc { font-size: 0.9rem; color: #666; margin-bottom: 15px; }
+        .btn-play { padding: 8px 15px; border-radius: 20px; display: inline-block; font-size: 0.9rem; color: white; }
+        .btn-math { background-color: #1a2a6c; }
+        .btn-zuma { background-color: #e91e63; }
+        .btn-locked { background-color: #777; }
+        .leaderboard-wrapper { margin-top: 20px; width: 100%; }
+        .leaderboard-link { text-decoration: none; }
+        .btn-leaderboard { width: 100%; padding: 12px; background: linear-gradient(45deg, #FFD700, #FFA500); border: none; border-radius: 10px; color: #333; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4); transition: transform 0.2s; }
+        .btn-leaderboard:hover { transform: scale(1.02); }
+
+        /* ========================================================= */
+        /* MEDIA QUERY: KHUSUS LAYAR HP (MAX WIDTH 800PX) */
+        /* ========================================================= */
+        @media (max-width: 800px) {
+            
+            .dashboard-container {
+                flex-direction: column; 
+                width: 100%; 
+                height: auto; 
+                min-height: 100vh;
+                border-radius: 0; 
+                box-shadow: none;
+            }
+
+            .sidebar {
+                flex: none; 
+                padding: 25px 15px 15px; 
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .main-content {
+                flex: none;
+                padding: 20px 15px; 
+            }
+            
+            .grid-games {
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 15px;
+            }
+            
+            .avatar {
+                width: 80px; 
+                height: 80px; 
+            }
+
+            .profile-search {
+                margin-top: 20px;
+            }
+
+            .level-label {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guest" id="user-avatar" class="avatar" alt="Avatar Pemain">
+            
+            <div class="profile-name" id="display-name">Silakan Login</div>
+            <div class="level-label" id="user-email">...</div>
+
+            <div class="stats-box">
+                <div class="stat-item">
+                    Total Skor
+                    <span class="stat-value" id="total-score">-</span>
+                </div>
+                <hr class="separator">
+                <div class="score-detail">
+                    Math Battle: <span id="score-math" class="score-right">-</span><br>
+                    Zuma Math: <span id="score-zuma" class="score-right">-</span>
+                </div>
+            </div>
+
+            <div class="leaderboard-wrapper">
+                <a href="leaderboard.html" class="leaderboard-link">
+                    <button class="btn-leaderboard">
+                        🏆 Lihat Leaderboard Global
+                    </button>
+                </a>
+            </div>
+
+            <div class="profile-search">
+                <p class="search-label">Masuk untuk menyimpan skor:</p>
+                <button onclick="loginGoogle()" class="btn-google" id="btn-login">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" alt="Google Logo">
+                    Masuk dengan Google
+                </button>
+                <button onclick="logout()" class="btn-logout" id="btn-logout">Keluar / Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <h1 class="main-title">🎮 Arcade Arena</h1>
+            <p>Pilih permainan dan kumpulkan skor sebanyak-banyaknya!</p>
+
+            <div class="grid-games">
+                <a href="#" onclick="masukGame('math.html')" class="game-card">
+                    <span class="game-icon">🧮</span>
+                    <div class="game-title">Math Battle</div>
+                    <div class="game-desc">Duel matematika cepat.</div>
+                    <div class="btn-play btn-math">Main 🚀</div>
+                </a>
+
+                <a href="#" onclick="masukGame('zuma.html')" class="game-card">
+                    <span class="game-icon">🐸</span>
+                    <div class="game-title">Zuma Math</div>
+                    <div class="game-desc">Tembak bola angka.</div>
+                    <div class="btn-play btn-zuma">Main 🎯</div>
+                </a>
+
+                <div class="game-card locked">
+                    <span class="game-icon">🔒</span>
+                    <div class="game-title">Tebak Kata</div>
+                    <div class="game-desc">Segera Hadir.</div>
+                    <div class="btn-play btn-locked">Terkunci</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
+            authDomain: "mathgamesd.firebaseapp.com",
+            databaseURL: "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app", 
+            projectId: "mathgamesd",
+            storageBucket: "mathgamesd.firebasestorage.app",
+            messagingSenderId: "595640141584",
+            appId: "1:595640141584:web:d02523bc844e52550f4795"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+        const provider = new firebase.auth.GoogleAuthProvider();
+
+        function loginGoogle() {
+            auth.signInWithPopup(provider).then((result) => {
+                localStorage.setItem("playerName", result.user.displayName); 
+            }).catch((error) => { alert("Gagal Login: " + error.message); });
+        }
+
+        function logout() {
+            auth.signOut().then(() => {
+                localStorage.removeItem("playerName");
+                location.reload();
+            });
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('btn-login').style.display = 'none';
+                document.getElementById('btn-logout').style.display = 'block';
+                document.getElementById('display-name').innerText = user.displayName;
+                document.getElementById('user-email').innerText = user.email;
+                document.getElementById('user-avatar').src = user.photoURL;
+                loadSkor(user.displayName);
+            } else {
+                document.getElementById('btn-login').style.display = 'flex';
+                document.getElementById('btn-logout').style.display = 'none';
+                document.getElementById('display-name').innerText = "Silakan Login";
+                document.getElementById('user-email').innerText = "...";
+                document.getElementById('user-avatar').src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Guest";
+            }
+        });
+
+        function loadSkor(name) {
+            database.ref('leaderboard/' + name).on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    let skorMath = data.skor_math || 0;
+                    let skorZuma = data.skor_zuma || 0;
+                    if(data.skor && !data.skor_math) skorMath = data.skor;
+                    
+                    document.getElementById('total-score').innerText = skorMath + skorZuma;
+                    document.getElementById('score-math').innerText = skorMath;
+                    document.getElementById('score-zuma').innerText = skorZuma;
+                } else {
+                    document.getElementById('total-score').innerText = "0";
+                    document.getElementById('score-math').innerText = "0";
+                    document.getElementById('score-zuma').innerText = "0";
+                }
+            });
+        }
+
+        function masukGame(url) {
+            const user = auth.currentUser;
+            if (!user) { alert("Silakan login dulu agar skor tersimpan! 😉"); } 
+            else { window.location.href = url; }
+        }
+    </script>
+</body>
+</html>

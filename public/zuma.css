@@ -1,0 +1,81 @@
+/* --- TAMPILAN GAME --- */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #222; /* Latar belakang gelap */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+    overflow: hidden; /* Mencegah scrollbar */
+}
+
+#game-container {
+    position: relative;
+    box-shadow: 0 0 50px rgba(0,0,0,0.5);
+    border: 5px solid #ff9800; /* Bingkai oranye */
+    border-radius: 15px;
+}
+
+canvas {
+    background-color: #004d40; /* Warna meja hijau tua */
+    border-radius: 10px;
+    cursor: crosshair; /* Kursor bidikan */
+    display: block;
+}
+
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+#score-board {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    background: rgba(0,0,0,0.6);
+    padding: 10px 20px;
+    border-radius: 20px;
+    border: 2px solid white;
+}
+
+#game-over-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 40px;
+    text-align: center;
+    border-radius: 15px;
+    border: 2px solid #ff9800;
+    pointer-events: auto;
+    display: none; /* Sembunyi saat main */
+}
+
+h1 { margin-top: 0; color: #ff9800; }
+
+button {
+    padding: 15px 30px;
+    font-size: 20px;
+    background-color: #ff9800;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 50px;
+    font-weight: bold;
+    transition: transform 0.2s;
+}
+
+button:hover {
+    background-color: #e68900;
+    transform: scale(1.1);
+}

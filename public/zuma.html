@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zuma Matematika Multiplayer</title>
+    <link rel="stylesheet" href="zuma.css">
+    <style>
+        #login-screen {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            text-align: center;
+            border: 3px solid #ff9800;
+            border-radius: 15px;
+            z-index: 100;
+        }
+        input { padding: 10px; margin: 10px; font-size: 16px; display: block; width: 80%; margin-left: auto; margin-right: auto;}
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <h1 style="color:white;">Zuma Math Battle</h1>
+        <input type="text" id="username" placeholder="Nama Kamu" required>
+        <input type="text" id="room-code" placeholder="Kode Kamar (mis: ZUMA1)" required>
+        <button onclick="startGameMultiplayer()">Masuk Arena</button>
+        <br><br>
+        <button onclick="window.location.href='/'" style="background-color: #555;">Kembali ke Menu</button>
+    </div>
+
+    <div id="game-container" style="display: none;"> 
+        <div id="ui-layer">
+            <div id="score-board" style="left: 20px; color: yellow;">
+                Kamu: <span id="score">0</span>
+            </div>
+
+            <div id="opponent-board" style="position: absolute; top: 20px; right: 20px; font-size: 24px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 20px; border: 2px solid red; color: white;">
+                Lawan: <span id="opponent-score" style="color: red;">0</span>
+            </div>
+
+            <div id="game-over-screen">
+                <h1>Game Over!</h1>
+                <p>Skor Akhir: <span id="final-score">0</span></p>
+                <button onclick="location.reload()">Main Lagi</button>
+                <br><br>
+                <button onclick="window.location.href='/'" style="background-color: #4CAF50;">Kembali ke Menu</button>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <script src="zuma.js"></script>
+</body>
+</html>

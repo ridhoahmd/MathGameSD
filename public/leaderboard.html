@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Papan Peringkat Juara</title>
+    <style>
+        /* CSS UTAMA */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; padding: 0; 
+            background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 100%, #fdbb2d 100%); 
+            color: white; 
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start;
+            padding-top: 50px;
+        }
+
+        .leaderboard-container {
+            width: 90%;
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.15);
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            margin-bottom: 50px;
+        }
+
+        h1 { text-align: center; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        
+        .back-btn {
+            display: inline-block; margin-bottom: 20px; text-decoration: none;
+            color: white; background: rgba(0,0,0,0.3); padding: 10px 20px;
+            border-radius: 30px; font-weight: bold; transition: 0.3s;
+        }
+        .back-btn:hover { background: rgba(0,0,0,0.6); }
+
+        /* TABLE STYLE */
+        .rank-table { width: 100%; border-collapse: collapse; }
+        .rank-table th { text-align: left; padding: 15px; border-bottom: 2px solid rgba(255,255,255,0.2); color: #ffeb3b; font-size: 1.2rem; }
+        .rank-table th.th-right { text-align: right; } /* Class baru */
+        .rank-table td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); align-items: center; }
+        
+        .player-info { display: flex; align-items: center; gap: 15px; }
+        .mini-avatar { width: 40px; height: 40px; border-radius: 50%; background: white; }
+        .player-name { font-weight: bold; font-size: 1.1rem; }
+        .total-score { font-weight: bold; font-size: 1.5rem; color: #4caf50; text-align: right;}
+
+        /* BADGES */
+        .rank-cell { font-weight: bold; } /* Class baru */
+        .rank-1 { color: #FFD700; font-size: 1.5rem; text-shadow: 0 0 10px #FFD700; } 
+        .rank-2 { color: #C0C0C0; font-size: 1.3rem; text-shadow: 0 0 10px #C0C0C0; } 
+        .rank-3 { color: #CD7F32; font-size: 1.2rem; text-shadow: 0 0 10px #CD7F32; } 
+
+        .row-highlight:hover { background: rgba(255,255,255,0.1); }
+        
+        /* Class untuk pesan kosong */
+        .empty-msg { text-align: center; } 
+    </style>
+</head>
+<body>
+
+    <div class="leaderboard-container">
+        <a href="/" class="back-btn">⬅ Kembali ke Menu</a>
+        <h1>🏆 TOP GLOBAL RANKING 🏆</h1>
+
+        <table class="rank-table">
+            <thead>
+                <tr>
+                    <th width="10%">#</th>
+                    <th>Pemain</th>
+                    <th class="th-right">Total Skor</th>
+                </tr>
+            </thead>
+            <tbody id="rank-list">
+                <tr><td colspan="3" class="empty-msg">Memuat Data... 🔄</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
+            authDomain: "mathgamesd.firebaseapp.com",
+            databaseURL: "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app", 
+            projectId: "mathgamesd",
+            storageBucket: "mathgamesd.firebasestorage.app",
+            messagingSenderId: "595640141584",
+            appId: "1:595640141584:web:d02523bc844e52550f4795",
+            measurementId: "G-GDZVLCJ4K2"
+        };
+
+        try { firebase.initializeApp(firebaseConfig); } catch(e) {}
+        const database = firebase.database();
+        const rankList = document.getElementById('rank-list');
+
+        database.ref('leaderboard').once('value', (snapshot) => {
+            const data = snapshot.val();
+            
+            // FIX: Gunakan Class, bukan Inline Style
+            if (!data) {
+                rankList.innerHTML = "<tr><td colspan='3' class='empty-msg'>Belum ada data.</td></tr>";
+                return;
+            }
+
+            let players = [];
+            Object.keys(data).forEach(key => {
+                const user = data[key];
+                let skorMath = user.skor_math || 0;
+                let skorZuma = user.skor_zuma || 0;
+                if (user.skor && !user.skor_math) skorMath = user.skor; 
+                players.push({ nama: user.nama || "Tanpa Nama", total: skorMath + skorZuma });
+            });
+
+            players.sort((a, b) => b.total - a.total);
+            rankList.innerHTML = ""; 
+            
+            players.forEach((player, index) => {
+                const rank = index + 1;
+                let rankClass = "rank-cell"; // Default Class
+                let icon = "#" + rank;
+
+                if (rank === 1) { rankClass += " rank-1"; icon = "🥇"; }
+                else if (rank === 2) { rankClass += " rank-2"; icon = "🥈"; }
+                else if (rank === 3) { rankClass += " rank-3"; icon = "🥉"; }
+
+                // FIX: Gunakan Class di TD
+                const row = `
+                    <tr class="row-highlight">
+                        <td class="${rankClass}">${icon}</td>
+                        <td>
+                            <div class="player-info">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${player.nama}" class="mini-avatar" alt="Avatar Pemain">
+                                <span class="player-name">${player.nama}</span>
+                            </div>
+                        </td>
+                        <td class="total-score">${player.total}</td>
+                    </tr>
+                `;
+                rankList.innerHTML += row;
+            });
+        });
+    </script>
+</body>
+</html>
