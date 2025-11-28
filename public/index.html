@@ -8,142 +8,138 @@
     
     <style>
         /* =========================================
-           TEMA: GALACTIC ARCADE (Dark Gaming)
-           Status: RESTORED & FIXED
+           TEMA: DARK GALACTIC (Sesuai Screenshot Anda)
         ========================================= */
 
-        /* 1. RESET & BACKGROUND */
+        /* 1. GLOBAL */
+        * { box-sizing: border-box; }
         body { 
             font-family: 'Poppins', sans-serif;
             margin: 0; padding: 0; 
-            /* Background Gelap dengan Gradasi Galaksi */
-            background: radial-gradient(circle at top right, #2b1055, #7597de);
-            background-color: #1e1e2e;
+            /* Background Gelap Elegan */
+            background-color: #0f0c29;
+            background-image: linear-gradient(315deg, #0f0c29 0%, #302b63 74%, #24243e 100%);
             color: #e0e0e0; 
             min-height: 100vh; 
             display: flex; justify-content: center; align-items: center; 
         }
 
-        /* 2. HEADER ATAS */
+        /* 2. HEADER */
         .main-header {
-            width: 100%; padding: 5px 40px; /* Padding dikecilkan agar ramping */
-            background: rgba(18, 18, 28, 0.95); 
-            border-bottom: 1px solid rgba(0, 255, 255, 0.2); 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5); 
+            width: 100%; padding: 10px 40px;
+            background: rgba(15, 12, 41, 0.9); 
+            border-bottom: 1px solid rgba(0, 242, 255, 0.1); 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6); 
             display: flex; justify-content: space-between; align-items: center;
-            box-sizing: border-box; position: fixed; top: 0; z-index: 1000;
+            position: fixed; top: 0; z-index: 1000;
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         }
         
         .logo-area { display: flex; align-items: center; gap: 15px; }
         
-        /* LOGO BARU (Ukuran Besar) */
+        /* Logo Ukuran Sedang (Pas) */
         .logo-img { 
-            height: 75px; width: auto; 
-            filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); 
+            height: 50px; width: auto; 
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); 
         } 
         
         .portal-title { 
             font-family: 'Orbitron', sans-serif;
-            font-size: 1.4rem; 
-            background: linear-gradient(to right, #00f2ff, #00c3ff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 1.2rem; 
+            color: #00f2ff;
             letter-spacing: 2px;
             text-transform: uppercase;
-            border-left: 2px solid #444; 
+            border-left: 1px solid #555; 
             padding-left: 15px;
         }
 
         .role-badge { 
-            background: linear-gradient(45deg, #ff00cc, #333399); 
+            background: linear-gradient(90deg, #8E2DE2, #4A00E0); 
             color: white; padding: 5px 20px; border-radius: 5px; 
-            font-family: 'Orbitron', sans-serif; font-size: 0.8rem; letter-spacing: 2px;
-            box-shadow: 0 0 10px rgba(255, 0, 204, 0.5);
+            font-family: 'Orbitron', sans-serif; font-size: 0.8rem; letter-spacing: 1px;
+            box-shadow: 0 0 10px rgba(142, 45, 226, 0.4);
         }
 
-        /* 3. CONTAINER UTAMA */
+        /* 3. CONTAINER DASHBOARD */
         .dashboard-container { 
-            display: flex; width: 90%; max-width: 1200px; 
-            /* Auto height agar tidak terpotong */
+            display: flex; width: 95%; max-width: 1200px; 
             height: auto; min-height: 80vh; padding-bottom: 20px;
-            margin: 120px auto 50px; 
+            margin: 100px auto 50px; 
             
-            /* Glassmorphism Gelap */
-            background: rgba(30, 30, 46, 0.8); 
+            /* Glass Dark */
+            background: rgba(20, 20, 30, 0.6); 
             border-radius: 20px; 
             overflow: hidden; 
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.6); 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8); 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         }
 
-        /* 4. SIDEBAR KIRI */
+        /* 4. SIDEBAR (KIRI) */
         .sidebar { 
-            flex: 1; 
+            flex: 1; min-width: 280px;
             background: rgba(0, 0, 0, 0.3); padding: 30px; 
             border-right: 1px solid rgba(255, 255, 255, 0.05); 
             display: flex; flex-direction: column; align-items: center; text-align: center; 
-            overflow-y: auto; max-height: 100%;
         }
         .avatar { 
             width: 100px; height: 100px; border-radius: 50%; 
-            border: 3px solid #00f2ff; margin-bottom: 15px; background-color: #222; object-fit: cover; 
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+            border: 3px solid #00f2ff; margin-bottom: 15px; background-color: #111; object-fit: cover; 
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
         }
-        .profile-name { font-size: 1.3rem; font-weight: 700; margin-bottom: 5px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
-        .level-label { font-size: 0.85rem; color: #aaa; margin-bottom: 25px; font-family: monospace; }
+        .profile-name { font-size: 1.3rem; font-weight: 700; margin-bottom: 5px; color: #fff; }
+        .level-label { font-size: 0.8rem; color: #aaa; margin-bottom: 25px; }
         
         .stats-box { 
-            background: rgba(255, 255, 255, 0.05); width: 100%; padding: 20px; border-radius: 12px; 
-            margin-bottom: 20px; box-sizing: border-box; border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05); width: 100%; padding: 15px; 
+            border-radius: 10px; margin-bottom: 20px; 
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .stat-item { font-size: 0.9rem; color: #ccc; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;}
-        .stat-value { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: #ffeb3b; display: block; text-shadow: 0 0 10px rgba(255, 235, 59, 0.5); }
+        .stat-item { font-size: 0.8rem; color: #ccc; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;}
+        .stat-value { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: #ffeb3b; display: block; text-shadow: 0 0 10px rgba(255, 235, 59, 0.3); }
 
-        /* MENU TOMBOL */
+        /* MENU TOMBOL GRADASI */
         .menu-section { width: 100%; margin-top: 10px; text-align: left; }
-        .menu-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 10px; letter-spacing: 2px; }
+        .menu-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 10px; letter-spacing: 1px; }
         
         .link-wrapper { text-decoration: none; display: block; width: 100%; }
         
         .btn-menu { 
             width: 100%; padding: 12px 15px; margin-bottom: 10px; border: none; border-radius: 8px; 
             cursor: pointer; text-align: left; font-weight: 600; transition: 0.2s; 
-            display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: white;
+            display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: white;
         }
         .btn-menu:hover { transform: translateX(5px); filter: brightness(1.2); }
         
-        .btn-common { background: linear-gradient(90deg, #2b5876, #4e4376); }
-        .btn-guru { background: linear-gradient(90deg, #11998e, #38ef7d); }
-        .btn-admin { background: linear-gradient(90deg, #cb2d3e, #ef473a); }
+        /* Warna Gradient Tombol */
+        .btn-common { background: linear-gradient(90deg, #4e54c8, #8f94fb); } /* Ungu Biru */
+        .btn-guru { background: linear-gradient(90deg, #11998e, #38ef7d); }   /* Hijau */
+        .btn-admin { background: linear-gradient(90deg, #cb2d3e, #ef473a); }  /* Merah */
 
+        /* Login Logout */
         .profile-search { margin-top: auto; width: 100%; }
-        .search-label { font-size: 0.8rem; margin-bottom: 5px; color: #aaa; }
-        
         .btn-google { 
             background-color: #fff; color: #333; 
             width: 100%; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; 
             display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;
         }
-        .btn-google:hover { background-color: #e0e0e0; }
-        .btn-logout { background-color: rgba(255,255,255,0.1); color: #ccc; width: 100%; padding: 10px; border: 1px solid #444; border-radius: 8px; cursor: pointer; margin-top: 10px; font-weight: bold; }
-        .btn-logout:hover { background-color: rgba(255,0,0,0.2); border-color: red; color: white; }
+        .btn-logout { background-color: #333; color: #ccc; width: 100%; padding: 10px; border: 1px solid #555; border-radius: 8px; cursor: pointer; margin-top: 10px; font-weight: bold; }
+        .btn-logout:hover { background-color: #444; color: white; }
 
-        /* 5. KONTEN KANAN */
+        /* 5. KONTEN UTAMA (KANAN) */
         .main-content { flex: 3; padding: 40px; overflow-y: auto; }
         h2 { 
             margin-top:0; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 1.5rem; 
-            margin-bottom: 25px; letter-spacing: 1px; border-bottom: 2px solid #00f2ff; 
-            display: inline-block; padding-bottom: 5px;
+            margin-bottom: 30px; letter-spacing: 1px; border-bottom: 2px solid #00f2ff; 
+            display: inline-block; padding-bottom: 5px; text-transform: uppercase;
         }
         
         .grid-games { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px; }
         
+        /* CARD GAME */
         .game-card { 
             background: rgba(255, 255, 255, 0.05); 
-            border-radius: 15px; padding: 25px; 
+            border-radius: 15px; padding: 30px 20px; 
             text-align: center; text-decoration: none; transition: all 0.3s ease; display: block; 
             border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative; overflow: hidden;
@@ -151,25 +147,26 @@
         .game-card:hover { 
             transform: translateY(-10px); 
             background: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+            box-shadow: 0 0 25px rgba(0, 242, 255, 0.15);
             border-color: #00f2ff;
         }
-        .game-card.locked { opacity: 0.4; cursor: not-allowed; background: rgba(0,0,0,0.2); }
+        .game-card.locked { opacity: 0.4; cursor: not-allowed; background: rgba(0,0,0,0.3); }
         .game-card.locked:hover { transform: none; box-shadow: none; border-color: transparent; }
 
-        .game-icon { font-size: 50px; display: block; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
-        .game-title { font-weight: 800; font-size: 1.2rem; color: #fff; margin-bottom: 8px; letter-spacing: 1px;}
-        .game-desc { font-size: 0.9rem; color: #aaa; margin-bottom: 20px; line-height: 1.4; }
+        .game-icon { font-size: 50px; display: block; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
+        .game-title { font-weight: 800; font-size: 1.1rem; color: #fff; margin-bottom: 10px; letter-spacing: 1px; text-transform: uppercase;}
+        .game-desc { font-size: 0.85rem; color: #aaa; margin-bottom: 25px; line-height: 1.4; height: 40px; overflow: hidden; }
         
+        /* Tombol Start Pink */
         .btn-play { 
-            padding: 10px 30px; border-radius: 30px; display: inline-block; 
-            font-size: 0.9rem; font-weight: bold; color: white; 
-            background: linear-gradient(45deg, #ff0099, #493240);
-            box-shadow: 0 4px 15px rgba(255, 0, 153, 0.4);
-            border: none; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px;
+            padding: 10px 35px; border-radius: 30px; display: inline-block; 
+            font-size: 0.8rem; font-weight: bold; color: white; 
+            background: linear-gradient(45deg, #ff0080, #ff00cc);
+            box-shadow: 0 0 15px rgba(255, 0, 128, 0.4);
+            border: none; transition: 0.2s; text-transform: uppercase; letter-spacing: 2px;
         }
-        .btn-play:hover { transform: scale(1.1); box-shadow: 0 0 20px rgba(255, 0, 153, 0.8); }
-        .btn-locked { background: #333; box-shadow: none; color: #777; cursor: not-allowed;}
+        .btn-play:hover { transform: scale(1.1); box-shadow: 0 0 25px rgba(255, 0, 128, 0.7); }
+        .btn-locked { background: #444; box-shadow: none; color: #888; cursor: not-allowed;}
 
         /* UTILS */
         .hidden { display: none; }
@@ -178,13 +175,13 @@
         /* RESPONSIVE HP */
         @media (max-width: 800px) {
             body { background: #1e1e2e; align-items: flex-start; }
-            .dashboard-container { flex-direction: column; height: auto; border-radius: 0; margin-top: 100px; box-shadow: none; border: none; width: 100%; background: transparent; backdrop-filter: none; }
-            .sidebar { flex: none; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 25px; background: rgba(30, 30, 46, 0.9); }
+            .dashboard-container { flex-direction: column; height: auto; border-radius: 0; margin-top: 80px; box-shadow: none; border: none; width: 100%; background: transparent; backdrop-filter: none; }
+            .sidebar { flex: none; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 25px; background: rgba(20, 20, 30, 0.95); }
             .main-content { flex: none; padding: 25px; }
             .grid-games { grid-template-columns: repeat(1, 1fr); gap: 20px; }
-            .portal-title { font-size: 1rem; border: none; padding-left: 0; display: block; margin-top: 5px;}
-            .logo-area { flex-direction: column; align-items: flex-start; gap: 0;}
-            .logo-img { height: 50px; } /* Logo di HP */
+            .portal-title { display: none; } /* Sembunyikan judul panjang di HP */
+            .logo-area { gap: 0; }
+            .logo-img { height: 40px; } 
             .main-header { padding: 10px 20px; }
         }
     </style>
@@ -272,6 +269,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
+        // CONFIG FIREBASE ASLI ANDA
         const firebaseConfig = {
             apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
             authDomain: "mathgamesd.firebaseapp.com",
