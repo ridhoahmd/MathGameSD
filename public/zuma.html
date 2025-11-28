@@ -3,95 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zuma Space Multiplayer</title>
+    <title>Zuma Space</title>
     <link rel="stylesheet" href="zuma.css">
     <style>
-        /* ... (CSS RESET, CONTAINER, CANVAS, DLL TETAP SAMA) ... */
-        body { 
-            margin: 0; padding: 0; background: #1e1e2e; 
-            width: 100vw; height: 100vh; overflow: hidden; 
-            display: flex; justify-content: center; align-items: center; 
-        }
-        #game-container {
-            position: relative; width: 100%; max-width: 800px; aspect-ratio: 4/3;
-            background: #000; box-shadow: 0 0 50px rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden;
-        }
+        body { margin: 0; background: #1e1e2e; width: 100vw; height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        #game-container { position: relative; width: 100%; max-width: 800px; aspect-ratio: 4/3; background: #000; box-shadow: 0 0 50px rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; }
         canvas { display: block; width: 100%; height: 100%; }
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-
-        .score-box {
-            position: absolute; font-family: 'Segoe UI', sans-serif; font-weight: bold;
-            background: rgba(0, 0, 0, 0.6); padding: 5px 12px;
-            border-radius: 20px; font-size: 0.9rem; color: white; top: 15px;
-        }
+        
+        .score-box { position: absolute; background: rgba(0,0,0,0.6); padding: 5px 12px; border-radius: 20px; font-size: 0.9rem; color: white; top: 15px; font-weight: bold; font-family: sans-serif; }
         .score-left { left: 15px; border: 2px solid #00f2ff; }
         .score-right { right: 15px; border: 2px solid #ff4757; }
-
-        .btn-exit {
-            position: absolute; bottom: 15px; right: 15px; width: auto !important; padding: 8px 20px; margin: 0;
-            background-color: #ff4757; color: white; border: 2px solid white; border-radius: 30px;
-            font-weight: bold; cursor: pointer; font-size: 0.8rem; pointer-events: auto; z-index: 20;
-            transition: transform 0.2s;
-        }
-        .btn-exit:hover { transform: scale(1.1); }
-
-        .login-box {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(18, 18, 28, 0.95); padding: 30px; text-align: center;
-            border: 2px solid #00f2ff; border-radius: 15px; z-index: 100;
-            pointer-events: auto; width: 80%; max-width: 350px;
-        }
         
-        /* FIX 3: Class pengganti inline style */
-        .login-title { margin-top: 0; color: #00f2ff; font-family: sans-serif; }
-        .game-over-title { color: #ff4757; margin: 0 0 10px; }
-        .final-score-text { color: white; font-size: 1.2rem; }
-        .final-score-val { color: yellow; }
+        .btn-exit { position: absolute; bottom: 15px; right: 15px; width: auto !important; padding: 8px 20px; background: #ff4757; color: white; border: 2px solid white; border-radius: 30px; font-weight: bold; cursor: pointer; pointer-events: auto; z-index: 20; font-size: 0.8rem; margin: 0; }
+        
+        .login-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(18, 18, 28, 0.95); padding: 30px; text-align: center; border: 2px solid #00f2ff; border-radius: 15px; z-index: 100; pointer-events: auto; width: 80%; max-width: 350px; }
+        
+        /* CLASS PENGGANTI INLINE STYLE */
+        .text-title { margin-top: 0; color: #00f2ff; font-family: sans-serif; }
+        .text-gameover { color: #ff4757; margin: 0 0 10px; }
+        .text-final-score { color: white; font-size: 1.2rem; }
+        .text-yellow { color: yellow; }
         
         input { padding: 12px; margin: 10px 0; width: 100%; box-sizing: border-box; border-radius: 5px; border: 1px solid #555; background: #333; color: white; }
-        .btn-login-group button { padding: 12px; width: 100%; margin-top: 10px; cursor: pointer; font-weight: bold; border-radius: 5px; border: none; }
-        .btn-start { background: #00f2ff; color: black;} 
+        button { padding: 12px; width: 100%; margin-top: 10px; cursor: pointer; font-weight: bold; border-radius: 5px; border: none; }
+        .btn-start { background: #00f2ff; color: black; }
         .btn-back { background: #555; color: white; }
-
-        #game-over-screen {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.95); padding: 40px; text-align: center;
-            border: 2px solid red; border-radius: 15px; color: white;
-            display: none; z-index: 100; pointer-events: auto; width: 80%; max-width: 300px;
-        }
-        #game-over-screen button { width: 100%; margin-top: 10px; padding: 10px; cursor: pointer; }
+        
+        #game-over-screen { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.95); padding: 40px; text-align: center; border: 2px solid red; border-radius: 15px; display: none; z-index: 100; pointer-events: auto; width: 80%; max-width: 300px; }
+        
+        .hidden { display: none !important; }
+        .block { display: block !important; }
     </style>
 </head>
 <body>
-
     <div id="game-container">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         <div id="ui-layer">
             <div id="login-screen" class="login-box">
-                <h2 class="login-title">ZUMA SPACE</h2>
+                <h2 class="text-title">ZUMA SPACE</h2>
                 <input type="text" id="username" placeholder="Nama" readonly>
-                <input type="text" id="room-code" placeholder="Room (ex: A1)">
-                <div class="btn-login-group">
-                    <button class="btn-start" onclick="startGameMultiplayer()">MULAI GAME</button>
-                    <button class="btn-back" onclick="window.location.href='/'">KEMBALI</button>
-                </div>
+                <input type="text" id="room-code" placeholder="Room">
+                <button class="btn-start" onclick="startGameMultiplayer()">MULAI GAME</button>
+                <button class="btn-back" onclick="window.location.href='/'">KEMBALI</button>
             </div>
 
-            <div id="game-hud" style="display:none;">
+            <div id="game-hud" class="hidden">
                 <div class="score-box score-left">Kamu: <span id="score">0</span></div>
                 <div class="score-box score-right">Lawan: <span id="opponent-score">0</span></div>
                 <button class="btn-exit" onclick="window.location.href='/'">✖ Keluar</button>
             </div>
 
             <div id="game-over-screen">
-                <h1 class="game-over-title">GAME OVER</h1>
-                <p class="final-score-text">Skor Akhir: <span id="final-score" class="final-score-val">0</span></p>
+                <h1 class="text-gameover">GAME OVER</h1>
+                <p class="text-final-score">Skor: <span id="final-score" class="text-yellow">0</span></p>
                 <button class="btn-start" onclick="location.reload()">MAIN LAGI</button>
-                <button class="btn-back" onclick="window.location.href='/'">MENU UTAMA</button>
+                <button class="btn-back" onclick="window.location.href='/'">MENU</button>
             </div>
         </div>
     </div>
-
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -102,8 +72,9 @@
         const oriStart = window.startGameMultiplayer;
         window.startGameMultiplayer = function() {
             oriStart();
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('game-hud').style.display = 'block';
+            document.getElementById('login-screen').style.display='none';
+            document.getElementById('game-hud').classList.remove('hidden');
+            document.getElementById('game-hud').classList.add('block');
         }
     </script>
 </body>
