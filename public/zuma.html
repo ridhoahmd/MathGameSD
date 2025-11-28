@@ -6,40 +6,68 @@
     <title>Zuma Matematika Multiplayer</title>
     <link rel="stylesheet" href="zuma.css">
     <style>
-        #login-screen {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9); padding: 40px; text-align: center;
-            border: 3px solid #ff9800; border-radius: 15px; z-index: 100;
-        }
-        input { padding: 10px; margin: 10px; font-size: 16px; display: block; width: 80%; margin-left: auto; margin-right: auto;}
-        
-        .btn-menu { background-color: #555; }
-        .game-hidden { display: none; }
-        
-        .score-box {
-            position: absolute; font-size: 24px; font-weight: bold;
-            background: rgba(0,0,0,0.6); padding: 10px 20px;
-            border-radius: 20px; pointer-events: none;
-        }
-        .score-left { top: 20px; left: 20px; border: 2px solid white; color: yellow; }
-        .score-right { top: 20px; right: 20px; border: 2px solid red; color: white; }
-        .text-red { color: red; }
+    body { margin: 0; overflow: hidden; background: #222; touch-action: none; /* Mencegah zoom di HP */ }
 
-        .btn-exit {
-            position: absolute; bottom: 20px; right: 20px;
-            padding: 10px 20px; background-color: #ff4757;
-            color: white; border: 2px solid white; border-radius: 30px;
-            font-weight: bold; cursor: pointer; pointer-events: auto; z-index: 100;
-        }
-        .btn-replay { background-color: #4CAF50; }
-    </style>
+    /* LAYAR LOGIN RESPONSIF */
+    #login-screen {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9); padding: 30px; text-align: center;
+        border: 2px solid #ff9800; border-radius: 15px; z-index: 100;
+        width: 80%; max-width: 400px; /* Agar tidak melebar di HP */
+    }
+    input { padding: 10px; margin: 10px auto; font-size: 16px; display: block; width: 90%; }
+    
+    /* CSS BARU UNTUK MEMAKSA CANVAS MUAT DI HP */
+    #game-container {
+        position: relative;
+        width: 100vw;  /* Lebar penuh layar */
+        height: 100vh; /* Tinggi penuh layar */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    canvas {
+        background-color: #004d40;
+        max-width: 100%; /* Agar tidak melebihi lebar HP */
+        max-height: 100%; /* Agar tidak melebihi tinggi HP */
+        object-fit: contain; /* Jaga proporsi gambar agar tidak gepeng */
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    /* UI SKOR & TOMBOL */
+    .score-box {
+        position: absolute; font-size: 18px; font-weight: bold; /* Font dikecilkan dikit */
+        background: rgba(0,0,0,0.6); padding: 8px 15px;
+        border-radius: 20px; pointer-events: none; white-space: nowrap;
+    }
+    .score-left { top: 10px; left: 10px; border: 2px solid white; color: yellow; }
+    .score-right { top: 10px; right: 10px; border: 2px solid red; color: white; }
+    
+    .btn-exit {
+        position: absolute; bottom: 20px; right: 20px;
+        padding: 8px 15px; background-color: #ff4757; color: white;
+        border: 2px solid white; border-radius: 20px; font-weight: bold;
+        z-index: 100; font-size: 0.9rem;
+    }
+    
+    .btn-menu { background-color: #555; width: 100%; margin-top: 5px; color: white; border: none; padding: 10px; border-radius: 5px; cursor:pointer;}
+    button { cursor: pointer; }
+    
+    #game-over-screen {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.9); padding: 30px; text-align: center;
+        border-radius: 15px; border: 2px solid #ff9800; color: white;
+        width: 80%; max-width: 300px;
+    }
+</style>
 </head>
 <body>
 
-    <div id="login-screen">
-        <h1 style="color:white;">Zuma Math Battle</h1>
+    <div id="login-screen" class="login-box">
+        <h1 class="login-title">Zuma Math Battle</h1>
         <input type="text" id="username" placeholder="Nama Kamu" required>
-        <input type="text" id="room-code" placeholder="Kode Kamar (mis: ZUMA1)" required>
+        <input type="text" id="room-code" placeholder="Kode Kamar" required>
         <button onclick="startGameMultiplayer()">Masuk Arena</button>
         <br><br>
         <button onclick="window.location.href='/'" class="btn-menu">Kembali ke Menu</button>

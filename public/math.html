@@ -6,20 +6,55 @@
     <title>Math Battle SD</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .btn-back {
-            position: absolute; top: 20px; left: 20px; z-index: 1000;
-            padding: 10px 20px; background-color: #ff4757; color: white;
-            border: none; border-radius: 30px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.2s;
-            text-decoration: none;
-        }
-        .btn-back:hover { transform: scale(1.05); }
-        .score-val { font-weight: bold; }
-        .score-green { color: green; }
-        .score-red { color: red; }
-        .btn-finish { background-color: #ff9800; }
-        .game-area { display: none; } /* Default sembunyi */
-    </style>
+    /* CSS GLOBAL */
+    body { 
+        font-family: 'Segoe UI', sans-serif; 
+        text-align: center; 
+        background-color: #f0f8ff; 
+        margin: 0; padding: 0;
+        display: flex; justify-content: center; align-items: center;
+        min-height: 100vh;
+    }
+
+    /* TOMBOL KEMBALI RESPONSIF */
+    .btn-back {
+        position: absolute; top: 15px; left: 15px; z-index: 1000;
+        padding: 8px 15px; background-color: #ff4757; color: white;
+        border: none; border-radius: 30px; font-weight: bold; cursor: pointer;
+        text-decoration: none; font-size: 0.9rem;
+    }
+
+    /* CONTAINER UTAMA (Kunci Responsif) */
+    .container { 
+        margin-top: 50px; 
+        background: white; 
+        padding: 20px; 
+        border-radius: 15px; 
+        display: inline-block; 
+        width: 90%; /* Gunakan Persen, bukan Pixel */
+        max-width: 500px; /* Batas maksimal di laptop */
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    input { padding: 12px; margin: 10px 0; font-size: 16px; width: 80%; border: 2px solid #ddd; border-radius: 8px; }
+    button { padding: 12px 25px; background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 8px; font-size: 1rem; font-weight: bold; }
+    
+    #question-display { font-size: 3rem; color: #333; margin: 20px 0; }
+    
+    .score-val { font-weight: bold; font-size: 1.2rem; }
+    .score-green { color: green; }
+    .score-red { color: red; }
+    .btn-finish { background-color: #ff9800; width: 100%; margin-top: 10px;}
+    .game-area { display: none; }
+
+    /* MEDIA QUERY KHUSUS HP */
+    @media (max-width: 600px) {
+        h1 { font-size: 1.5rem; }
+        #question-display { font-size: 2.5rem; } /* Kecilkan font soal */
+        .container { padding: 15px; width: 85%; margin-top: 60px;} /* Beri jarak dari tombol back */
+        input { width: 100%; box-sizing: border-box; }
+    }
+</style>
 </head>
 <body>
 
@@ -30,9 +65,9 @@
         
         <div id="login-screen">
             <h2>Masuk Game</h2>
-            <input type="text" id="username" placeholder="Nama Kamu (mis: Budi)" required>
+            <input type="text" id="username" placeholder="Nama Kamu" required>
             <br>
-            <input type="text" id="room-code" placeholder="Kode Kamar (mis: KELAS1)" required>
+            <input type="text" id="room-code" placeholder="Kode Kamar" required>
             <br><br>
             <button onclick="startGame()">Masuk ke Arena</button>
         </div>
@@ -60,5 +95,14 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="game.js"></script>
+    <script>
+        // Helper untuk mengganti display block/none lewat JS
+        function showGame() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+        }
+        // Override fungsi startGame di game.js agar pakai helper ini
+        // (Atau update game.js jika mau lebih bersih)
+    </script>
 </body>
 </html>

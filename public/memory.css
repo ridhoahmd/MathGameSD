@@ -3,76 +3,77 @@ body {
     background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 100%, #fdbb2d 100%);
     color: white;
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    margin: 0; padding: 10px; /* Tambah padding biar gak mepet */
 }
 
 .btn-back {
-    position: absolute; top: 20px; left: 20px; text-decoration: none;
-    background: rgba(255, 255, 255, 0.2); padding: 10px 20px; border-radius: 20px;
-    color: white; font-weight: bold;
+    position: absolute; top: 15px; left: 15px; text-decoration: none;
+    background: rgba(255, 255, 255, 0.2); padding: 8px 15px; border-radius: 20px;
+    color: white; font-weight: bold; font-size: 0.9rem;
 }
 
-.game-container { text-align: center; }
+.game-container { 
+    text-align: center; 
+    width: 100%; 
+    max-width: 500px; /* Batas lebar di laptop */
+}
+
+h1 { font-size: 1.8rem; margin-bottom: 5px; margin-top: 40px;}
 
 .info-panel {
-    margin-bottom: 20px; font-size: 1.2rem; font-weight: bold;
-    background: rgba(0,0,0,0.3); padding: 10px 20px; border-radius: 10px;
-    display: inline-block;
+    margin-bottom: 20px; font-size: 1rem; font-weight: bold;
+    background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px;
+    display: inline-flex; gap: 20px; justify-content: center;
+    width: 90%;
 }
 
-.info-panel span { margin: 0 15px; }
-
-/* GRID KARTU */
+/* GRID KARTU RESPONSIVE */
 .memory-board {
     display: grid;
-    grid-template-columns: repeat(4, 100px); /* 4 Kolom */
-    gap: 15px;
-    margin: 0 auto;
+    /* Ubah dari pixel tetap menjadi flexible (fr) */
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 10px;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
 }
 
 .card {
-    width: 100px; height: 100px;
+    /* Hapus width/height tetap 100px */
+    aspect-ratio: 1 / 1; /* Biar tetap kotak */
     background-color: white;
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #333;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 1.2rem; /* Font agak kecil */
+    font-weight: bold; color: #333;
     transition: transform 0.3s;
-    perspective: 1000px;
+    background-size: cover;
 }
 
-.card:active { transform: scale(0.95); }
+/* KHUSUS HP KECIL */
+@media (max-width: 400px) {
+    .memory-board {
+        gap: 5px; /* Jarak antar kartu lebih rapat */
+    }
+    .card {
+        font-size: 1rem; /* Font lebih kecil lagi */
+        border-radius: 5px;
+    }
+    h1 { font-size: 1.5rem; }
+}
 
-/* Efek Kartu Tertutup */
 .card.hidden {
-    background-color: #ff9800; /* Warna Belakang Kartu */
-    color: transparent; /* Sembunyikan Tulisan */
+    background-color: #ff9800; color: transparent;
     background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
 }
-
-/* Efek Kartu Cocok */
-.card.matched {
-    background-color: #4CAF50; /* Hijau */
-    color: white;
-    cursor: default;
-}
+.card.matched { background-color: #4CAF50; color: white; cursor: default; }
 
 #win-screen {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.9); padding: 40px; border-radius: 15px;
-    border: 2px solid gold; text-align: center; z-index: 100;
+    background: rgba(0, 0, 0, 0.9); padding: 30px; border-radius: 15px;
+    border: 2px solid gold; text-align: center; z-index: 100; width: 80%;
 }
 
-button {
-    padding: 10px 20px; margin: 10px; cursor: pointer;
-    border-radius: 5px; border: none; font-weight: bold; font-size: 1rem;
-}
+button { padding: 10px 20px; margin: 10px; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; }
