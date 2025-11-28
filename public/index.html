@@ -5,33 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Game Videa Class</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    
     <style>
-        /* CSS RESET & VARS */
+        /* TEMA DARK GALACTIC */
         * { box-sizing: border-box; }
-        
-        /* UTILITY CLASSES (Pengganti Inline Style) */
-        .hidden { display: none !important; }
-        .visible { display: block !important; }
-        .mt-10 { margin-top: 10px; }
-        .w-100 { width: 100%; }
-
         body { 
             font-family: 'Poppins', sans-serif; margin: 0; padding: 0; 
             background: radial-gradient(circle at top right, #2b1055, #7597de); background-color: #1e1e2e;
             color: #e0e0e0; min-height: 100vh; display: flex; justify-content: center; align-items: center; 
         }
-
-        /* HEADER */
         .main-header {
-            width: 100%; padding: 10px 40px;
-            background: rgba(18, 18, 28, 0.95); 
+            width: 100%; padding: 5px 40px; background: rgba(18, 18, 28, 0.95); 
             border-bottom: 1px solid rgba(0, 242, 255, 0.1); 
             display: flex; justify-content: space-between; align-items: center;
             position: fixed; top: 0; z-index: 1000;
-            /* FIX: Tambahkan webkit untuk iPhone */
-            -webkit-backdrop-filter: blur(10px);
-            backdrop-filter: blur(10px); 
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         }
         .logo-area { display: flex; align-items: center; gap: 15px; }
         .logo-img { height: 75px; width: auto; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); } 
@@ -40,61 +27,35 @@
             letter-spacing: 2px; text-transform: uppercase; border-left: 2px solid #444; padding-left: 15px;
         }
         .role-badge { background: linear-gradient(45deg, #ff00cc, #333399); color: white; padding: 5px 20px; border-radius: 5px; font-weight: bold; }
-
-        /* DASHBOARD CONTAINER */
+        
         .dashboard-container { 
             display: flex; width: 95%; max-width: 1200px; height: auto; min-height: 80vh; 
             margin: 120px auto 50px; background: rgba(30, 30, 46, 0.8); border-radius: 20px; overflow: hidden; 
             box-shadow: 0 0 40px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1);
-            /* FIX: Tambahkan webkit untuk iPhone */
-            -webkit-backdrop-filter: blur(20px);
-            backdrop-filter: blur(20px); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         }
-
-        /* SIDEBAR */
         .sidebar { 
             flex: 1; min-width: 280px; background: rgba(0,0,0,0.3); padding: 30px; 
             border-right: 1px solid rgba(255,255,255,0.05); text-align: center; display: flex; flex-direction: column; align-items: center;
         }
         .avatar { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #00f2ff; margin-bottom: 15px; object-fit: cover; background: #000;}
         .profile-name { font-size: 1.3rem; font-weight: bold; margin-bottom: 5px; color: #fff; }
-        .user-email { font-size: 0.8rem; color: #aaa; margin-bottom: 20px; }
-        
         .stats-box { background: rgba(255,255,255,0.05); width: 100%; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-        .stat-label { font-size: 0.8rem; color: #ccc; }
         .stat-value { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: #ffeb3b; display: block; }
-
-        /* MENU TOMBOL */
-        .menu-label { font-size: 0.7rem; font-weight: bold; color: #666; margin-bottom: 10px; text-align: left; width: 100%; }
-        .guru-label { color: #38ef7d; }
-        .admin-label { color: #ef473a; }
-
+        
         .btn-menu { width: 100%; padding: 12px 15px; margin-bottom: 10px; border: none; border-radius: 8px; cursor: pointer; text-align: left; font-weight: 600; color: white; display: flex; align-items: center; gap: 10px; }
         .btn-common { background: linear-gradient(90deg, #2b5876, #4e4376); }
         .btn-guru { background: linear-gradient(90deg, #11998e, #38ef7d); }
         .btn-admin { background: linear-gradient(90deg, #cb2d3e, #ef473a); }
-        
-        /* FOOTER SIDEBAR */
-        .sidebar-footer { margin-top: auto; width: 100%; }
-        .btn-google { background: #fff; color: #333; width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none;}
+        .btn-google { background: #fff; color: #333; width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-logout { background: rgba(255,255,255,0.1); color: #ccc; width: 100%; padding: 10px; border: 1px solid #444; border-radius: 8px; cursor: pointer; margin-top: 10px; }
 
-        /* KONTEN KANAN */
         .main-content { flex: 3; padding: 40px; }
-        .misi-title { margin-top:0; border-bottom:2px solid #00f2ff; display:inline-block; padding-bottom:5px; }
-        
         .grid-games { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px; }
         .game-card { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 30px 20px; text-align: center; text-decoration: none; border: 1px solid rgba(255,255,255,0.1); display: block; transition: 0.3s; }
         .game-card:hover { transform: translateY(-10px); background: rgba(255,255,255,0.1); border-color: #00f2ff; }
-        
-        .game-icon-text { font-size: 50px; margin-bottom: 10px; display: block; }
-        .game-title-text { font-weight: bold; font-size: 1.2rem; color: white; margin-bottom: 10px; }
-        .game-desc-text { color: #aaa; font-size: 0.9rem; margin-bottom: 20px; }
         .btn-play { padding: 10px 35px; border-radius: 30px; font-size: 0.8rem; font-weight: bold; color: white; background: linear-gradient(45deg, #ff0080, #ff00cc); border: none; margin-top: 15px; display: inline-block; }
-        
-        .link-wrapper { text-decoration: none; width: 100%; display: block; }
 
-        /* RESPONSIF */
         @media (max-width: 800px) {
             .dashboard-container { flex-direction: column; margin-top: 100px; }
             .sidebar { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
@@ -102,6 +63,10 @@
             .portal-title { display: none; }
             .logo-img { height: 50px; }
         }
+        .hidden { display: none !important; } .block { display: block !important; } .link-wrapper { text-decoration: none; width: 100%; }
+        
+        /* CSS INPUT KODE GURU */
+        #input-kode-guru { background: rgba(255,255,255,0.1); border: 1px solid #555; color: white; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -117,56 +82,66 @@
         <aside class="sidebar">
             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guest" id="user-avatar" class="avatar" alt="Avatar">
             <div class="profile-name" id="display-name">Silakan Login</div>
-            <div class="user-email" id="user-email">...</div>
+            <div style="font-size:0.8rem; color:#aaa; margin-bottom:20px;" id="user-email">...</div>
             
             <div class="stats-box">
-                <div class="stat-label">TOTAL SKOR</div>
+                <div style="font-size:0.8rem; color:#ccc;">TOTAL SKOR</div>
                 <span class="stat-value" id="total-score">-</span>
             </div>
 
             <div class="menu-section">
-                <div class="menu-label">MENU SISWA</div>
+                <div style="font-size:0.7rem; font-weight:bold; color:#666; margin-bottom:10px;">MENU SISWA</div>
                 <a href="leaderboard.html" class="link-wrapper"><button class="btn-menu btn-common">🏆 Leaderboard</button></a>
                 <button class="btn-menu btn-common" onclick="alert('Chat Global segera hadir!')">💬 Chat Global</button>
             </div>
 
             <div class="menu-section hidden" id="guru-panel">
-                <div class="menu-label guru-label">AKSES GURU</div>
+                <div style="font-size:0.7rem; font-weight:bold; color:#38ef7d; margin-bottom:10px;">AKSES GURU</div>
                 <button class="btn-menu btn-guru">📋 Riwayat Siswa</button>
                 <button class="btn-menu btn-guru">🔑 Hak Akses</button>
             </div>
 
             <div class="menu-section hidden" id="admin-panel">
-                <div class="menu-label admin-label">FULL ADMIN</div>
+                <div style="font-size:0.7rem; font-weight:bold; color:#ef473a; margin-bottom:10px;">FULL ADMIN</div>
                 <button class="btn-menu btn-admin">⚙️ Pengaturan Sistem</button>
                 <button class="btn-menu btn-admin">👥 Kelola User</button>
             </div>
 
-            <div class="sidebar-footer">
+            <div style="margin-top:auto; width:100%;">
+                
+                <div id="guru-input-area" class="hidden">
+                    <input type="password" id="input-kode-guru" placeholder="Kode Rahasia Guru" style="width:100%; padding:10px; border-radius:5px;">
+                </div>
+
                 <button onclick="loginGoogle()" class="btn-google" id="btn-login">G Masuk Google</button>
+                
+                <p id="text-guru" style="font-size: 0.7rem; color: #666; cursor: pointer; text-decoration: underline; margin-top: 10px;" onclick="toggleInputGuru()">
+                    Apakah Anda Guru?
+                </p>
+
                 <button onclick="logout()" class="btn-logout hidden" id="btn-logout">Keluar</button>
             </div>
         </aside>
 
         <main class="main-content">
-            <h2 class="misi-title">PILIH MISI</h2>
+            <h2 style="margin-top:0; border-bottom:2px solid #00f2ff; display:inline-block; padding-bottom:5px;">PILIH MISI</h2>
             <div class="grid-games">
                 <a href="#" onclick="masukGame('math.html')" class="game-card">
-                    <span class="game-icon-text">🚀</span>
-                    <div class="game-title-text">MATH BATTLE</div>
-                    <div class="game-desc-text">Duel matematika cepat antar galaksi!</div>
+                    <div style="font-size:50px; margin-bottom:10px;">🚀</div>
+                    <div style="font-weight:bold; font-size:1.2rem; color:white; margin-bottom:10px;">MATH BATTLE</div>
+                    <div style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Duel matematika cepat antar galaksi!</div>
                     <div class="btn-play">START</div>
                 </a>
                 <a href="#" onclick="masukGame('zuma.html')" class="game-card">
-                    <span class="game-icon-text">☄️</span>
-                    <div class="game-title-text">ZUMA SPACE</div>
-                    <div class="game-desc-text">Hancurkan bola angka sebelum meledak!</div>
+                    <div style="font-size:50px; margin-bottom:10px;">☄️</div>
+                    <div style="font-weight:bold; font-size:1.2rem; color:white; margin-bottom:10px;">ZUMA SPACE</div>
+                    <div style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Hancurkan bola angka sebelum meledak!</div>
                     <div class="btn-play">START</div>
                 </a>
                 <a href="#" onclick="masukGame('memory.html')" class="game-card">
-                    <span class="game-icon-text">🧩</span>
-                    <div class="game-title-text">MEMORY LAB</div>
-                    <div class="game-desc-text">Aktifkan sel otakmu dengan kartu memori.</div>
+                    <div style="font-size:50px; margin-bottom:10px;">🧩</div>
+                    <div style="font-weight:bold; font-size:1.2rem; color:white; margin-bottom:10px;">MEMORY LAB</div>
+                    <div style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Aktifkan sel otakmu dengan kartu memori.</div>
                     <div class="btn-play">START</div>
                 </a>
             </div>
@@ -192,16 +167,52 @@
         const database = firebase.database();
         const provider = new firebase.auth.GoogleAuthProvider();
 
+        function toggleInputGuru() {
+            const area = document.getElementById('guru-input-area');
+            const text = document.getElementById('text-guru');
+            if (area.classList.contains('hidden')) {
+                area.classList.remove('hidden');
+                area.classList.add('block');
+                text.innerText = "Batal (Masuk sebagai Siswa)";
+            } else {
+                area.classList.remove('block');
+                area.classList.add('hidden');
+                text.innerText = "Apakah Anda Guru?";
+                document.getElementById('input-kode-guru').value = "";
+            }
+        }
+
         function loginGoogle() {
+            const KODE_RAHASIA = "GURU2025"; 
+            const inputKode = document.getElementById('input-kode-guru').value.trim();
+            
             auth.signInWithPopup(provider).then((result) => {
-                localStorage.setItem("playerName", result.user.displayName);
-                checkRole(result.user.displayName);
+                const user = result.user;
+                localStorage.setItem("playerName", user.displayName);
+                
+                let roleBaru = "siswa"; 
+                if (inputKode === KODE_RAHASIA) {
+                    roleBaru = "guru";
+                    alert("Selamat datang Bapak/Ibu Guru!");
+                }
+
+                database.ref('leaderboard/' + user.displayName).once('value').then(snapshot => {
+                    const data = snapshot.val();
+                    const currentRole = data ? data.role : null;
+                    // Hanya update jika user belum punya role Admin/Guru, ATAU jika dia baru saja memasukkan kode guru yang benar
+                    if (currentRole !== 'admin' && (currentRole !== 'guru' || roleBaru === 'guru')) {
+                         database.ref('leaderboard/' + user.displayName).update({
+                            nama: user.displayName,
+                            role: roleBaru
+                        });
+                    }
+                });
             }).catch(e => alert(e.message));
         }
+
         function logout() {
             auth.signOut().then(() => { localStorage.removeItem("playerName"); location.reload(); });
         }
-        
         function checkRole(name) {
             database.ref('leaderboard/' + name).on('value', snapshot => {
                 const data = snapshot.val();
@@ -210,31 +221,25 @@
                 else if(data) database.ref('leaderboard/'+name).update({ role: "siswa" });
 
                 document.getElementById('role-display').innerText = role.toUpperCase();
-                
                 const guruPanel = document.getElementById('guru-panel');
                 const adminPanel = document.getElementById('admin-panel');
-                
-                // Gunakan classList (Lebih bersih daripada style.display)
-                guruPanel.classList.remove('visible'); guruPanel.classList.add('hidden');
-                adminPanel.classList.remove('visible'); adminPanel.classList.add('hidden');
+                guruPanel.classList.add('hidden'); adminPanel.classList.add('hidden');
 
                 if(role === 'admin') {
-                    guruPanel.classList.remove('hidden'); guruPanel.classList.add('visible');
-                    adminPanel.classList.remove('hidden'); adminPanel.classList.add('visible');
+                    guruPanel.classList.remove('hidden'); guruPanel.classList.add('block');
+                    adminPanel.classList.remove('hidden'); adminPanel.classList.add('block');
                 } else if(role === 'guru') {
-                    guruPanel.classList.remove('hidden'); guruPanel.classList.add('visible');
+                    guruPanel.classList.remove('hidden'); guruPanel.classList.add('block');
                 }
             });
         }
-        
         auth.onAuthStateChanged((user) => {
             if(user) {
-                document.getElementById('btn-login').classList.remove('visible');
                 document.getElementById('btn-login').classList.add('hidden');
+                document.getElementById('text-guru').classList.add('hidden'); // Sembunyikan teks guru kalau udah login
+                document.getElementById('guru-input-area').classList.add('hidden');
                 
                 document.getElementById('btn-logout').classList.remove('hidden');
-                document.getElementById('btn-logout').classList.add('visible');
-                
                 document.getElementById('display-name').innerText = user.displayName;
                 document.getElementById('user-email').innerText = user.email;
                 document.getElementById('user-avatar').src = user.photoURL;
@@ -242,7 +247,6 @@
                 checkRole(user.displayName);
             }
         });
-        
         function loadSkor(name) {
             database.ref('leaderboard/'+name).on('value', snapshot => {
                 const data = snapshot.val();
@@ -252,7 +256,6 @@
                 }
             });
         }
-        
         function masukGame(url) {
             if(!auth.currentUser) alert("Login dulu!"); else window.location.href = url;
         }
