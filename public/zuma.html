@@ -6,80 +6,83 @@
     <title>Zuma Space Multiplayer</title>
     <link rel="stylesheet" href="zuma.css">
     <style>
-        /* 1. RESET LAYAR */
+        /* 1. RESET LAYAR AGAR TENGAH */
         body { 
             margin: 0; padding: 0;
-            background: #1e1e2e; /* Warna Background Gelap */
+            background: #1e1e2e; /* Warna gelap */
             width: 100vw; height: 100vh;
-            overflow: hidden; /* Hilangkan scrollbar */
-            display: flex; justify-content: center; align-items: center; /* KUNCI: Tengahkan Konten */
+            overflow: hidden; /* Hilangkan scroll */
+            display: flex; 
+            justify-content: center; 
+            align-items: center; /* Kunci penengah */
         }
 
-        /* 2. CONTAINER GAME (Wadah Utama) */
+        /* 2. WADAH GAME (CONTAINER) */
         #game-container {
-            position: relative;
-            width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
+            position: relative; /* Penting agar UI nempel disini */
+            width: 100%; 
+            max-width: 800px; /* Batas lebar seperti laptop */
+            aspect-ratio: 4/3; /* Jaga bentuk kotak biar tidak gepeng */
+            background: #000;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
         }
 
-        /* 3. CANVAS (Area Hijau) */
+        /* 3. CANVAS (LAYAR HIJAU) */
         canvas {
-            /* Agar canvas menyesuaikan layar tapi TIDAK GEPENG */
-            max-width: 100%; 
-            max-height: 100%;
-            object-fit: contain; 
-            box-shadow: 0 0 50px rgba(0,0,0,0.5); /* Bayangan biar keren */
+            display: block;
+            width: 100%;
+            height: 100%;
         }
 
-        /* 4. UI LAYER (Skor & Tombol) */
+        /* 4. LAPISAN UI (SKOR & TOMBOL) */
         #ui-layer {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             pointer-events: none; /* Supaya klik tembus ke game */
+            z-index: 10; /* Pastikan di ATAS canvas */
         }
 
-        /* LOGIN BOX (Di Tengah) */
+        /* Tampilan Skor */
+        .score-box {
+            position: absolute; font-family: 'Segoe UI', sans-serif; font-weight: bold;
+            background: rgba(0, 0, 0, 0.6); padding: 8px 15px;
+            border-radius: 20px; font-size: 1rem; color: white;
+            top: 15px; /* Jarak dari atas */
+        }
+        .score-left { left: 15px; border: 2px solid #00f2ff; }
+        .score-right { right: 15px; border: 2px solid #ff4757; }
+
+        /* Tombol Keluar */
+        .btn-exit {
+            position: absolute; 
+            bottom: 15px; right: 15px; /* Pojok Kanan Bawah */
+            padding: 10px 20px; 
+            background-color: #ff4757; 
+            color: white; border: 2px solid white; border-radius: 30px;
+            font-weight: bold; cursor: pointer; 
+            pointer-events: auto; /* PENTING: Agar bisa diklik */
+            z-index: 20;
+        }
+
+        /* Layar Login */
         .login-box {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: rgba(18, 18, 28, 0.95); padding: 30px; text-align: center;
             border: 2px solid #00f2ff; border-radius: 15px; z-index: 100;
-            pointer-events: auto; width: 85%; max-width: 350px;
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+            pointer-events: auto; width: 80%; max-width: 350px;
         }
         h2 { margin-top: 0; color: #00f2ff; font-family: sans-serif; }
-        input { padding: 12px; margin: 10px 0; font-size: 16px; display: block; width: 100%; box-sizing: border-box; border-radius: 5px; border: 1px solid #555; background: #333; color: white; }
-        
-        /* SKOR (Pojok Layar) */
-        .score-box {
-            position: absolute; font-family: 'Segoe UI', sans-serif; font-weight: bold;
-            background: rgba(0, 0, 0, 0.7); padding: 8px 15px;
-            border-radius: 20px; font-size: 1rem; color: white;
-            backdrop-filter: blur(5px);
-        }
-        .score-left { top: 20px; left: 20px; border: 2px solid #00f2ff; }
-        .score-right { top: 20px; right: 20px; border: 2px solid #ff4757; }
+        input { padding: 12px; margin: 10px 0; width: 100%; box-sizing: border-box; border-radius: 5px; }
+        button { padding: 12px; width: 100%; margin-top: 10px; cursor: pointer; font-weight: bold; border-radius: 5px; border: none;}
+        .btn-start { background: #00f2ff; } .btn-back { background: #555; color: white; }
 
-        /* TOMBOL KELUAR (Pojok Kanan Bawah) */
-        .btn-exit {
-            position: absolute; bottom: 20px; right: 20px;
-            padding: 10px 20px; background-color: #ff4757; color: white;
-            border: 2px solid white; border-radius: 30px;
-            font-weight: bold; cursor: pointer; pointer-events: auto; z-index: 100;
-            transition: transform 0.2s;
-        }
-        .btn-exit:hover { transform: scale(1.1); }
-
-        /* TOMBOL START & MENU */
-        button { padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; width: 100%; margin-top: 10px; }
-        .btn-start { background: linear-gradient(45deg, #00f2ff, #0099ff); color: #000; }
-        .btn-back { background: #444; color: #ccc; }
-        
-        /* GAME OVER */
+        /* Game Over */
         #game-over-screen {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.95); padding: 40px; text-align: center;
-            border-radius: 15px; border: 2px solid #ff4757; pointer-events: auto;
-            display: none; width: 80%; max-width: 300px;
+            background: rgba(0,0,0,0.9); padding: 40px; text-align: center;
+            border: 2px solid red; border-radius: 15px; color: white;
+            display: none; z-index: 100; pointer-events: auto;
         }
     </style>
 </head>
@@ -92,8 +95,8 @@
             
             <div id="login-screen" class="login-box">
                 <h2>ZUMA SPACE</h2>
-                <input type="text" id="username" placeholder="Nama Kamu" readonly>
-                <input type="text" id="room-code" placeholder="Kode Room (Contoh: A1)">
+                <input type="text" id="username" placeholder="Nama" readonly>
+                <input type="text" id="room-code" placeholder="Room (ex: A1)">
                 <button class="btn-start" onclick="startGameMultiplayer()">MULAI GAME</button>
                 <button class="btn-back" onclick="window.location.href='/'">KEMBALI</button>
             </div>
@@ -105,8 +108,8 @@
             </div>
 
             <div id="game-over-screen">
-                <h1 style="color:#ff4757; margin-top:0;">GAME OVER</h1>
-                <p style="color:white; font-size:1.2rem;">Skor Akhir: <span id="final-score" style="color:yellow">0</span></p>
+                <h1 style="color:#ff4757; margin:0 0 10px;">GAME OVER</h1>
+                <p>Skor Akhir: <span id="final-score">0</span></p>
                 <button class="btn-start" onclick="location.reload()">MAIN LAGI</button>
                 <button class="btn-back" onclick="window.location.href='/'">MENU UTAMA</button>
             </div>
@@ -116,22 +119,17 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
     <script src="zuma.js"></script>
 
     <script>
-        // Auto-isi Nama dari Login Google
-        const savedName = localStorage.getItem("playerName");
-        if(savedName) document.getElementById('username').value = savedName;
+        // Auto isi nama
+        const saved = localStorage.getItem("playerName");
+        if(saved) document.getElementById('username').value = saved;
 
-        // Fungsi Helper untuk menyembunyikan Login saat game mulai
-        // (Pastikan zuma.js memanggil logika untuk menyembunyikan login-screen)
-        // Kita tambahkan sedikit logika tampilan di sini untuk memastikan HUD muncul
-        const oriStartGame = window.startGameMultiplayer;
+        // HELPER: Menampilkan UI Game setelah login
+        const oriStart = window.startGameMultiplayer;
         window.startGameMultiplayer = function() {
-            // Panggil fungsi asli
-            oriStartGame();
-            // Atur tampilan
+            oriStart(); // Panggil fungsi asli di zuma.js
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('game-hud').style.display = 'block';
         }
