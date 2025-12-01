@@ -65,12 +65,12 @@
                         <th>Math</th>
                         <th>Zuma</th>
                         <th>Memory</th>
-                        <th>Piano</th> <th>TOTAL</th>
+                        <th>TOTAL</th>
                         <th>Hak Akses (Role)</th>
                     </tr>
                 </thead>
                 <tbody id="table-body">
-                    <tr><td colspan="7" style="text-align:center;">Memuat Data...</td></tr>
+                    <tr><td colspan="6" style="text-align:center;">Memuat Data...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -84,7 +84,6 @@
         const firebaseConfig = {
             apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
             authDomain: "mathgamesd.firebaseapp.com",
-            // GANTI DENGAN DATABASE URL ASLI ANDA
             databaseURL: "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app", 
             projectId: "mathgamesd",
             storageBucket: "mathgamesd.firebasestorage.app",
@@ -99,7 +98,7 @@
         let currentUserRole = 'siswa';
         let currentUserName = '';
 
-        // CEK USER LOGIN
+        // 1. CEK SIAPA YANG LOGIN
         auth.onAuthStateChanged((user) => {
             if (!user) {
                 window.location.href = "/";
@@ -125,7 +124,7 @@
             }
         });
 
-        // LOAD DATA SISWA
+        // 2. RENDER TABEL DENGAN PENGAMANAN
         function loadDataSiswa() {
             database.ref('leaderboard').on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -134,39 +133,31 @@
 
                 if (!data) return;
 
-                const isEditable = (currentUserRole === 'admin' || currentUserRole === 'guru') ? '' : 'disabled';
-
                 Object.keys(data).forEach(key => {
                     const user = data[key];
-                    
-                    // AMBIL SKOR LAMA
-                    let sMath = user.skor_math || 0;
-                    if (user.skor && !user.skor_math) sMath = user.skor;
-                    let sZuma = user.skor_zuma || 0;
-                    let sMemory = user.skor_memory || 0;
-                    
-                    // 2. AMBIL SKOR PIANO (KODE YANG ANDA TANYAKAN)
-                    let sPiano = user.skor_piano || 0;
-
-                    // 3. HITUNG TOTAL BARU
-                    let total = sMath + sZuma + sMemory + sPiano;
-                    
+                    let total = (user.skor_math || 0) + (user.skor_zuma || 0) + (user.skor_memory || 0);
                     let targetRole = user.role || "siswa";
 
-                    // Logic Keamanan Dropdown
+                    // --- LOGIKA KEAMANAN DROPDOWN ---
                     let isDisabled = '';
                     let adminOption = '';
 
                     if (currentUserRole === 'admin') {
+                        // Admin bebas ngapain aja
                         isDisabled = ''; 
                         adminOption = `<option value="admin" ${targetRole === 'admin' ? 'selected' : ''}>Admin</option>`;
                     } else {
+                        // GURU:
+                        // 1. Tidak boleh edit Admin (targetRole == 'admin')
+                        // 2. Tidak boleh edit Diri Sendiri (user.nama == currentUserName) -> Biar gak bunuh diri jadi siswa
                         if (targetRole === 'admin' || user.nama === currentUserName) {
                             isDisabled = 'disabled';
                         }
+                        // Guru TIDAK BOLEH melihat opsi "Admin" di dropdown
                         adminOption = ''; 
                     }
 
+                    // Jika target adalah Admin dan saya cuma Guru, jangan tampilkan dropdown, tapi teks saja (Biar aman)
                     let roleControl = '';
                     if (isDisabled === 'disabled' && targetRole === 'admin') {
                          roleControl = `<span style="color:#ef473a; font-weight:bold;">ADMIN (Terkunci)</span>`;
@@ -180,17 +171,16 @@
                          `;
                     }
 
-                    // 4. RENDER BARIS TABEL (TAMBAH KOLOM PIANO)
                     const row = `
                         <tr>
                             <td>
                                 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${user.nama}" class="avatar-mini">
                                 ${user.nama}
                             </td>
-                            <td>${sMath}</td>
-                            <td>${sZuma}</td>
-                            <td>${sMemory}</td>
-                            <td>${sPiano}</td> <td class="score-val">${total}</td>
+                            <td>${user.skor_math || 0}</td>
+                            <td>${user.skor_zuma || 0}</td>
+                            <td>${user.skor_memory || 0}</td>
+                            <td class="score-val">${total}</td>
                             <td>${roleControl}</td>
                         </tr>
                     `;
@@ -199,16 +189,21 @@
             });
         }
 
-        // UPDATE ROLE
+        // 3. FUNGSI UPDATE DENGAN KEAMANAN GANDA
         window.updateRole = function(targetName, newRole, oldRole) {
+            // LAYER 1: Cek Identitas Pengubah
             if(currentUserRole !== 'admin' && currentUserRole !== 'guru') {
                 alert("Anda tidak punya hak!");
                 loadDataSiswa(); return;
             }
+
+            // LAYER 2: Mencegah Guru mengangkat Admin
             if(currentUserRole === 'guru' && newRole === 'admin') {
                 alert("Guru tidak bisa mengangkat Admin!");
                 loadDataSiswa(); return;
             }
+
+            // LAYER 3: Mencegah Guru menurunkan Admin (Kudeta)
             if(currentUserRole === 'guru' && oldRole === 'admin') {
                 alert("Guru tidak bisa mengubah akun Admin!");
                 loadDataSiswa(); return;
@@ -217,7 +212,7 @@
             if(confirm(`Ubah status ${targetName} menjadi ${newRole.toUpperCase()}?`)) {
                 database.ref('leaderboard/' + targetName).update({ role: newRole });
             } else {
-                loadDataSiswa(); 
+                loadDataSiswa(); // Reset jika batal
             }
         }
 
