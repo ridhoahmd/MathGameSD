@@ -40,6 +40,11 @@
         select.role-select {
             padding: 5px 10px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer;
         }
+        /* Style kalau didisabled (Dikunci) */
+        select.role-select:disabled {
+            opacity: 0.6; cursor: not-allowed; background: #333; color: #aaa; border: 1px solid #555;
+        }
+        
         .role-siswa { background: #444; color: white; }
         .role-guru { background: #38ef7d; color: black; }
         .role-admin { background: #ef473a; color: white; }
@@ -50,6 +55,12 @@
             background: rgba(255,255,255,0.1); border: 1px solid #555; 
             color: white; border-radius: 8px;
         }
+        
+        .badge-info {
+            font-size: 0.8rem; background: rgba(255,255,0,0.1); color: yellow; 
+            padding: 5px 10px; border-radius: 5px; border: 1px solid yellow;
+            display: inline-block; margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -57,6 +68,8 @@
     <div class="container">
         <a href="/" class="btn-back">⬅ Kembali ke Dashboard</a>
         <h1>📋 DATA SISWA & HAK AKSES</h1>
+
+        <div id="user-status-info" style="text-align: center; margin-bottom: 20px;"></div>
 
         <input type="text" id="search" class="search-box" placeholder="🔍 Cari nama siswa..." onkeyup="filterTable()">
 
@@ -84,7 +97,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // 1. CONFIG FIREBASE (Gunakan Config Asli Anda)
         const firebaseConfig = {
             apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
             authDomain: "mathgamesd.firebaseapp.com",
@@ -98,40 +110,55 @@
         try { firebase.initializeApp(firebaseConfig); } catch(e) {}
         const auth = firebase.auth();
         const database = firebase.database();
+        
+        // Variabel untuk menyimpan Role Saya (User yang sedang login)
+        let currentUserRole = 'siswa';
 
-        // 2. CEK KEAMANAN (Hanya Guru/Admin yang boleh masuk)
+        // 1. CEK KEAMANAN & SIAPA SAYA
         auth.onAuthStateChanged((user) => {
             if (!user) {
-                window.location.href = "/"; // Tendang jika belum login
+                window.location.href = "/";
             } else {
+                // Cek role saya di database
                 database.ref('leaderboard/' + user.displayName).once('value').then(snapshot => {
                     const data = snapshot.val();
-                    const role = data ? data.role : 'siswa';
-                    // Jika bukan guru/admin, tendang balik
-                    if (role !== 'guru' && role !== 'admin') {
-                        alert("Maaf, halaman ini khusus Guru!");
+                    currentUserRole = data ? data.role : 'siswa'; // Simpan role saya
+                    
+                    // Validasi Keamanan Halaman
+                    if (currentUserRole !== 'guru' && currentUserRole !== 'admin') {
+                        alert("Maaf, halaman ini khusus Guru/Admin!");
                         window.location.href = "/";
                     } else {
-                        loadDataSiswa(); // Jika lolos, muat data
+                        // Tampilkan Info Status
+                        const infoBox = document.getElementById('user-status-info');
+                        if(currentUserRole === 'admin') {
+                            infoBox.innerHTML = `<span class="badge-info" style="border-color:#ef473a; color:#ef473a">ANDA LOGIN SEBAGAI ADMIN (FULL AKSES)</span>`;
+                        } else {
+                            infoBox.innerHTML = `<span class="badge-info">ANDA LOGIN SEBAGAI GURU (HANYA LIHAT DATA)</span>`;
+                        }
+                        
+                        loadDataSiswa(); // Muat data tabel
                     }
                 });
             }
         });
 
-        // 3. AMBIL DATA SISWA & RENDER TABEL
+        // 2. AMBIL DATA & RENDER
         function loadDataSiswa() {
             database.ref('leaderboard').on('value', (snapshot) => {
                 const data = snapshot.val();
                 const tbody = document.getElementById('table-body');
-                tbody.innerHTML = ""; // Bersihkan tabel
+                tbody.innerHTML = ""; 
 
                 if (!data) return;
 
-                // Loop semua user
+                // Tentukan apakah tombol edit boleh aktif?
+                // KUNCI PERBAIKANNYA DISINI: Hanya 'admin' yang dropdown-nya aktif (tidak disabled)
+                const isEditable = (currentUserRole === 'admin') ? '' : 'disabled';
+
                 Object.keys(data).forEach(key => {
                     const user = data[key];
                     
-                    // Hitung Skor
                     let sMath = user.skor_math || 0;
                     if (user.skor && !user.skor_math) sMath = user.skor;
                     let sZuma = user.skor_zuma || 0;
@@ -140,7 +167,6 @@
                     
                     let role = user.role || "siswa";
 
-                    // Render Baris
                     const row = `
                         <tr>
                             <td>
@@ -152,7 +178,7 @@
                             <td>${sMemory}</td>
                             <td class="score-val">${total}</td>
                             <td>
-                                <select class="role-select role-${role}" onchange="updateRole('${user.nama}', this.value)">
+                                <select class="role-select role-${role}" onchange="updateRole('${user.nama}', this.value)" ${isEditable}>
                                     <option value="siswa" ${role === 'siswa' ? 'selected' : ''}>Siswa</option>
                                     <option value="guru" ${role === 'guru' ? 'selected' : ''}>Guru</option>
                                     <option value="admin" ${role === 'admin' ? 'selected' : ''}>Admin</option>
@@ -165,22 +191,23 @@
             });
         }
 
-        // 4. FUNGSI GANTI ROLE (Otomatis Simpan ke Firebase)
+        // 3. FUNGSI GANTI ROLE (Hanya akan bekerja jika Admin)
         window.updateRole = function(namaUser, newRole) {
+            if(currentUserRole !== 'admin') {
+                alert("Akses Ditolak! Hanya Admin yang boleh mengubah hak akses.");
+                loadDataSiswa(); // Refresh tabel agar pilihan kembali seperti semula
+                return;
+            }
+
             if(confirm(`Ubah hak akses ${namaUser} menjadi ${newRole.toUpperCase()}?`)) {
                 database.ref('leaderboard/' + namaUser).update({
                     role: newRole
-                }).then(() => {
-                    // alert("Status berhasil diubah!"); 
-                    // Tidak perlu alert, data otomatis refresh karena .on()
                 });
             } else {
-                // Kembalikan pilihan jika batal (Reload data)
                 loadDataSiswa(); 
             }
         }
 
-        // 5. FITUR PENCARIAN
         window.filterTable = function() {
             const input = document.getElementById('search');
             const filter = input.value.toUpperCase();
@@ -188,7 +215,7 @@
             const tr = table.getElementsByTagName("tr");
 
             for (let i = 1; i < tr.length; i++) {
-                let td = tr[i].getElementsByTagName("td")[0]; // Kolom Nama
+                let td = tr[i].getElementsByTagName("td")[0];
                 if (td) {
                     let txtValue = td.textContent || td.innerText;
                     if (txtValue.toUpperCase().indexOf(filter) > -1) {
