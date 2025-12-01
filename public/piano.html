@@ -3,231 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Guru - Videa Class</title>
+    <title>Piano Math - Videa Class</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* TEMA DARK GALACTIC */
+        /* CSS TEMA GALAXY */
         body { 
-            font-family: 'Poppins', sans-serif; margin: 0; padding: 20px; 
+            margin: 0; padding: 0; font-family: 'Poppins', sans-serif;
             background: radial-gradient(circle at top right, #2b1055, #7597de); background-color: #1e1e2e;
-            color: #e0e0e0; min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+            color: white; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow: hidden;
         }
-        
-        .container {
-            width: 95%; max-width: 1200px; background: rgba(30, 30, 46, 0.9);
-            padding: 30px; border-radius: 20px; box-shadow: 0 0 40px rgba(0,0,0,0.6);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        h1 { font-family: 'Orbitron', sans-serif; color: #00f2ff; text-align: center; margin-bottom: 30px; letter-spacing: 2px; }
-        
         .btn-back {
-            display: inline-block; margin-bottom: 20px; padding: 10px 20px;
-            background: #ff4757; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;
+            position: absolute; top: 20px; left: 20px; text-decoration: none;
+            background: #ff4757; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9rem;
         }
 
-        .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        th { background: rgba(0, 242, 255, 0.1); color: #00f2ff; font-family: 'Orbitron', sans-serif; }
-        tr:hover { background: rgba(255,255,255,0.05); }
-        
-        .avatar-mini { width: 35px; height: 35px; border-radius: 50%; vertical-align: middle; margin-right: 10px; }
-        .score-val { font-weight: bold; color: #ffeb3b; }
-        
-        select.role-select { padding: 5px 10px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
-        select.role-select:disabled { opacity: 0.5; cursor: not-allowed; background: #222; border: 1px solid #555; }
-        
-        .role-siswa { background: #444; color: white; }
-        .role-guru { background: #38ef7d; color: black; }
-        .role-admin { background: #ef473a; color: white; }
+        /* HUD (Heads Up Display) */
+        .hud {
+            display: flex; justify-content: space-between; width: 90%; max-width: 600px;
+            margin-bottom: 20px; font-family: 'Orbitron', sans-serif;
+        }
+        .score-box { font-size: 1.5rem; color: #ffeb3b; }
+        .timer-box { font-size: 1.5rem; color: #00f2ff; }
 
-        .search-box { width: 100%; padding: 12px; margin-bottom: 20px; background: rgba(255,255,255,0.1); border: 1px solid #555; color: white; border-radius: 8px; }
+        /* AREA SOAL */
+        .question-box {
+            font-size: 4rem; font-family: 'Orbitron', sans-serif; font-weight: bold;
+            margin-bottom: 40px; text-shadow: 0 0 20px rgba(0, 242, 255, 0.8);
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
+
+        /* PIANO KEYS */
+        .piano-container {
+            display: flex; gap: 5px; padding: 10px; background: #111;
+            border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .key {
+            width: 60px; height: 200px;
+            background: white; border-radius: 0 0 5px 5px;
+            cursor: pointer; position: relative;
+            display: flex; justify-content: center; align-items: flex-end;
+            padding-bottom: 20px; color: #333; font-weight: bold; font-size: 1.5rem;
+            transition: 0.1s; user-select: none;
+        }
+        .key:active, .key.active {
+            background: #ccc; transform: scale(0.95);
+        }
         
-        .badge-info { font-size: 0.8rem; padding: 5px 10px; border-radius: 5px; border: 1px solid; display: inline-block; margin-bottom: 10px; }
+        /* ANGKA DI TUTS */
+        .key span { pointer-events: none; }
+
+        /* MODAL GAME OVER */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center;
+            z-index: 100; display: none;
+        }
+        .modal-content {
+            background: #1e1e2e; padding: 40px; border-radius: 20px; text-align: center;
+            border: 2px solid #00f2ff; box-shadow: 0 0 30px #00f2ff;
+        }
+        button {
+            padding: 12px 30px; margin-top: 20px; border-radius: 30px; border: none;
+            background: linear-gradient(45deg, #00f2ff, #0099ff);
+            font-weight: bold; cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <a href="/" class="btn-back">⬅ Kembali ke Dashboard</a>
-        <h1>📋 DATA SISWA & HAK AKSES</h1>
+    <a href="/" class="btn-back">⬅ Menu</a>
 
-        <div id="user-status-info" style="text-align: center; margin-bottom: 20px;"></div>
+    <div class="hud">
+        <div class="score-box">Skor: <span id="score">0</span></div>
+        <div class="timer-box">Waktu: <span id="timer">60</span></div>
+    </div>
 
-        <input type="text" id="search" class="search-box" placeholder="🔍 Cari nama siswa..." onkeyup="filterTable()">
+    <div class="question-box" id="question">SIAP?</div>
 
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nama</th>
-                        <th>Math</th>
-                        <th>Zuma</th>
-                        <th>Memory</th>
-                        <th>TOTAL</th>
-                        <th>Hak Akses (Role)</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body">
-                    <tr><td colspan="6" style="text-align:center;">Memuat Data...</td></tr>
-                </tbody>
-            </table>
+    <div class="piano-container">
+        <div class="key" onclick="playNote(1)" data-val="1"><span>1</span></div>
+        <div class="key" onclick="playNote(2)" data-val="2"><span>2</span></div>
+        <div class="key" onclick="playNote(3)" data-val="3"><span>3</span></div>
+        <div class="key" onclick="playNote(4)" data-val="4"><span>4</span></div>
+        <div class="key" onclick="playNote(5)" data-val="5"><span>5</span></div>
+        <div class="key" onclick="playNote(6)" data-val="6"><span>6</span></div>
+        <div class="key" onclick="playNote(7)" data-val="7"><span>7</span></div>
+        <div class="key" onclick="playNote(8)" data-val="8"><span>8</span></div>
+        <div class="key" onclick="playNote(9)" data-val="9"><span>9</span></div>
+        <div class="key" onclick="playNote(0)" data-val="0"><span>0</span></div>
+    </div>
+
+    <div class="modal" id="game-over-modal">
+        <div class="modal-content">
+            <h1 style="color:#ff4757">WAKTU HABIS!</h1>
+            <p>Total Skor Piano: <span id="final-score" style="font-size:2rem; color:#ffeb3b">0</span></p>
+            <button onclick="location.reload()">MAIN LAGI</button>
+            <button onclick="window.location.href='/'" style="background:#555; color:white;">KEMBALI</button>
         </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
-            authDomain: "mathgamesd.firebaseapp.com",
-            databaseURL: "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app", 
-            projectId: "mathgamesd",
-            storageBucket: "mathgamesd.firebasestorage.app",
-            messagingSenderId: "595640141584",
-            appId: "1:595640141584:web:d02523bc844e52550f4795"
-        };
-
-        try { firebase.initializeApp(firebaseConfig); } catch(e) {}
-        const auth = firebase.auth();
-        const database = firebase.database();
-        
-        let currentUserRole = 'siswa';
-        let currentUserName = '';
-
-        // 1. CEK SIAPA YANG LOGIN
-        auth.onAuthStateChanged((user) => {
-            if (!user) {
-                window.location.href = "/";
-            } else {
-                currentUserName = user.displayName;
-                database.ref('leaderboard/' + user.displayName).once('value').then(snapshot => {
-                    const data = snapshot.val();
-                    currentUserRole = data ? data.role : 'siswa';
-                    
-                    if (currentUserRole !== 'guru' && currentUserRole !== 'admin') {
-                        alert("Akses Ditolak!");
-                        window.location.href = "/";
-                    } else {
-                        const infoBox = document.getElementById('user-status-info');
-                        if(currentUserRole === 'admin') {
-                            infoBox.innerHTML = `<span class="badge-info" style="color:#ef473a; border-color:#ef473a">ANDA ADMIN (FULL KONTROL)</span>`;
-                        } else {
-                            infoBox.innerHTML = `<span class="badge-info" style="color:#38ef7d; border-color:#38ef7d">ANDA GURU (TERBATAS)</span>`;
-                        }
-                        loadDataSiswa();
-                    }
-                });
-            }
-        });
-
-        // 2. RENDER TABEL DENGAN PENGAMANAN
-        function loadDataSiswa() {
-            database.ref('leaderboard').on('value', (snapshot) => {
-                const data = snapshot.val();
-                const tbody = document.getElementById('table-body');
-                tbody.innerHTML = ""; 
-
-                if (!data) return;
-
-                Object.keys(data).forEach(key => {
-                    const user = data[key];
-                    let total = (user.skor_math || 0) + (user.skor_zuma || 0) + (user.skor_memory || 0);
-                    let targetRole = user.role || "siswa";
-
-                    // --- LOGIKA KEAMANAN DROPDOWN ---
-                    let isDisabled = '';
-                    let adminOption = '';
-
-                    if (currentUserRole === 'admin') {
-                        // Admin bebas ngapain aja
-                        isDisabled = ''; 
-                        adminOption = `<option value="admin" ${targetRole === 'admin' ? 'selected' : ''}>Admin</option>`;
-                    } else {
-                        // GURU:
-                        // 1. Tidak boleh edit Admin (targetRole == 'admin')
-                        // 2. Tidak boleh edit Diri Sendiri (user.nama == currentUserName) -> Biar gak bunuh diri jadi siswa
-                        if (targetRole === 'admin' || user.nama === currentUserName) {
-                            isDisabled = 'disabled';
-                        }
-                        // Guru TIDAK BOLEH melihat opsi "Admin" di dropdown
-                        adminOption = ''; 
-                    }
-
-                    // Jika target adalah Admin dan saya cuma Guru, jangan tampilkan dropdown, tapi teks saja (Biar aman)
-                    let roleControl = '';
-                    if (isDisabled === 'disabled' && targetRole === 'admin') {
-                         roleControl = `<span style="color:#ef473a; font-weight:bold;">ADMIN (Terkunci)</span>`;
-                    } else {
-                         roleControl = `
-                            <select class="role-select role-${targetRole}" onchange="updateRole('${user.nama}', this.value, '${targetRole}')" ${isDisabled}>
-                                <option value="siswa" ${targetRole === 'siswa' ? 'selected' : ''}>Siswa</option>
-                                <option value="guru" ${targetRole === 'guru' ? 'selected' : ''}>Guru</option>
-                                ${adminOption}
-                            </select>
-                         `;
-                    }
-
-                    const row = `
-                        <tr>
-                            <td>
-                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${user.nama}" class="avatar-mini">
-                                ${user.nama}
-                            </td>
-                            <td>${user.skor_math || 0}</td>
-                            <td>${user.skor_zuma || 0}</td>
-                            <td>${user.skor_memory || 0}</td>
-                            <td class="score-val">${total}</td>
-                            <td>${roleControl}</td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
-                });
-            });
-        }
-
-        // 3. FUNGSI UPDATE DENGAN KEAMANAN GANDA
-        window.updateRole = function(targetName, newRole, oldRole) {
-            // LAYER 1: Cek Identitas Pengubah
-            if(currentUserRole !== 'admin' && currentUserRole !== 'guru') {
-                alert("Anda tidak punya hak!");
-                loadDataSiswa(); return;
-            }
-
-            // LAYER 2: Mencegah Guru mengangkat Admin
-            if(currentUserRole === 'guru' && newRole === 'admin') {
-                alert("Guru tidak bisa mengangkat Admin!");
-                loadDataSiswa(); return;
-            }
-
-            // LAYER 3: Mencegah Guru menurunkan Admin (Kudeta)
-            if(currentUserRole === 'guru' && oldRole === 'admin') {
-                alert("Guru tidak bisa mengubah akun Admin!");
-                loadDataSiswa(); return;
-            }
-
-            if(confirm(`Ubah status ${targetName} menjadi ${newRole.toUpperCase()}?`)) {
-                database.ref('leaderboard/' + targetName).update({ role: newRole });
-            } else {
-                loadDataSiswa(); // Reset jika batal
-            }
-        }
-
-        window.filterTable = function() {
-            const input = document.getElementById('search');
-            const filter = input.value.toUpperCase();
-            const rows = document.getElementById("table-body").getElementsByTagName("tr");
-            for (let i = 0; i < rows.length; i++) {
-                let td = rows[i].getElementsByTagName("td")[0];
-                if (td) {
-                    let txt = td.textContent || td.innerText;
-                    rows[i].style.display = txt.toUpperCase().indexOf(filter) > -1 ? "" : "none";
-                }
-            }
-        }
-    </script>
+    <script src="piano.js"></script>
 </body>
 </html>
