@@ -8,22 +8,22 @@ app.use(express.static('public'));
 io.on('connection', (socket) => {
     console.log('✅ User CONNECTED:', socket.id);
 
-    // 1. Saat user minta GABUNG ROOM
+    // 1. FITUR JOIN ROOM
     socket.on('joinRoom', (data) => {
         socket.join(data.room);
         console.log(`🏠 User ${data.username} MASUK ke room: [${data.room}]`);
     });
 
-    // 2. Saat user LAPOR SKOR
+    // 2. FITUR SKOR GAME
     socket.on('laporSkor', (data) => {
-        console.log(`📢 Menerima Skor dari Room [${data.room}]: ${data.skor}`);
-        
-        // Cek apakah ada orang lain di room ini?
-        const roomSize = io.sockets.adapter.rooms.get(data.room)?.size || 0;
-        console.log(`   👉 Mengirim ke ${roomSize - 1} orang lain di room tersebut.`);
-
-        // Kirim ke orang lain
+        // Kirim hanya ke lawan di room yang sama
         socket.to(data.room).emit('updateSkorLawan', data.skor);
+    });
+
+    // 3. FITUR CHAT GLOBAL (BARU)
+    socket.on('chatMessage', (data) => {
+        // Kirim ke SEMUA orang yang sedang online
+        io.emit('chatMessage', data);
     });
 
     socket.on('disconnect', () => {
@@ -31,9 +31,9 @@ io.on('connection', (socket) => {
     });
 });
 
-// server.js (Paling Bawah)
-const PORT = process.env.PORT || 3000; // 👈 INI KUNCINYA
-
+const PORT = process.env.PORT || 3000;
 http.listen(PORT, () => {
-    console.log(`🚀 Server berjalan di Port ${PORT}`);
+    console.log('------------------------------------------');
+    console.log(`🚀 SERVER SIAP! Jalan di Port ${PORT}`);
+    console.log('------------------------------------------');
 });
