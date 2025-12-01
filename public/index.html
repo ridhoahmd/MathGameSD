@@ -7,10 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
-        /* =========================================
-           TEMA: DARK GALACTIC + CHAT MINIMIZE
-        ========================================= */
-        
         /* GLOBAL RESET */
         * { box-sizing: border-box; }
         body { 
@@ -64,66 +60,42 @@
         /* KONTEN UTAMA */
         .main-content { flex: 3; padding: 40px; }
         .grid-games { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px; }
+        
+        /* KARTU GAME */
         .game-card { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 30px 20px; text-align: center; text-decoration: none; border: 1px solid rgba(255,255,255,0.1); display: block; transition: 0.3s; }
         .game-card:hover { transform: translateY(-10px); background: rgba(255,255,255,0.1); border-color: #00f2ff; }
+        
+        /* STYLE KHUSUS UNTUK GAME TERKUNCI (SOON) */
+        .game-card.locked { opacity: 0.4; cursor: not-allowed; background: rgba(0,0,0,0.3); }
+        .game-card.locked:hover { transform: none; box-shadow: none; border-color: transparent; }
+        .btn-locked { background: #444; box-shadow: none; color: #888; cursor: not-allowed; }
+
         .btn-play { padding: 10px 35px; border-radius: 30px; font-size: 0.8rem; font-weight: bold; color: white; background: linear-gradient(45deg, #ff0080, #ff00cc); border: none; margin-top: 15px; display: inline-block; }
 
-        /* =========================================
-           CSS CHAT ROOM (DENGAN ANIMASI MINIMIZE)
-        ========================================= */
-        #chat-container {
-            position: fixed; bottom: 20px; right: 20px;
-            width: 320px; 
-            height: 400px; /* Tinggi Normal */
-            background: rgba(20, 20, 35, 0.95);
-            border: 1px solid #00f2ff; border-radius: 15px 15px 0 0;
-            display: flex; flex-direction: column;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
-            z-index: 2000; overflow: hidden;
-            transform: translateY(120%); 
-            /* Tambah transisi height agar halus saat minimize */
-            transition: transform 0.3s ease, height 0.3s ease; 
+        /* CSS CHAT ROOM */
+        #chat-container { 
+            position: fixed; bottom: 20px; right: 20px; width: 320px; height: 400px; 
+            background: rgba(20, 20, 35, 0.95); border: 1px solid #00f2ff; border-radius: 15px 15px 0 0; 
+            display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0,0,0,0.8); z-index: 2000; 
+            overflow: hidden; transform: translateY(120%); transition: transform 0.3s ease, height 0.3s ease; 
         }
-        
         #chat-container.open { transform: translateY(0); }
+        #chat-container.minimized { height: 45px !important; }
 
-        /* KELAS UNTUK MINIMIZE */
-        #chat-container.minimized {
-            height: 45px !important; /* Hanya sisa header */
-        }
-
-        .chat-header {
-            background: linear-gradient(90deg, #2b5876, #4e4376);
-            padding: 10px 15px; font-weight: bold; color: white;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #444;
-            cursor: pointer; /* Bisa diklik */
-        }
-        
-        .chat-controls button {
-            background: none; border: none; color: white; 
-            font-size: 1.2rem; cursor: pointer; margin-left: 10px;
-            font-weight: bold;
-        }
-        .chat-controls button:hover { color: #00f2ff; }
-
-        .chat-messages {
-            flex: 1; padding: 10px; overflow-y: auto;
-            font-size: 0.9rem; color: #ddd; display: flex; flex-direction: column; gap: 8px;
-        }
-        
+        .chat-header { background: linear-gradient(90deg, #2b5876, #4e4376); padding: 10px 15px; font-weight: bold; color: white; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; cursor: pointer; }
+        .chat-controls button { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; margin-left: 10px; font-weight: bold; }
+        .chat-messages { flex: 1; padding: 10px; overflow-y: auto; font-size: 0.9rem; color: #ddd; display: flex; flex-direction: column; gap: 8px; }
         .msg-bubble { background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 8px; align-self: flex-start; max-width: 80%; }
         .msg-me { background: #00f2ff; color: #000; align-self: flex-end; border-radius: 8px 8px 0 8px; }
         .msg-name { font-size: 0.7rem; color: #aaa; margin-bottom: 2px; display: block; }
         .msg-me .msg-name { display: none; }
         .msg-time { display: block; font-size: 0.65rem; color: rgba(255, 255, 255, 0.6); text-align: right; margin-top: 4px; }
         .msg-me .msg-time { color: rgba(0, 0, 0, 0.6); }
-
         .chat-input-area { padding: 10px; border-top: 1px solid #444; display: flex; gap: 5px; }
         .chat-input { flex: 1; padding: 8px; border-radius: 20px; border: none; background: #333; color: white; outline: none;}
         .chat-send { background: #00f2ff; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; font-weight: bold; }
 
-        /* UTILS & RESPONSIF */
+        /* RESPONSIF HP */
         @media (max-width: 800px) {
             .dashboard-container { flex-direction: column; margin-top: 100px; }
             .sidebar { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
@@ -176,7 +148,7 @@
 
             <div style="margin-top:auto; width:100%;">
                 <div id="guru-input-area" class="hidden">
-                    <input type="password" id="input-kode-guru" placeholder="Kode Rahasia Guru" style="width:100%; padding:8px; border-radius:5px;">
+                    <input type="password" id="input-kode-guru" placeholder="Kode Rahasia Guru" style="width:100%; padding:8px; border-radius:5px; margin-bottom:5px;">
                 </div>
                 <button onclick="loginGoogle()" class="btn-google" id="btn-login">G Masuk Google</button>
                 <p id="text-guru" style="font-size: 0.7rem; color: #666; cursor: pointer; text-decoration: underline; margin-top: 10px;" onclick="toggleInputGuru()">
@@ -188,22 +160,49 @@
 
         <main class="main-content">
             <h2 style="margin-top:0; border-bottom:2px solid #00f2ff; display:inline-block; padding-bottom:5px;">PILIH MISI</h2>
+            
             <div class="grid-games">
                 <a href="#" onclick="masukGame('math.html')" class="game-card">
-                    <div style="font-size:50px;">🚀</div>
-                    <div style="font-weight:bold; margin:10px 0;">MATH BATTLE</div>
+                    <div style="font-size:50px; margin-bottom:10px;">🚀</div>
+                    <div style="font-weight:bold; font-size:1.2rem; color:white; margin-bottom:10px;">MATH BATTLE</div>
+                    <div style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Duel matematika cepat antar galaksi!</div>
                     <div class="btn-play">START</div>
                 </a>
+
                 <a href="#" onclick="masukGame('zuma.html')" class="game-card">
-                    <div style="font-size:50px;">☄️</div>
-                    <div style="font-weight:bold; margin:10px 0;">ZUMA SPACE</div>
+                    <div style="font-size:50px; margin-bottom:10px;">☄️</div>
+                    <div style="font-weight:bold; font-size:1.2rem; color:white; margin-bottom:10px;">ZUMA SPACE</div>
+                    <div style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Hancurkan bola angka sebelum meledak!</div>
                     <div class="btn-play">START</div>
                 </a>
+
                 <a href="#" onclick="masukGame('memory.html')" class="game-card">
-                    <div style="font-size:50px;">🧩</div>
-                    <div style="font-weight:bold; margin:10px 0;">MEMORY LAB</div>
+                    <div style="font-size:50px; margin-bottom:10px;">🧩</div>
+                    <div style="font-weight:bold; font-size:1.2rem; color:white; margin-bottom:10px;">MEMORY LAB</div>
+                    <div style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Aktifkan sel otakmu dengan kartu memori.</div>
                     <div class="btn-play">START</div>
                 </a>
+
+                <div class="game-card locked">
+                    <div style="font-size:50px; margin-bottom:10px;">🔤</div>
+                    <div style="font-weight:bold; font-size:1.2rem; color:white; margin-bottom:10px;">TEBAK KATA</div>
+                    <div style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Susun huruf menjadi kata yang benar.</div>
+                    <div class="btn-play btn-locked">SOON !</div>
+                </div>
+
+                <div class="game-card locked">
+                    <div style="font-size:50px; margin-bottom:10px;">🌍</div>
+                    <div style="font-weight:bold; font-size:1.2rem; color:white; margin-bottom:10px;">PETA BUTA</div>
+                    <div style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Tebak nama provinsi di peta Indonesia.</div>
+                    <div class="btn-play btn-locked">SOON !</div>
+                </div>
+
+                <div class="game-card locked">
+                    <div style="font-size:50px; margin-bottom:10px;">🎹</div>
+                    <div style="font-weight:bold; font-size:1.2rem; color:white; margin-bottom:10px;">PIANO MATH</div>
+                    <div style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Tekan tuts piano sesuai hasil hitungan.</div>
+                    <div class="btn-play btn-locked">SOON !</div>
+                </div>
             </div>
         </main>
     </div>
@@ -216,7 +215,6 @@
                 <button onclick="event.stopPropagation(); toggleChat()">✖</button>
             </div>
         </div>
-
         <div class="chat-messages" id="chat-box">
             <div style="text-align:center; color:#555; font-size:0.8rem; margin-top:20px;">Selamat datang di Chat Global!</div>
         </div>
@@ -248,7 +246,6 @@
         const provider = new firebase.auth.GoogleAuthProvider();
         let currentUser = null;
 
-        // --- LOGIKA CHAT ---
         function toggleChat() {
             const chatBox = document.getElementById('chat-container');
             if (chatBox.classList.contains('minimized')) chatBox.classList.remove('minimized');
@@ -286,7 +283,6 @@
             }
         });
 
-        // --- LOGIKA AUTH & DATA ---
         function toggleInputGuru() {
             const area = document.getElementById('guru-input-area');
             const text = document.getElementById('text-guru');
@@ -306,7 +302,10 @@
             auth.signInWithPopup(provider).then((result) => {
                 localStorage.setItem("playerName", result.user.displayName);
                 let roleBaru = "siswa"; 
-                if (inputKode === KODE_RAHASIA) roleBaru = "guru";
+                if (inputKode === KODE_RAHASIA) {
+                    roleBaru = "guru";
+                    alert("Selamat datang Bapak/Ibu Guru!");
+                }
                 database.ref('leaderboard/' + result.user.displayName).once('value').then(snapshot => {
                     const data = snapshot.val();
                     const currentRole = data ? data.role : null;
@@ -324,10 +323,12 @@
                 const data = snapshot.val();
                 let role = (data && data.role) ? data.role : "siswa";
                 document.getElementById('role-display').innerText = role.toUpperCase();
+                
                 const guruPanel = document.getElementById('guru-panel');
                 const adminPanel = document.getElementById('admin-panel');
                 guruPanel.classList.add('hidden'); guruPanel.classList.remove('block');
                 adminPanel.classList.add('hidden'); adminPanel.classList.remove('block');
+
                 if(role === 'admin') {
                     guruPanel.classList.remove('hidden'); guruPanel.classList.add('block');
                     adminPanel.classList.remove('hidden'); adminPanel.classList.add('block');
@@ -336,13 +337,13 @@
                 }
             });
         }
+        
         auth.onAuthStateChanged((user) => {
             if(user) {
-                currentUser = user;
                 document.getElementById('btn-login').classList.add('hidden');
-                document.getElementById('btn-logout').classList.remove('hidden');
                 document.getElementById('text-guru').classList.add('hidden');
                 document.getElementById('guru-input-area').classList.add('hidden');
+                document.getElementById('btn-logout').classList.remove('hidden');
                 document.getElementById('display-name').innerText = user.displayName;
                 document.getElementById('user-email').innerText = user.email;
                 document.getElementById('user-avatar').src = user.photoURL;
@@ -350,6 +351,7 @@
                 checkRole(user.displayName);
             }
         });
+        
         function loadSkor(name) {
             database.ref('leaderboard/'+name).on('value', snapshot => {
                 const data = snapshot.val();
@@ -359,7 +361,10 @@
                 }
             });
         }
-        function masukGame(url) { if(!currentUser) alert("Login dulu!"); else window.location.href = url; }
+        
+        function masukGame(url) {
+            if(!auth.currentUser) alert("Login dulu!"); else window.location.href = url;
+        }
     </script>
 </body>
 </html>
