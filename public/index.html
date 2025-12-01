@@ -5,10 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Game Videa Class</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    
     <style>
-        /* GLOBAL RESET */
+        /* TEMA DARK GALACTIC */
         * { box-sizing: border-box; }
+        
+        /* UTILITY CLASSES (Pengganti Inline Style) */
+        .hidden { display: none !important; }
+        .block { display: block !important; }
+        .mt-10 { margin-top: 10px; }
+        .mb-10 { margin-bottom: 10px; }
+        .mb-20 { margin-bottom: 20px; }
+        .text-bold { font-weight: bold; }
+        .text-center { text-align: center; }
+        .text-gray { color: #aaa; }
+        .text-ccc { color: #ccc; }
+        .text-666 { color: #666; }
+        .text-green { color: #38ef7d; }
+        .text-red { color: #ef473a; }
+        .font-small { font-size: 0.8rem; }
+        .font-tiny { font-size: 0.7rem; }
+        .w-100 { width: 100%; }
+        .cursor-pointer { cursor: pointer; }
+        .underline { text-decoration: underline; }
+
         body { 
             font-family: 'Poppins', sans-serif; margin: 0; padding: 0; 
             background: radial-gradient(circle at top right, #2b1055, #7597de); background-color: #1e1e2e;
@@ -21,7 +40,9 @@
             border-bottom: 1px solid rgba(0, 242, 255, 0.1); 
             display: flex; justify-content: space-between; align-items: center;
             position: fixed; top: 0; z-index: 1000;
-            -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+            /* FIX 1: Urutan prefix yang benar */
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
         }
         .logo-area { display: flex; align-items: center; gap: 15px; }
         .logo-img { height: 75px; width: auto; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); } 
@@ -36,7 +57,9 @@
             display: flex; width: 95%; max-width: 1200px; height: auto; min-height: 80vh; 
             margin: 120px auto 50px; background: rgba(30, 30, 46, 0.8); border-radius: 20px; overflow: hidden; 
             box-shadow: 0 0 40px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1);
-            -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+            /* FIX 1: Urutan prefix yang benar */
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
         }
 
         /* SIDEBAR */
@@ -46,10 +69,10 @@
         }
         .avatar { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #00f2ff; margin-bottom: 15px; object-fit: cover; background: #000;}
         .profile-name { font-size: 1.3rem; font-weight: bold; margin-bottom: 5px; color: #fff; }
+        
         .stats-box { background: rgba(255,255,255,0.05); width: 100%; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
         .stat-value { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: #ffeb3b; display: block; }
         
-        /* MENU TOMBOL */
         .btn-menu { width: 100%; padding: 12px 15px; margin-bottom: 10px; border: none; border-radius: 8px; cursor: pointer; text-align: left; font-weight: 600; color: white; display: flex; align-items: center; gap: 10px; }
         .btn-common { background: linear-gradient(90deg, #2b5876, #4e4376); }
         .btn-guru { background: linear-gradient(90deg, #11998e, #38ef7d); }
@@ -59,26 +82,23 @@
 
         /* KONTEN UTAMA */
         .main-content { flex: 3; padding: 40px; }
-        .grid-games { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px; }
+        .misi-title { margin-top:0; border-bottom:2px solid #00f2ff; display:inline-block; padding-bottom:5px; }
         
-        /* KARTU GAME */
+        .grid-games { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px; }
         .game-card { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 30px 20px; text-align: center; text-decoration: none; border: 1px solid rgba(255,255,255,0.1); display: block; transition: 0.3s; }
         .game-card:hover { transform: translateY(-10px); background: rgba(255,255,255,0.1); border-color: #00f2ff; }
         
-        /* STYLE KHUSUS UNTUK GAME TERKUNCI (SOON) */
+        /* Game Card Elements (Pengganti Inline) */
+        .game-icon { font-size: 50px; margin-bottom: 10px; display: block; }
+        .game-title { font-weight: bold; font-size: 1.2rem; color: white; margin-bottom: 10px; }
+        .game-desc { color: #aaa; font-size: 0.9rem; margin-bottom: 20px; }
+        
+        .btn-play { padding: 10px 35px; border-radius: 30px; font-size: 0.8rem; font-weight: bold; color: white; background: linear-gradient(45deg, #ff0080, #ff00cc); border: none; margin-top: 15px; display: inline-block; }
         .game-card.locked { opacity: 0.4; cursor: not-allowed; background: rgba(0,0,0,0.3); }
-        .game-card.locked:hover { transform: none; box-shadow: none; border-color: transparent; }
         .btn-locked { background: #444; box-shadow: none; color: #888; cursor: not-allowed; }
 
-        .btn-play { padding: 10px 35px; border-radius: 30px; font-size: 0.8rem; font-weight: bold; color: white; background: linear-gradient(45deg, #ff0080, #ff00cc); border: none; margin-top: 15px; display: inline-block; }
-
         /* CSS CHAT ROOM */
-        #chat-container { 
-            position: fixed; bottom: 20px; right: 20px; width: 320px; height: 400px; 
-            background: rgba(20, 20, 35, 0.95); border: 1px solid #00f2ff; border-radius: 15px 15px 0 0; 
-            display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0,0,0,0.8); z-index: 2000; 
-            overflow: hidden; transform: translateY(120%); transition: transform 0.3s ease, height 0.3s ease; 
-        }
+        #chat-container { position: fixed; bottom: 20px; right: 20px; width: 320px; height: 400px; background: rgba(20, 20, 35, 0.95); border: 1px solid #00f2ff; border-radius: 15px 15px 0 0; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0,0,0,0.8); z-index: 2000; overflow: hidden; transform: translateY(120%); transition: transform 0.3s ease, height 0.3s ease; }
         #chat-container.open { transform: translateY(0); }
         #chat-container.minimized { height: 45px !important; }
 
@@ -94,8 +114,13 @@
         .chat-input-area { padding: 10px; border-top: 1px solid #444; display: flex; gap: 5px; }
         .chat-input { flex: 1; padding: 8px; border-radius: 20px; border: none; background: #333; color: white; outline: none;}
         .chat-send { background: #00f2ff; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; font-weight: bold; }
+        .chat-welcome { text-align: center; color: #555; font-size: 0.8rem; margin-top: 20px; }
 
-        /* RESPONSIF HP */
+        /* SIDEBAR FOOTER */
+        .sidebar-footer { margin-top: auto; width: 100%; }
+        .input-guru { width:100%; padding:8px; border-radius:5px; margin-bottom:5px; background: rgba(255,255,255,0.1); border: 1px solid #555; color: white; }
+        .link-wrapper { text-decoration: none; width: 100%; }
+
         @media (max-width: 800px) {
             .dashboard-container { flex-direction: column; margin-top: 100px; }
             .sidebar { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
@@ -104,8 +129,6 @@
             .logo-img { height: 50px; }
             #chat-container { width: 90%; right: 5%; bottom: 10px; }
         }
-        .hidden { display: none !important; } .block { display: block !important; } .link-wrapper { text-decoration: none; width: 100%; }
-        #input-kode-guru { background: rgba(255,255,255,0.1); border: 1px solid #555; color: white; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -121,37 +144,37 @@
         <aside class="sidebar">
             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guest" id="user-avatar" class="avatar" alt="Avatar">
             <div class="profile-name" id="display-name">Silakan Login</div>
-            <div style="font-size:0.8rem; color:#aaa; margin-bottom:20px;" id="user-email">...</div>
+            <div class="font-small text-gray mb-20" id="user-email">...</div>
             
             <div class="stats-box">
-                <div style="font-size:0.8rem; color:#ccc;">TOTAL SKOR</div>
+                <div class="font-small text-ccc">TOTAL SKOR</div>
                 <span class="stat-value" id="total-score">-</span>
             </div>
 
             <div class="menu-section">
-                <div style="font-size:0.7rem; font-weight:bold; color:#666; margin-bottom:10px;">MENU SISWA</div>
+                <div class="font-tiny text-bold text-666 mb-10">MENU SISWA</div>
                 <a href="leaderboard.html" class="link-wrapper"><button class="btn-menu btn-common">🏆 Leaderboard</button></a>
                 <button class="btn-menu btn-common" onclick="toggleChat()">💬 Chat Global <span id="chat-notif" style="display:none; color:#00f2ff; margin-left:5px;">●</span></button>
             </div>
 
             <div class="menu-section hidden" id="guru-panel">
-                <div style="font-size:0.7rem; font-weight:bold; color:#38ef7d; margin-bottom:10px;">AKSES GURU</div>
+                <div class="font-tiny text-bold text-green mb-10">AKSES GURU</div>
                 <button class="btn-menu btn-guru">📋 Riwayat Siswa</button>
                 <button class="btn-menu btn-guru">🔑 Hak Akses</button>
             </div>
 
             <div class="menu-section hidden" id="admin-panel">
-                <div style="font-size:0.7rem; font-weight:bold; color:#ef473a; margin-bottom:10px;">FULL ADMIN</div>
+                <div class="font-tiny text-bold text-red mb-10">FULL ADMIN</div>
                 <button class="btn-menu btn-admin">⚙️ Pengaturan Sistem</button>
                 <button class="btn-menu btn-admin">👥 Kelola User</button>
             </div>
 
-            <div style="margin-top:auto; width:100%;">
+            <div class="sidebar-footer">
                 <div id="guru-input-area" class="hidden">
-                    <input type="password" id="input-kode-guru" placeholder="Kode Rahasia Guru" style="width:100%; padding:8px; border-radius:5px; margin-bottom:5px;">
+                    <input type="password" id="input-kode-guru" placeholder="Kode Rahasia Guru" class="input-guru">
                 </div>
                 <button onclick="loginGoogle()" class="btn-google" id="btn-login">G Masuk Google</button>
-                <p id="text-guru" style="font-size: 0.7rem; color: #666; cursor: pointer; text-decoration: underline; margin-top: 10px;" onclick="toggleInputGuru()">
+                <p id="text-guru" class="font-tiny text-666 cursor-pointer underline mt-10" onclick="toggleInputGuru()">
                     Apakah Anda Guru?
                 </p>
                 <button onclick="logout()" class="btn-logout hidden" id="btn-logout">Keluar</button>
@@ -159,48 +182,43 @@
         </aside>
 
         <main class="main-content">
-            <h2 style="margin-top:0; border-bottom:2px solid #00f2ff; display:inline-block; padding-bottom:5px;">PILIH MISI</h2>
-            
+            <h2 class="misi-title">PILIH MISI</h2>
             <div class="grid-games">
                 <a href="#" onclick="masukGame('math.html')" class="game-card">
-                    <div style="font-size:50px; margin-bottom:10px;">🚀</div>
-                    <div style="font-weight:bold; font-size:1.2rem; color:white; margin-bottom:10px;">MATH BATTLE</div>
-                    <div style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Duel matematika cepat antar galaksi!</div>
+                    <div class="game-icon">🚀</div>
+                    <div class="game-title">MATH BATTLE</div>
+                    <div class="game-desc">Duel matematika cepat antar galaksi!</div>
                     <div class="btn-play">START</div>
                 </a>
-
                 <a href="#" onclick="masukGame('zuma.html')" class="game-card">
-                    <div style="font-size:50px; margin-bottom:10px;">☄️</div>
-                    <div style="font-weight:bold; font-size:1.2rem; color:white; margin-bottom:10px;">ZUMA SPACE</div>
-                    <div style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Hancurkan bola angka sebelum meledak!</div>
+                    <div class="game-icon">☄️</div>
+                    <div class="game-title">ZUMA SPACE</div>
+                    <div class="game-desc">Hancurkan bola angka sebelum meledak!</div>
                     <div class="btn-play">START</div>
                 </a>
-
                 <a href="#" onclick="masukGame('memory.html')" class="game-card">
-                    <div style="font-size:50px; margin-bottom:10px;">🧩</div>
-                    <div style="font-weight:bold; font-size:1.2rem; color:white; margin-bottom:10px;">MEMORY LAB</div>
-                    <div style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Aktifkan sel otakmu dengan kartu memori.</div>
+                    <div class="game-icon">🧩</div>
+                    <div class="game-title">MEMORY LAB</div>
+                    <div class="game-desc">Aktifkan sel otakmu dengan kartu memori.</div>
                     <div class="btn-play">START</div>
                 </a>
-
+                
                 <div class="game-card locked">
-                    <div style="font-size:50px; margin-bottom:10px;">🔤</div>
-                    <div style="font-weight:bold; font-size:1.2rem; color:white; margin-bottom:10px;">TEBAK KATA</div>
-                    <div style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Susun huruf menjadi kata yang benar.</div>
+                    <div class="game-icon">🔤</div>
+                    <div class="game-title">TEBAK KATA</div>
+                    <div class="game-desc">Susun huruf menjadi kata yang benar.</div>
                     <div class="btn-play btn-locked">SOON !</div>
                 </div>
-
                 <div class="game-card locked">
-                    <div style="font-size:50px; margin-bottom:10px;">🌍</div>
-                    <div style="font-weight:bold; font-size:1.2rem; color:white; margin-bottom:10px;">PETA BUTA</div>
-                    <div style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Tebak nama provinsi di peta Indonesia.</div>
+                    <div class="game-icon">🌍</div>
+                    <div class="game-title">PETA BUTA</div>
+                    <div class="game-desc">Tebak nama provinsi di peta Indonesia.</div>
                     <div class="btn-play btn-locked">SOON !</div>
                 </div>
-
                 <div class="game-card locked">
-                    <div style="font-size:50px; margin-bottom:10px;">🎹</div>
-                    <div style="font-weight:bold; font-size:1.2rem; color:white; margin-bottom:10px;">PIANO MATH</div>
-                    <div style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Tekan tuts piano sesuai hasil hitungan.</div>
+                    <div class="game-icon">🎹</div>
+                    <div class="game-title">PIANO MATH</div>
+                    <div class="game-desc">Tekan tuts piano sesuai hasil hitungan.</div>
                     <div class="btn-play btn-locked">SOON !</div>
                 </div>
             </div>
@@ -216,7 +234,7 @@
             </div>
         </div>
         <div class="chat-messages" id="chat-box">
-            <div style="text-align:center; color:#555; font-size:0.8rem; margin-top:20px;">Selamat datang di Chat Global!</div>
+            <div class="chat-welcome">Selamat datang di Chat Global!</div>
         </div>
         <div class="chat-input-area">
             <input type="text" id="chat-input" class="chat-input" placeholder="Tulis pesan..." onkeypress="handleEnter(event)">
@@ -252,23 +270,21 @@
             chatBox.classList.toggle('open');
             document.getElementById('chat-notif').style.display = 'none';
         }
-
         function minimizeChat() {
             const chatBox = document.getElementById('chat-container');
             if (!chatBox.classList.contains('open')) chatBox.classList.add('open');
             chatBox.classList.toggle('minimized');
         }
-
         function kirimPesan() {
             const input = document.getElementById('chat-input');
             const msg = input.value.trim();
             if(!msg) return;
-            if(!currentUser) return alert("Login dulu untuk chat!");
-            socket.emit('chatMessage', { nama: currentUser.displayName, pesan: msg });
+            const user = auth.currentUser;
+            if(!user) return alert("Login dulu untuk chat!");
+            socket.emit('chatMessage', { nama: user.displayName, pesan: msg });
             input.value = "";
         }
         function handleEnter(e) { if(e.key === 'Enter') kirimPesan(); }
-
         socket.on('chatMessage', (data) => {
             const box = document.getElementById('chat-box');
             const isMe = currentUser && data.nama === currentUser.displayName;
@@ -282,7 +298,6 @@
                 document.getElementById('chat-notif').style.display = 'inline';
             }
         });
-
         function toggleInputGuru() {
             const area = document.getElementById('guru-input-area');
             const text = document.getElementById('text-guru');
@@ -295,17 +310,13 @@
                 document.getElementById('input-kode-guru').value = "";
             }
         }
-
         function loginGoogle() {
             const KODE_RAHASIA = "GURU2025"; 
             const inputKode = document.getElementById('input-kode-guru').value.trim();
             auth.signInWithPopup(provider).then((result) => {
                 localStorage.setItem("playerName", result.user.displayName);
                 let roleBaru = "siswa"; 
-                if (inputKode === KODE_RAHASIA) {
-                    roleBaru = "guru";
-                    alert("Selamat datang Bapak/Ibu Guru!");
-                }
+                if (inputKode === KODE_RAHASIA) roleBaru = "guru";
                 database.ref('leaderboard/' + result.user.displayName).once('value').then(snapshot => {
                     const data = snapshot.val();
                     const currentRole = data ? data.role : null;
@@ -315,20 +326,16 @@
                 });
             }).catch(e => alert(e.message));
         }
-
-        function logout() { auth.signOut().then(() => location.reload()); }
-        
+        function logout() { auth.signOut().then(() => { localStorage.removeItem("playerName"); location.reload(); }); }
         function checkRole(name) {
             database.ref('leaderboard/' + name).on('value', snapshot => {
                 const data = snapshot.val();
                 let role = (data && data.role) ? data.role : "siswa";
                 document.getElementById('role-display').innerText = role.toUpperCase();
-                
                 const guruPanel = document.getElementById('guru-panel');
                 const adminPanel = document.getElementById('admin-panel');
                 guruPanel.classList.add('hidden'); guruPanel.classList.remove('block');
                 adminPanel.classList.add('hidden'); adminPanel.classList.remove('block');
-
                 if(role === 'admin') {
                     guruPanel.classList.remove('hidden'); guruPanel.classList.add('block');
                     adminPanel.classList.remove('hidden'); adminPanel.classList.add('block');
@@ -337,9 +344,9 @@
                 }
             });
         }
-        
         auth.onAuthStateChanged((user) => {
             if(user) {
+                currentUser = user;
                 document.getElementById('btn-login').classList.add('hidden');
                 document.getElementById('text-guru').classList.add('hidden');
                 document.getElementById('guru-input-area').classList.add('hidden');
@@ -351,7 +358,6 @@
                 checkRole(user.displayName);
             }
         });
-        
         function loadSkor(name) {
             database.ref('leaderboard/'+name).on('value', snapshot => {
                 const data = snapshot.val();
@@ -361,10 +367,7 @@
                 }
             });
         }
-        
-        function masukGame(url) {
-            if(!auth.currentUser) alert("Login dulu!"); else window.location.href = url;
-        }
+        function masukGame(url) { if(!auth.currentUser) alert("Login dulu!"); else window.location.href = url; }
     </script>
 </body>
 </html>
