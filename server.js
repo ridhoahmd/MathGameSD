@@ -5,13 +5,14 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// Konfigurasi AI
-// KUNCI BARU
-const genAI = new GoogleGenerativeAI("AIzaSyDyNYxWRhieDnRKuZvEvY3Pjg36UiHhbRQ");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+// Konfigurasi AI (YANG SUDAH DIPERBAIKI)
+const apiKey = process.env.API_KEY; // Mengambil dari file .env
+const genAI = new GoogleGenerativeAI(apiKey);
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 app.use(express.static('public'));
 
+// ... sisanya tidak berubah
 io.on('connection', (socket) => {
     console.log('✅ User CONNECTED:', socket.id);
 
