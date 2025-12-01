@@ -86,16 +86,20 @@
             Object.keys(data).forEach(key => {
                 const user = data[key];
                 
-                // 👇 LOGIKA HITUNG TOTAL UPDATE DI SINI 👇
-                let skorMath = user.skor_math || 0;
-                let skorZuma = user.skor_zuma || 0;
-                let skorMemory = user.skor_memory || 0; // Tambah Memory
+                let sMath = user.skor_math || 0;
+                if (user.skor && !user.skor_math) sMath = user.skor;
+                let sZuma = user.skor_zuma || 0;
+                let sMemory = user.skor_memory || 0;
                 
-                if (user.skor && !user.skor_math) skorMath = user.skor; 
+                // 👇 TAMBAHAN SKOR PIANO
+                let sPiano = user.skor_piano || 0; 
                 
+                // 👇 Update Rumus Total
+                let total = sMath + sZuma + sMemory + sPiano; 
+
                 players.push({ 
                     nama: user.nama || "Tanpa Nama", 
-                    total: skorMath + skorZuma + skorMemory 
+                    total: total 
                 });
             });
 

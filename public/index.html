@@ -224,8 +224,8 @@
                 <a href="#" onclick="masukGame('piano.html')" class="game-card">
                     <div class="game-icon">🎹</div>
                     <div class="game-title">PIANO MATH</div>
-                    <div class="game-desc">Tekan tuts piano sesuai hasil hitungan!</div>
-                    <div class="btn-play" style="background: linear-gradient(45deg, #FFD700, #FFA500);">PLAY</div>
+                    <div class="game-desc">Tekan tuts piano sesuai hasil hitungan.</div>
+                    <div class="btn-play" style="background: linear-gradient(45deg, #FFD700, #FFA500); color: black;">PLAY</div>
                 </a>
 
             </div>
@@ -365,15 +365,29 @@
                 checkRole(user.displayName);
             }
         });
+        
         function loadSkor(name) {
-            database.ref('leaderboard/'+name).on('value', snapshot => {
+            database.ref('leaderboard/' + name).on('value', snapshot => {
                 const data = snapshot.val();
-                if(data) {
-                    let total = (data.skor_math||0) + (data.skor_zuma||0) + (data.skor_memory||0);
+                if (data) {
+                    // Ambil semua skor
+                    let sMath = data.skor_math || 0;
+                    if (data.skor && !data.skor_math) sMath = data.skor; // Support data lama
+                    let sZuma = data.skor_zuma || 0;
+                    let sMemory = data.skor_memory || 0;
+                    
+                    //  Ambil skor piano
+                    let sPiano = data.skor_piano || 0;
+
+                    //  Hitung Total Baru
+                    let total = sMath + sZuma + sMemory + sPiano;
+                    
                     document.getElementById('total-score').innerText = total;
                 }
             });
         }
+
+
         function masukGame(url) { if(!auth.currentUser) alert("Login dulu!"); else window.location.href = url; }
     </script>
 </body>
