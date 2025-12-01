@@ -26,7 +26,6 @@
             background: #ff4757; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;
         }
 
-        /* TABEL */
         .table-wrapper { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
@@ -36,36 +35,23 @@
         .avatar-mini { width: 35px; height: 35px; border-radius: 50%; vertical-align: middle; margin-right: 10px; }
         .score-val { font-weight: bold; color: #ffeb3b; }
         
-        /* DROPDOWN ROLE */
-        select.role-select {
-            padding: 5px 10px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer;
-        }
-        select.role-select:disabled {
-            opacity: 0.6; cursor: not-allowed; background: #333; color: #aaa; border: 1px solid #555;
-        }
+        select.role-select { padding: 5px 10px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
+        select.role-select:disabled { opacity: 0.5; cursor: not-allowed; background: #222; border: 1px solid #555; }
         
         .role-siswa { background: #444; color: white; }
         .role-guru { background: #38ef7d; color: black; }
         .role-admin { background: #ef473a; color: white; }
 
-        .search-box {
-            width: 100%; padding: 12px; margin-bottom: 20px;
-            background: rgba(255,255,255,0.1); border: 1px solid #555; 
-            color: white; border-radius: 8px;
-        }
+        .search-box { width: 100%; padding: 12px; margin-bottom: 20px; background: rgba(255,255,255,0.1); border: 1px solid #555; color: white; border-radius: 8px; }
         
-        .badge-info {
-            font-size: 0.8rem; background: rgba(255,255,0,0.1); color: yellow; 
-            padding: 5px 10px; border-radius: 5px; border: 1px solid yellow;
-            display: inline-block; margin-bottom: 10px;
-        }
+        .badge-info { font-size: 0.8rem; padding: 5px 10px; border-radius: 5px; border: 1px solid; display: inline-block; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <a href="/" class="btn-back">⬅ Kembali ke Dashboard</a>
-        <h1>📋 MANAJEMEN KELAS</h1>
+        <h1>📋 DATA SISWA & HAK AKSES</h1>
 
         <div id="user-status-info" style="text-align: center; margin-bottom: 20px;"></div>
 
@@ -110,33 +96,35 @@
         const database = firebase.database();
         
         let currentUserRole = 'siswa';
+        let currentUserName = '';
 
+        // 1. CEK SIAPA YANG LOGIN
         auth.onAuthStateChanged((user) => {
             if (!user) {
                 window.location.href = "/";
             } else {
+                currentUserName = user.displayName;
                 database.ref('leaderboard/' + user.displayName).once('value').then(snapshot => {
                     const data = snapshot.val();
                     currentUserRole = data ? data.role : 'siswa';
                     
                     if (currentUserRole !== 'guru' && currentUserRole !== 'admin') {
-                        alert("Maaf, halaman ini khusus Guru/Admin!");
+                        alert("Akses Ditolak!");
                         window.location.href = "/";
                     } else {
                         const infoBox = document.getElementById('user-status-info');
                         if(currentUserRole === 'admin') {
-                            infoBox.innerHTML = `<span class="badge-info" style="border-color:#ef473a; color:#ef473a">ANDA ADALAH ADMIN (FULL AKSES)</span>`;
+                            infoBox.innerHTML = `<span class="badge-info" style="color:#ef473a; border-color:#ef473a">ANDA ADMIN (FULL KONTROL)</span>`;
                         } else {
-                            // UPDATE: Teks Guru sekarang memberitahu bahwa mereka bisa edit
-                            infoBox.innerHTML = `<span class="badge-info" style="border-color:#38ef7d; color:#38ef7d">ANDA ADALAH GURU (BISA UBAH ROLE SISWA)</span>`;
+                            infoBox.innerHTML = `<span class="badge-info" style="color:#38ef7d; border-color:#38ef7d">ANDA GURU (TERBATAS)</span>`;
                         }
-                        
                         loadDataSiswa();
                     }
                 });
             }
         });
 
+        // 2. RENDER TABEL DENGAN PENGAMANAN
         function loadDataSiswa() {
             database.ref('leaderboard').on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -145,17 +133,43 @@
 
                 if (!data) return;
 
-                // UPDATE LOGIKA: KUNCI DIBUKA UNTUK GURU JUGA
-                const isEditable = (currentUserRole === 'admin' || currentUserRole === 'guru') ? '' : 'disabled';
-
                 Object.keys(data).forEach(key => {
                     const user = data[key];
-                    let sMath = user.skor_math || 0;
-                    if (user.skor && !user.skor_math) sMath = user.skor;
-                    let sZuma = user.skor_zuma || 0;
-                    let sMemory = user.skor_memory || 0;
-                    let total = sMath + sZuma + sMemory;
-                    let role = user.role || "siswa";
+                    let total = (user.skor_math || 0) + (user.skor_zuma || 0) + (user.skor_memory || 0);
+                    let targetRole = user.role || "siswa";
+
+                    // --- LOGIKA KEAMANAN DROPDOWN ---
+                    let isDisabled = '';
+                    let adminOption = '';
+
+                    if (currentUserRole === 'admin') {
+                        // Admin bebas ngapain aja
+                        isDisabled = ''; 
+                        adminOption = `<option value="admin" ${targetRole === 'admin' ? 'selected' : ''}>Admin</option>`;
+                    } else {
+                        // GURU:
+                        // 1. Tidak boleh edit Admin (targetRole == 'admin')
+                        // 2. Tidak boleh edit Diri Sendiri (user.nama == currentUserName) -> Biar gak bunuh diri jadi siswa
+                        if (targetRole === 'admin' || user.nama === currentUserName) {
+                            isDisabled = 'disabled';
+                        }
+                        // Guru TIDAK BOLEH melihat opsi "Admin" di dropdown
+                        adminOption = ''; 
+                    }
+
+                    // Jika target adalah Admin dan saya cuma Guru, jangan tampilkan dropdown, tapi teks saja (Biar aman)
+                    let roleControl = '';
+                    if (isDisabled === 'disabled' && targetRole === 'admin') {
+                         roleControl = `<span style="color:#ef473a; font-weight:bold;">ADMIN (Terkunci)</span>`;
+                    } else {
+                         roleControl = `
+                            <select class="role-select role-${targetRole}" onchange="updateRole('${user.nama}', this.value, '${targetRole}')" ${isDisabled}>
+                                <option value="siswa" ${targetRole === 'siswa' ? 'selected' : ''}>Siswa</option>
+                                <option value="guru" ${targetRole === 'guru' ? 'selected' : ''}>Guru</option>
+                                ${adminOption}
+                            </select>
+                         `;
+                    }
 
                     const row = `
                         <tr>
@@ -163,17 +177,11 @@
                                 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${user.nama}" class="avatar-mini">
                                 ${user.nama}
                             </td>
-                            <td>${sMath}</td>
-                            <td>${sZuma}</td>
-                            <td>${sMemory}</td>
+                            <td>${user.skor_math || 0}</td>
+                            <td>${user.skor_zuma || 0}</td>
+                            <td>${user.skor_memory || 0}</td>
                             <td class="score-val">${total}</td>
-                            <td>
-                                <select class="role-select role-${role}" onchange="updateRole('${user.nama}', this.value)" ${isEditable}>
-                                    <option value="siswa" ${role === 'siswa' ? 'selected' : ''}>Siswa</option>
-                                    <option value="guru" ${role === 'guru' ? 'selected' : ''}>Guru</option>
-                                    ${currentUserRole === 'admin' ? `<option value="admin" ${role === 'admin' ? 'selected' : ''}>Admin</option>` : (role === 'admin' ? '<option selected>Admin</option>' : '')}
-                                </select>
-                            </td>
+                            <td>${roleControl}</td>
                         </tr>
                     `;
                     tbody.innerHTML += row;
@@ -181,41 +189,42 @@
             });
         }
 
-        // UPDATE LOGIKA: Guru boleh simpan perubahan
-        window.updateRole = function(namaUser, newRole) {
-            // Cek keamanan ganda
+        // 3. FUNGSI UPDATE DENGAN KEAMANAN GANDA
+        window.updateRole = function(targetName, newRole, oldRole) {
+            // LAYER 1: Cek Identitas Pengubah
             if(currentUserRole !== 'admin' && currentUserRole !== 'guru') {
-                alert("Akses Ditolak!");
-                loadDataSiswa();
-                return;
+                alert("Anda tidak punya hak!");
+                loadDataSiswa(); return;
             }
 
-            // Cegah Guru mengubah Admin (Hirarki)
+            // LAYER 2: Mencegah Guru mengangkat Admin
             if(currentUserRole === 'guru' && newRole === 'admin') {
-                alert("Maaf Pak/Bu Guru, hanya Admin Utama yang bisa mengangkat Admin baru.");
-                loadDataSiswa();
-                return;
+                alert("Guru tidak bisa mengangkat Admin!");
+                loadDataSiswa(); return;
             }
 
-            if(confirm(`Ubah status ${namaUser} menjadi ${newRole.toUpperCase()}?`)) {
-                database.ref('leaderboard/' + namaUser).update({
-                    role: newRole
-                });
+            // LAYER 3: Mencegah Guru menurunkan Admin (Kudeta)
+            if(currentUserRole === 'guru' && oldRole === 'admin') {
+                alert("Guru tidak bisa mengubah akun Admin!");
+                loadDataSiswa(); return;
+            }
+
+            if(confirm(`Ubah status ${targetName} menjadi ${newRole.toUpperCase()}?`)) {
+                database.ref('leaderboard/' + targetName).update({ role: newRole });
             } else {
-                loadDataSiswa(); 
+                loadDataSiswa(); // Reset jika batal
             }
         }
 
         window.filterTable = function() {
             const input = document.getElementById('search');
             const filter = input.value.toUpperCase();
-            const table = document.querySelector("table");
-            const tr = table.getElementsByTagName("tr");
-            for (let i = 1; i < tr.length; i++) {
-                let td = tr[i].getElementsByTagName("td")[0];
+            const rows = document.getElementById("table-body").getElementsByTagName("tr");
+            for (let i = 0; i < rows.length; i++) {
+                let td = rows[i].getElementsByTagName("td")[0];
                 if (td) {
-                    let txtValue = td.textContent || td.innerText;
-                    if (txtValue.toUpperCase().indexOf(filter) > -1) tr[i].style.display = ""; else tr[i].style.display = "none";
+                    let txt = td.textContent || td.innerText;
+                    rows[i].style.display = txt.toUpperCase().indexOf(filter) > -1 ? "" : "none";
                 }
             }
         }
