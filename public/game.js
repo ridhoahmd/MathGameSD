@@ -59,14 +59,30 @@ function startGame() {
     generateQuestion();
 }
 
+
+// generate pertanyaan:
 function generateQuestion() {
-    const num1 = Math.floor(Math.random() * 10) + 1;
-    const num2 = Math.floor(Math.random() * 10) + 1;
-    document.getElementById('question-display').innerText = `${num1} + ${num2} = ?`;
-    currentResult = num1 + num2;
+    // Tampilkan loading
+    document.getElementById('question-display').innerText = "🤖 AI sedang berpikir...";
+    
+    // Minta Server (yang nanti minta ke Gemini)
+    socket.emit('mintaSoalAI');
+}
+
+
+socket.on('soalDariAI', (data) => {
+    // Tampilkan Soal dari AI
+    document.getElementById('question-display').innerText = data.soal;
+    
+    // Simpan Kunci Jawaban
+    currentResult = data.jawaban;
+    
+    // Reset input
     document.getElementById('answer-input').value = '';
     document.getElementById('answer-input').focus();
-}
+});
+
+
 
 function checkAnswer() {
     const playerAnswer = parseInt(document.getElementById('answer-input').value);
