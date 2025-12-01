@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Game Videa Class</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#00f2ff">
+    <link rel="apple-touch-icon" href="/logo-videa.png.png">
     <style>
         /* TEMA DARK GALACTIC */
         * { box-sizing: border-box; }
@@ -277,6 +280,16 @@
         function masukGame(url) {
             if(!auth.currentUser) alert("Login dulu!"); else window.location.href = url;
         }
+    </script>
+    <script>
+       // REGISTER SERVICE WORKER (PWA)
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Aplikasi Siap Diinstall! Scope:', reg.scope))
+                .catch(err => console.log('Gagal install:', err));
+        });
+    } 
     </script>
 </body>
 </html>
