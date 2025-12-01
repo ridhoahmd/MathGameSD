@@ -20,10 +20,22 @@ io.on('connection', (socket) => {
         socket.to(data.room).emit('updateSkorLawan', data.skor);
     });
 
-    // 3. FITUR CHAT GLOBAL (BARU)
+    // 3. FITUR CHAT GLOBAL (DENGAN WAKTU)
     socket.on('chatMessage', (data) => {
-        // Kirim ke SEMUA orang yang sedang online
-        io.emit('chatMessage', data);
+        // Ambil waktu server saat ini
+        const now = new Date();
+        // Format jam:menit (contoh: 14:30)
+        const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+        // Bungkus data lengkap
+        const fullData = {
+            nama: data.nama,
+            pesan: data.pesan,
+            waktu: timeString // <--- INI DATA BARUNYA
+        };
+
+        // Kirim ke SEMUA orang
+        io.emit('chatMessage', fullData);
     });
 
     socket.on('disconnect', () => {

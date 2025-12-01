@@ -6,7 +6,7 @@
     <title>Portal Game Videa Class</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* CSS DASAR (Sama seperti sebelumnya) */
+        /* CSS DASAR */
         * { box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; margin: 0; padding: 0; background: radial-gradient(circle at top right, #2b1055, #7597de); background-color: #1e1e2e; color: #e0e0e0; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
         .hidden { display: none !important; } .block { display: block !important; } .link-wrapper { text-decoration: none; width: 100%; }
@@ -40,49 +40,31 @@
         .game-card:hover { transform: translateY(-10px); background: rgba(255,255,255,0.1); border-color: #00f2ff; }
         .btn-play { padding: 10px 35px; border-radius: 30px; font-size: 0.8rem; font-weight: bold; color: white; background: linear-gradient(45deg, #ff0080, #ff00cc); border: none; margin-top: 15px; display: inline-block; }
 
-        /* =========================================
-           CSS KHUSUS CHAT ROOM (BARU)
-        ========================================= */
-        #chat-container {
-            position: fixed; bottom: 20px; right: 20px;
-            width: 320px; height: 400px;
-            background: rgba(20, 20, 35, 0.95);
-            border: 1px solid #00f2ff; border-radius: 15px;
-            display: flex; flex-direction: column;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
-            z-index: 2000; overflow: hidden;
-            transform: translateY(120%); transition: transform 0.3s ease; /* Animasi Slide */
-        }
+        /* CSS CHAT ROOM */
+        #chat-container { position: fixed; bottom: 20px; right: 20px; width: 320px; height: 400px; background: rgba(20, 20, 35, 0.95); border: 1px solid #00f2ff; border-radius: 15px; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0,0,0,0.8); z-index: 2000; overflow: hidden; transform: translateY(120%); transition: transform 0.3s ease; }
         #chat-container.open { transform: translateY(0); }
-
-        .chat-header {
-            background: linear-gradient(90deg, #2b5876, #4e4376);
-            padding: 10px 15px; font-weight: bold; color: white;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #444;
-        }
+        .chat-header { background: linear-gradient(90deg, #2b5876, #4e4376); padding: 10px 15px; font-weight: bold; color: white; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; }
         .chat-close { cursor: pointer; background: none; border: none; color: white; font-size: 1.2rem; }
+        .chat-messages { flex: 1; padding: 10px; overflow-y: auto; font-size: 0.9rem; color: #ddd; display: flex; flex-direction: column; gap: 8px; }
         
-        .chat-messages {
-            flex: 1; padding: 10px; overflow-y: auto;
-            font-size: 0.9rem; color: #ddd; display: flex; flex-direction: column; gap: 8px;
-        }
         .msg-bubble { background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 8px; align-self: flex-start; max-width: 80%; }
         .msg-me { background: #00f2ff; color: #000; align-self: flex-end; border-radius: 8px 8px 0 8px; }
         .msg-name { font-size: 0.7rem; color: #aaa; margin-bottom: 2px; display: block; }
         .msg-me .msg-name { display: none; }
 
-        .chat-input-area {
-            padding: 10px; border-top: 1px solid #444; display: flex; gap: 5px;
-        }
+        /* 👇 CSS WAKTU (YANG ANDA TANYAKAN) 👇 */
+        .msg-time { display: block; font-size: 0.65rem; color: rgba(255, 255, 255, 0.6); text-align: right; margin-top: 4px; }
+        .msg-me .msg-time { color: rgba(0, 0, 0, 0.6); }
+        /* 👆 SELESAI 👇 */
+
+        .chat-input-area { padding: 10px; border-top: 1px solid #444; display: flex; gap: 5px; }
         .chat-input { flex: 1; padding: 8px; border-radius: 20px; border: none; background: #333; color: white; outline: none;}
         .chat-send { background: #00f2ff; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; font-weight: bold; }
 
-        /* Responsif HP */
         @media (max-width: 800px) {
             .dashboard-container { flex-direction: column; margin-top: 100px; }
             .portal-title { display: none; }
-            #chat-container { width: 90%; right: 5%; bottom: 10px; } /* Chat menyesuaikan HP */
+            #chat-container { width: 90%; right: 5%; bottom: 10px; }
         }
     </style>
 </head>
@@ -174,8 +156,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        const socket = io(); // KONEKSI SOCKET UNTUK CHAT
-
+        const socket = io(); 
         const firebaseConfig = {
             apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
             authDomain: "mathgamesd.firebaseapp.com",
@@ -189,10 +170,8 @@
         const auth = firebase.auth();
         const database = firebase.database();
         const provider = new firebase.auth.GoogleAuthProvider();
-
         let currentUser = null;
 
-        // --- FITUR CHAT ---
         function toggleChat() {
             document.getElementById('chat-container').classList.toggle('open');
             document.getElementById('chat-notif').style.display = 'none';
@@ -203,36 +182,34 @@
             const msg = input.value.trim();
             if(!msg) return;
             if(!currentUser) return alert("Login dulu untuk chat!");
-
-            // Kirim ke Server
-            socket.emit('chatMessage', {
-                nama: currentUser.displayName,
-                pesan: msg
-            });
+            socket.emit('chatMessage', { nama: currentUser.displayName, pesan: msg });
             input.value = "";
         }
-
         function handleEnter(e) { if(e.key === 'Enter') kirimPesan(); }
 
-        // Terima Pesan dari Server
+        // 👇 UPDATE LOGIKA CHAT DENGAN WAKTU 👇
         socket.on('chatMessage', (data) => {
             const box = document.getElementById('chat-box');
             const isMe = currentUser && data.nama === currentUser.displayName;
-            
             const div = document.createElement('div');
             div.className = isMe ? 'msg-bubble msg-me' : 'msg-bubble';
-            div.innerHTML = `<span class="msg-name">${data.nama}</span>${data.pesan}`;
+            
+            // Tampilkan Waktu (Jika ada)
+            let timeHtml = data.waktu ? `<span class="msg-time">${data.waktu}</span>` : '';
+
+            div.innerHTML = `
+                <span class="msg-name">${data.nama}</span>
+                ${data.pesan}
+                ${timeHtml}
+            `;
             
             box.appendChild(div);
-            box.scrollTop = box.scrollHeight; // Auto scroll ke bawah
-
-            // Notifikasi titik merah jika chat tertutup
+            box.scrollTop = box.scrollHeight;
             if(!document.getElementById('chat-container').classList.contains('open')) {
                 document.getElementById('chat-notif').style.display = 'inline';
             }
         });
 
-        // --- FITUR UTAMA ---
         function loginGoogle() {
             const KODE_RAHASIA = "GURU2025"; 
             const inputKode = document.getElementById('input-kode-guru').value.trim();
@@ -240,7 +217,6 @@
                 localStorage.setItem("playerName", result.user.displayName);
                 let roleBaru = "siswa"; 
                 if (inputKode === KODE_RAHASIA) roleBaru = "guru";
-                
                 database.ref('leaderboard/' + result.user.displayName).once('value').then(snapshot => {
                     const data = snapshot.val();
                     const currentRole = data ? data.role : null;
@@ -252,10 +228,7 @@
         }
 
         function logout() { auth.signOut().then(() => location.reload()); }
-        function toggleInputGuru() {
-            const area = document.getElementById('guru-input-area');
-            area.classList.toggle('hidden');
-        }
+        function toggleInputGuru() { document.getElementById('guru-input-area').classList.toggle('hidden'); }
 
         auth.onAuthStateChanged((user) => {
             if(user) {
@@ -264,11 +237,9 @@
                 document.getElementById('btn-logout').classList.remove('hidden');
                 document.getElementById('text-guru').classList.add('hidden');
                 document.getElementById('guru-input-area').classList.add('hidden');
-                
                 document.getElementById('display-name').innerText = user.displayName;
                 document.getElementById('user-email').innerText = user.email;
                 document.getElementById('user-avatar').src = user.photoURL;
-                
                 loadSkor(user.displayName);
                 checkRole(user.displayName);
             }
@@ -289,7 +260,6 @@
                 const data = snapshot.val();
                 let role = (data && data.role) ? data.role : "siswa";
                 document.getElementById('role-display').innerText = role.toUpperCase();
-                
                 if(role === 'admin') {
                     document.getElementById('guru-panel').classList.remove('hidden');
                     document.getElementById('admin-panel').classList.remove('hidden');
@@ -299,9 +269,7 @@
             });
         }
 
-        function masukGame(url) {
-            if(!currentUser) alert("Login dulu!"); else window.location.href = url;
-        }
+        function masukGame(url) { if(!currentUser) alert("Login dulu!"); else window.location.href = url; }
     </script>
 </body>
 </html>
