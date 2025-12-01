@@ -45,6 +45,10 @@
         .search-box { width: 100%; padding: 12px; margin-bottom: 20px; background: rgba(255,255,255,0.1); border: 1px solid #555; color: white; border-radius: 8px; }
         
         .badge-info { font-size: 0.8rem; padding: 5px 10px; border-radius: 5px; border: 1px solid; display: inline-block; margin-bottom: 10px; }
+
+        /* FIX: Class pengganti inline style */
+        .text-center { text-align: center; }
+        .mb-20 { margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -53,7 +57,7 @@
         <a href="/" class="btn-back">⬅ Kembali ke Dashboard</a>
         <h1>📋 DATA SISWA & HAK AKSES</h1>
 
-        <div id="user-status-info" style="text-align: center; margin-bottom: 20px;"></div>
+        <div id="user-status-info" class="text-center mb-20"></div>
 
         <input type="text" id="search" class="search-box" placeholder="🔍 Cari nama siswa..." onkeyup="filterTable()">
 
@@ -65,12 +69,13 @@
                         <th>Math</th>
                         <th>Zuma</th>
                         <th>Memory</th>
-                        <th>Piano</th> <th>TOTAL</th>
+                        <th>Piano</th>
+                        <th>TOTAL</th>
                         <th>Hak Akses (Role)</th>
                     </tr>
                 </thead>
                 <tbody id="table-body">
-                    <tr><td colspan="7" style="text-align:center;">Memuat Data...</td></tr>
+                    <tr><td colspan="7" class="text-center">Memuat Data...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -84,7 +89,6 @@
         const firebaseConfig = {
             apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
             authDomain: "mathgamesd.firebaseapp.com",
-            // GANTI DENGAN DATABASE URL ASLI ANDA
             databaseURL: "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app", 
             projectId: "mathgamesd",
             storageBucket: "mathgamesd.firebasestorage.app",
@@ -99,7 +103,6 @@
         let currentUserRole = 'siswa';
         let currentUserName = '';
 
-        // CEK USER LOGIN
         auth.onAuthStateChanged((user) => {
             if (!user) {
                 window.location.href = "/";
@@ -125,7 +128,6 @@
             }
         });
 
-        // LOAD DATA SISWA
         function loadDataSiswa() {
             database.ref('leaderboard').on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -138,22 +140,14 @@
 
                 Object.keys(data).forEach(key => {
                     const user = data[key];
-                    
-                    // AMBIL SKOR LAMA
                     let sMath = user.skor_math || 0;
                     if (user.skor && !user.skor_math) sMath = user.skor;
                     let sZuma = user.skor_zuma || 0;
                     let sMemory = user.skor_memory || 0;
-                    
-                    // 2. AMBIL SKOR PIANO (KODE YANG ANDA TANYAKAN)
                     let sPiano = user.skor_piano || 0;
-
-                    // 3. HITUNG TOTAL BARU
                     let total = sMath + sZuma + sMemory + sPiano;
-                    
                     let targetRole = user.role || "siswa";
 
-                    // Logic Keamanan Dropdown
                     let isDisabled = '';
                     let adminOption = '';
 
@@ -180,7 +174,6 @@
                          `;
                     }
 
-                    // 4. RENDER BARIS TABEL (TAMBAH KOLOM PIANO)
                     const row = `
                         <tr>
                             <td>
@@ -190,7 +183,8 @@
                             <td>${sMath}</td>
                             <td>${sZuma}</td>
                             <td>${sMemory}</td>
-                            <td>${sPiano}</td> <td class="score-val">${total}</td>
+                            <td>${sPiano}</td>
+                            <td class="score-val">${total}</td>
                             <td>${roleControl}</td>
                         </tr>
                     `;
@@ -199,7 +193,6 @@
             });
         }
 
-        // UPDATE ROLE
         window.updateRole = function(targetName, newRole, oldRole) {
             if(currentUserRole !== 'admin' && currentUserRole !== 'guru') {
                 alert("Anda tidak punya hak!");
@@ -213,7 +206,6 @@
                 alert("Guru tidak bisa mengubah akun Admin!");
                 loadDataSiswa(); return;
             }
-
             if(confirm(`Ubah status ${targetName} menjadi ${newRole.toUpperCase()}?`)) {
                 database.ref('leaderboard/' + targetName).update({ role: newRole });
             } else {

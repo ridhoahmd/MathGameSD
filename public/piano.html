@@ -18,7 +18,7 @@
             background: #ff4757; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9rem;
         }
 
-        /* HUD (Heads Up Display) */
+        /* HUD */
         .hud {
             display: flex; justify-content: space-between; width: 90%; max-width: 600px;
             margin-bottom: 20px; font-family: 'Orbitron', sans-serif;
@@ -47,13 +47,16 @@
             cursor: pointer; position: relative;
             display: flex; justify-content: center; align-items: flex-end;
             padding-bottom: 20px; color: #333; font-weight: bold; font-size: 1.5rem;
-            transition: 0.1s; user-select: none;
+            transition: 0.1s; 
+            
+            /* FIX: Tambahkan Webkit untuk Safari/iPhone */
+            -webkit-user-select: none; 
+            user-select: none;
         }
         .key:active, .key.active {
             background: #ccc; transform: scale(0.95);
         }
         
-        /* ANGKA DI TUTS */
         .key span { pointer-events: none; }
 
         /* MODAL GAME OVER */
@@ -66,6 +69,12 @@
             background: #1e1e2e; padding: 40px; border-radius: 20px; text-align: center;
             border: 2px solid #00f2ff; box-shadow: 0 0 30px #00f2ff;
         }
+        
+        /* CLASS BARU UNTUK MENGGANTIKAN INLINE STYLE */
+        .text-gameover { color: #ff4757; margin-top: 0; }
+        .text-score-final { font-size: 2rem; color: #ffeb3b; }
+        .btn-grey { background: #555; color: white; }
+
         button {
             padding: 12px 30px; margin-top: 20px; border-radius: 30px; border: none;
             background: linear-gradient(45deg, #00f2ff, #0099ff);
@@ -99,10 +108,10 @@
 
     <div class="modal" id="game-over-modal">
         <div class="modal-content">
-            <h1 style="color:#ff4757">WAKTU HABIS!</h1>
-            <p>Total Skor Piano: <span id="final-score" style="font-size:2rem; color:#ffeb3b">0</span></p>
+            <h1 class="text-gameover">WAKTU HABIS!</h1>
+            <p>Total Skor Piano: <span id="final-score" class="text-score-final">0</span></p>
             <button onclick="location.reload()">MAIN LAGI</button>
-            <button onclick="window.location.href='/'" style="background:#555; color:white;">KEMBALI</button>
+            <button onclick="window.location.href='/'" class="btn-grey">KEMBALI</button>
         </div>
     </div>
 
