@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Guru - Videa Class</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* TEMA DARK GALACTIC */
+        body { 
+            font-family: 'Poppins', sans-serif; margin: 0; padding: 20px; 
+            background: radial-gradient(circle at top right, #2b1055, #7597de); background-color: #1e1e2e;
+            color: #e0e0e0; min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+        }
+        
+        .container {
+            width: 95%; max-width: 1200px; background: rgba(30, 30, 46, 0.9);
+            padding: 30px; border-radius: 20px; box-shadow: 0 0 40px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        h1 { font-family: 'Orbitron', sans-serif; color: #00f2ff; text-align: center; margin-bottom: 30px; letter-spacing: 2px; }
+        
+        .btn-back {
+            display: inline-block; margin-bottom: 20px; padding: 10px 20px;
+            background: #ff4757; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;
+        }
+
+        /* TABEL KEREN */
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        th { background: rgba(0, 242, 255, 0.1); color: #00f2ff; font-family: 'Orbitron', sans-serif; }
+        tr:hover { background: rgba(255,255,255,0.05); }
+        
+        .avatar-mini { width: 35px; height: 35px; border-radius: 50%; vertical-align: middle; margin-right: 10px; }
+        .score-val { font-weight: bold; color: #ffeb3b; }
+        
+        /* DROPDOWN ROLE */
+        select.role-select {
+            padding: 5px 10px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer;
+        }
+        .role-siswa { background: #444; color: white; }
+        .role-guru { background: #38ef7d; color: black; }
+        .role-admin { background: #ef473a; color: white; }
+
+        /* Search Box */
+        .search-box {
+            width: 100%; padding: 12px; margin-bottom: 20px;
+            background: rgba(255,255,255,0.1); border: 1px solid #555; 
+            color: white; border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <a href="/" class="btn-back">⬅ Kembali ke Dashboard</a>
+        <h1>📋 DATA SISWA & HAK AKSES</h1>
+
+        <input type="text" id="search" class="search-box" placeholder="🔍 Cari nama siswa..." onkeyup="filterTable()">
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nama Siswa</th>
+                        <th>Math</th>
+                        <th>Zuma</th>
+                        <th>Memory</th>
+                        <th>TOTAL</th>
+                        <th>Hak Akses (Role)</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <tr><td colspan="6" style="text-align:center;">Memuat Data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        // 1. CONFIG FIREBASE (Gunakan Config Asli Anda)
+        const firebaseConfig = {
+            apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
+            authDomain: "mathgamesd.firebaseapp.com",
+            databaseURL: "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app", 
+            projectId: "mathgamesd",
+            storageBucket: "mathgamesd.firebasestorage.app",
+            messagingSenderId: "595640141584",
+            appId: "1:595640141584:web:d02523bc844e52550f4795"
+        };
+
+        try { firebase.initializeApp(firebaseConfig); } catch(e) {}
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // 2. CEK KEAMANAN (Hanya Guru/Admin yang boleh masuk)
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = "/"; // Tendang jika belum login
+            } else {
+                database.ref('leaderboard/' + user.displayName).once('value').then(snapshot => {
+                    const data = snapshot.val();
+                    const role = data ? data.role : 'siswa';
+                    // Jika bukan guru/admin, tendang balik
+                    if (role !== 'guru' && role !== 'admin') {
+                        alert("Maaf, halaman ini khusus Guru!");
+                        window.location.href = "/";
+                    } else {
+                        loadDataSiswa(); // Jika lolos, muat data
+                    }
+                });
+            }
+        });
+
+        // 3. AMBIL DATA SISWA & RENDER TABEL
+        function loadDataSiswa() {
+            database.ref('leaderboard').on('value', (snapshot) => {
+                const data = snapshot.val();
+                const tbody = document.getElementById('table-body');
+                tbody.innerHTML = ""; // Bersihkan tabel
+
+                if (!data) return;
+
+                // Loop semua user
+                Object.keys(data).forEach(key => {
+                    const user = data[key];
+                    
+                    // Hitung Skor
+                    let sMath = user.skor_math || 0;
+                    if (user.skor && !user.skor_math) sMath = user.skor;
+                    let sZuma = user.skor_zuma || 0;
+                    let sMemory = user.skor_memory || 0;
+                    let total = sMath + sZuma + sMemory;
+                    
+                    let role = user.role || "siswa";
+
+                    // Render Baris
+                    const row = `
+                        <tr>
+                            <td>
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${user.nama}" class="avatar-mini">
+                                ${user.nama}
+                            </td>
+                            <td>${sMath}</td>
+                            <td>${sZuma}</td>
+                            <td>${sMemory}</td>
+                            <td class="score-val">${total}</td>
+                            <td>
+                                <select class="role-select role-${role}" onchange="updateRole('${user.nama}', this.value)">
+                                    <option value="siswa" ${role === 'siswa' ? 'selected' : ''}>Siswa</option>
+                                    <option value="guru" ${role === 'guru' ? 'selected' : ''}>Guru</option>
+                                    <option value="admin" ${role === 'admin' ? 'selected' : ''}>Admin</option>
+                                </select>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            });
+        }
+
+        // 4. FUNGSI GANTI ROLE (Otomatis Simpan ke Firebase)
+        window.updateRole = function(namaUser, newRole) {
+            if(confirm(`Ubah hak akses ${namaUser} menjadi ${newRole.toUpperCase()}?`)) {
+                database.ref('leaderboard/' + namaUser).update({
+                    role: newRole
+                }).then(() => {
+                    // alert("Status berhasil diubah!"); 
+                    // Tidak perlu alert, data otomatis refresh karena .on()
+                });
+            } else {
+                // Kembalikan pilihan jika batal (Reload data)
+                loadDataSiswa(); 
+            }
+        }
+
+        // 5. FITUR PENCARIAN
+        window.filterTable = function() {
+            const input = document.getElementById('search');
+            const filter = input.value.toUpperCase();
+            const table = document.querySelector("table");
+            const tr = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < tr.length; i++) {
+                let td = tr[i].getElementsByTagName("td")[0]; // Kolom Nama
+                if (td) {
+                    let txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
