@@ -6,7 +6,8 @@ const io = require('socket.io')(http);
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // Konfigurasi AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// KUNCI BARU
+const genAI = new GoogleGenerativeAI("AIzaSyDyNYxWRhieDnRKuZvEvY3Pjg36UiHhbRQ");
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 app.use(express.static('public'));
