@@ -121,6 +121,42 @@
             width: 100%; margin-top: 15px; padding: 12px; cursor: pointer; 
             border-radius: 50px; border: none; font-weight: bold; font-family: 'Orbitron', sans-serif;
         }
+
+        /* --- CSS untuk Tombol Kesulitan --- */
+        .difficulty-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .btn-difficulty {
+            padding: 8px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: #ccc;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        .btn-difficulty:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+        .btn-difficulty.active {
+            background: rgba(0, 242, 255, 0.3);
+            color: #00f2ff;
+            border-color: #00f2ff;
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+        }
+
+       /* --- PERBAIKAN TOMBOL TIDAK BISA DIKLIK --- */
+#ui-layer button {
+    pointer-events: auto !important;
+}
+
     </style>
 </head>
 <body>
@@ -135,6 +171,13 @@
                 <input type="text" id="username" placeholder="Nama Pilot" readonly style="background:#333; color:#aaa; cursor: not-allowed;">
                 <input type="text" id="room-code" placeholder="Kode Misi (Room)">
                 
+                <!-- UI PEMILIHAN KESULITAN -->
+                <div class="difficulty-selector">
+                    <button class="btn-difficulty active" data-level="mudah">Mudah</button>
+                    <button class="btn-difficulty" data-level="sedang">Sedang</button>
+                    <button class="btn-difficulty" data-level="sulit">Sulit</button>
+                </div>
+
                 <div class="btn-login-group">
                     <button class="btn-start" onclick="startGameMultiplayer()">MULAI MISI</button>
                     <button class="btn-back" onclick="window.location.href='/'">BATAL</button>
@@ -142,14 +185,11 @@
             </div>
 
             <div id="game-hud" style="display:none;">
-    <!-- PASTIKAN ELEMEN INI ADA DAN TIDAK SALAH KETIK -->
-    <h3 id="level-description" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: white; font-family: 'Poppins'; pointer-events: none;"></h3>
-    
-    <div class="score-box score-left">KAMU: <span id="score">0</span></div>
-    <div class="score-box score-right">LAWAN: <span id="opponent-score">0</span></div>
-    
-    <button class="btn-exit" onclick="window.location.href='/'">✖ KELUAR</button>
-</div>
+                <div class="score-box score-left">KAMU: <span id="score">0</span></div>
+                <div class="score-box score-right">LAWAN: <span id="opponent-score">0</span></div>
+                
+                <button class="btn-exit" onclick="window.location.href='/'">✖ KELUAR</button>
+            </div>
 
             <div id="game-over-screen">
                 <h1 style="color:#ff4757; margin:0 0 10px; font-family:'Orbitron', sans-serif;">GAME OVER</h1>
@@ -181,8 +221,5 @@
             document.getElementById('game-hud').style.display = 'block';
         }
     </script>
-
-    <script src="/socket.io/socket.io.js"></script>
-
 </body>
 </html>

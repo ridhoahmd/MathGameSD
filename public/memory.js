@@ -1,39 +1,79 @@
-const socket = io();
+// public/memory.js - VERSI STANDALONE (TANPA SERVER)
+// Versi ini membuat kartu sendiri, tidak meminta ke server.
+
+// Elemen-elemen DOM yang akan kita gunakan
+const board = document.getElementById('board');
+const movesEl = document.getElementById('moves');
+const finalScoreEl = document.getElementById('final-score');
+const winScreen = document.getElementById('win-screen');
+
 let cards = [];
 let hasFlippedCard = false;
 let lockBoard = false;
 let firstCard, secondCard;
 let matchesFound = 0;
 let moves = 0;
-const totalPairs = 6;
+let totalPairs = 6; // Akan diubah berdasarkan tingkat kesulitan
 
-function initGame() {
-    const board = document.getElementById('board');
-    board.innerHTML = '<p style="color:white; grid-column:span 4; text-align:center;">🤖 AI sedang menyusun kartu...</p>';
-    
-    // FIX 1: Kirim kategori 'memory'
-    socket.emit('mintaSoalAI', 'memory');
-}
+// --- LOGIKA KESULITAN ---
+let selectedDifficulty = 'mudah'; // Nilai default
 
-// FIX 2: Terima data format baru
-socket.on('soalDariAI', (res) => {
-    // Pastikan ini data untuk memory
-    if (res.kategori !== 'memory') return;
+// Event listener untuk tombol kesulitan
+document.addEventListener('DOMContentLoaded', () => {
+    const buttons = document.querySelectorAll('.btn-difficulty');
+    buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            buttons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            selectedDifficulty = button.dataset.level;
+        });
+    });
+});
+
+// Fungsi untuk membuat pasangan kartu secara lokal
+function generateCardPairs() {
+    let pairs = [];
+    // Data contoh, bisa diperbanyak
+    const allPairs = [
+        { a: "🍎", b: "Apple" }, { a: "🍌", b: "Pisang" }, { a: "🍇", b: "Anggur" },
+        { a: "🍓", b: "Stroberi" }, { a: "🍑", b: "Ceri" }, { a: "🍒", b: "Nanas" },
+        { a: "🍋", b: "Lemon" }, { a: "🍉", b: "Semangka" }
+    ];
     
-    const rawData = res.data; 
+    let numPairs = 4;
+    if (selectedDifficulty === 'mudah') numPairs = 4;
+    else if (selectedDifficulty === 'sedang') numPairs = 6;
+    else if (selectedDifficulty === 'sulit') numPairs = 8;
+
+    // Acak dan ambil pasangan yang dibutuhkan
+    for (let i = 0; i < numPairs; i++) {
+        pairs.push(allPairs[i]);
+    }
+
     let gameCards = [];
-
-    // Proses data
-    rawData.forEach((pair, index) => {
+    pairs.forEach((pair, index) => {
         gameCards.push({ content: pair.a, value: index });
         gameCards.push({ content: pair.b, value: index });
     });
+    
+    totalPairs = numPairs;
+    return gameCards;
+}
 
-    setupBoard(gameCards);
-});
+function initGame() {
+    console.log("🔧 Memulai game dengan data lokal...");
+    
+    // Tampilkan pesan loading
+    board.innerHTML = '<p style="color:white; grid-column:span 4; text-align:center;">🤖 Menyiapkan kartu...</p>';
+    
+    // Simulasi delay loading
+    setTimeout(() => {
+        const gameCards = generateCardPairs();
+        setupBoard(gameCards);
+    }, 500); // Delay singkat 0.5 detik
+}
 
 function setupBoard(cardsArray) {
-    const board = document.getElementById('board');
     board.innerHTML = '';
     cardsArray.sort(() => 0.5 - Math.random());
 
@@ -66,7 +106,7 @@ function flipCard() {
 
     secondCard = this;
     moves++;
-    document.getElementById('moves').innerText = moves;
+    movesEl.innerText = moves;
     checkForMatch();
 }
 
@@ -99,18 +139,9 @@ function resetBoard() {
 
 function gameWon() {
     const score = Math.max(100 - (moves * 2), 10);
-    document.getElementById('final-score').innerText = score;
-    document.getElementById('win-screen').style.display = 'flex';
+    finalScoreEl.innerText = score;
+    winScreen.style.display = 'flex';
 
-    const savedName = localStorage.getItem("playerName");
-    if (savedName) {
-        // KIRIM DATA SKOR KE SERVER, bukan langsung ke Firebase
-        socket.emit('simpanSkor', {
-            nama: savedName,
-            skor: score,
-            game: 'memory' // Penting untuk membedakan game
-        });
-    }
+    // Di versi standalone, kita tidak menyimpan skor ke server
+    console.log(`Game selesai! Skor: ${score}`);
 }
-
-initGame();

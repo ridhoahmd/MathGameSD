@@ -23,7 +23,7 @@
         /* 2. TOMBOL KEMBALI */
         .btn-back {
             position: absolute; top: 20px; left: 20px; z-index: 1000;
-            padding: 10px 20px; background: rgba(255, 255, 255, 0.1); 
+            padding:10px 20px; background: rgba(255, 255, 255, 0.1); 
             color: white; border: 1px solid rgba(255,255,255,0.2);
             border-radius: 30px; font-weight: bold; cursor: pointer;
             text-decoration: none; backdrop-filter: blur(5px);
@@ -93,6 +93,36 @@
         /* UTILS */
         .hidden { display: none !important; }
         .block { display: block !important; }
+
+        /* --- CSS untuk Tombol Kesulitan --- */
+        .difficulty-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .btn-difficulty {
+            padding: 8px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: #ccc;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        .btn-difficulty:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+        .btn-difficulty.active {
+            background: rgba(0, 242, 255, 0.3);
+            color: #00f2ff;
+            border-color: #00f2ff;
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -107,6 +137,13 @@
             
             <input type="text" id="username" placeholder="Nama Petarung" readonly style="background:#333; color:#ccc; cursor: not-allowed;">
             <input type="text" id="room-code" placeholder="Kode Arena (Cth: 123)">
+            
+            <!-- UI PEMILIHAN KESULITAN -->
+            <div class="difficulty-selector">
+                <button class="btn-difficulty active" data-level="mudah">Mudah</button>
+                <button class="btn-difficulty" data-level="sedang">Sedang</button>
+                <button class="btn-difficulty" data-level="sulit">Sulit</button>
+            </div>
             
             <button onclick="startGame()">MULAI PERTEMPURAN 🚀</button>
         </div>
@@ -141,8 +178,7 @@
         const saved = localStorage.getItem("playerName");
         if(saved) document.getElementById('username').value = saved;
 
-        // Helper untuk transisi layar (Menggantikan logic inline style di game.js lama)
-        // Kita override fungsi startGame asli agar transisi CSS-nya mulus
+        // Helper untuk transisi layar
         const originalStart = window.startGame;
         window.startGame = function() {
             originalStart();

@@ -1,102 +1,79 @@
-// public/game.js - FULL CODE FIXED
+// public/game.js - VERSI STANDALONE UNTUK MATH BATTLE
+// Versi ini membuat soal sendiri, tidak meminta ke server.
 
-// 1. CONFIG FIREBASE
-const sfxBenar = new Audio('https://actions.google.com/sounds/v1/cartoon/pop.ogg');
-const sfxSalah = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
+const questionEl = document.getElementById('question-display');
+const scoreEl = document.getElementById('score');
+const finalScoreEl = document.getElementById('final-score');
+const gameOverScreen = document.getElementById('game-over-screen');
 
-const firebaseConfig = {
-    apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
-    authDomain: "mathgamesd.firebaseapp.com",
-    databaseURL: "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "mathgamesd",
-    storageBucket: "mathgamesd.firebasestorage.app",
-    messagingSenderId: "595640141584",
-    appId: "1:595640141584:web:d02523bc844e52550f4795"
-};
-
-let database = null;
-try {
-    firebase.initializeApp(firebaseConfig);
-    database = firebase.database();
-} catch (e) { console.log(e); }
-
-const socket = io(); 
 let score = 0;
-let currentResult = 0;
-let myRoom = ""; 
+let gameActive = false;
+let currentProblem = null;
 
-// Auto-isi nama
-const savedName = localStorage.getItem("playerName");
-if (savedName) {
-    const inputNama = document.getElementById('username');
-    if (inputNama) inputNama.value = savedName;
-}
+// --- LOGIKA KESULITAN ---
+let selectedDifficulty = 'mudah'; // Nilai default
+
+document.addEventListener('DOMContentLoaded', () => {
+    const buttons = document.querySelectorAll('.btn-difficulty');
+    buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            buttons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            selectedDifficulty = button.dataset.level;
+        });
+    });
+});
 
 function startGame() {
-    const name = document.getElementById('username').value;
-    const room = document.getElementById('room-code').value;
-    if(name.trim() === "" || room.trim() === "") return alert("Isi data dulu!");
-    
-    myRoom = room;
-    socket.emit('joinRoom', { username: name, room: room });
+    // Tampilkan layar game
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('game-screen').classList.remove('hidden');
     document.getElementById('game-screen').classList.add('block');
     
-    generateQuestion();
+    gameActive = true;
+    requestMintaSoal();
 }
 
-function generateQuestion() {
-    document.getElementById('question-display').innerText = "🤖 AI sedang berpikir...";
-    document.getElementById('question-display').style.fontSize = "1.5rem";
-    
-    // FIX 1: Kirim kategori 'math'
-    socket.emit('mintaSoalAI', 'math');
+function requestMintaSoal() {
+    // Buat soal secara lokal
+    let a, b;
+    if (selectedDifficulty === 'mudah') { a = Math.floor(Math.random() * 10) + 1; b = Math.floor(Math.random() * 10) + 1; }
+    else if (selectedDifficulty === 'sedang') { a = Math.floor(Math.random() * 50) + 1; b = Math.floor(Math.random() * 50) + 1; }
+    else if (selectedDifficulty === 'sulit') { a = Math.floor(Math.random() * 100) + 1; b = Math.floor(Math.random() * 100) + 1; }
+
+    currentProblem = { text: `Berapa ${a} + ${b}?`, jawaban: a + b };
+    questionEl.innerText = currentProblem.text;
 }
-
-// FIX 2: Terima data dengan format baru
-socket.on('soalDariAI', (res) => {
-    // Cek apakah ini soal untuk math?
-    if (res.kategori !== 'math') return;
-
-    const data = res.data; // Ambil isinya
-    document.getElementById('question-display').innerText = data.soal;
-    currentResult = data.jawaban;
-    
-    document.getElementById('answer-input').value = '';
-    document.getElementById('answer-input').focus();
-});
 
 function checkAnswer() {
-    const playerAnswer = parseInt(document.getElementById('answer-input').value);
-    if (playerAnswer === currentResult) {
-        score += 10; 
-        sfxBenar.currentTime = 0; sfxBenar.play();
-        alert("Benar! 🎉");
-        socket.emit('laporSkor', { skor: score, room: myRoom }); 
+    if (!gameActive || !currentProblem) return;
+    
+    const answerInput = document.getElementById('answer-input');
+    const userAnswer = parseInt(answerInput.value, 10);
+
+    if (userAnswer === currentProblem.jawaban) {
+        score += 10;
+        scoreEl.innerText = score;
+        questionEl.innerText = "BENAR! 🎉";
+        setTimeout(requestMintaSoal, 1500); // Minta soal berikutnya
     } else {
-        sfxSalah.currentTime = 0; sfxSalah.play();
-        alert("Salah! Jawabannya: " + currentResult);
+        questionEl.innerText = "SALAH! Coba lagi.";
     }
-    document.getElementById('score').innerText = score;
-    generateQuestion();
+    answerInput.value = '';
+    answerInput.focus();
 }
 
-socket.on('updateSkorLawan', (skor) => {
-    document.getElementById('opponent-score').innerText = skor;
+// Event listener untuk input field agar bisa menjawab dengan "Enter"
+document.getElementById('answer-input').addEventListener('keyup', function(event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        checkAnswer();
+    }
 });
 
-async function downloadSertifikat() {
-    const name = document.getElementById('username').value;
-    if (database) {
-        database.ref('leaderboard/' + name).update({ 
-            nama: name, skor_math: score, waktu_math: new Date().toString()
-        });
-    }
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.text("SERTIFIKAT JUARA", 20, 20);
-    doc.text(`Nama: ${name}`, 20, 40);
-    doc.text(`Skor: ${score}`, 20, 50);
-    doc.save(`Sertifikat_${name}.pdf`);
+function endGame() {
+    gameActive = false;
+    finalScoreEl.innerText = score;
+    gameOverScreen.style.display = 'block';
+    console.log(`Game selesai! Skor Akhir: ${score}`);
 }
