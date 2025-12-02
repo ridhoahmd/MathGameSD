@@ -1,17 +1,3 @@
-// public/memory.js - FULL CODE FIXED
-
-const firebaseConfig = {
-    apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
-    authDomain: "mathgamesd.firebaseapp.com",
-    databaseURL: "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "mathgamesd",
-    storageBucket: "mathgamesd.firebasestorage.app",
-    messagingSenderId: "595640141584",
-    appId: "1:595640141584:web:d02523bc844e52550f4795"
-};
-try { firebase.initializeApp(firebaseConfig); } catch(e) {}
-const database = firebase.database();
-
 const socket = io();
 let cards = [];
 let hasFlippedCard = false;
@@ -117,11 +103,12 @@ function gameWon() {
     document.getElementById('win-screen').style.display = 'flex';
 
     const savedName = localStorage.getItem("playerName");
-    if (savedName && database) {
-        database.ref('leaderboard/' + savedName).update({
+    if (savedName) {
+        // KIRIM DATA SKOR KE SERVER, bukan langsung ke Firebase
+        socket.emit('simpanSkor', {
             nama: savedName,
-            skor_memory: score,
-            waktu_memory: new Date().toString()
+            skor: score,
+            game: 'memory' // Penting untuk membedakan game
         });
     }
 }
