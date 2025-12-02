@@ -21,12 +21,24 @@
 
         h1 { font-family: 'Orbitron', sans-serif; color: #00f2ff; text-align: center; margin-bottom: 30px; letter-spacing: 2px; }
         
-        .btn-back {
-            display: inline-block; margin-bottom: 20px; padding: 10px 20px;
-            background: #ff4757; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;
+        .header-actions {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
         }
 
-        .table-wrapper { overflow-x: auto; }
+        .btn-back {
+            text-decoration: none; background: #444; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; transition: 0.3s;
+        }
+        .btn-back:hover { background: #666; }
+
+        /* TOMBOL DOWNLOAD PDF (BARU) */
+        .btn-print {
+            background: linear-gradient(45deg, #ff9800, #ff5722); color: white; 
+            padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; gap: 10px; transition: 0.3s;
+        }
+        .btn-print:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 87, 34, 0.5); }
+
+        .table-wrapper { overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
         th { background: rgba(0, 242, 255, 0.1); color: #00f2ff; font-family: 'Orbitron', sans-serif; }
@@ -38,15 +50,9 @@
         select.role-select { padding: 5px 10px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
         select.role-select:disabled { opacity: 0.5; cursor: not-allowed; background: #222; border: 1px solid #555; }
         
-        .role-siswa { background: #444; color: white; }
-        .role-guru { background: #38ef7d; color: black; }
-        .role-admin { background: #ef473a; color: white; }
-
         .search-box { width: 100%; padding: 12px; margin-bottom: 20px; background: rgba(255,255,255,0.1); border: 1px solid #555; color: white; border-radius: 8px; }
         
         .badge-info { font-size: 0.8rem; padding: 5px 10px; border-radius: 5px; border: 1px solid; display: inline-block; margin-bottom: 10px; }
-
-        /* FIX: Class pengganti inline style */
         .text-center { text-align: center; }
         .mb-20 { margin-bottom: 20px; }
     </style>
@@ -54,24 +60,31 @@
 <body>
 
     <div class="container">
-        <a href="/" class="btn-back">⬅ Kembali ke Dashboard</a>
-        <h1>📋 DATA SISWA & HAK AKSES</h1>
+        <div class="header-actions">
+            <a href="/" class="btn-back">⬅ Dashboard</a>
+            
+            <button onclick="downloadPDF()" class="btn-print">
+                🖨️ Download Laporan PDF
+            </button>
+        </div>
+
+        <h1>📋 DATA SISWA & NILAI</h1>
 
         <div id="user-status-info" class="text-center mb-20"></div>
 
         <input type="text" id="search" class="search-box" placeholder="🔍 Cari nama siswa..." onkeyup="filterTable()">
 
         <div class="table-wrapper">
-            <table>
+            <table id="tabel-nilai">
                 <thead>
                     <tr>
-                        <th>Nama</th>
+                        <th>Nama Siswa</th>
                         <th>Math</th>
                         <th>Zuma</th>
                         <th>Memory</th>
                         <th>Piano</th>
                         <th>TOTAL</th>
-                        <th>Hak Akses (Role)</th>
+                        <th>Role</th>
                     </tr>
                 </thead>
                 <tbody id="table-body">
@@ -84,6 +97,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
     <script>
         const firebaseConfig = {
@@ -103,6 +119,7 @@
         let currentUserRole = 'siswa';
         let currentUserName = '';
 
+        // --- AUTH & SECURITY ---
         auth.onAuthStateChanged((user) => {
             if (!user) {
                 window.location.href = "/";
@@ -113,7 +130,7 @@
                     currentUserRole = data ? data.role : 'siswa';
                     
                     if (currentUserRole !== 'guru' && currentUserRole !== 'admin') {
-                        alert("Akses Ditolak!");
+                        alert("Akses Ditolak! Halaman ini khusus Guru.");
                         window.location.href = "/";
                     } else {
                         const infoBox = document.getElementById('user-status-info');
@@ -128,6 +145,7 @@
             }
         });
 
+        // --- LOAD DATA ---
         function loadDataSiswa() {
             database.ref('leaderboard').on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -148,22 +166,20 @@
                     let total = sMath + sZuma + sMemory + sPiano;
                     let targetRole = user.role || "siswa";
 
+                    // Logic Role Control
                     let isDisabled = '';
                     let adminOption = '';
-
                     if (currentUserRole === 'admin') {
                         isDisabled = ''; 
                         adminOption = `<option value="admin" ${targetRole === 'admin' ? 'selected' : ''}>Admin</option>`;
                     } else {
-                        if (targetRole === 'admin' || user.nama === currentUserName) {
-                            isDisabled = 'disabled';
-                        }
+                        if (targetRole === 'admin' || user.nama === currentUserName) isDisabled = 'disabled';
                         adminOption = ''; 
                     }
 
                     let roleControl = '';
                     if (isDisabled === 'disabled' && targetRole === 'admin') {
-                         roleControl = `<span style="color:#ef473a; font-weight:bold;">ADMIN (Terkunci)</span>`;
+                         roleControl = `<span style="color:#ef473a; font-weight:bold;">ADMIN</span>`;
                     } else {
                          roleControl = `
                             <select class="role-select role-${targetRole}" onchange="updateRole('${user.nama}', this.value, '${targetRole}')" ${isDisabled}>
@@ -177,8 +193,10 @@
                     const row = `
                         <tr>
                             <td>
-                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${user.nama}" class="avatar-mini">
-                                ${user.nama}
+                                <div style="display:flex; align-items:center;">
+                                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${user.nama}" class="avatar-mini">
+                                    <span>${user.nama}</span>
+                                </div>
                             </td>
                             <td>${sMath}</td>
                             <td>${sZuma}</td>
@@ -193,18 +211,13 @@
             });
         }
 
+        // --- UPDATE ROLE ---
         window.updateRole = function(targetName, newRole, oldRole) {
             if(currentUserRole !== 'admin' && currentUserRole !== 'guru') {
-                alert("Anda tidak punya hak!");
-                loadDataSiswa(); return;
+                alert("Anda tidak punya hak!"); loadDataSiswa(); return;
             }
             if(currentUserRole === 'guru' && newRole === 'admin') {
-                alert("Guru tidak bisa mengangkat Admin!");
-                loadDataSiswa(); return;
-            }
-            if(currentUserRole === 'guru' && oldRole === 'admin') {
-                alert("Guru tidak bisa mengubah akun Admin!");
-                loadDataSiswa(); return;
+                alert("Guru tidak bisa mengangkat Admin!"); loadDataSiswa(); return;
             }
             if(confirm(`Ubah status ${targetName} menjadi ${newRole.toUpperCase()}?`)) {
                 database.ref('leaderboard/' + targetName).update({ role: newRole });
@@ -213,6 +226,7 @@
             }
         }
 
+        // --- SEARCH FILTER ---
         window.filterTable = function() {
             const input = document.getElementById('search');
             const filter = input.value.toUpperCase();
@@ -224,6 +238,57 @@
                     rows[i].style.display = txt.toUpperCase().indexOf(filter) > -1 ? "" : "none";
                 }
             }
+        }
+
+        // --- 🖨️ FUNGSI DOWNLOAD PDF (BARU) ---
+        window.downloadPDF = function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Judul Dokumen
+            doc.setFontSize(18);
+            doc.text("Laporan Nilai Siswa - Videa Class", 14, 20);
+            
+            // Tanggal Cetak
+            doc.setFontSize(10);
+            const date = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            doc.text(`Dicetak pada: ${date}`, 14, 28);
+
+            // Generate Tabel dari HTML
+            // Kita ambil data manual agar input Select (Role) tidak berantakan
+            let dataBody = [];
+            const rows = document.querySelectorAll('#table-body tr');
+            
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('td');
+                if(cols.length > 0 && row.style.display !== 'none') {
+                    // Ambil teks nama (bersihkan enter/spasi)
+                    let nama = cols[0].innerText.trim();
+                    let math = cols[1].innerText;
+                    let zuma = cols[2].innerText;
+                    let memory = cols[3].innerText;
+                    let piano = cols[4].innerText;
+                    let total = cols[5].innerText;
+                    
+                    // Ambil value dari Select atau Text untuk Role
+                    let roleSelect = cols[6].querySelector('select');
+                    let role = roleSelect ? roleSelect.value : cols[6].innerText;
+
+                    dataBody.push([nama, math, zuma, memory, piano, total, role.toUpperCase()]);
+                }
+            });
+
+            doc.autoTable({
+                head: [['Nama Siswa', 'Math', 'Zuma', 'Memory', 'Piano', 'Total', 'Role']],
+                body: dataBody,
+                startY: 35,
+                theme: 'grid',
+                headStyles: { fillColor: [0, 242, 255], textColor: [0,0,0] }, // Warna header cyan
+                styles: { fontSize: 10 }
+            });
+
+            // Simpan File
+            doc.save(`Laporan_Nilai_Videa_${new Date().toISOString().slice(0,10)}.pdf`);
         }
     </script>
 </body>
