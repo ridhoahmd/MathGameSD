@@ -3,37 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Memory Math</title>
-    <link rel="stylesheet" href="memory.css">
+    <title>Memory Lab - Videa Class</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <style>
-        .win-modal { display: none; } /* Default sembunyi */
+        /* 1. GLOBAL STYLE */
+        body { 
+            margin: 0; padding: 0; font-family: 'Poppins', sans-serif;
+            /* Background Galaxy */
+            background: radial-gradient(circle at top right, #2b1055, #7597de); 
+            background-color: #1e1e2e;
+            color: #e0e0e0; 
+            min-height: 100vh; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center;
+        }
+
+        /* 2. TOMBOL KEMBALI */
+        .btn-back {
+            position: absolute; top: 20px; left: 20px; text-decoration: none;
+            background: rgba(255, 255, 255, 0.1); color: white; 
+            padding: 10px 20px; border-radius: 30px; font-weight: bold; font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(5px);
+            transition: 0.3s;
+        }
+        .btn-back:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+
+        /* 3. CONTAINER UTAMA */
+        .game-container { 
+            text-align: center; width: 95%; max-width: 600px;
+            padding: 20px;
+        }
+
+        h1 { 
+            font-family: 'Orbitron', sans-serif; color: #00f2ff; 
+            text-shadow: 0 0 15px rgba(0, 242, 255, 0.5);
+            margin-bottom: 10px; letter-spacing: 2px;
+        }
+        
+        p { color: #aaa; font-size: 0.9rem; margin-bottom: 30px; }
+
+        /* 4. PANEL INFO (Langkah & Waktu) */
+        .info-panel {
+            margin-bottom: 30px; font-size: 1.1rem; font-weight: bold;
+            background: rgba(0,0,0,0.5); padding: 10px 20px; border-radius: 50px;
+            display: inline-flex; gap: 30px; border: 1px solid #444;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .info-val { color: #ffeb3b; font-family: 'Orbitron', sans-serif; }
+
+        /* 5. GRID KARTU (RESPONSIF) */
+        .memory-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 Kolom */
+            gap: 15px;
+            width: 100%;
+            perspective: 1000px;
+        }
+
+        /* 6. DESAIN KARTU (HOLOGRAM STYLE) */
+        .card {
+            aspect-ratio: 1 / 1; /* Selalu Kotak */
+            background-color: rgba(30, 30, 46, 0.8);
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.5rem; font-family: 'Orbitron', sans-serif;
+            font-weight: bold; color: #fff;
+            transition: transform 0.4s, box-shadow 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border: 2px solid #00f2ff; /* Border Nyala saat terbuka */
+            text-shadow: 0 0 10px rgba(0, 242, 255, 0.8);
+            user-select: none; -webkit-user-select: none;
+        }
+
+        /* EFEK KARTU TERTUTUP (Belakang Kartu) */
+        .card.hidden {
+            background: linear-gradient(135deg, #2b1055, #41295a); /* Warna Ungu Gelap */
+            color: transparent; /* Sembunyikan Angka */
+            text-shadow: none;
+            border: 2px solid #555; /* Border redup */
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            transform: rotateY(180deg); /* Efek balik */
+        }
+        
+        /* Ikon tanda tanya di kartu tertutup */
+        .card.hidden::after {
+            content: "?";
+            color: rgba(255,255,255,0.1);
+            font-size: 2rem;
+        }
+
+        /* EFEK KARTU COCOK (Benar) */
+        .card.matched {
+            background-color: rgba(56, 239, 125, 0.2); /* Hijau Transparan */
+            border-color: #38ef7d;
+            color: #38ef7d;
+            text-shadow: 0 0 15px #38ef7d;
+            cursor: default;
+            transform: scale(0.95);
+        }
+
+        /* RESPONSIVE HP */
+        @media (max-width: 500px) {
+            .memory-board { gap: 8px; }
+            .card { font-size: 1rem; border-radius: 8px; }
+            h1 { font-size: 1.5rem; }
+        }
+
+        /* 7. MODAL MENANG */
+        .win-modal {
+            display: none; /* Default sembunyi */
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2000;
+            justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        .win-content {
+            background: #1e1e2e; padding: 40px; border-radius: 20px; 
+            text-align: center; border: 2px solid #ffd700;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+            width: 85%; max-width: 400px;
+            animation: popIn 0.5s ease;
+        }
+        @keyframes popIn { from{transform:scale(0.5); opacity:0;} to{transform:scale(1); opacity:1;} }
+
+        .win-title { color: #ffd700; font-family: 'Orbitron', sans-serif; margin-top: 0; }
+        .win-score { font-size: 3rem; font-weight: bold; color: white; margin: 10px 0; }
+        
+        .btn-action {
+            padding: 12px 25px; margin-top: 15px; cursor: pointer;
+            border-radius: 30px; border: none; font-weight: bold; font-family: 'Poppins', sans-serif;
+            width: 100%; transition: 0.2s;
+        }
+        .btn-retry { background: #00f2ff; color: black; }
+        .btn-retry:hover { box-shadow: 0 0 15px #00f2ff; }
+        .btn-home { background: #333; color: #ccc; margin-top: 10px; }
+
     </style>
 </head>
 <body>
 
-    <a href="/" class="btn-back">⬅ Kembali</a>
+    <a href="/" class="btn-back">⬅ MENU</a>
 
     <div class="game-container">
-        <h1>🧠 Memory Math</h1>
-        <p>Cari pasangan Soal dan Jawabannya!</p>
+        <h1>MEMORY LAB</h1>
+        <p>Retas sistem dengan mencocokkan kode!</p>
         
         <div class="info-panel">
-            <span>Langkah: <span id="moves">0</span></span>
+            <span>Langkah: <span id="moves" class="info-val">0</span></span>
         </div>
 
         <div class="memory-board" id="board">
             </div>
+    </div>
 
-        <div id="win-screen" class="win-modal">
-            <h2>🎉 Kamu Menang!</h2>
-            <p>Skor Akhir: <span id="final-score">0</span></p>
-            <button onclick="location.reload()">Main Lagi</button>
-            <button onclick="window.location.href='/'">Kembali ke Menu</button>
+    <div id="win-screen" class="win-modal">
+        <div class="win-content">
+            <h2 class="win-title">MISSION COMPLETE!</h2>
+            <p>Skor Kamu</p>
+            <div class="win-score" id="final-score">0</div>
+            
+            <button onclick="location.reload()" class="btn-action btn-retry">MAIN LAGI</button>
+            <button onclick="window.location.href='/'" class="btn-action btn-home">KEMBALI KE BASE</button>
         </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
     <script src="memory.js"></script>
 </body>
 </html>
