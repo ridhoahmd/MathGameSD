@@ -9,7 +9,7 @@
         /* TEMA DARK GALACTIC */
         * { box-sizing: border-box; }
         
-        /* UTILITY CLASSES (Pengganti Inline Style) */
+        /* UTILITY CLASSES */
         .hidden { display: none !important; }
         .block { display: block !important; }
         .mt-10 { margin-top: 10px; }
@@ -40,9 +40,7 @@
             border-bottom: 1px solid rgba(0, 242, 255, 0.1); 
             display: flex; justify-content: space-between; align-items: center;
             position: fixed; top: 0; z-index: 1000;
-            /* FIX 1: Urutan prefix yang benar */
-            -webkit-backdrop-filter: blur(10px);
-            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
         }
         .logo-area { display: flex; align-items: center; gap: 15px; }
         .logo-img { height: 75px; width: auto; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); } 
@@ -57,9 +55,7 @@
             display: flex; width: 95%; max-width: 1200px; height: auto; min-height: 80vh; 
             margin: 120px auto 50px; background: rgba(30, 30, 46, 0.8); border-radius: 20px; overflow: hidden; 
             box-shadow: 0 0 40px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1);
-            /* FIX 1: Urutan prefix yang benar */
-            -webkit-backdrop-filter: blur(20px);
-            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
         }
 
         /* SIDEBAR */
@@ -88,7 +84,7 @@
         .game-card { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 30px 20px; text-align: center; text-decoration: none; border: 1px solid rgba(255,255,255,0.1); display: block; transition: 0.3s; }
         .game-card:hover { transform: translateY(-10px); background: rgba(255,255,255,0.1); border-color: #00f2ff; }
         
-        /* Game Card Elements (Pengganti Inline) */
+        /* Game Card Elements */
         .game-icon { font-size: 50px; margin-bottom: 10px; display: block; }
         .game-title { font-weight: bold; font-size: 1.2rem; color: white; margin-bottom: 10px; }
         .game-desc { color: #aaa; font-size: 0.9rem; margin-bottom: 20px; }
@@ -159,13 +155,8 @@
 
             <div class="menu-section hidden" id="guru-panel">
                 <div class="font-tiny text-bold text-green mb-10">AKSES GURU</div>
-                
-                <a href="guru.html" class="link-wrapper">
-                     <button class="btn-menu btn-guru">📋 Data Siswa & Nilai</button>
-                </a>
-                <a href="guru.html" class="link-wrapper">
-                     <button class="btn-menu btn-guru">🔑 Atur Hak Akses</button>
-                </a>
+                <a href="guru.html" class="link-wrapper"><button class="btn-menu btn-guru">📋 Data Siswa & Nilai</button></a>
+                <a href="guru.html" class="link-wrapper"><button class="btn-menu btn-guru">🔑 Atur Hak Akses</button></a>
             </div>
 
             <div class="menu-section hidden" id="admin-panel">
@@ -208,19 +199,6 @@
                     <div class="btn-play" style="background: linear-gradient(45deg, #FFD700, #FFA500); color: black;">START</div>
                 </a>
                 
-                <div class="game-card locked">
-                    <div class="game-icon">🔤</div>
-                    <div class="game-title">TEBAK KATA</div>
-                    <div class="game-desc">Susun huruf menjadi kata yang benar.</div>
-                    <div class="btn-play btn-locked">SOON !</div>
-                </div>
-                <div class="game-card locked">
-                    <div class="game-icon">🌍</div>
-                    <div class="game-title">PETA BUTA</div>
-                    <div class="game-desc">Tebak nama provinsi di peta Indonesia.</div>
-                    <div class="btn-play btn-locked">SOON !</div>
-                </div>
-                
                 <a href="#" onclick="masukGame('piano.html')" class="game-card">
                     <div class="game-icon">🎹</div>
                     <div class="game-title">PIANO MATH</div>
@@ -228,6 +206,12 @@
                     <div class="btn-play" style="background: linear-gradient(45deg, #FFD700, #FFA500); color: black;">START</div>
                 </a>
 
+                <div class="game-card locked">
+                    <div class="game-icon">🔤</div>
+                    <div class="game-title">TEBAK KATA</div>
+                    <div class="game-desc">Susun huruf menjadi kata yang benar.</div>
+                    <div class="btn-play btn-locked">SOON !</div>
+                </div>
             </div>
         </main>
     </div>
@@ -271,6 +255,21 @@
         const provider = new firebase.auth.GoogleAuthProvider();
         let currentUser = null;
 
+        // ✅ LOGIKA GUEST UNIK (Dijalankan Pertama Kali)
+        if (!localStorage.getItem("playerName")) {
+            const randomGuest = "Guest_" + Math.floor(Math.random() * 10000);
+            localStorage.setItem("playerName", randomGuest);
+        }
+        
+        // Update tampilan nama di sidebar
+        const localName = localStorage.getItem("playerName");
+        document.getElementById('display-name').innerText = localName;
+        document.getElementById('user-avatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${localName}`;
+
+        // ✅ LOAD SKOR (Dijalankan untuk Guest & Login)
+        loadSkor(localName); 
+        checkRole(localName);
+
         function toggleChat() {
             const chatBox = document.getElementById('chat-container');
             if (chatBox.classList.contains('minimized')) chatBox.classList.remove('minimized');
@@ -286,15 +285,19 @@
             const input = document.getElementById('chat-input');
             const msg = input.value.trim();
             if(!msg) return;
-            const user = auth.currentUser;
-            if(!user) return alert("Login dulu untuk chat!");
-            socket.emit('chatMessage', { nama: user.displayName, pesan: msg });
+            // Gunakan nama lokal agar Guest bisa chat juga
+            const namaPengirim = localStorage.getItem("playerName") || "Guest";
+            socket.emit('chatMessage', { nama: namaPengirim, pesan: msg });
             input.value = "";
         }
         function handleEnter(e) { if(e.key === 'Enter') kirimPesan(); }
+        
         socket.on('chatMessage', (data) => {
             const box = document.getElementById('chat-box');
-            const isMe = currentUser && data.nama === currentUser.displayName;
+            // Cek nama lokal untuk menentukan "pesan saya"
+            const myName = localStorage.getItem("playerName");
+            const isMe = data.nama === myName;
+            
             const div = document.createElement('div');
             div.className = isMe ? 'msg-bubble msg-me' : 'msg-bubble';
             let timeHtml = data.waktu ? `<span class="msg-time">${data.waktu}</span>` : '';
@@ -305,6 +308,7 @@
                 document.getElementById('chat-notif').style.display = 'inline';
             }
         });
+
         function toggleInputGuru() {
             const area = document.getElementById('guru-input-area');
             const text = document.getElementById('text-guru');
@@ -317,11 +321,14 @@
                 document.getElementById('input-kode-guru').value = "";
             }
         }
+
         function loginGoogle() {
             const KODE_RAHASIA = "GURU2025"; 
             const inputKode = document.getElementById('input-kode-guru').value.trim();
             auth.signInWithPopup(provider).then((result) => {
+                // Update nama lokal dengan nama Google
                 localStorage.setItem("playerName", result.user.displayName);
+                
                 let roleBaru = "siswa"; 
                 if (inputKode === KODE_RAHASIA) roleBaru = "guru";
                 database.ref('leaderboard/' + result.user.displayName).once('value').then(snapshot => {
@@ -333,16 +340,26 @@
                 });
             }).catch(e => alert(e.message));
         }
-        function logout() { auth.signOut().then(() => { localStorage.removeItem("playerName"); location.reload(); }); }
+
+        function logout() { 
+            auth.signOut().then(() => { 
+                localStorage.removeItem("playerName"); 
+                location.reload(); 
+            }); 
+        }
+
         function checkRole(name) {
             database.ref('leaderboard/' + name).on('value', snapshot => {
                 const data = snapshot.val();
                 let role = (data && data.role) ? data.role : "siswa";
                 document.getElementById('role-display').innerText = role.toUpperCase();
+                
                 const guruPanel = document.getElementById('guru-panel');
                 const adminPanel = document.getElementById('admin-panel');
+                
                 guruPanel.classList.add('hidden'); guruPanel.classList.remove('block');
                 adminPanel.classList.add('hidden'); adminPanel.classList.remove('block');
+                
                 if(role === 'admin') {
                     guruPanel.classList.remove('hidden'); guruPanel.classList.add('block');
                     adminPanel.classList.remove('hidden'); adminPanel.classList.add('block');
@@ -351,6 +368,8 @@
                 }
             });
         }
+
+        // Listener Auth (Hanya update UI saat login berhasil)
         auth.onAuthStateChanged((user) => {
             if(user) {
                 currentUser = user;
@@ -358,9 +377,12 @@
                 document.getElementById('text-guru').classList.add('hidden');
                 document.getElementById('guru-input-area').classList.add('hidden');
                 document.getElementById('btn-logout').classList.remove('hidden');
+                
                 document.getElementById('display-name').innerText = user.displayName;
                 document.getElementById('user-email').innerText = user.email;
                 document.getElementById('user-avatar').src = user.photoURL;
+                
+                // Load ulang data user Google
                 loadSkor(user.displayName);
                 checkRole(user.displayName);
             }
@@ -369,26 +391,27 @@
         function loadSkor(name) {
             database.ref('leaderboard/' + name).on('value', snapshot => {
                 const data = snapshot.val();
+                let total = 0;
                 if (data) {
-                    // Ambil semua skor
                     let sMath = data.skor_math || 0;
-                    if (data.skor && !data.skor_math) sMath = data.skor; // Support data lama
+                    if (data.skor && !data.skor_math) sMath = data.skor;
                     let sZuma = data.skor_zuma || 0;
                     let sMemory = data.skor_memory || 0;
-                    
-                    //  Ambil skor piano
                     let sPiano = data.skor_piano || 0;
-
-                    //  Hitung Total Baru
-                    let total = sMath + sZuma + sMemory + sPiano;
-                    
-                    document.getElementById('total-score').innerText = total;
+                    total = sMath + sZuma + sMemory + sPiano;
                 }
+                document.getElementById('total-score').innerText = total;
             });
         }
 
-
-        function masukGame(url) { if(!auth.currentUser) alert("Login dulu!"); else window.location.href = url; }
+        // ✅ FIX MASUK GAME (Bolehkan Guest Main)
+        function masukGame(url) { 
+            if(localStorage.getItem("playerName")) {
+                window.location.href = url; 
+            } else {
+                alert("Silakan refresh halaman untuk mendapatkan ID Guest.");
+            }
+        }
     </script>
 </body>
 </html>
