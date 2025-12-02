@@ -56,13 +56,16 @@ function startGameMultiplayer() {
     socket.emit('mintaSoalAI', 'zuma');
 }
 
-// --- 4. LISTENER UNTUK MENERIMA DATA LEVEL DARI AI ---
-socket.on('levelDariAI', (res) => {
+// Listener untuk menerima data level dari server
+socket.on('soalDariAI', (res) => {
+    // --- TAMBAHKAN INI UNTUK DIAGNOSTIK ---
+    console.log("Data diterima dari server:", res);
+
     // Pastikan ini data untuk zuma
     if (res.kategori !== 'zuma') return;
 
     const levelData = res.data;
-    console.log("Data level Zuma dari AI:", levelData);
+    console.log("Data level Zuma:", levelData);
 
     // Terapkan data dari AI ke dalam game
     applyAIDataToGame(levelData);

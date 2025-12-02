@@ -93,13 +93,13 @@ io.on('connection', (socket) => {
             // Di dalam socket.on('mintaSoalAI', async (kategori) => { ... })
 else if (kategori === 'zuma') {
     prompt = `
-        Tugasmu adalah membuat data untuk satu level game Zuma.
-        1. Tema: pilih satu secara acak dari 'Hutan Misterius', 'Lautan Dalam', 'Gurun Pasir', 'Kota Masa Depan'.
-        2. Deskripsi: buat deskripsi singkat (maks 15 kata) tentang level tersebut.
-        3. Palet Warna: berikan 4 kode warna hex (misal: #RRGGBB) yang cocok dengan tema.
-
-        KRITIS: Seluruh respons kamu HANYA boleh berupa satu objek JSON yang valid. Jangan sertakan penjelasan, sapaan, atau formatting markdown seperti \`\`\`json.
-        Format JSON harus persis seperti ini: {"tema": "string", "deskripsi": "string", "palet_warna": ["#RRGGBB", "#RRGGBB", "#RRGGBB", "#RRGGBB"]}
+        Buat satu objek JSON untuk level game Zuma.
+        Objek harus memiliki tiga kunci: "tema", "deskripsi", "palet_warna".
+        - "tema": satu kata tema, contoh: "gunung".
+        - "deskripsi": deskripsi singkat, maksimal 10 kata.
+        - "palet_warna": array dari empat kode warna hex.
+        Contoh output: {"tema": "hutan", "deskripsi": "Hati-hati dengan serangga!", "palet_warna": ["#228B22", "#90EE90", "#FFD700", "#8B4513"]}.
+        Respons kamu HANYA boleh berupa objek JSON, tidak ada yang lain.
     `;
 }
 
