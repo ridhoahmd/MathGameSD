@@ -63,16 +63,31 @@
             flex: 1; min-width: 280px; background: rgba(0,0,0,0.3); padding: 30px; 
             border-right: 1px solid rgba(255,255,255,0.05); text-align: center; display: flex; flex-direction: column; align-items: center;
         }
-        .avatar { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #00f2ff; margin-bottom: 15px; object-fit: cover; background: #000;}
+        
+        /* GAYA BINGKAI AVATAR (NEW) */
+        .avatar-container { position: relative; width: 110px; height: 110px; margin-bottom: 15px; display: flex; justify-content: center; align-items: center;}
+        .avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; background: #000; border: 3px solid #333; }
+        
+        /* CLASS BINGKAI (Sama dengan Toko) */
+        .frame-neon .avatar { border: 3px solid #00f2ff; box-shadow: 0 0 15px #00f2ff; }
+        .frame-gold .avatar { border: 4px solid #FFD700; box-shadow: 0 0 15px #FFD700; }
+        .frame-fire .avatar { border: 4px solid #ff4500; box-shadow: 0 0 20px #ff4500; animation: burn 1s infinite alternate; }
+        .frame-royal .avatar { border: 4px dashed #9900ff; box-shadow: 0 0 20px #9900ff; }
+        @keyframes burn { from { box-shadow: 0 0 10px #ff4500; } to { box-shadow: 0 0 25px #ffeb3b; } }
+
         .profile-name { font-size: 1.3rem; font-weight: bold; margin-bottom: 5px; color: #fff; }
         
         .stats-box { background: rgba(255,255,255,0.05); width: 100%; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
         .stat-value { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: #ffeb3b; display: block; }
         
-        .btn-menu { width: 100%; padding: 12px 15px; margin-bottom: 10px; border: none; border-radius: 8px; cursor: pointer; text-align: left; font-weight: 600; color: white; display: flex; align-items: center; gap: 10px; }
+        .btn-menu { width: 100%; padding: 12px 15px; margin-bottom: 10px; border: none; border-radius: 8px; cursor: pointer; text-align: left; font-weight: 600; color: white; display: flex; align-items: center; gap: 10px; transition: 0.2s;}
+        .btn-menu:hover { transform: translateX(5px); }
+        
         .btn-common { background: linear-gradient(90deg, #2b5876, #4e4376); }
+        .btn-shop { background: linear-gradient(90deg, #ff9966, #ff5e62); } /* Warna Tombol Toko */
         .btn-guru { background: linear-gradient(90deg, #11998e, #38ef7d); }
         .btn-admin { background: linear-gradient(90deg, #cb2d3e, #ef473a); }
+        
         .btn-google { background: #fff; color: #333; width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-logout { background: rgba(255,255,255,0.1); color: #ccc; width: 100%; padding: 10px; border: 1px solid #444; border-radius: 8px; cursor: pointer; margin-top: 10px; }
 
@@ -138,7 +153,10 @@
 
     <div class="dashboard-container">
         <aside class="sidebar">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guest" id="user-avatar" class="avatar" alt="Avatar">
+            <div class="avatar-container" id="avatar-box">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guest" id="user-avatar" class="avatar" alt="Avatar">
+            </div>
+            
             <div class="profile-name" id="display-name">Silakan Login</div>
             <div class="font-small text-gray mb-20" id="user-email">...</div>
             
@@ -149,6 +167,11 @@
 
             <div class="menu-section">
                 <div class="font-tiny text-bold text-666 mb-10">MENU SISWA</div>
+                
+                <a href="toko.html" class="link-wrapper">
+                    <button class="btn-menu btn-shop">🛍️ Toko Avatar</button>
+                </a>
+
                 <a href="leaderboard.html" class="link-wrapper"><button class="btn-menu btn-common">🏆 Leaderboard</button></a>
                 <button class="btn-menu btn-common" onclick="toggleChat()">💬 Chat Global <span id="chat-notif" style="display:none; color:#00f2ff; margin-left:5px;">●</span></button>
             </div>
@@ -255,19 +278,16 @@
         const provider = new firebase.auth.GoogleAuthProvider();
         let currentUser = null;
 
-        // ✅ LOGIKA GUEST UNIK (Dijalankan Pertama Kali)
+        // GUEST LOGIC
         if (!localStorage.getItem("playerName")) {
             const randomGuest = "Guest_" + Math.floor(Math.random() * 10000);
             localStorage.setItem("playerName", randomGuest);
         }
-        
-        // Update tampilan nama di sidebar
         const localName = localStorage.getItem("playerName");
         document.getElementById('display-name').innerText = localName;
         document.getElementById('user-avatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${localName}`;
 
-        // ✅ LOAD SKOR (Dijalankan untuk Guest & Login)
-        loadSkor(localName); 
+        loadUserData(localName);
         checkRole(localName);
 
         function toggleChat() {
@@ -285,7 +305,6 @@
             const input = document.getElementById('chat-input');
             const msg = input.value.trim();
             if(!msg) return;
-            // Gunakan nama lokal agar Guest bisa chat juga
             const namaPengirim = localStorage.getItem("playerName") || "Guest";
             socket.emit('chatMessage', { nama: namaPengirim, pesan: msg });
             input.value = "";
@@ -294,7 +313,6 @@
         
         socket.on('chatMessage', (data) => {
             const box = document.getElementById('chat-box');
-            // Cek nama lokal untuk menentukan "pesan saya"
             const myName = localStorage.getItem("playerName");
             const isMe = data.nama === myName;
             
@@ -326,9 +344,7 @@
             const KODE_RAHASIA = "GURU2025"; 
             const inputKode = document.getElementById('input-kode-guru').value.trim();
             auth.signInWithPopup(provider).then((result) => {
-                // Update nama lokal dengan nama Google
                 localStorage.setItem("playerName", result.user.displayName);
-                
                 let roleBaru = "siswa"; 
                 if (inputKode === KODE_RAHASIA) roleBaru = "guru";
                 database.ref('leaderboard/' + result.user.displayName).once('value').then(snapshot => {
@@ -356,7 +372,6 @@
                 
                 const guruPanel = document.getElementById('guru-panel');
                 const adminPanel = document.getElementById('admin-panel');
-                
                 guruPanel.classList.add('hidden'); guruPanel.classList.remove('block');
                 adminPanel.classList.add('hidden'); adminPanel.classList.remove('block');
                 
@@ -369,7 +384,6 @@
             });
         }
 
-        // Listener Auth (Hanya update UI saat login berhasil)
         auth.onAuthStateChanged((user) => {
             if(user) {
                 currentUser = user;
@@ -382,13 +396,13 @@
                 document.getElementById('user-email').innerText = user.email;
                 document.getElementById('user-avatar').src = user.photoURL;
                 
-                // Load ulang data user Google
-                loadSkor(user.displayName);
+                loadUserData(user.displayName);
                 checkRole(user.displayName);
             }
         });
         
-        function loadSkor(name) {
+        // FUNGSI BARU: LOAD USER DATA (SKOR + AVATAR FRAME)
+        function loadUserData(name) {
             database.ref('leaderboard/' + name).on('value', snapshot => {
                 const data = snapshot.val();
                 let total = 0;
@@ -399,17 +413,25 @@
                     let sMemory = data.skor_memory || 0;
                     let sPiano = data.skor_piano || 0;
                     total = sMath + sZuma + sMemory + sPiano;
+
+                    // UPDATE BINGKAI AVATAR
+                    const avatarBox = document.getElementById('avatar-box');
+                    // Reset kelas lama
+                    avatarBox.className = "avatar-container"; 
+                    if (data.equipped_frame && data.equipped_frame !== "default") {
+                        // Tambahkan kelas baru: frame-gold, frame-fire, dll.
+                        avatarBox.classList.add("frame-" + data.equipped_frame);
+                    }
                 }
                 document.getElementById('total-score').innerText = total;
             });
         }
 
-        // ✅ FIX MASUK GAME (Bolehkan Guest Main)
         function masukGame(url) { 
             if(localStorage.getItem("playerName")) {
                 window.location.href = url; 
             } else {
-                alert("Silakan refresh halaman untuk mendapatkan ID Guest.");
+                alert("Silakan refresh halaman.");
             }
         }
     </script>
