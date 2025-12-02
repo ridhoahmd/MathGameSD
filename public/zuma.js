@@ -2,7 +2,7 @@
 
 // --- 1. CONFIG SUARA ---
 const sfxTembak = new Audio('https://actions.google.com/sounds/v1/cartoon/pop.ogg');
-const sfxLedakan = new Audio('https://actions.google.com/sounds/v1/cartoon/general_thud.ogg');
+const sfxLedakan = new Audio('/explosion.mp3');
 
 // --- 2. INISIALISASI SOCKET.IO & GAME ---
 const socket = io();
