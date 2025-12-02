@@ -29,38 +29,45 @@ io.on('connection', (socket) => {
         io.emit('chatMessage', { nama: data.nama, pesan: data.pesan, waktu: timeString });
     });
 
-    // --- FITUR AI (GEMINI) ---
-    socket.on('mintaSoalAI', async () => {
+    // --- FITUR AI MULTI-GAME (LENGKAP) ---
+    socket.on('mintaSoalAI', async (kategori) => {
         try {
-            console.log("🤖 Sedang meminta soal ke Gemini...");
-            
-            // Instruksi ke AI
-            const prompt = `Buatkan 1 soal matematika cerita pendek (maksimal 15 kata) untuk anak SD. 
-            Operasi hitungan dasar (tambah/kurang/kali).
-            Jawabannya harus angka bulat.
-            Output WAJIB format JSON murni: { "soal": "teks soal", "jawaban": angka }
-            Jangan ada markdown.`;
+            console.log(`🤖 Meminta soal kategori: ${kategori}`);
+            let prompt = "";
 
-            const result = await model.generateContent(prompt);
+            if (kategori === 'math') {
+                prompt = `Buatkan 1 soal matematika cerita pendek SD. Output JSON: { "soal": "teks soal", "jawaban": angka_bulat }`;
+            } else if (kategori === 'tebak') {
+                prompt = `Berikan 1 kata benda umum (maks 8 huruf) untuk anak SD dan petunjuknya. Output JSON: { "kata": "KATA_ASLI", "petunjuk": "kalimat petunjuk" }`;
+            } else if (kategori === 'peta') {
+                prompt = `Berikan 1 pertanyaan tentang Geografi Indonesia. Output JSON: { "soal": "pertanyaan", "jawaban": "jawaban_singkat" }`;
+            
+            // 👇 INI YANG KEMARIN HILANG 👇
+            } else if (kategori === 'memory') {
+                prompt = `Buatkan 6 pasang kata/konsep pengetahuan umum untuk anak SD (Misal: Hewan & Suara, Negara & Ibukota). 
+                Output WAJIB JSON Array: [ {"a": "Item1", "b": "Pasangannya1"}, ... ] (Total 6 pasang). Jangan ada markdown.`;
+            }
+            // 👆 ----------------------- 👆
+
+            const result = await model.generateContent(prompt + " Output JSON only, no markdown.");
             const response = await result.response;
-            let text = response.text();
-            
-            // Bersihkan teks agar jadi JSON murni
-            text = text.replace(/```json|```/g, '').trim();
-            const soalData = JSON.parse(text);
+            let text = response.text().replace(/```json|```/g, '').trim();
+            const dataAI = JSON.parse(text);
 
-            // Kirim ke Game
-            socket.emit('soalDariAI', soalData);
+            // Kirim balik
+            socket.emit('soalDariAI', { kategori: kategori, data: dataAI });
 
         } catch (error) {
             console.error("❌ Error AI:", error);
-            // Soal Cadangan jika AI error
-            socket.emit('soalDariAI', { soal: "Berapa 10 + 10?", jawaban: 20 });
+            // Fallback (Cadangan jika error)
+            if (kategori === 'math') socket.emit('soalDariAI', { kategori: 'math', data: { soal: "10 + 10?", jawaban: 20 } });
+            
+            // Fallback Memory
+            if (kategori === 'memory') {
+                socket.emit('soalDariAI', { kategori: 'memory', data: [
+                    {a: "1+1", b: "2"}, {a: "Merah", b: "Red"}, {a: "Kucing", b: "Meong"},
+                    {a: "Pagi", b: "Morning"}, {a: "Gula", b: "Manis"}, {a: "Api", b: "Panas"}
+                ]});
+            }
         }
     });
-
-    socket.on('disconnect', () => { console.log('❌ User Left'); });
-});
-
-const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => console.log(`🚀 Server AI Siap di Port ${PORT}`));
