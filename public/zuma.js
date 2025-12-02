@@ -1,26 +1,10 @@
-// public/zuma.js - FULL CODE
+// public/zuma.js - VERSI LENGKAP DENGAN INTEGRASI AI & KEAMANAN
 
-// --- 1. CONFIG SUARA & FIREBASE ---
+// --- 1. CONFIG SUARA ---
 const sfxTembak = new Audio('https://actions.google.com/sounds/v1/cartoon/pop.ogg');
 const sfxLedakan = new Audio('https://actions.google.com/sounds/v1/cartoon/general_thud.ogg');
 
-const firebaseConfig = {
-    apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
-    authDomain: "mathgamesd.firebaseapp.com",
-    // 👇 URL Database ASLI Anda
-    databaseURL: "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app", 
-    projectId: "mathgamesd",
-    storageBucket: "mathgamesd.firebasestorage.app",
-    messagingSenderId: "595640141584",
-    appId: "1:595640141584:web:d02523bc844e52550f4795"
-};
-
-let database = null;
-try {
-    firebase.initializeApp(firebaseConfig);
-    database = firebase.database();
-} catch (e) { console.log(e); }
-
+// --- 2. INISIALISASI SOCKET.IO & GAME ---
 const socket = io();
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -35,14 +19,16 @@ let myRoom = "";
 let spawnRate = 4000; 
 let lastSpawnTime = 0;
 
+// Ambil nama dari localStorage dan isi otomatis
 const savedName = localStorage.getItem("playerName");
 if (savedName) {
     const inputNama = document.getElementById('username');
     if (inputNama) {
-        inputNama.value = savedName; // Isi otomatis
+        inputNama.value = savedName;
     }
 }
 
+// --- 3. FUNGSI START GAME YANG SUDAH DIPERBAIKI ---
 function startGameMultiplayer() {
     const nameInput = document.getElementById('username').value;
     const roomInput = document.getElementById('room-code').value;
@@ -54,21 +40,67 @@ function startGameMultiplayer() {
     myName = nameInput;
     myRoom = roomInput;
     socket.emit('joinRoom', { username: myName, room: myRoom });
+
+    // Sembunyikan layar login, tampilkan wadah game
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('game-container').style.display = 'block';
+
+    // Tampilkan pesan loading di canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 30px Orbitron';
+    ctx.textAlign = 'center';
+    ctx.fillText('🤖 AI sedang menciptakan level...', canvas.width / 2, canvas.height / 2);
+
+    // Minta data level baru ke server
+    socket.emit('mintaSoalAI', 'zuma');
+}
+
+// --- 4. LISTENER UNTUK MENERIMA DATA LEVEL DARI AI ---
+socket.on('levelDariAI', (res) => {
+    // Pastikan ini data untuk zuma
+    if (res.kategori !== 'zuma') return;
+
+    const levelData = res.data;
+    console.log("Data level Zuma dari AI:", levelData);
+
+    // Terapkan data dari AI ke dalam game
+    applyAIDataToGame(levelData);
+});
+
+// --- 5. FUNGSI UNTUK MENERAPKAN DATA AI KE GAME ---
+function applyAIDataToGame(data) {
+    // 1. Ubah warna player dengan warna pertama dari palet
+    player.color = data.palet_warna[0];
+
+    // 2. Tampilkan deskripsi level di UI
+    const descEl = document.getElementById('level-description');
+    if(descEl) {
+        descEl.innerText = data.deskripsi;
+    }
+
+    // 3. Ubah background game container
+    const gameContainer = document.getElementById('game-container');
+    if(gameContainer) {
+        gameContainer.style.background = `linear-gradient(135deg, ${data.palet_warna[1]}, ${data.palet_warna[2]})`;
+    }
+
+    // 4. Mulai game loop
     gameActive = true;
     requestAnimationFrame(update);
 }
 
+// --- 6. LISTENER LAINNYA ---
 socket.on('updateSkorLawan', (skorLawan) => {
     document.getElementById('opponent-score').innerText = skorLawan;
 });
 
+// --- 7. LOGIKA GAME UTAMA (TIDAK BERUBAH) ---
 const pathPoints = [
     {x: 50, y: 50}, {x: 750, y: 50}, {x: 750, y: 500},
     {x: 50, y: 500}, {x: 50, y: 300}, {x: 400, y: 300}
 ];
-const player = { x: 400, y: 550, angle: 0, currentAmmo: 0, color: '#ff9800' };
+const player = { x: 400, y: 550, angle: 0, currentAmmo: 0, color: '#ff9800' }; // Warna akan di-override oleh AI
 let bullets = [];
 let enemies = [];
 
@@ -113,14 +145,13 @@ class Enemy {
             finalScoreEl.innerText = score;
             gameOverScreen.style.display = 'block';
 
-            // SIMPAN DATA KE DATABASE
-            if (database && myName) {
-                database.ref('leaderboard/' + myName).update({ 
-                    nama: myName,
-                    skor_zuma: score, 
-                    waktu_zuma: new Date().toString()
-                }).then(() => console.log("Zuma Saved!"));
-            }
+            // --- PERUBAHAN: KIRIM SKOR KE SERVER, BUKAN LANGSUNG KE FIREBASE ---
+            socket.emit('simpanSkor', {
+                nama: myName,
+                skor: score,
+                game: 'zuma'
+            });
+            console.log(`Melaporkan skor ${score} untuk game zuma ke server.`);
             return;
         }
         const dx = target.x - this.x; const dy = target.y - this.y;
@@ -141,7 +172,6 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mousedown', () => {
     if (!gameActive) return;
     
-    // 🔊 SUARA TEMBAK
     sfxTembak.currentTime = 0;
     sfxTembak.play();
 
@@ -158,7 +188,6 @@ function checkCollisions() {
                 if (bullet.value === enemy.value) {
                     enemy.active = false; 
                     
-                    // 🔊 SUARA LEDAKAN
                     sfxLedakan.currentTime = 0;
                     sfxLedakan.play();
 

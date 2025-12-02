@@ -90,6 +90,18 @@ io.on('connection', (socket) => {
             } else if (kategori === 'peta') {
                 prompt = `Berikan 1 pertanyaan tentang Geografi Indonesia. Output JSON murni: { "soal": "pertanyaan", "jawaban": "jawaban_singkat" }`;
             }
+            // Di dalam socket.on('mintaSoalAI', async (kategori) => { ... })
+else if (kategori === 'zuma') {
+    prompt = `
+        Tugasmu adalah membuat data untuk satu level game Zuma.
+        1. Tema: pilih satu secara acak dari 'Hutan Misterius', 'Lautan Dalam', 'Gurun Pasir', 'Kota Masa Depan'.
+        2. Deskripsi: buat deskripsi singkat (maks 15 kata) tentang level tersebut.
+        3. Palet Warna: berikan 4 kode warna hex (misal: #RRGGBB) yang cocok dengan tema.
+
+        KRITIS: Seluruh respons kamu HANYA boleh berupa satu objek JSON yang valid. Jangan sertakan penjelasan, sapaan, atau formatting markdown seperti \`\`\`json.
+        Format JSON harus persis seperti ini: {"tema": "string", "deskripsi": "string", "palet_warna": ["#RRGGBB", "#RRGGBB", "#RRGGBB", "#RRGGBB"]}
+    `;
+}
 
             const result = await model.generateContent(prompt);
             const response = await result.response;
