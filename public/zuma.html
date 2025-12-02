@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Zuma Space Multiplayer</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
@@ -151,12 +152,6 @@
             border-color: #00f2ff;
             box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
         }
-
-       /* --- PERBAIKAN TOMBOL TIDAK BISA DIKLIK --- */
-#ui-layer button {
-    pointer-events: auto !important;
-}
-
     </style>
 </head>
 <body>
@@ -207,19 +202,5 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="zuma.js"></script>
-
-    <script>
-        // Auto isi nama
-        const saved = localStorage.getItem("playerName");
-        if(saved) document.getElementById('username').value = saved;
-
-        // Helper UI
-        const oriStart = window.startGameMultiplayer;
-        window.startGameMultiplayer = function() {
-            oriStart();
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('game-hud').style.display = 'block';
-        }
-    </script>
 </body>
 </html>

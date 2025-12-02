@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Math Battle SD</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
@@ -172,20 +173,5 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="game.js"></script>
-
-    <script>
-        // Auto-isi nama (Helper)
-        const saved = localStorage.getItem("playerName");
-        if(saved) document.getElementById('username').value = saved;
-
-        // Helper untuk transisi layar
-        const originalStart = window.startGame;
-        window.startGame = function() {
-            originalStart();
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('game-screen').classList.remove('hidden');
-            document.getElementById('game-screen').classList.add('block');
-        }
-    </script>
 </body>
 </html>
