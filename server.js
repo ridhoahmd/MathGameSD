@@ -2,7 +2,7 @@ require('dotenv').config();
 
 // --- INISIALISASI FIREBASE (AMAN DI SERVER) ---
 const { initializeApp } = require("firebase/app");
-const { getDatabase, ref, set, update } = require("firebase/database");
+const { getDatabase, ref, set, update, get, child } = require("firebase/database");
 
 // Konfigurasi Firebase (Sekarang aman di server)
 const firebaseConfig = {
@@ -49,30 +49,47 @@ io.on('connection', (socket) => {
         io.emit('chatMessage', { nama: data.nama, pesan: data.pesan, waktu: timeString });
     });
 
-    // --- LISTENER UNTUK MENYIMPAN SKOR DARI GAME APAPUN ---
-    socket.on('simpanSkor', (data) => {
-        console.log(`💾 Menerima skor dari ${data.nama} untuk game ${data.game}: ${data.skor}`);
-        const leaderboardRef = ref(database, 'leaderboard/' + data.nama);
-        const updateData = {
-            nama: data.nama
-        };
-        if (data.game === 'memory') {
-            updateData.skor_memory = data.skor;
-            updateData.waktu_memory = new Date().toString();
-        } else if (data.game === 'zuma') {
-            updateData.skor_zuma = data.skor;
-            updateData.waktu_zuma = new Date().toString();
-        } else if (data.game === 'math') {
-            updateData.skor_math = data.skor;
-            updateData.waktu_math = new Date().toString();
+    // --- LISTENER UNTUK MENYIMPAN SKOR (VERSI AKUMULASI) ---
+    socket.on('simpanSkor', async (data) => {
+        console.log(`💾 Request simpan dari ${data.nama}: +${data.skor} poin di game ${data.game}`);
+        
+        try {
+            const userRef = ref(database, 'leaderboard/' + data.nama);
+            
+            // 1. Ambil data lama dulu dari database
+            const snapshot = await get(userRef);
+            const userData = snapshot.val() || {};
+            
+            // 2. Tentukan nama kolom skor berdasarkan game
+            let fieldSkor = '';
+            if (data.game === 'math') fieldSkor = 'skor_math';
+            else if (data.game === 'zuma') fieldSkor = 'skor_zuma';
+            else if (data.game === 'memory') fieldSkor = 'skor_memory';
+            else if (data.game === 'piano') fieldSkor = 'skor_piano';
+
+            // 3. Hitung Total Baru (Skor Lama + Skor Baru)
+            const skorLama = userData[fieldSkor] || 0;
+            const totalBaru = skorLama + parseInt(data.skor);
+
+            // 4. Update data waktu
+            const updateData = {
+                nama: data.nama, // Pastikan nama tetap ada
+                [fieldSkor]: totalBaru
+            };
+            
+            // Update waktu main terakhir
+            if (data.game === 'math') updateData.waktu_math = new Date().toString();
+            if (data.game === 'zuma') updateData.waktu_zuma = new Date().toString();
+            if (data.game === 'memory') updateData.waktu_memory = new Date().toString();
+
+            // 5. Simpan ke Firebase
+            await update(userRef, updateData);
+            
+            console.log(`✅ Sukses! ${data.nama} (Lama: ${skorLama} + Baru: ${data.skor} = Total: ${totalBaru})`);
+
+        } catch (error) {
+            console.error("❌ Gagal menyimpan skor:", error);
         }
-        update(leaderboardRef, updateData)
-            .then(() => {
-                console.log(`✅ Skor ${data.nama} untuk ${data.game} berhasil disimpan.`);
-            })
-            .catch((error) => {
-                console.error("❌ Gagal menyimpan skor:", error);
-            });
     });
 
     // --- LOGIKA UTAMA: MENERIMA REQUEST DARI KLIEN ---
