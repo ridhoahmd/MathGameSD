@@ -17,14 +17,12 @@
             color: white;
             display: flex; justify-content: center; align-items: center;
             min-height: 100vh;
-            /* HAPUS overflow: hidden agar aman di HP kecil */
             overflow: auto; 
         }
 
         /* 2. TOMBOL KEMBALI */
         .btn-back {
-            position: fixed; /* Ganti absolute jadi fixed agar tetap terlihat saat scroll */
-            top: 20px; left: 20px; z-index: 1000;
+            position: fixed; top: 20px; left: 20px; z-index: 1000;
             padding: 10px 20px; background: rgba(255, 255, 255, 0.1); 
             color: white; border: 1px solid rgba(255,255,255,0.2);
             border-radius: 30px; font-weight: bold; cursor: pointer;
@@ -33,20 +31,14 @@
         }
         .btn-back:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
 
-        /* 3. CONTAINER KACA (RESPONSIF & SCROLLABLE) */
+        /* 3. CONTAINER KACA */
         .container {
             background: rgba(30, 30, 46, 0.85);
-            padding: 30px; /* Kurangi padding sedikit */
+            padding: 30px; 
             border-radius: 20px; 
             text-align: center; 
-            width: 90%; 
-            max-width: 500px; /* Lebarkan sedikit */
-            
-            /* --- UPDATE PENTING UNTUK LAYAR KECIL --- */
-            max-height: 90vh; /* Maksimal tinggi 90% dari layar */
-            overflow-y: auto; /* Munculkan scroll jika konten kepanjangan */
-            margin: 20px auto; /* Beri jarak aman */
-            
+            width: 90%; max-width: 500px;
+            max-height: 90vh; overflow-y: auto; margin: 20px auto;
             box-shadow: 0 0 40px rgba(0,0,0,0.7);
             border: 1px solid rgba(0, 242, 255, 0.2);
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -57,7 +49,7 @@
             font-family: 'Orbitron', sans-serif; 
             color: #00f2ff; margin-top: 0;
             text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
-            font-size: 1.8rem; /* Perkecil judul */
+            font-size: 1.8rem;
         }
 
         /* 5. INPUT FIELD */
@@ -82,16 +74,11 @@
         }
         button:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 242, 255, 0.6); }
 
-        /* 7. TAMPILAN SOAL (AUTO RESIZE) */
+        /* 7. TAMPILAN SOAL */
         #question-display { 
-            /* Gunakan CLAMP: Minimal 1.2rem, Ideal 4vw, Maksimal 2.5rem */
             font-size: clamp(1.2rem, 4vw, 2.5rem); 
-            font-weight: bold; 
-            margin: 20px 0; 
-            line-height: 1.4; /* Jarak antar baris agar mudah dibaca */
-            color: #fff; 
-            text-shadow: 0 0 10px rgba(255,255,255,0.2);
-            word-wrap: break-word; /* Bungkus kata panjang */
+            font-weight: bold; margin: 20px 0; line-height: 1.4; color: #fff; 
+            text-shadow: 0 0 10px rgba(255,255,255,0.2); word-wrap: break-word;
         }
         
         /* SKOR BOX */
@@ -111,13 +98,11 @@
         .hidden { display: none !important; }
         .block { display: block !important; }
 
-        /* SCROLLBAR CUSTOM (Opsional, agar scrollbar terlihat keren) */
         .container::-webkit-scrollbar { width: 8px; }
         .container::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
         .container::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
-        .container::-webkit-scrollbar-thumb:hover { background: #00f2ff; }
 
-        /* --- CSS untuk Tombol Kesulitan --- */
+        /* --- CSS TOMBOL KESULITAN --- */
         .difficulty-selector {
             display: flex; justify-content: center; gap: 5px; margin: 15px 0; flex-wrap: wrap;
         }
@@ -134,11 +119,20 @@
             background: rgba(0, 242, 255, 0.3); color: #00f2ff;
             border-color: #00f2ff; box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
         }
+
+        /* --- CSS TAMBAHAN: MODAL GAME OVER (PENTING!) --- */
+        #game-over-screen {
+            display: none; /* Sembunyi default */
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 2000;
+            padding-top: 20vh; text-align: center;
+        }
+        .go-content {
+            background: #1e1e2e; padding: 40px; border-radius: 20px; 
+            display: inline-block; border: 2px solid #ff4757;
+            box-shadow: 0 0 50px rgba(255, 71, 87, 0.4); width: 90%; max-width: 400px;
+        }
     </style>
-
-
-
-
 </head>
 <body>
 
@@ -151,9 +145,8 @@
             <p style="color:#aaa; margin-bottom:30px;">Masuk ke arena pertempuran!</p>
             
             <input type="text" id="username" placeholder="Nama Petarung" readonly style="background:#333; color:#ccc; cursor: not-allowed;">
-            <input type="text" id="room-code" placeholder="Kode Arena (Cth: 123)">
+            <input type="text" id="room-code" placeholder="Kode Arena (Kosongkan utk Latihan)">
             
-            <!-- UI PEMILIHAN KESULITAN -->
             <div class="difficulty-selector">
                 <button class="btn-difficulty active" data-level="mudah">Mudah</button>
                 <button class="btn-difficulty" data-level="sedang">Sedang</button>
@@ -169,6 +162,13 @@
                 <div class="score-item">LAWAN<span id="opponent-score" class="score-val score-red">0</span></div>
             </div>
 
+            <div id="status-display" style="color:#00f2ff; margin-bottom:10px; font-weight:bold;"></div>
+
+            <div style="background:#444; height:8px; width:100%; margin-top:5px; border-radius:5px; overflow:hidden;">
+                <div id="progress-bar" style="background:#00f2ff; height:100%; width:0%; transition:0.3s;"></div>
+            </div>
+            <p style="font-size:0.8rem; color:#aaa; margin-top:5px;">Target: <span id="q-current">0</span> / <span id="q-total">∞</span></p>
+
             <h2 id="question-display">Loading...</h2>
             
             <input type="number" id="answer-input" placeholder="Ketik Jawaban...">
@@ -177,8 +177,20 @@
             <hr style="border-color:rgba(255,255,255,0.1); margin:20px 0;">
             
             <button onclick="downloadSertifikat()" class="btn-finish">
-                🏆 SELESAI & AMBIL PIAGAM
+                🏆 SELESAI & SIMPAN SKOR
             </button>
+        </div>
+    </div>
+
+    <div id="game-over-screen">
+        <div class="go-content">
+            <h1 style="color:#ff4757; margin:0;">GAME OVER</h1>
+            <p style="color:#aaa;">Skor Akhir Kamu</p>
+            <div style="font-size:3rem; font-weight:bold; color:#ffeb3b; margin:20px 0;">
+                <span id="final-score">0</span>
+            </div>
+            <button onclick="location.reload()" style="padding: 12px 30px; width: 100%; border: none; border-radius: 50px; font-weight: bold; font-size: 1rem; cursor: pointer; text-transform: uppercase; background: linear-gradient(45deg, #00f2ff, #0099ff); color: #000; margin-bottom: 10px;">MAIN LAGI</button>
+            <button onclick="window.location.href='/'" style="padding: 12px 30px; width: 100%; border: none; border-radius: 50px; font-weight: bold; font-size: 1rem; cursor: pointer; text-transform: uppercase; background: #444; color: #ccc;">KEMBALI KE MENU</button>
         </div>
     </div>
 
