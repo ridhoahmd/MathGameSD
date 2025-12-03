@@ -11,7 +11,13 @@
             margin: 0; padding: 0; font-family: 'Poppins', sans-serif;
             background: radial-gradient(circle at top right, #2b1055, #7597de); background-color: #1e1e2e;
             color: white; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            overflow: hidden; user-select: none;
+            overflow: hidden; 
+            
+            /* FIX KOMPATIBILITAS USER SELECT */
+            -webkit-user-select: none; /* Safari/Chrome */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* IE/Edge */
+            user-select: none;         /* Standar */
         }
         .btn-back {
             position: absolute; top: 20px; left: 20px; text-decoration: none;
