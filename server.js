@@ -128,9 +128,25 @@ io.on('connection', (socket) => {
                 prompt = `Buat soal belanja SD. Range: ${rng}. Bayar pakai uang rupiah wajar. Output JSON: {"cerita":"...","total_belanja":0,"uang_bayar":0,"kembalian":0}.`;
             
             } else if (kategori === 'labirin') {
-                let size = level === 'mudah' ? 10 : (level === 'sedang' ? 15 : 20);
-                let numQ = level === 'mudah' ? 3 : (level === 'sedang' ? 5 : 8);
-                prompt = `Buat ${numQ} soal sains SD singkat (jawaban 1 kata). Output JSON: {"maze_size": ${size}, "soal_list": [{"tanya":"...","jawab":"..."}]}.`;
+                let mazeSize = 10; 
+                let numQuestions = 3;
+                
+                if (tingkat === 'sedang') { mazeSize = 15; numQuestions = 5; }
+                if (tingkat === 'sulit') { mazeSize = 20; numQuestions = 8; } // Kurangi size sulit jadi 20 agar tidak terlalu berat
+
+                // Prompt Lebih Ketat & Jelas
+                prompt = `Buat konfigurasi game labirin untuk anak SD.
+                1. Ukuran grid: ${mazeSize}x${mazeSize}.
+                2. Buat daftar ${numQuestions} soal pengetahuan umum pendek (maks 5 kata). Jawaban 1 kata.
+                
+                OUTPUT HARUS HANYA JSON VALID (TANPA MARKDOWN):
+                {
+                    "maze_size": ${mazeSize},
+                    "soal_list": [
+                        {"tanya": "Ibukota Indonesia?", "jawab": "jakarta"},
+                        {"tanya": "Warna bendera kita?", "jawab": "merahputih"}
+                    ]
+                }`;
             }
 
             if (!prompt) return;

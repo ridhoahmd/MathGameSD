@@ -33,8 +33,26 @@ function requestGame() {
 
 // 2. Terima Data & Buat Labirin
 socket.on('soalDariAI', (data) => {
+    // Sembunyikan Loading apapun yang terjadi
+    document.getElementById('loading-screen').style.display = 'none';
+
     if (data.kategori === 'labirin') {
-        const info = data.data; // { maze_size, soal_list }
+        console.log("📦 Data Labirin Diterima:", data.data); // Debugging
+
+        let info = data.data; 
+        
+        // PENCEGAHAN ERROR: Jika data kosong/rusak, pakai default
+        if (!info || !info.maze_size) {
+            console.warn("⚠️ Data rusak, pakai mode offline.");
+            info = {
+                maze_size: 10,
+                soal_list: [
+                    {tanya: "1 + 1 = ?", jawab: "2"},
+                    {tanya: "Warna langit?", jawab: "biru"},
+                    {tanya: "Kaki ayam ada?", jawab: "2"}
+                ]
+            };
+        }
         
         // Setup Ukuran
         cols = info.maze_size;
@@ -49,9 +67,6 @@ socket.on('soalDariAI', (data) => {
 
         // Generate Maze
         generateMaze();
-        
-        // Sembunyikan Loading
-        document.getElementById('loading-screen').style.display = 'none';
         gameActive = true;
     }
 });
