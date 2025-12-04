@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Piano Math - Videa Class</title>
+    <title>Piano Speed - Videa Class</title>
+    
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' http://localhost:3000 https://mathgamesd.up.railway.app; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;">
+
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         /* CSS TEMA GALAXY */
@@ -12,12 +15,7 @@
             background: radial-gradient(circle at top right, #2b1055, #7597de); background-color: #1e1e2e;
             color: white; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
             overflow: hidden; 
-            
-            /* FIX KOMPATIBILITAS USER SELECT */
-            -webkit-user-select: none; /* Safari/Chrome */
-            -moz-user-select: none;    /* Firefox */
-            -ms-user-select: none;     /* IE/Edge */
-            user-select: none;         /* Standar */
+            -webkit-user-select: none; user-select: none;
         }
         .btn-back {
             position: absolute; top: 20px; left: 20px; text-decoration: none;
@@ -27,64 +25,64 @@
         /* HUD */
         .hud {
             display: flex; justify-content: space-between; width: 90%; max-width: 600px;
-            margin-bottom: 20px; font-family: 'Orbitron', sans-serif;
+            margin-bottom: 10px; font-family: 'Orbitron', sans-serif;
         }
         .score-box { font-size: 1.5rem; color: #ffeb3b; }
         .timer-box { font-size: 1.5rem; color: #00f2ff; }
 
         /* AREA SOAL */
         .question-box {
-            font-size: 4rem; font-family: 'Orbitron', sans-serif; font-weight: bold;
-            margin-bottom: 40px; text-shadow: 0 0 20px rgba(0, 242, 255, 0.8);
-            animation: pulse 1s infinite alternate;
+            font-size: 2rem; font-family: 'Orbitron', sans-serif; font-weight: bold;
+            margin-bottom: 20px; text-shadow: 0 0 20px rgba(0, 242, 255, 0.8);
+            text-align: center; min-height: 50px;
         }
-
-        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
 
         /* PIANO KEYS */
         .piano-container {
             display: flex; gap: 5px; padding: 10px; background: #111;
             border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
         }
 
         .key {
-            width: 60px; height: 200px;
+            width: 50px; height: 180px;
             background: white; border-radius: 0 0 5px 5px;
             cursor: pointer; position: relative;
             display: flex; justify-content: center; align-items: flex-end;
             padding-bottom: 20px; color: #333; font-weight: bold; font-size: 1.5rem;
-            transition: 0.1s; 
-            
-            /* Agar tidak nge-blok saat ditekan cepat di HP */
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .key:active, .key.active {
-            background: #ccc; transform: scale(0.95);
+            transition: 0.1s; touch-action: manipulation;
         }
         
-        .key span { pointer-events: none; }
+        /* EFEK GLOWING */
+        .key.active {
+            background: #00f2ff; color: black;
+            transform: scale(0.95); box-shadow: 0 0 20px #00f2ff;
+        }
+
+        /* TOMBOL LEVEL (BARU) */
+        .controls-area { text-align: center; }
+        .difficulty-selector { margin-bottom: 15px; }
+        .btn-level {
+            padding: 8px 15px; margin: 0 5px; background: rgba(255,255,255,0.1); 
+            border: 1px solid #aaa; color: #ccc; border-radius: 20px; cursor: pointer;
+        }
+        .btn-level.active { background: #00f2ff; color: black; border-color: #00f2ff; font-weight: bold; }
+        
+        .btn-start {
+            padding: 10px 40px; background: linear-gradient(45deg, #ff00cc, #333399); 
+            color: white; border: none; border-radius: 30px; font-weight: bold; 
+            font-size: 1.2rem; cursor: pointer;
+        }
 
         /* MODAL GAME OVER */
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); display: none; /* Default sembunyi */
-            justify-content: center; align-items: center;
-            z-index: 100; 
+            background: rgba(0,0,0,0.9); display: none;
+            justify-content: center; align-items: center; z-index: 100;
         }
         .modal-content {
             background: #1e1e2e; padding: 40px; border-radius: 20px; text-align: center;
             border: 2px solid #00f2ff; box-shadow: 0 0 30px #00f2ff;
-        }
-        
-        .text-gameover { color: #ff4757; margin-top: 0; }
-        .text-score-final { font-size: 2rem; color: #ffeb3b; }
-        .btn-grey { background: #555; color: white; }
-
-        button {
-            padding: 12px 30px; margin-top: 20px; border-radius: 30px; border: none;
-            background: linear-gradient(45deg, #00f2ff, #0099ff);
-            font-weight: bold; cursor: pointer;
         }
     </style>
 </head>
@@ -94,35 +92,44 @@
 
     <div class="hud">
         <div class="score-box">Skor: <span id="score">0</span></div>
-        <div class="timer-box">Waktu: <span id="timer">60</span></div>
+        <div class="timer-box">⏳ <span id="timer">60</span>s</div>
     </div>
 
-    <div class="question-box" id="question">SIAP?</div>
+    <div class="question-box" id="question">PILIH LEVEL & MULAI</div>
+
+    <div class="controls-area" id="start-controls">
+        <div class="difficulty-selector">
+            <button class="btn-level active" data-level="mudah">Mudah (3 Nada)</button>
+            <button class="btn-level" data-level="sedang">Sedang (5 Nada)</button>
+            <button class="btn-level" data-level="sulit">Sulit (7 Nada)</button>
+        </div>
+        <button onclick="startGameSession()" class="btn-start">MULAI 🎵</button>
+    </div>
 
     <div class="piano-container">
-        <div class="key" onclick="playNote(1)" data-val="1"><span>1</span></div>
-        <div class="key" onclick="playNote(2)" data-val="2"><span>2</span></div>
-        <div class="key" onclick="playNote(3)" data-val="3"><span>3</span></div>
-        <div class="key" onclick="playNote(4)" data-val="4"><span>4</span></div>
-        <div class="key" onclick="playNote(5)" data-val="5"><span>5</span></div>
-        <div class="key" onclick="playNote(6)" data-val="6"><span>6</span></div>
-        <div class="key" onclick="playNote(7)" data-val="7"><span>7</span></div>
-        <div class="key" onclick="playNote(8)" data-val="8"><span>8</span></div>
-        <div class="key" onclick="playNote(9)" data-val="9"><span>9</span></div>
-        <div class="key" onclick="playNote(0)" data-val="0"><span>0</span></div>
+        <div class="key" data-val="1" onclick="playNote(1)">1</div>
+        <div class="key" data-val="2" onclick="playNote(2)">2</div>
+        <div class="key" data-val="3" onclick="playNote(3)">3</div>
+        <div class="key" data-val="4" onclick="playNote(4)">4</div>
+        <div class="key" data-val="5" onclick="playNote(5)">5</div>
+        <div class="key" data-val="6" onclick="playNote(6)">6</div>
+        <div class="key" data-val="7" onclick="playNote(7)">7</div>
+        <div class="key" data-val="8" onclick="playNote(8)">8</div>
+        <div class="key" data-val="9" onclick="playNote(9)">9</div>
+        <div class="key" data-val="0" onclick="playNote(0)">0</div>
     </div>
 
     <div class="modal" id="game-over-modal">
         <div class="modal-content">
-            <h1 class="text-gameover">WAKTU HABIS!</h1>
-            <p>Total Skor Piano: <span id="final-score" class="text-score-final">0</span></p>
-            <button onclick="location.reload()">MAIN LAGI</button>
-            <button onclick="window.location.href='/'" class="btn-grey">KEMBALI</button>
+            <h1 style="color:#ff4757">WAKTU HABIS!</h1>
+            <p style="color:#aaa">Skor Akhir:</p>
+            <h2 style="font-size:3rem; margin:10px 0; color:#ffeb3b" id="final-score">0</h2>
+            <button onclick="location.reload()" class="btn-start">MAIN LAGI</button>
+            <button onclick="window.location.href='/'" style="background:transparent; border:1px solid #555; color:#ccc; margin-top:10px; padding:10px;">KEMBALI</button>
         </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    
     <script src="piano.js"></script>
 </body>
 </html>

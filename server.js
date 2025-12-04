@@ -101,7 +101,7 @@ io.on('connection', (socket) => {
         } catch (error) { console.error("❌ DB Error:", error); }
     });
 
-    // --- MINTA SOAL AI ---
+  // --- MINTA SOAL AI (MATH, MEMORY, ZUMA, KASIR, LABIRIN, PIANO) ---
     socket.on('mintaSoalAI', async (requestData) => {
         const { kategori, tingkat } = requestData;
         const level = tingkat || 'sedang';
@@ -128,25 +128,14 @@ io.on('connection', (socket) => {
                 prompt = `Buat soal belanja SD. Range: ${rng}. Bayar pakai uang rupiah wajar. Output JSON: {"cerita":"...","total_belanja":0,"uang_bayar":0,"kembalian":0}.`;
             
             } else if (kategori === 'labirin') {
-                let mazeSize = 10; 
-                let numQuestions = 3;
-                
-                if (tingkat === 'sedang') { mazeSize = 15; numQuestions = 5; }
-                if (tingkat === 'sulit') { mazeSize = 20; numQuestions = 8; } // Kurangi size sulit jadi 20 agar tidak terlalu berat
-
-                // Prompt Lebih Ketat & Jelas
-                prompt = `Buat konfigurasi game labirin untuk anak SD.
-                1. Ukuran grid: ${mazeSize}x${mazeSize}.
-                2. Buat daftar ${numQuestions} soal pengetahuan umum pendek (maks 5 kata). Jawaban 1 kata.
-                
-                OUTPUT HARUS HANYA JSON VALID (TANPA MARKDOWN):
-                {
-                    "maze_size": ${mazeSize},
-                    "soal_list": [
-                        {"tanya": "Ibukota Indonesia?", "jawab": "jakarta"},
-                        {"tanya": "Warna bendera kita?", "jawab": "merahputih"}
-                    ]
-                }`;
+                let size = level === 'mudah' ? 10 : (level === 'sedang' ? 15 : 20);
+                let numQ = level === 'mudah' ? 3 : (level === 'sedang' ? 5 : 8);
+                prompt = `Buat ${numQ} soal sains SD singkat (jawaban 1 kata). Output JSON: {"maze_size": ${size}, "soal_list": [{"tanya":"...","jawab":"..."}]}.`;
+            
+            } else if (kategori === 'piano') {
+                // ✅ INI LOGIKA BARU UNTUK PIANO
+                let len = level === 'mudah' ? 3 : (level === 'sedang' ? 5 : 7);
+                prompt = `Buat urutan ${len} angka acak (1-9). Output JSON: { "sequence": [1, 3, 5] }.`;
             }
 
             if (!prompt) return;
@@ -159,10 +148,10 @@ io.on('connection', (socket) => {
 
         } catch (error) {
             console.error("❌ AI Error:", error.message);
-            // Fallback sederhana agar game tidak macet
+            // Fallback (Soal Cadangan)
             let fallback;
             if (kategori === 'math') fallback = { soal: "1+1=?", jawaban: 2 };
-            if (kategori === 'labirin') fallback = { maze_size: 10, soal_list: [{tanya:"1+1?", jawab:"2"}] };
+            if (kategori === 'piano') fallback = { sequence: [1, 2, 3, 4] }; // Fallback Piano
             if (fallback) socket.emit('soalDariAI', { kategori: kategori, data: fallback });
         }
     });
