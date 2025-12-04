@@ -130,7 +130,7 @@ io.on('connection', (socket) => {
             } else if (kategori === 'labirin') {
                 let size = level === 'mudah' ? 10 : (level === 'sedang' ? 15 : 20);
                 let numQ = level === 'mudah' ? 3 : (level === 'sedang' ? 5 : 8);
-                prompt = `Buat ${numQ} soal sains SD singkat (jawaban 1 kata). Output JSON: {"maze_size": ${size}, "soal_list": [{"tanya":"...","jawab":"..."}]}.`;
+                prompt = `Buat ${numQ} soal sains SD singkat yang variatif (jawaban 1 kata). Output JSON: {"maze_size": ${size}, "soal_list": [{"tanya":"...","jawab":"..."}]}.`;
             
             } else if (kategori === 'piano') {
                 // ✅ INI LOGIKA BARU UNTUK PIANO
