@@ -6,14 +6,69 @@
     <title>Portal Game Videa Class</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* TEMA DARK GALACTIC */
+        /* --- 1. CSS GLOBAL & TEMA --- */
         * { box-sizing: border-box; }
         
+        /* TEMA DEFAULT (Galactic) */
+        body { 
+            font-family: 'Poppins', sans-serif; margin: 0; padding: 0; 
+            background: radial-gradient(circle at top right, #2b1055, #7597de); 
+            background-color: #1e1e2e;
+            color: #e0e0e0; min-height: 100vh; display: flex; justify-content: center; align-items: center; 
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+
+        /* TEMA: HUTAN (Forest) */
+        body.theme-forest {
+            background: radial-gradient(circle at top right, #134e5e, #71b280);
+            background-color: #0f2027;
+            color: #f1f8e9;
+        }
+        body.theme-forest .game-card { background: rgba(20, 50, 20, 0.6); border-color: #71b280; }
+        body.theme-forest .sidebar { border-right-color: #71b280; }
+        body.theme-forest .btn-menu { background: linear-gradient(90deg, #134e5e, #71b280); }
+
+        /* TEMA: LAUTAN (Ocean) */
+        body.theme-ocean {
+            background: radial-gradient(circle at top right, #2193b0, #6dd5ed);
+            background-color: #2193b0;
+            color: #e0f7fa;
+        }
+        body.theme-ocean .game-card { background: rgba(255, 255, 255, 0.15); border-color: #fff; }
+        body.theme-ocean .sidebar { border-right-color: #fff; }
+        body.theme-ocean .btn-menu { background: linear-gradient(90deg, #2193b0, #6dd5ed); }
+
+        /* TEMA: HACKER (Matrix) */
+        body.theme-hacker {
+            background: #000;
+            color: #00ff41;
+            font-family: 'Courier New', monospace;
+        }
+        body.theme-hacker .game-card { border: 1px solid #00ff41; background: rgba(0, 20, 0, 0.9); }
+        body.theme-hacker .sidebar { border-right-color: #00ff41; }
+        body.theme-hacker h1, body.theme-hacker h2, body.theme-hacker .stat-value { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
+        body.theme-hacker .btn-menu { background: #003300; border: 1px solid #00ff41; color: #00ff41; }
+
+        /* TEMA: CRIMSON (Dark Red) */
+        body.theme-crimson {
+            background: #000000;
+            color: #ff4d4d;
+        }
+        body.theme-crimson .main-header { background: rgba(20, 0, 0, 0.9); border-bottom: 1px solid #ff0000; }
+        body.theme-crimson .sidebar { border-right: 1px solid #ff0000; background: rgba(20, 0, 0, 0.5); }
+        body.theme-crimson .dashboard-container { border: 1px solid #ff0000; box-shadow: 0 0 30px rgba(255, 0, 0, 0.3); }
+        body.theme-crimson .game-card { background: rgba(30, 0, 0, 0.8); border: 1px solid #ff0000; box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.2); }
+        body.theme-crimson .game-card:hover { transform: translateY(-5px); box-shadow: 0 0 20px #ff0000; }
+        body.theme-crimson .btn-menu { background: linear-gradient(90deg, #330000, #800000); border: 1px solid #ff4d4d; color: white; }
+        body.theme-crimson .stat-value, body.theme-crimson h2 { color: #ff0000; text-shadow: 0 0 10px #ff0000; }
+        body.theme-crimson .portal-title { color: #ff0000; }
+
+        /* --- END TEMA --- */
+
         /* UTILITY CLASSES */
         .hidden { display: none !important; }
         .block { display: block !important; }
         .mt-10 { margin-top: 10px; }
-        .mb-10 { margin-bottom: 10px; }
         .mb-20 { margin-bottom: 20px; }
         .text-bold { font-weight: bold; }
         .text-center { text-align: center; }
@@ -28,28 +83,42 @@
         .cursor-pointer { cursor: pointer; }
         .underline { text-decoration: underline; }
 
-        body { 
-            font-family: 'Poppins', sans-serif; margin: 0; padding: 0; 
-            background: radial-gradient(circle at top right, #2b1055, #7597de); background-color: #1e1e2e;
-            color: #e0e0e0; min-height: 100vh; display: flex; justify-content: center; align-items: center; 
-        }
-
         /* HEADER */
         .main-header {
-            width: 100%; padding: 5px 40px; background: rgba(18, 18, 28, 0.95); 
+            width: 100%; padding: 10px 40px; background: rgba(18, 18, 28, 0.95); 
             border-bottom: 1px solid rgba(0, 242, 255, 0.1); 
             display: flex; justify-content: space-between; align-items: center;
             position: fixed; top: 0; z-index: 1000;
             -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
         }
         .logo-area { display: flex; align-items: center; gap: 15px; }
-        .logo-img { height: 75px; width: auto; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); } 
+        .logo-img { height: 60px; width: auto; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); } 
         .portal-title { 
             font-family: 'Orbitron', sans-serif; font-size: 1.4rem; color: #00f2ff;
             letter-spacing: 2px; text-transform: uppercase; border-left: 2px solid #444; padding-left: 15px;
         }
-        .role-badge { background: linear-gradient(45deg, #ff00cc, #333399); color: white; padding: 5px 20px; border-radius: 5px; font-weight: bold; }
         
+        /* HEADER RIGHT AREA (BARU) */
+        .header-right { display: flex; align-items: center; gap: 15px; }
+
+        .role-badge { background: linear-gradient(45deg, #ff00cc, #333399); color: white; padding: 8px 20px; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
+        
+        /* 🔥 TOMBOL GANTI TEMA KEREN (HEADER) 🔥 */
+        .btn-theme-toggle {
+            width: 45px; height: 45px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff; font-size: 1.5rem; cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            transition: all 0.4s ease; backdrop-filter: blur(5px);
+        }
+        .btn-theme-toggle:hover {
+            background: #00f2ff; color: #000;
+            transform: rotate(180deg) scale(1.1); /* Efek Putar */
+            box-shadow: 0 0 20px #00f2ff; /* Efek Cahaya */
+            border-color: #00f2ff;
+        }
+
         /* DASHBOARD CONTAINER */
         .dashboard-container { 
             display: flex; width: 95%; max-width: 1200px; height: auto; min-height: 80vh; 
@@ -64,18 +133,18 @@
             border-right: 1px solid rgba(255,255,255,0.05); text-align: center; display: flex; flex-direction: column; align-items: center;
         }
         
-        /* GAYA BINGKAI AVATAR (NEW) */
+        /* AVATAR & BINGKAI */
         .avatar-container { position: relative; width: 110px; height: 110px; margin-bottom: 15px; display: flex; justify-content: center; align-items: center;}
         .avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; background: #000; border: 3px solid #333; }
         
-        /* CLASS BINGKAI (Sama dengan Toko) */
+        /* CLASS BINGKAI */
         .frame-neon .avatar { border: 3px solid #00f2ff; box-shadow: 0 0 15px #00f2ff; }
         .frame-gold .avatar { border: 4px solid #FFD700; box-shadow: 0 0 15px #FFD700; }
         .frame-fire .avatar { border: 4px solid #ff4500; box-shadow: 0 0 20px #ff4500; animation: burn 1s infinite alternate; }
         .frame-royal .avatar { border: 4px dashed #9900ff; box-shadow: 0 0 20px #9900ff; }
         @keyframes burn { from { box-shadow: 0 0 10px #ff4500; } to { box-shadow: 0 0 25px #ffeb3b; } }
 
-        .profile-name { font-size: 1.3rem; font-weight: bold; margin-bottom: 5px; color: #fff; }
+        .profile-name { font-size: 1.3rem; font-weight: bold; margin-bottom: 5px; color: inherit; }
         
         .stats-box { background: rgba(255,255,255,0.05); width: 100%; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
         .stat-value { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: #ffeb3b; display: block; }
@@ -84,7 +153,7 @@
         .btn-menu:hover { transform: translateX(5px); }
         
         .btn-common { background: linear-gradient(90deg, #2b5876, #4e4376); }
-        .btn-shop { background: linear-gradient(90deg, #ff9966, #ff5e62); } /* Warna Tombol Toko */
+        .btn-shop { background: linear-gradient(90deg, #ff9966, #ff5e62); } 
         .btn-guru { background: linear-gradient(90deg, #11998e, #38ef7d); }
         .btn-admin { background: linear-gradient(90deg, #cb2d3e, #ef473a); }
         
@@ -99,20 +168,19 @@
         .game-card { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 30px 20px; text-align: center; text-decoration: none; border: 1px solid rgba(255,255,255,0.1); display: block; transition: 0.3s; }
         .game-card:hover { transform: translateY(-10px); background: rgba(255,255,255,0.1); border-color: #00f2ff; }
         
-        /* Game Card Elements */
         .game-icon { font-size: 50px; margin-bottom: 10px; display: block; }
-        .game-title { font-weight: bold; font-size: 1.2rem; color: white; margin-bottom: 10px; }
+        .game-title { font-weight: bold; font-size: 1.2rem; color: inherit; margin-bottom: 10px; }
         .game-desc { color: #aaa; font-size: 0.9rem; margin-bottom: 20px; }
         
-        .btn-play { padding: 10px 35px; border-radius: 30px; font-size: 0.8rem; font-weight: bold; color: white; background: linear-gradient(45deg, #ff0080, #ff00cc); border: none; margin-top: 15px; display: inline-block; }
+        .btn-play { padding: 10px 35px; border-radius: 30px; font-size: 0.8rem; font-weight: bold; color: white; border: none; margin-top: 15px; display: inline-block; }
+        .btn-start-math { background: linear-gradient(45deg, #FFD700, #FFA500); color: black; }
         .game-card.locked { opacity: 0.4; cursor: not-allowed; background: rgba(0,0,0,0.3); }
         .btn-locked { background: #444; box-shadow: none; color: #888; cursor: not-allowed; }
 
-        /* CSS CHAT ROOM */
+        /* CHAT & FOOTER */
         #chat-container { position: fixed; bottom: 20px; right: 20px; width: 320px; height: 400px; background: rgba(20, 20, 35, 0.95); border: 1px solid #00f2ff; border-radius: 15px 15px 0 0; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0,0,0,0.8); z-index: 2000; overflow: hidden; transform: translateY(120%); transition: transform 0.3s ease, height 0.3s ease; }
         #chat-container.open { transform: translateY(0); }
         #chat-container.minimized { height: 45px !important; }
-
         .chat-header { background: linear-gradient(90deg, #2b5876, #4e4376); padding: 10px 15px; font-weight: bold; color: white; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; cursor: pointer; }
         .chat-controls button { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; margin-left: 10px; font-weight: bold; }
         .chat-messages { flex: 1; padding: 10px; overflow-y: auto; font-size: 0.9rem; color: #ddd; display: flex; flex-direction: column; gap: 8px; }
@@ -127,7 +195,6 @@
         .chat-send { background: #00f2ff; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; font-weight: bold; }
         .chat-welcome { text-align: center; color: #555; font-size: 0.8rem; margin-top: 20px; }
 
-        /* SIDEBAR FOOTER */
         .sidebar-footer { margin-top: auto; width: 100%; }
         .input-guru { width:100%; padding:8px; border-radius:5px; margin-bottom:5px; background: rgba(255,255,255,0.1); border: 1px solid #555; color: white; }
         .link-wrapper { text-decoration: none; width: 100%; }
@@ -148,7 +215,11 @@
             <img src="/logo-videa.png.png" class="logo-img" alt="Logo">
             <span class="portal-title">PORTAL GAME EDUKASI</span>
         </div>
-        <div class="role-badge" id="role-display">GUEST</div>
+        
+        <div class="header-right" style="display: flex; align-items: center; gap: 15px;">
+            <button class="btn-theme-toggle" onclick="cycleTheme()" title="Ganti Tampilan">🎨</button>
+            <div class="role-badge" id="role-display">GUEST</div>
+        </div>
     </header>
 
     <div class="dashboard-container">
@@ -207,40 +278,40 @@
                     <div class="game-icon">🚀</div>
                     <div class="game-title">MATH BATTLE</div>
                     <div class="game-desc">Duel matematika cepat antar galaksi!</div>
-                    <div class="btn-play" style="background: linear-gradient(45deg, #FFD700, #FFA500); color: black;">START</div>
+                    <div class="btn-play btn-start-math">START</div>
                 </a>
                 <a href="#" onclick="masukGame('zuma.html')" class="game-card">
                     <div class="game-icon">☄️</div>
                     <div class="game-title">ZUMA SPACE</div>
                     <div class="game-desc">Hancurkan bola angka sebelum meledak!</div>
-                    <div class="btn-play" style="background: linear-gradient(45deg, #FFD700, #FFA500); color: black;">START</div>
+                    <div class="btn-play btn-start-math">START</div>
                 </a>
                 <a href="#" onclick="masukGame('memory.html')" class="game-card">
                     <div class="game-icon">🧩</div>
                     <div class="game-title">MEMORY LAB</div>
                     <div class="game-desc">Aktifkan sel otakmu dengan kartu memori.</div>
-                    <div class="btn-play" style="background: linear-gradient(45deg, #FFD700, #FFA500); color: black;">START</div>
+                    <div class="btn-play btn-start-math">START</div>
                 </a>
                 
                 <a href="#" onclick="masukGame('piano.html')" class="game-card">
                     <div class="game-icon">🎹</div>
                     <div class="game-title">PIANO MATH</div>
                     <div class="game-desc">Tekan tuts piano sesuai hasil hitungan.</div>
-                    <div class="btn-play" style="background: linear-gradient(45deg, #FFD700, #FFA500); color: black;">START</div>
+                    <div class="btn-play btn-start-math">START</div>
                 </a>
 
                 <a href="#" onclick="masukGame('kasir.html')" class="game-card">
                     <div class="game-icon">🏪</div>
                     <div class="game-title">KASIR CILIK</div>
                     <div class="game-desc">Simulasi belanja & hitung kembalian.</div>
-                    <div class="btn-play" style="background: linear-gradient(45deg, #FFD700, #FFA500); color: black;">START</div>
+                    <div class="btn-play btn-start-math">START</div>
                 </a>
 
                 <a href="#" onclick="masukGame('labirin.html')" class="game-card">
                     <div class="game-icon">🌀</div>
                     <div class="game-title">LABIRIN ILMU</div>
                     <div class="game-desc">Cari jalan keluar & jawab rintangan!</div>
-                    <div class="btn-play" style="background: linear-gradient(45deg, #FFD700, #FFA500); color: black;">START</div>
+                    <div class="btn-play btn-start-math">START</div>
                 </a>
             </div>
         </main>
@@ -285,7 +356,7 @@
         const provider = new firebase.auth.GoogleAuthProvider();
         let currentUser = null;
 
-        // GUEST LOGIC
+        // --- GUEST LOGIC ---
         if (!localStorage.getItem("playerName")) {
             const randomGuest = "Guest_" + Math.floor(Math.random() * 10000);
             localStorage.setItem("playerName", randomGuest);
@@ -294,9 +365,36 @@
         document.getElementById('display-name').innerText = localName;
         document.getElementById('user-avatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${localName}`;
 
-        loadUserData(localName);
+        loadUserData(localName); 
         checkRole(localName);
 
+        // --- DAFTAR TEMA (UPDATE: + CRIMSON) ---
+        const themes = ['default', 'forest', 'ocean', 'hacker', 'crimson'];
+        
+        function cycleTheme() {
+            let currentThemeIndex = 0;
+            const body = document.body;
+            
+            if (body.classList.contains('theme-forest')) currentThemeIndex = 1;
+            else if (body.classList.contains('theme-ocean')) currentThemeIndex = 2;
+            else if (body.classList.contains('theme-hacker')) currentThemeIndex = 3;
+            else if (body.classList.contains('theme-crimson')) currentThemeIndex = 4;
+
+            let nextIndex = (currentThemeIndex + 1) % themes.length;
+            let nextTheme = themes[nextIndex];
+
+            // Simpan ke DB agar persist
+            const targetName = auth.currentUser ? auth.currentUser.displayName : localStorage.getItem("playerName");
+            if(targetName) {
+                database.ref('leaderboard/' + targetName).update({
+                    active_theme: nextTheme
+                });
+            } else {
+                alert("Mohon refresh halaman.");
+            }
+        }
+
+        // --- CHAT LOGIC ---
         function toggleChat() {
             const chatBox = document.getElementById('chat-container');
             if (chatBox.classList.contains('minimized')) chatBox.classList.remove('minimized');
@@ -379,6 +477,7 @@
                 
                 const guruPanel = document.getElementById('guru-panel');
                 const adminPanel = document.getElementById('admin-panel');
+                
                 guruPanel.classList.add('hidden'); guruPanel.classList.remove('block');
                 adminPanel.classList.add('hidden'); adminPanel.classList.remove('block');
                 
@@ -391,6 +490,7 @@
             });
         }
 
+        // Auth Listener
         auth.onAuthStateChanged((user) => {
             if(user) {
                 currentUser = user;
@@ -408,12 +508,13 @@
             }
         });
         
-        // FUNGSI BARU: LOAD USER DATA (SKOR + AVATAR FRAME)
+        // FUNGSI LOAD DATA (SKOR + TEMA + AVATAR)
         function loadUserData(name) {
             database.ref('leaderboard/' + name).on('value', snapshot => {
                 const data = snapshot.val();
                 let total = 0;
                 if (data) {
+                    // 1. Hitung Skor
                     let sMath = data.skor_math || 0;
                     if (data.skor && !data.skor_math) sMath = data.skor;
                     let sZuma = data.skor_zuma || 0;
@@ -421,13 +522,20 @@
                     let sPiano = data.skor_piano || 0;
                     total = sMath + sZuma + sMemory + sPiano;
 
-                    // UPDATE BINGKAI AVATAR
+                    // 2. Update Bingkai
                     const avatarBox = document.getElementById('avatar-box');
-                    // Reset kelas lama
                     avatarBox.className = "avatar-container"; 
                     if (data.equipped_frame && data.equipped_frame !== "default") {
-                        // Tambahkan kelas baru: frame-gold, frame-fire, dll.
                         avatarBox.classList.add("frame-" + data.equipped_frame);
+                    }
+
+                    // 3. Update Tema (Ganti Baju)
+                    // Reset semua class tema
+                    document.body.classList.remove('theme-forest', 'theme-ocean', 'theme-hacker', 'theme-crimson');
+                    
+                    const myTheme = data.active_theme || 'default';
+                    if (myTheme !== 'default') {
+                        document.body.classList.add('theme-' + myTheme);
                     }
                 }
                 document.getElementById('total-score').innerText = total;
@@ -438,7 +546,7 @@
             if(localStorage.getItem("playerName")) {
                 window.location.href = url; 
             } else {
-                alert("Silakan refresh halaman.");
+                alert("Silakan refresh halaman untuk mendapatkan ID Guest.");
             }
         }
     </script>
