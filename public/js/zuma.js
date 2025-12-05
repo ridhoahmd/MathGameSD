@@ -191,6 +191,7 @@ function checkCollisions() {
                 if (bullet.value === enemy.value) {
                     enemy.active = false; 
                     score += 10;
+                    AudioManager.playCorrect();
                     scoreEl.innerText = score;
                     socket.emit('laporSkor', { skor: score, room: myRoom });
                     player.currentAmmo = getNextAmmo();
@@ -210,6 +211,7 @@ function endGame() {
     finalScoreEl.innerText = score;
     gameOverScreen.style.display = 'block';
     socket.emit('simpanSkor', { nama: myName, skor: score, game: 'zuma' });
+    AudioManager.playWin();
 }
 
 // --- INPUT HANDLER (FIXED) ---
@@ -225,7 +227,7 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mousedown', () => {
     if (!gameActive) return;
     
-    try { sfxTembak.currentTime = 0; sfxTembak.play(); } catch(e){}
+    try { AudioManager.playTone(600, 0, 0.1); } catch(e){}
     bullets.push(new Bullet(player.x, player.y, player.angle, player.currentAmmo));
     setTimeout(() => { player.currentAmmo = getNextAmmo(); }, 100);
 });

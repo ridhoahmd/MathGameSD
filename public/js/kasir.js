@@ -55,6 +55,7 @@ function checkAnswer() {
         title.innerText = "✅ TRANSAKSI SUKSES!";
         title.style.color = "#38ef7d";
         desc.innerText = `Kembalian tepat Rp ${correctAns}. Pelanggan senang!`;
+        AudioManager.playCorrect();
         
         // Update Skor di Layar
         document.getElementById('score-display').innerText = "Gaji (Skor): " + score;
@@ -63,6 +64,7 @@ function checkAnswer() {
         title.innerText = "❌ SALAH HITUNG!";
         title.style.color = "#ff4757";
         desc.innerText = `Harusnya kembalian Rp ${correctAns}. Toko rugi!`;
+        AudioManager.playWrong();
     }
 }
 
@@ -82,6 +84,7 @@ function endGame() {
     });
     alert("Toko Tutup! Gaji kamu telah disimpan.");
     window.location.href = "/";
+    AudioManager.playWin();
 }
 
 // Tambahan Logika Simpan Khusus Kasir di Client (Opsional)

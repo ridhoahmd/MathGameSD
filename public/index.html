@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/style.css">
-
 </head>
 <body>
     <header class="main-header">
@@ -43,8 +42,10 @@
                     <button class="btn-menu btn-shop">🛍️ Toko Avatar</button>
                 </a>
 
+                <a href="leaderboard.html" class="link-wrapper">
+                    <button class="btn-menu btn-common">🏆 Leaderboard</button>
+                </a>
                 
-                <a href="leaderboard.html" class="link-wrapper"><button class="btn-menu btn-common">🏆 Leaderboard</button></a>
                 <button class="btn-menu btn-common" onclick="toggleChat()">💬 Chat Global <span id="chat-notif" style="display:none; color:#00f2ff; margin-left:5px;">●</span></button>
             </div>
 
@@ -144,6 +145,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <script src="js/audio.js"></script>
 
     <script>
         const socket = io(); 
@@ -174,7 +177,7 @@
         loadUserData(localName); 
         checkRole(localName);
 
-        // --- DAFTAR TEMA (UPDATE: + CRIMSON) ---
+        // --- DAFTAR TEMA ---
         const themes = ['default', 'forest', 'ocean', 'hacker', 'crimson'];
         
         function cycleTheme() {
@@ -189,12 +192,9 @@
             let nextIndex = (currentThemeIndex + 1) % themes.length;
             let nextTheme = themes[nextIndex];
 
-            // Simpan ke DB agar persist
             const targetName = auth.currentUser ? auth.currentUser.displayName : localStorage.getItem("playerName");
             if(targetName) {
-                database.ref('leaderboard/' + targetName).update({
-                    active_theme: nextTheme
-                });
+                database.ref('leaderboard/' + targetName).update({ active_theme: nextTheme });
             } else {
                 alert("Mohon refresh halaman.");
             }
@@ -222,52 +222,44 @@
         }
         function handleEnter(e) { if(e.key === 'Enter') kirimPesan(); }
         
-        // --- LOGIKA CHAT YANG SUDAH DIAMANKAN (ANTI-HACK) ---
         socket.on('chatMessage', (data) => {
             const box = document.getElementById('chat-box');
-            
-            // Cek nama untuk menentukan posisi bubble (Kanan/Kiri)
-            // Gunakan optional chaining (?.) jaga-jaga kalau auth belum siap
             const myName = localStorage.getItem("playerName") || "Guest";
             const isMe = data.nama === myName;
             
-            // 1. Buat Elemen Pembungkus (Bubble)
+            // ELEMEN BUBBLE
             const div = document.createElement('div');
             div.className = isMe ? 'msg-bubble msg-me' : 'msg-bubble';
             
-            // 2. Buat Elemen Nama (Aman)
-            const nameSpan = document.createElement('span');
-            nameSpan.className = 'msg-name';
-            nameSpan.innerText = data.nama; // Pakai innerText agar aman
+            // NAMA PENGIRIM
+            if (!isMe) {
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'msg-name';
+                nameSpan.innerText = data.nama;
+                div.appendChild(nameSpan);
+            }
             
-            // 3. Buat Elemen Pesan (SANGAT PENTING: Pakai textContent/innerText)
+            // PESAN (AMAN)
             const msgSpan = document.createElement('span');
-            msgSpan.innerText = data.pesan; // Script jahat akan jadi teks biasa disini
+            msgSpan.innerText = data.pesan;
+            div.appendChild(msgSpan);
             
-            // 4. Buat Elemen Waktu
+            // WAKTU
             const timeSpan = document.createElement('span');
             timeSpan.className = 'msg-time';
             timeSpan.innerText = data.waktu || '';
+            div.appendChild(document.createElement('br'));
+            div.appendChild(timeSpan);
             
-            // 5. Rakit Semuanya
-            // Jika pesan orang lain, tampilkan namanya
-            if (!isMe) div.appendChild(nameSpan);
-            
-            div.appendChild(msgSpan); // Masukkan pesan
-            div.appendChild(document.createElement('br')); // Baris baru
-            div.appendChild(timeSpan); // Masukkan waktu
-            
-            // 6. Tampilkan ke Layar
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
-            
-            // Notifikasi jika chat tertutup
             if(!document.getElementById('chat-container').classList.contains('open')) {
                 const notif = document.getElementById('chat-notif');
                 if(notif) notif.style.display = 'inline';
             }
         });
 
+        // --- LOGIN & ROLE ---
         function toggleInputGuru() {
             const area = document.getElementById('guru-input-area');
             const text = document.getElementById('text-guru');
@@ -299,10 +291,7 @@
         }
 
         function logout() { 
-            auth.signOut().then(() => { 
-                localStorage.removeItem("playerName"); 
-                location.reload(); 
-            }); 
+            auth.signOut().then(() => { localStorage.removeItem("playerName"); location.reload(); }); 
         }
 
         function checkRole(name) {
@@ -326,7 +315,6 @@
             });
         }
 
-        // Auth Listener
         auth.onAuthStateChanged((user) => {
             if(user) {
                 currentUser = user;
@@ -334,23 +322,19 @@
                 document.getElementById('text-guru').classList.add('hidden');
                 document.getElementById('guru-input-area').classList.add('hidden');
                 document.getElementById('btn-logout').classList.remove('hidden');
-                
                 document.getElementById('display-name').innerText = user.displayName;
                 document.getElementById('user-email').innerText = user.email;
                 document.getElementById('user-avatar').src = user.photoURL;
-                
                 loadUserData(user.displayName);
                 checkRole(user.displayName);
             }
         });
         
-        // FUNGSI LOAD DATA (SKOR + TEMA + AVATAR)
         function loadUserData(name) {
             database.ref('leaderboard/' + name).on('value', snapshot => {
                 const data = snapshot.val();
                 let total = 0;
                 if (data) {
-                    // 1. Hitung Skor
                     let sMath = data.skor_math || 0;
                     if (data.skor && !data.skor_math) sMath = data.skor;
                     let sZuma = data.skor_zuma || 0;
@@ -358,17 +342,13 @@
                     let sPiano = data.skor_piano || 0;
                     total = sMath + sZuma + sMemory + sPiano;
 
-                    // 2. Update Bingkai
                     const avatarBox = document.getElementById('avatar-box');
                     avatarBox.className = "avatar-container"; 
                     if (data.equipped_frame && data.equipped_frame !== "default") {
                         avatarBox.classList.add("frame-" + data.equipped_frame);
                     }
 
-                    // 3. Update Tema (Ganti Baju)
-                    // Reset semua class tema
                     document.body.classList.remove('theme-forest', 'theme-ocean', 'theme-hacker', 'theme-crimson');
-                    
                     const myTheme = data.active_theme || 'default';
                     if (myTheme !== 'default') {
                         document.body.classList.add('theme-' + myTheme);
@@ -379,27 +359,25 @@
         }
 
         function masukGame(url) { 
-            if(localStorage.getItem("playerName")) {
-                window.location.href = url; 
-            } else {
-                alert("Silakan refresh halaman untuk mendapatkan ID Guest.");
-            }
+            if(localStorage.getItem("playerName")) window.location.href = url; 
+            else alert("Silakan refresh halaman untuk mendapatkan ID Guest.");
         }
 
-        // --- FITUR ADMIN ---
         function adminReset() {
-            // Cek lagi apakah benar admin (Double protection)
             const roleEl = document.getElementById('role-display').innerText;
             if(roleEl !== 'ADMIN') return alert("Anda bukan Admin!");
-
-            if(confirm("⚠️ BAHAYA: Apakah Anda yakin ingin me-reset CHAT GLOBAL? Data tidak bisa dikembalikan.")) {
-                // Contoh logika reset chat (opsional)
-                // database.ref('chat').remove();
-                alert("Fitur Reset Chat akan aktif di versi 2.0! (Data aman)");
-            }
+            if(confirm("⚠️ Reset Sistem?")) alert("Fitur Reset Chat akan aktif di versi 2.0!");
         }
 
-
+        // --- AUDIO LISTENER (DIPINDAHKAN KESINI) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const allButtons = document.querySelectorAll('button, .game-card');
+            allButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if(typeof AudioManager !== 'undefined') AudioManager.playClick();
+                });
+            });
+        });
     </script>
 </body>
 </html>

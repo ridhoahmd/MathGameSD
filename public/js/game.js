@@ -190,6 +190,8 @@ function checkAnswer() {
         // BENAR
         score += 10;
         scoreEl.innerText = score;
+
+        AudioManager.playCorrect();
         
         // Efek visual
         questionEl.style.color = "#38ef7d"; // Hijau
@@ -213,6 +215,8 @@ function checkAnswer() {
         questionEl.style.color = "#ff4757"; // Merah
         setTimeout(() => questionEl.style.color = "#fff", 500);
     }
+
+    AudioManager.playWrong();
     
     inputEl.value = '';
     inputEl.focus();
@@ -232,6 +236,8 @@ function downloadSertifikat() {
 function endGame() {
     if (!gameActive) return; // Mencegah fungsi jalan 2x
     gameActive = false;
+
+    AudioManager.playWin(); 
     
     inputEl.disabled = true; // Matikan input
     finalScoreEl.innerText = score;

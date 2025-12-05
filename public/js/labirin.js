@@ -289,6 +289,7 @@ function checkQuiz() {
 
     // Toleransi jawaban (misal 'bumi' == 'bumi ')
     if (userAns.includes(correct) || correct.includes(userAns)) {
+        AudioManager.playCorrect();
         alert("✅ BENAR! Jalan terbuka.");
         document.getElementById('quiz-modal').style.display = 'none';
         
@@ -300,6 +301,7 @@ function checkQuiz() {
         gameActive = true; // Lanjut game
         draw(); // Paksa gambar ulang
     } else {
+        AudioManager.playWrong();
         alert(`❌ SALAH! Jawaban yang benar: ${pendingNode.questionData.jawab}`);
         document.getElementById('quiz-modal').style.display = 'none';
         
@@ -311,6 +313,7 @@ function checkQuiz() {
 
 function checkFinish() {
     if (current === finishNode) {
+        AudioManager.playWin();
         score += 50; 
         gameActive = false;
         alert(`🏆 LABIRIN SELESAI! Total Skor: ${score}`);

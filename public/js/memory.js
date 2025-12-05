@@ -104,6 +104,8 @@ function flipCard() {
     if (lockBoard) return;
     if (this === firstCard) return;
 
+    AudioManager.playClick();
+
     this.classList.remove('hidden');
 
     if (!hasFlippedCard) {
@@ -130,6 +132,7 @@ function disableCards() {
     secondCard.classList.add('matched');
     resetBoard();
     matchesFound++;
+    AudioManager.playCorrect();
     
     // Cek Kemenangan
     if (matchesFound === totalPairs) {
@@ -140,6 +143,7 @@ function disableCards() {
 function unflipCards() {
     lockBoard = true;
     setTimeout(() => {
+        AudioManager.playWrong();
         firstCard.classList.add('hidden');
         secondCard.classList.add('hidden');
         resetBoard();
@@ -162,6 +166,7 @@ function gameWon() {
 
     finalScoreEl.innerText = finalScore;
     winScreen.style.display = 'flex';
+    AudioManager.playWin();
 
     console.log(`📡 Mengirim skor Memory: ${finalScore}`);
 
