@@ -1,0 +1,49 @@
+/* TEMA DARK GALACTIC */
+        body { 
+            font-family: 'Poppins', sans-serif; margin: 0; padding: 20px; 
+            background: radial-gradient(circle at top right, #2b1055, #7597de); background-color: #1e1e2e;
+            color: #e0e0e0; min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+        }
+        
+        .container {
+            width: 95%; max-width: 1200px; background: rgba(30, 30, 46, 0.9);
+            padding: 30px; border-radius: 20px; box-shadow: 0 0 40px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        h1 { font-family: 'Orbitron', sans-serif; color: #00f2ff; text-align: center; margin-bottom: 30px; letter-spacing: 2px; }
+        
+        .header-actions {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+        }
+
+        .btn-back {
+            text-decoration: none; background: #444; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; transition: 0.3s;
+        }
+        .btn-back:hover { background: #666; }
+
+        /* TOMBOL DOWNLOAD PDF (BARU) */
+        .btn-print {
+            background: linear-gradient(45deg, #ff9800, #ff5722); color: white; 
+            padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; gap: 10px; transition: 0.3s;
+        }
+        .btn-print:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 87, 34, 0.5); }
+
+        .table-wrapper { overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        th { background: rgba(0, 242, 255, 0.1); color: #00f2ff; font-family: 'Orbitron', sans-serif; }
+        tr:hover { background: rgba(255,255,255,0.05); }
+        
+        .avatar-mini { width: 35px; height: 35px; border-radius: 50%; vertical-align: middle; margin-right: 10px; }
+        .score-val { font-weight: bold; color: #ffeb3b; }
+        
+        select.role-select { padding: 5px 10px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
+        select.role-select:disabled { opacity: 0.5; cursor: not-allowed; background: #222; border: 1px solid #555; }
+        
+        .search-box { width: 100%; padding: 12px; margin-bottom: 20px; background: rgba(255,255,255,0.1); border: 1px solid #555; color: white; border-radius: 8px; }
+        
+        .badge-info { font-size: 0.8rem; padding: 5px 10px; border-radius: 5px; border: 1px solid; display: inline-block; margin-bottom: 10px; }
+        .text-center { text-align: center; }
+        .mb-20 { margin-bottom: 20px; }

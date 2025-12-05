@@ -37,7 +37,7 @@ io.on('connection', (socket) => {
     socket.on('joinRoom', (data) => { socket.join(data.room); });
     socket.on('laporSkor', (data) => { socket.to(data.room).emit('updateSkorLawan', data.skor); });
 
-    // --- MATH BATTLE DUEL ROOMS ---
+    // --- MATH DUEL ---
     let mathRooms = {}; 
     socket.on('joinMathDuel', async (data) => {
         const { room, nama, tingkat } = data;
@@ -74,7 +74,7 @@ io.on('connection', (socket) => {
         io.emit('chatMessage', { nama: data.nama, pesan: data.pesan, waktu: timeString });
     });
 
-    // --- SIMPAN SKOR (AKUMULASI) ---
+    // --- SIMPAN SKOR ---
     socket.on('simpanSkor', async (data) => {
         console.log(`💾 Simpan: ${data.nama} +${data.skor} (${data.game})`);
         try {
@@ -101,7 +101,7 @@ io.on('connection', (socket) => {
         } catch (error) { console.error("❌ DB Error:", error); }
     });
 
-  // --- MINTA SOAL AI (MATH, MEMORY, ZUMA, KASIR, LABIRIN, PIANO) ---
+    // --- MINTA SOAL AI (BAGIAN UTAMA YANG DIPERBAIKI) ---
     socket.on('mintaSoalAI', async (requestData) => {
         const { kategori, tingkat } = requestData;
         const level = tingkat || 'sedang';
@@ -110,6 +110,7 @@ io.on('connection', (socket) => {
             console.log(`🤖 AI Request: ${kategori} (${level})`);
             let prompt = "";
 
+            // 1. Tentukan Prompt berdasarkan Game
             if (kategori === 'math') {
                 let op = level === 'mudah' ? 'tambah/kurang' : (level === 'sedang' ? 'kali/bagi' : 'campuran');
                 let ang = level === 'mudah' ? '1-10' : (level === 'sedang' ? '1-50' : '1-100');
@@ -130,28 +131,55 @@ io.on('connection', (socket) => {
             } else if (kategori === 'labirin') {
                 let size = level === 'mudah' ? 10 : (level === 'sedang' ? 15 : 20);
                 let numQ = level === 'mudah' ? 3 : (level === 'sedang' ? 5 : 8);
-                prompt = `Buat ${numQ} soal sains SD singkat yang variatif (jawaban 1 kata). Output JSON: {"maze_size": ${size}, "soal_list": [{"tanya":"...","jawab":"..."}]}.`;
+                prompt = `Buat ${numQ} soal sains SD singkat (jawaban 1 kata). Output JSON: {"maze_size": ${size}, "soal_list": [{"tanya":"...","jawab":"..."}]}.`;
             
             } else if (kategori === 'piano') {
-                // ✅ INI LOGIKA BARU UNTUK PIANO
                 let len = level === 'mudah' ? 3 : (level === 'sedang' ? 5 : 7);
                 prompt = `Buat urutan ${len} angka acak (1-9). Output JSON: { "sequence": [1, 3, 5] }.`;
             }
 
             if (!prompt) return;
 
+            // 2. Panggil AI
             const result = await model.generateContent(prompt);
-            const text = result.response.text().replace(/```json|```/g, '').trim();
-            const soalData = JSON.parse(text);
+            const response = await result.response;
+            const text = response.text();
+            
+            console.log("📝 Raw AI:", text); // Debugging
 
+            // 3. ✅ TEKNIK PEMBERSIHAN JSON LEBIH KUAT (IMPLEMENTASI KODE BARU DI SINI) ✅
+            const jsonStartIndex = text.indexOf('{');
+            const jsonEndIndex = text.lastIndexOf('}') + 1;
+            
+            // Khusus untuk Memory (karena dia Array [...], bukan Object {...})
+            const arrayStartIndex = text.indexOf('[');
+            const arrayEndIndex = text.lastIndexOf(']') + 1;
+
+            let cleanJson;
+            // Cek apakah outputnya Array (Memory) atau Object (Game lain)
+            if (kategori === 'memory' && arrayStartIndex !== -1) {
+                cleanJson = text.substring(arrayStartIndex, arrayEndIndex);
+            } else if (jsonStartIndex !== -1) {
+                cleanJson = text.substring(jsonStartIndex, jsonEndIndex);
+            } else {
+                throw new Error("JSON tidak ditemukan");
+            }
+
+            // 4. Parse JSON
+            const soalData = JSON.parse(cleanJson);
             socket.emit('soalDariAI', { kategori: kategori, data: soalData });
 
         } catch (error) {
             console.error("❌ AI Error:", error.message);
-            // Fallback (Soal Cadangan)
+            
+            // FALLBACK (SOAL CADANGAN)
             let fallback;
             if (kategori === 'math') fallback = { soal: "1+1=?", jawaban: 2 };
-            if (kategori === 'piano') fallback = { sequence: [1, 2, 3, 4] }; // Fallback Piano
+            if (kategori === 'kasir') fallback = { cerita: "Beli 500 bayar 1000", total_belanja: 500, uang_bayar: 1000, kembalian: 500 };
+            if (kategori === 'labirin') fallback = { maze_size: 10, soal_list: [{tanya:"1+1?", jawab:"2"}] };
+            if (kategori === 'piano') fallback = { sequence: [1,2,3] };
+            if (kategori === 'zuma') fallback = { deskripsi: "Offline", palet_warna: ["#f00","#0f0","#00f","#ff0"], speed: "sedang" };
+            
             if (fallback) socket.emit('soalDariAI', { kategori: kategori, data: fallback });
         }
     });

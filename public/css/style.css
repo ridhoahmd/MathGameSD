@@ -1,0 +1,203 @@
+ /* --- 1. CSS GLOBAL & TEMA --- */
+        * { box-sizing: border-box; }
+        
+        /* TEMA DEFAULT (Galactic) */
+        body { 
+            font-family: 'Poppins', sans-serif; margin: 0; padding: 0; 
+            background: radial-gradient(circle at top right, #2b1055, #7597de); 
+            background-color: #1e1e2e;
+            color: #e0e0e0; min-height: 100vh; display: flex; justify-content: center; align-items: center; 
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+
+        /* TEMA: HUTAN (Forest) */
+        body.theme-forest {
+            background: radial-gradient(circle at top right, #134e5e, #71b280);
+            background-color: #0f2027;
+            color: #f1f8e9;
+        }
+        body.theme-forest .game-card { background: rgba(20, 50, 20, 0.6); border-color: #71b280; }
+        body.theme-forest .sidebar { border-right-color: #71b280; }
+        body.theme-forest .btn-menu { background: linear-gradient(90deg, #134e5e, #71b280); }
+
+        /* TEMA: LAUTAN (Ocean) */
+        body.theme-ocean {
+            background: radial-gradient(circle at top right, #2193b0, #6dd5ed);
+            background-color: #2193b0;
+            color: #e0f7fa;
+        }
+        body.theme-ocean .game-card { background: rgba(255, 255, 255, 0.15); border-color: #fff; }
+        body.theme-ocean .sidebar { border-right-color: #fff; }
+        body.theme-ocean .btn-menu { background: linear-gradient(90deg, #2193b0, #6dd5ed); }
+
+        /* TEMA: HACKER (Matrix) */
+        body.theme-hacker {
+            background: #000;
+            color: #00ff41;
+            font-family: 'Courier New', monospace;
+        }
+        body.theme-hacker .game-card { border: 1px solid #00ff41; background: rgba(0, 20, 0, 0.9); }
+        body.theme-hacker .sidebar { border-right-color: #00ff41; }
+        body.theme-hacker h1, body.theme-hacker h2, body.theme-hacker .stat-value { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
+        body.theme-hacker .btn-menu { background: #003300; border: 1px solid #00ff41; color: #00ff41; }
+
+        /* TEMA: CRIMSON (Dark Red) */
+        body.theme-crimson {
+            background: #000000;
+            color: #ff4d4d;
+        }
+        body.theme-crimson .main-header { background: rgba(20, 0, 0, 0.9); border-bottom: 1px solid #ff0000; }
+        body.theme-crimson .sidebar { border-right: 1px solid #ff0000; background: rgba(20, 0, 0, 0.5); }
+        body.theme-crimson .dashboard-container { border: 1px solid #ff0000; box-shadow: 0 0 30px rgba(255, 0, 0, 0.3); }
+        body.theme-crimson .game-card { background: rgba(30, 0, 0, 0.8); border: 1px solid #ff0000; box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.2); }
+        body.theme-crimson .game-card:hover { transform: translateY(-5px); box-shadow: 0 0 20px #ff0000; }
+        body.theme-crimson .btn-menu { background: linear-gradient(90deg, #330000, #800000); border: 1px solid #ff4d4d; color: white; }
+        body.theme-crimson .stat-value, body.theme-crimson h2 { color: #ff0000; text-shadow: 0 0 10px #ff0000; }
+        body.theme-crimson .portal-title { color: #ff0000; }
+
+        /* --- END TEMA --- */
+
+        /* UTILITY CLASSES */
+        .hidden { display: none !important; }
+        .block { display: block !important; }
+        .mt-10 { margin-top: 10px; }
+        .mb-20 { margin-bottom: 20px; }
+        .text-bold { font-weight: bold; }
+        .text-center { text-align: center; }
+        .text-gray { color: #aaa; }
+        .text-ccc { color: #ccc; }
+        .text-666 { color: #666; }
+        .text-green { color: #38ef7d; }
+        .text-red { color: #ef473a; }
+        .font-small { font-size: 0.8rem; }
+        .font-tiny { font-size: 0.7rem; }
+        .w-100 { width: 100%; }
+        .cursor-pointer { cursor: pointer; }
+        .underline { text-decoration: underline; }
+
+        /* HEADER */
+        .main-header {
+            width: 100%; padding: 10px 40px; background: rgba(18, 18, 28, 0.95); 
+            border-bottom: 1px solid rgba(0, 242, 255, 0.1); 
+            display: flex; justify-content: space-between; align-items: center;
+            position: fixed; top: 0; z-index: 1000;
+            -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+        }
+        .logo-area { display: flex; align-items: center; gap: 15px; }
+        .logo-img { height: 60px; width: auto; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); } 
+        .portal-title { 
+            font-family: 'Orbitron', sans-serif; font-size: 1.4rem; color: #00f2ff;
+            letter-spacing: 2px; text-transform: uppercase; border-left: 2px solid #444; padding-left: 15px;
+        }
+        
+        /* HEADER RIGHT AREA (BARU) */
+        .header-right { display: flex; align-items: center; gap: 15px; }
+
+        .role-badge { background: linear-gradient(45deg, #ff00cc, #333399); color: white; padding: 8px 20px; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
+        
+        /* 🔥 TOMBOL GANTI TEMA KEREN (HEADER) 🔥 */
+        .btn-theme-toggle {
+            width: 45px; height: 45px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff; font-size: 1.5rem; cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            transition: all 0.4s ease; 
+            -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
+        }
+        .btn-theme-toggle:hover {
+            background: #00f2ff; color: #000;
+            transform: rotate(180deg) scale(1.1); /* Efek Putar */
+            box-shadow: 0 0 20px #00f2ff; /* Efek Cahaya */
+            border-color: #00f2ff;
+        }
+
+        /* DASHBOARD CONTAINER */
+        .dashboard-container { 
+            display: flex; width: 95%; max-width: 1200px; height: auto; min-height: 80vh; 
+            margin: 120px auto 50px; background: rgba(30, 30, 46, 0.8); border-radius: 20px; overflow: hidden; 
+            box-shadow: 0 0 40px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1);
+            -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+        }
+
+        /* SIDEBAR */
+        .sidebar { 
+            flex: 1; min-width: 280px; background: rgba(0,0,0,0.3); padding: 30px; 
+            border-right: 1px solid rgba(255,255,255,0.05); text-align: center; display: flex; flex-direction: column; align-items: center;
+        }
+        
+        /* AVATAR & BINGKAI */
+        .avatar-container { position: relative; width: 110px; height: 110px; margin-bottom: 15px; display: flex; justify-content: center; align-items: center;}
+        .avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; background: #000; border: 3px solid #333; }
+        
+        /* CLASS BINGKAI */
+        .frame-neon .avatar { border: 3px solid #00f2ff; box-shadow: 0 0 15px #00f2ff; }
+        .frame-gold .avatar { border: 4px solid #FFD700; box-shadow: 0 0 15px #FFD700; }
+        .frame-fire .avatar { border: 4px solid #ff4500; box-shadow: 0 0 20px #ff4500; animation: burn 1s infinite alternate; }
+        .frame-royal .avatar { border: 4px dashed #9900ff; box-shadow: 0 0 20px #9900ff; }
+        @keyframes burn { from { box-shadow: 0 0 10px #ff4500; } to { box-shadow: 0 0 25px #ffeb3b; } }
+
+        .profile-name { font-size: 1.3rem; font-weight: bold; margin-bottom: 5px; color: inherit; }
+        
+        .stats-box { background: rgba(255,255,255,0.05); width: 100%; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .stat-value { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: #ffeb3b; display: block; }
+        
+        .btn-menu { width: 100%; padding: 12px 15px; margin-bottom: 10px; border: none; border-radius: 8px; cursor: pointer; text-align: left; font-weight: 600; color: white; display: flex; align-items: center; gap: 10px; transition: 0.2s;}
+        .btn-menu:hover { transform: translateX(5px); }
+        
+        .btn-common { background: linear-gradient(90deg, #2b5876, #4e4376); }
+        .btn-shop { background: linear-gradient(90deg, #ff9966, #ff5e62); } 
+        .btn-guru { background: linear-gradient(90deg, #11998e, #38ef7d); }
+        .btn-admin { background: linear-gradient(90deg, #cb2d3e, #ef473a); }
+        
+        .btn-google { background: #fff; color: #333; width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-logout { background: rgba(255,255,255,0.1); color: #ccc; width: 100%; padding: 10px; border: 1px solid #444; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+
+        /* KONTEN UTAMA */
+        .main-content { flex: 3; padding: 40px; }
+        .misi-title { margin-top:0; border-bottom:2px solid #00f2ff; display:inline-block; padding-bottom:5px; }
+        
+        .grid-games { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px; }
+        .game-card { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 30px 20px; text-align: center; text-decoration: none; border: 1px solid rgba(255,255,255,0.1); display: block; transition: 0.3s; }
+        .game-card:hover { transform: translateY(-10px); background: rgba(255,255,255,0.1); border-color: #00f2ff; }
+        
+        .game-icon { font-size: 50px; margin-bottom: 10px; display: block; }
+        .game-title { font-weight: bold; font-size: 1.2rem; color: inherit; margin-bottom: 10px; }
+        .game-desc { color: #aaa; font-size: 0.9rem; margin-bottom: 20px; }
+        
+        .btn-play { padding: 10px 35px; border-radius: 30px; font-size: 0.8rem; font-weight: bold; color: white; border: none; margin-top: 15px; display: inline-block; }
+        .btn-start-math { background: linear-gradient(45deg, #FFD700, #FFA500); color: black; }
+        .game-card.locked { opacity: 0.4; cursor: not-allowed; background: rgba(0,0,0,0.3); }
+        .btn-locked { background: #444; box-shadow: none; color: #888; cursor: not-allowed; }
+
+        /* CHAT & FOOTER */
+        #chat-container { position: fixed; bottom: 20px; right: 20px; width: 320px; height: 400px; background: rgba(20, 20, 35, 0.95); border: 1px solid #00f2ff; border-radius: 15px 15px 0 0; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0,0,0,0.8); z-index: 2000; overflow: hidden; transform: translateY(120%); transition: transform 0.3s ease, height 0.3s ease; }
+        #chat-container.open { transform: translateY(0); }
+        #chat-container.minimized { height: 45px !important; }
+        .chat-header { background: linear-gradient(90deg, #2b5876, #4e4376); padding: 10px 15px; font-weight: bold; color: white; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; cursor: pointer; }
+        .chat-controls button { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; margin-left: 10px; font-weight: bold; }
+        .chat-messages { flex: 1; padding: 10px; overflow-y: auto; font-size: 0.9rem; color: #ddd; display: flex; flex-direction: column; gap: 8px; }
+        .msg-bubble { background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 8px; align-self: flex-start; max-width: 80%; }
+        .msg-me { background: #00f2ff; color: #000; align-self: flex-end; border-radius: 8px 8px 0 8px; }
+        .msg-name { font-size: 0.7rem; color: #aaa; margin-bottom: 2px; display: block; }
+        .msg-me .msg-name { display: none; }
+        .msg-time { display: block; font-size: 0.65rem; color: rgba(255, 255, 255, 0.6); text-align: right; margin-top: 4px; }
+        .msg-me .msg-time { color: rgba(0, 0, 0, 0.6); }
+        .chat-input-area { padding: 10px; border-top: 1px solid #444; display: flex; gap: 5px; }
+        .chat-input { flex: 1; padding: 8px; border-radius: 20px; border: none; background: #333; color: white; outline: none;}
+        .chat-send { background: #00f2ff; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; font-weight: bold; }
+        .chat-welcome { text-align: center; color: #555; font-size: 0.8rem; margin-top: 20px; }
+
+        .sidebar-footer { margin-top: auto; width: 100%; }
+        .input-guru { width:100%; padding:8px; border-radius:5px; margin-bottom:5px; background: rgba(255,255,255,0.1); border: 1px solid #555; color: white; }
+        .link-wrapper { text-decoration: none; width: 100%; }
+
+        @media (max-width: 800px) {
+            .dashboard-container { flex-direction: column; margin-top: 100px; }
+            .sidebar { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
+            .grid-games { grid-template-columns: 1fr; }
+            .portal-title { display: none; }
+            .logo-img { height: 50px; }
+            #chat-container { width: 90%; right: 5%; bottom: 10px; }
+        }

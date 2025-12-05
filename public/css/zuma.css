@@ -1,0 +1,114 @@
+/* public/css/zuma.css */
+
+/* 1. GLOBAL STYLE (TEMA GALAKSI) */
+body { 
+    margin: 0; padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background: radial-gradient(circle at top right, #2b1055, #7597de); 
+    background-color: #1e1e2e;
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    display: flex; justify-content: center; align-items: center;
+}
+
+/* 2. WADAH GAME (KACA/GLASSMORPHISM) */
+#game-container {
+    position: relative;
+    width: 100%; max-width: 800px;
+    aspect-ratio: 4/3;
+    background: rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 50px rgba(0, 242, 255, 0.2);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+}
+
+canvas { display: block; width: 100%; height: 100%; }
+
+#ui-layer {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; z-index: 10;
+}
+
+/* SKOR (NEON STYLE) */
+.score-box {
+    position: absolute; top: 15px;
+    font-family: 'Orbitron', sans-serif; font-weight: bold;
+    background: rgba(0, 0, 0, 0.8); padding: 8px 15px;
+    border-radius: 30px; font-size: 0.9rem; color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+.score-left { left: 15px; color: #00f2ff; border-color: #00f2ff; }
+.score-right { right: 15px; color: #ff4757; border-color: #ff4757; }
+
+/* TOMBOL KELUAR */
+.btn-exit {
+    position: absolute; bottom: 15px; right: 15px; 
+    width: auto !important; padding: 8px 20px; margin: 0;
+    background: rgba(255, 71, 87, 0.2); 
+    color: #ff4757; border: 1px solid #ff4757; border-radius: 30px;
+    font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: bold;
+    cursor: pointer; pointer-events: auto; z-index: 20;
+    transition: 0.3s; backdrop-filter: blur(5px);
+}
+.btn-exit:hover { background: #ff4757; color: white; box-shadow: 0 0 15px #ff4757; }
+
+/* LOGIN BOX */
+.login-box {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(30, 30, 46, 0.9); padding: 30px; text-align: center;
+    border: 1px solid rgba(0, 242, 255, 0.3); border-radius: 20px; z-index: 100;
+    pointer-events: auto; width: 80%; max-width: 350px;
+    box-shadow: 0 0 40px rgba(0, 242, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+h2, h1 { margin-top: 0; color: #00f2ff; font-family: 'Orbitron', sans-serif; text-shadow: 0 0 10px rgba(0, 242, 255, 0.5); }
+
+input { 
+    padding: 12px; margin: 10px 0; width: 100%; box-sizing: border-box; 
+    border-radius: 10px; border: 1px solid #555; 
+    background: #222; color: white; font-family: 'Poppins', sans-serif;
+    text-align: center; outline: none; transition: 0.3s;
+}
+input:focus { border-color: #00f2ff; box-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
+
+.btn-login-group button { 
+    padding: 12px; width: 100%; margin-top: 10px; cursor: pointer; 
+    font-weight: bold; border-radius: 50px; border: none; font-family: 'Orbitron', sans-serif;
+    transition: 0.3s;
+}
+.btn-start { background: linear-gradient(45deg, #00f2ff, #0099ff); color: #000; }
+.btn-start:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 242, 255, 0.6); }
+
+.btn-back { background: rgba(255, 255, 255, 0.1); color: #ccc; border: 1px solid rgba(255,255,255,0.2) !important; }
+.btn-back:hover { background: rgba(255, 255, 255, 0.2); color: white; }
+
+#game-over-screen {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(20, 20, 30, 0.95); padding: 40px; text-align: center;
+    border: 2px solid #ff4757; border-radius: 20px; color: white;
+    display: none; z-index: 100; pointer-events: auto;
+    width: 80%; max-width: 300px; box-shadow: 0 0 50px rgba(255, 71, 87, 0.4);
+}
+#game-over-screen button { 
+    width: 100%; margin-top: 15px; padding: 12px; cursor: pointer; 
+    border-radius: 50px; border: none; font-weight: bold; font-family: 'Orbitron', sans-serif;
+}
+
+/* TOMBOL KESULITAN */
+.difficulty-selector { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
+.btn-difficulty {
+    padding: 8px 15px; border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1); color: #ccc;
+    border-radius: 20px; cursor: pointer; font-family: 'Poppins', sans-serif;
+    font-weight: 600; transition: all 0.3s ease; backdrop-filter: blur(5px);
+}
+.btn-difficulty:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+.btn-difficulty.active {
+    background: rgba(0, 242, 255, 0.3); color: #00f2ff;
+    border-color: #00f2ff; box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+}

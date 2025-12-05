@@ -2,7 +2,6 @@ const CACHE_NAME = 'videa-game-v1';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css', // Jika ada file css terpisah
   '/logo-videa.png.png',
   '/math.html',
   '/zuma.html',
