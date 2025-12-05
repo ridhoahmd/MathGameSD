@@ -102,9 +102,27 @@ io.on('connection', (socket) => {
         io.emit('chatMessage', { nama: data.nama, pesan: data.pesan, waktu: timeString });
     });
 
-    // --- SIMPAN SKOR ---
+
+    // --- SIMPAN SKOR (AKUMULASI + VALIDASI KEAMANAN) ---
     socket.on('simpanSkor', async (data) => {
-        console.log(`💾 Simpan: ${data.nama} +${data.skor} (${data.game})`);
+        // 1. Validasi Input: Pastikan skor adalah Angka Positif yang Masuk Akal
+        let skorMasuk = parseInt(data.skor);
+        
+        // Tolak jika bukan angka atau negatif
+        if (isNaN(skorMasuk) || skorMasuk < 0) {
+            console.warn(`⚠️ Percobaan hack/bug skor dari ${data.nama}: ${data.skor}`);
+            return; // Batalkan proses
+        }
+
+        // Tolak jika skor terlalu tidak masuk akal (misal > 500 sekali main) untuk mencegah cheat
+        // Kecuali Anda mau membolehkan skor besar, batas ini bisa disesuaikan
+        if (skorMasuk > 1000) {
+            console.warn(`⚠️ Skor mencurigakan dari ${data.nama}: ${skorMasuk}`);
+            skorMasuk = 1000; // Cap (batasi) skor maksimal per sesi
+        }
+
+        console.log(`💾 Simpan Valid: ${data.nama} +${skorMasuk} (${data.game})`);
+
         try {
             const userRef = ref(database, 'leaderboard/' + data.nama);
             const snapshot = await get(userRef);
@@ -119,7 +137,7 @@ io.on('connection', (socket) => {
             if (!fieldSkor) return;
 
             const skorLama = userData[fieldSkor] || 0;
-            const totalBaru = skorLama + parseInt(data.skor);
+            const totalBaru = skorLama + skorMasuk; // Gunakan skorMasuk yang sudah divalidasi
 
             const updateData = { nama: data.nama, [fieldSkor]: totalBaru };
             if (fieldSkor === 'skor_math') updateData.waktu_math = new Date().toString();
