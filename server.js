@@ -27,12 +27,10 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const apiKey = process.env.API_KEY; 
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// 🔥 UPDATE 1: KONFIGURASI KREATIFITAS (TEMPERATURE TINGGI)
-// Temperature 0.85 membuat AI jauh lebih variatif dan tidak kaku
 const model = genAI.getGenerativeModel({ 
     model: "gemini-2.0-flash",
     generationConfig: {
-        temperature: 0.85, // 0 = Kaku, 1 = Sangat Kreatif (Acak)
+        temperature: 0.85, 
         topP: 0.95,
         topK: 40,
     }
@@ -42,12 +40,12 @@ app.use(express.static('public'));
 
 // --- HELPER: PENGACAK TEMA ---
 function getRandomTheme() {
-    const themes = ["Luar Angkasa", "Hutan Rimba", "Bawah Laut", "Dunia Dinosaurus", "Kota Futuristik", "Kerajaan Fantasi", "Dunia Permen", "Super Hero"];
+    const themes = ["Luar Angkasa", "Hutan Rimba", "Bawah Laut", "Dunia Dinosaurus", "Kota Futuristik", "Kerajaan Fantasi", "Dunia Permen", "Super Hero", "Gurun Pasir", "Kutub Utara"];
     return themes[Math.floor(Math.random() * themes.length)];
 }
 
 function getRandomObject() {
-    const objects = ["Apel", "Robot", "Kucing", "Mobil", "Bintang", "Buku", "Pedang", "Pizza", "Bola"];
+    const objects = ["Apel", "Robot", "Kucing", "Mobil", "Bintang", "Buku", "Pedang", "Pizza", "Bola", "Topi"];
     return objects[Math.floor(Math.random() * objects.length)];
 }
 
@@ -70,19 +68,17 @@ io.on('connection', (socket) => {
         if (mathRooms[room].length === 2) {
             console.log(`🚀 Duel Mulai di Room ${room}`);
             try {
-                // Tambahkan elemen acak agar soal duel tidak itu-itu saja
                 const tema = getRandomTheme();
                 const prompt = `Buat 10 soal matematika SD tingkat ${tingkat} dengan tema cerita: ${tema}. 
-                Variasikan jenis soal (jangan cuma tambah-tambahan).
-                JSON Array: [{"q":"Soal cerita singkat","a":2}]. No markdown.`;
+                JSON Array Murni: [{"q":"Soal cerita singkat","a":2}]. JANGAN ADA KOMENTAR // atau markdown.`;
                 
                 const result = await model.generateContent(prompt);
-                const text = result.response.text().replace(/```json|```/g, '').trim();
+                const text = result.response.text();
                 
-                // Pembersihan JSON Sederhana untuk Duel
+                // Cleaner Sederhana untuk Duel
                 const start = text.indexOf('[');
                 const end = text.lastIndexOf(']') + 1;
-                const cleanJson = text.substring(start, end);
+                const cleanJson = text.substring(start, end).replace(/\/\/.*$/gm, ''); // Hapus komentar
                 
                 const paketSoal = JSON.parse(cleanJson);
                 io.to(room).emit('startDuel', { soal: paketSoal });
@@ -133,7 +129,7 @@ io.on('connection', (socket) => {
         } catch (error) { console.error("❌ DB Error:", error); }
     });
 
-    // --- MINTA SOAL AI (UPDATE: VARIATIF) ---
+    // --- MINTA SOAL AI ---
     socket.on('mintaSoalAI', async (requestData) => {
         const { kategori, tingkat } = requestData;
         const level = tingkat || 'sedang';
@@ -141,60 +137,46 @@ io.on('connection', (socket) => {
         try {
             console.log(`🤖 AI Request: ${kategori} (${level})`);
             let prompt = "";
-            
-            // 🔥 UPDATE 2: BUMBU RANDOM DI SETIAP KATEGORI 🔥
             const temaAcak = getRandomTheme();
             const objekAcak = getRandomObject();
 
             if (kategori === 'math') {
                 let range = level === 'mudah' ? '1-20' : (level === 'sedang' ? '10-100' : '50-500');
-                // Instruksi khusus: JANGAN BUAT POLA BERULANG
-                prompt = `Bertindak sebagai guru matematika kreatif. Buat 1 soal matematika SD.
-                Tingkat: ${level}. Range Angka: ${range}.
-                Tema Soal: ${temaAcak}.
-                PENTING: Buat soal cerita unik, JANGAN gunakan pola "A punya X apel". Gunakan variasi seperti sisa uang, jarak tempuh, atau pembagian barang.
-                Output JSON: {"soal": "...", "jawaban": 0}.`;
+                prompt = `Bertindak sebagai guru matematika. Buat 1 soal matematika SD.
+                Tingkat: ${level}. Range: ${range}. Tema: ${temaAcak}.
+                JANGAN GUNAKAN pola "A punya X apel". Gunakan variasi kreatif.
+                Output JSON: {"soal": "...", "jawaban": 0}. JANGAN ADA KOMENTAR.`;
             
             } else if (kategori === 'memory') {
                 let num = level === 'mudah' ? 4 : (level === 'sedang' ? 6 : 8);
-                // Instruksi khusus: Minta kategori spesifik secara acak
                 const kategoriMemory = ["Ibukota Negara", "Nama Hewan Inggris", "Rumus Bangun Datar", "Antonim Kata", "Sinonim Kata", "Nama Planet"];
                 const katPilihan = kategoriMemory[Math.floor(Math.random() * kategoriMemory.length)];
-                
-                prompt = `Buat ${num} pasang kartu memori untuk anak SD.
-                Kategori Pasangan: ${katPilihan}.
-                Contoh jika Antonim: {"a":"Panas", "b":"Dingin"}.
-                Output JSON Array: [{"a":"...","b":"..."}].`;
+                prompt = `Buat ${num} pasang kartu memori SD. Kategori: ${katPilihan}. Output JSON Array: [{"a":"...","b":"..."}]. NO COMMENTS.`;
             
             } else if (kategori === 'zuma') {
                 let spd = level === 'mudah' ? 'lambat' : (level === 'sedang' ? 'sedang' : 'cepat');
-                prompt = `Buat level game Zuma unik dengan tema visual: ${temaAcak}.
+                prompt = `Buat level game Zuma unik tema visual: ${temaAcak}.
                 Speed: ${spd}.
-                Output JSON: {"deskripsi":"Misi di ${temaAcak}...", "palet_warna":["#hex","#hex","#hex","#hex"], "speed":"${spd}"}.`;
+                Output JSON: {"deskripsi":"Misi di ${temaAcak}...", "palet_warna":["#hex","#hex","#hex","#hex"], "speed":"${spd}"}.
+                PENTING: JANGAN tulis komentar // di samping kode warna. JSON Murni Saja.`;
             
             } else if (kategori === 'kasir') {
                 let rng = level === 'mudah' ? 'ratusan' : (level === 'sedang' ? 'ribuan' : 'puluhan ribu');
                 prompt = `Buat skenario belanja unik di "Toko ${objekAcak}".
-                Barang yang dibeli aneh/lucu. Range harga: ${rng}.
-                Output JSON: {"cerita":"...", "total_belanja":0, "uang_bayar":0, "kembalian":0}.`;
+                Barang aneh/lucu. Range: ${rng}.
+                Output JSON: {"cerita":"...", "total_belanja":0, "uang_bayar":0, "kembalian":0}. NO COMMENTS.`;
             
             } else if (kategori === 'labirin') {
                 let size = level === 'mudah' ? 10 : (level === 'sedang' ? 15 : 20);
                 let numQ = level === 'mudah' ? 3 : (level === 'sedang' ? 5 : 8);
-                const topikSains = ["Tata Surya", "Bagian Tumbuhan", "Wujud Benda", "Rantai Makanan", "Gaya & Gerak"];
-                const topikPilihan = topikSains[Math.floor(Math.random() * topikSains.length)];
-
                 prompt = `Buat konfigurasi labirin. Grid: ${size}x${size}.
-                Buat ${numQ} soal sains SD singkat tentang topik: ${topikPilihan}.
-                Jawaban 1 kata saja.
-                Output JSON: {"maze_size": ${size}, "soal_list": [{"tanya":"...","jawab":"..."}]}.`;
+                Buat ${numQ} soal sains SD singkat (jawaban 1 kata).
+                Output JSON: {"maze_size": ${size}, "soal_list": [{"tanya":"...","jawab":"..."}]}. NO COMMENTS.`;
             
             } else if (kategori === 'piano') {
                 let len = level === 'mudah' ? 4 : (level === 'sedang' ? 6 : 8);
-                // Minta pola yang tidak berurutan
-                prompt = `Buat urutan nada piano acak sepanjang ${len} digit (angka 1-9).
-                PENTING: Jangan buat urutan yang mudah ditebak seperti 12345. Buat pola lompat seperti 13524.
-                Output JSON: { "sequence": [1, 3, 5] }.`;
+                prompt = `Buat urutan nada piano acak ${len} digit (1-9).
+                Output JSON: { "sequence": [1, 3, 5] }. NO COMMENTS.`;
             }
 
             if (!prompt) return;
@@ -203,9 +185,7 @@ io.on('connection', (socket) => {
             const response = await result.response;
             const text = response.text();
             
-            console.log(`📝 AI Response (${kategori}):`, text.substring(0, 50) + "..."); 
-
-            // --- CLEANING JSON ---
+            // --- CLEANING JSON TINGKAT LANJUT (ANTI-KOMENTAR) ---
             const jsonStartIndex = text.indexOf('{');
             const jsonEndIndex = text.lastIndexOf('}') + 1;
             const arrayStartIndex = text.indexOf('[');
@@ -220,6 +200,9 @@ io.on('connection', (socket) => {
                 throw new Error("JSON tidak ditemukan");
             }
 
+            // 🔥 HAPUS KOMENTAR JS (// ...) DARI JSON 🔥
+            cleanJson = cleanJson.replace(/\/\/.*$/gm, ''); 
+
             const soalData = JSON.parse(cleanJson);
             socket.emit('soalDariAI', { kategori: kategori, data: soalData });
 
@@ -231,8 +214,8 @@ io.on('connection', (socket) => {
             if (kategori === 'kasir') fallback = { cerita: "Beli 500 bayar 1000", total_belanja: 500, uang_bayar: 1000, kembalian: 500 };
             if (kategori === 'labirin') fallback = { maze_size: 10, soal_list: [{tanya:"1+1?", jawab:"2"}] };
             if (kategori === 'piano') fallback = { sequence: [1,2,3,4] };
-            if (kategori === 'zuma') fallback = { deskripsi: "Offline", palet_warna: ["#f00","#0f0","#00f","#ff0"], speed: "sedang" };
-            if (kategori === 'memory') fallback = [{a:"A", b:"B"}, {a:"C", b:"D"}]; // Fix fallback memory
+            if (kategori === 'zuma') fallback = { deskripsi: "Offline Mode", palet_warna: ["#f00","#0f0","#00f","#ff0"], speed: "sedang" };
+            if (kategori === 'memory') fallback = [{a:"A", b:"B"}, {a:"C", b:"D"}];
             
             if (fallback) socket.emit('soalDariAI', { kategori: kategori, data: fallback });
         }
