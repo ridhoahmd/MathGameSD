@@ -1,71 +1,102 @@
+/* public/css/labirin.css */
+
+/* GLOBAL */
 body { 
-            margin: 0; padding: 0; background: #050505; color: white; 
-            font-family: 'Poppins', sans-serif; overflow: hidden; /* No Scroll */
-            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
-        }
+    margin: 0; padding: 0; 
+    /* Background Luar Angkasa Gelap */
+    background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%); 
+    color: white; 
+    font-family: 'Poppins', sans-serif; overflow: hidden;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
+    -webkit-user-select: none; user-select: none;
+}
 
-        /* UI HEADER */
-        .ui-top {
-            position: absolute; top: 10px; width: 90%; display: flex; justify-content: space-between; z-index: 10;
-        }
-        .btn-back { text-decoration: none; color: white; background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; font-weight: bold; 
-            -webkit-backdrop-filter: blur(5px);
-            backdrop-filter: blur(5px); }
-        .score-box { font-family: 'Orbitron'; color: #00f2ff; font-size: 1.2rem; }
+/* UI HEADER */
+.ui-top {
+    position: absolute; top: 15px; width: 90%; display: flex; justify-content: space-between; z-index: 10;
+}
+.btn-back { 
+    text-decoration: none; color: white; background: rgba(255,255,255,0.15); 
+    padding: 10px 20px; border-radius: 30px; font-weight: bold; 
+    backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.score-box { 
+    font-family: 'Orbitron'; color: #00f2ff; font-size: 1.5rem; 
+    text-shadow: 0 0 10px #00f2ff; font-weight: bold;
+}
 
-        /* CANVAS LABIRIN (NEON) */
-        canvas {
-            background: #111;
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
-            border: 2px solid #333;
-            border-radius: 10px;
-            max-width: 95vw; max-height: 60vh; /* Agar muat di HP */
-        }
+/* CANVAS LABIRIN (KEREN) */
+canvas {
+    background: rgba(0, 0, 0, 0.5); /* Semi transparan */
+    box-shadow: 0 0 40px rgba(0, 242, 255, 0.15);
+    border: 4px solid #333;
+    border-radius: 15px;
+    max-width: 95vw; max-height: 65vh;
+    
+    /* Efek Grid Latar Belakang (Opsional via CSS) */
+    background-image: 
+        linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
 
-        /* LOADING SCREEN */
-        #loading-screen {
-            position: absolute; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.9); display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; z-index: 100;
-        }
-        .difficulty-selector { margin-top: 20px; display: flex; gap: 10px; }
-        .btn-level {
-            padding: 10px 20px; background: #222; border: 1px solid #555; color: #aaa; 
-            border-radius: 20px; cursor: pointer; font-family: 'Orbitron';
-        }
-        .btn-level.active { border-color: #00f2ff; color: #00f2ff; box-shadow: 0 0 10px #00f2ff; }
-        .btn-start {
-            margin-top: 30px; padding: 15px 40px; border-radius: 30px; border: none;
-            background: linear-gradient(45deg, #00f2ff, #0099ff); color: black; font-weight: bold;
-            font-size: 1.2rem; cursor: pointer;
-        }
+/* LOADING SCREEN */
+#loading-screen {
+    position: absolute; top:0; left:0; width:100%; height:100%;
+    background: rgba(5, 5, 10, 0.95); display: flex; flex-direction: column; 
+    justify-content: center; align-items: center; z-index: 100;
+}
+.difficulty-selector { margin-top: 20px; display: flex; gap: 10px; }
+.btn-level {
+    padding: 10px 20px; background: #222; border: 1px solid #555; color: #aaa; 
+    border-radius: 20px; cursor: pointer; font-family: 'Orbitron'; transition: 0.3s;
+}
+.btn-level.active { border-color: #00f2ff; color: black; background: #00f2ff; box-shadow: 0 0 15px #00f2ff; }
+.btn-start {
+    margin-top: 30px; padding: 15px 50px; border-radius: 30px; border: none;
+    background: linear-gradient(45deg, #00f2ff, #0099ff); color: white; font-weight: bold;
+    font-size: 1.2rem; cursor: pointer; box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+    transition: transform 0.2s;
+}
+.btn-start:hover { transform: scale(1.05); }
 
-        /* KONTROL HP (D-PAD) */
-        .controls {
-            display: none; /* Muncul hanya di layar kecil via JS/CSS */
-            margin-top: 20px; gap: 10px;
-        }
-        @media (max-width: 800px) {
-            .controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-            .btn-ctrl { 
-                width: 60px; height: 60px; background: rgba(255,255,255,0.1); 
-                border: 1px solid #555; border-radius: 50%; color: white; font-size: 1.5rem;
-                display: flex; justify-content: center; align-items: center; cursor: pointer;
-                user-select: none; -webkit-user-select: none;
-            }
-            .btn-ctrl:active { background: #00f2ff; color: black; }
-            .spacer { visibility: hidden; }
-        }
+/* KONTROL HP (D-PAD) */
+.controls { display: none; margin-top: 20px; gap: 10px; }
+@media (max-width: 800px) {
+    .controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .btn-ctrl { 
+        width: 60px; height: 60px; background: rgba(255,255,255,0.1); 
+        border: 1px solid #555; border-radius: 50%; color: white; font-size: 1.5rem;
+        display: flex; justify-content: center; align-items: center; cursor: pointer;
+        user-select: none; -webkit-user-select: none;
+    }
+    .btn-ctrl:active { background: #00f2ff; color: black; }
+    .spacer { visibility: hidden; }
+}
 
-        /* MODAL PERTANYAAN */
-        #quiz-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 50; justify-content: center; align-items: center;
-        }
-        .quiz-content {
-            background: #222; padding: 30px; border-radius: 15px; border: 2px solid #ff00cc;
-            text-align: center; width: 80%; max-width: 400px;
-            box-shadow: 0 0 30px rgba(255, 0, 204, 0.4);
-        }
-        input { padding: 10px; width: 80%; margin: 15px 0; border-radius: 5px; border: none; text-align: center; }
-        .btn-submit { padding: 10px 20px; background: #ff00cc; color: white; border: none; border-radius: 20px; cursor: pointer; }
+/* MODAL PERTANYAAN */
+#quiz-modal {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); z-index: 50; justify-content: center; align-items: center;
+    backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+}
+.quiz-content {
+    background: linear-gradient(135deg, #2b1055, #1e1e2e); 
+    padding: 30px; border-radius: 20px; border: 2px solid #ff00cc;
+    text-align: center; width: 85%; max-width: 400px;
+    box-shadow: 0 0 50px rgba(255, 0, 204, 0.3);
+    animation: popUp 0.3s ease;
+}
+@keyframes popUp { from{transform:scale(0.8); opacity:0;} to{transform:scale(1); opacity:1;} }
+
+input { 
+    padding: 15px; width: 100%; margin: 20px 0; border-radius: 10px; 
+    border: 2px solid #555; background: #111; color: white; text-align: center; font-size: 1.1rem;
+}
+input:focus { border-color: #ff00cc; outline: none; }
+.btn-submit { 
+    padding: 12px 30px; background: #ff00cc; color: white; border: none; 
+    border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 1rem;
+    box-shadow: 0 0 15px #ff00cc;
+}

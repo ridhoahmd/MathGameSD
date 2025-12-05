@@ -1,3 +1,5 @@
+// public/js/labirin.js - VERSI GRAFIS KEREN (SPRITES)
+
 const socket = io();
 const canvas = document.getElementById('mazeCanvas');
 const ctx = canvas.getContext('2d');
@@ -14,7 +16,20 @@ let gameActive = false;
 let finishNode;
 let playerName = localStorage.getItem("playerName") || "Guest";
 
-// Setup Tombol Level
+// --- 🎨 LOAD GAMBAR ASET (CARTOON STYLE) ---
+// Robot Lucu
+const imgPlayer = new Image();
+imgPlayer.src = 'https://cdn-icons-png.flaticon.com/512/4140/4140047.png'; 
+
+// Portal Finish
+const imgFinish = new Image();
+imgFinish.src = 'https://cdn-icons-png.flaticon.com/512/1501/1501597.png'; 
+
+// Rintangan (Kristal/Gembok)
+const imgObstacle = new Image();
+imgObstacle.src = 'https://cdn-icons-png.flaticon.com/512/9183/9183226.png'; // Kristal Ungu
+
+// --- SETUP LEVEL ---
 document.querySelectorAll('.btn-level').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.btn-level').forEach(b => b.classList.remove('active'));
@@ -23,63 +38,43 @@ document.querySelectorAll('.btn-level').forEach(btn => {
     });
 });
 
-// 1. Minta Data ke Server
 function requestGame() {
     const btn = document.querySelector('.btn-start');
-    btn.innerText = "⏳ MEMBANGUN LABIRIN...";
+    btn.innerText = "⏳ MEMUAT MISI...";
     btn.disabled = true;
     socket.emit('mintaSoalAI', { kategori: 'labirin', tingkat: level });
 }
 
-// 2. Terima Data & Mulai Game
+// --- TERIMA DATA ---
 socket.on('soalDariAI', (data) => {
     document.getElementById('loading-screen').style.display = 'none';
 
     if (data.kategori === 'labirin') {
-        console.log("📦 Data Labirin Diterima:", data.data);
-
         let info = data.data; 
-        
-        // Fallback jika data rusak/kosong
         if (!info || !info.maze_size) {
-            console.warn("⚠️ Data rusak/kosong, menggunakan mode offline.");
             info = {
                 maze_size: 10,
-                soal_list: [
-                    {tanya: "1 + 1 = ?", jawab: "2"},
-                    {tanya: "Ibukota Indonesia?", jawab: "jakarta"},
-                    {tanya: "Warna langit?", jawab: "biru"}
-                ]
+                soal_list: [{tanya: "1 + 1?", jawab: "2"}]
             };
         }
         
-        // Setup Ukuran
         cols = info.maze_size;
         rows = info.maze_size;
         questions = info.soal_list;
         
-        // Hitung ukuran kotak agar pas di layar
-        // Kita kurangi sedikit rasionya agar tidak terlalu mepet
-        const maxSize = Math.min(window.innerWidth * 0.90, window.innerHeight * 0.60);
+        const maxSize = Math.min(window.innerWidth * 0.90, window.innerHeight * 0.65);
         size = Math.floor(maxSize / cols);
         
-        // Set ukuran canvas
         canvas.width = cols * size;
         canvas.height = rows * size;
 
-        // ✅ PERBAIKAN UTAMA DI SINI:
-        // 1. Generate struktur labirin dulu
         generateMazeDataOnly();
-        
-        // 2. Aktifkan status game
         gameActive = true; 
-        
-        // 3. Baru mulai menggambar (Loop)
         draw(); 
     }
 });
 
-// --- GENERATOR LABIRIN (LOGIKA SAJA, TANPA GAMBAR) ---
+// --- GENERATOR LOGIKA MAZE ---
 function generateMazeDataOnly() {
     grid = [];
     for (let j = 0; j < rows; j++) {
@@ -93,11 +88,9 @@ function generateMazeDataOnly() {
     current.visited = true;
     finishNode = grid[grid.length - 1]; 
 
-    // Algoritma DFS (Recursive Backtracker)
     let stack = [];
     let processing = true;
     
-    // Kita pakai loop while agar instan (tidak animasi satu-satu)
     while(processing) {
         let next = current.checkNeighbors();
         if (next) {
@@ -112,26 +105,22 @@ function generateMazeDataOnly() {
         }
     }
 
-    // Sebar Soal (Rintangan)
     let qIndex = 0;
-    // Coba pasang soal di 20% kotak acak, tapi hindari area start/finish
     for(let i=0; i<grid.length; i++) {
-        // Syarat: Random, Soal masih ada, Jauh dari start, Jauh dari finish
-        if(Math.random() < 0.2 && qIndex < questions.length && i > 5 && i < grid.length-5) {
+        if(Math.random() < 0.15 && qIndex < questions.length && i > 5 && i < grid.length-5) {
             grid[i].isQuestion = true;
             grid[i].questionData = questions[qIndex];
             qIndex++;
         }
     }
-
-    current = grid[0]; // Kembalikan player ke Start
+    current = grid[0]; 
 }
 
-// Class Kotak Labirin
+// --- CLASS CELL (DENGAN GAMBAR) ---
 class Cell {
     constructor(i, j) {
         this.i = i; this.j = j;
-        this.walls = [true, true, true, true]; // Top, Right, Bottom, Left
+        this.walls = [true, true, true, true]; 
         this.visited = false;
         this.isQuestion = false; 
         this.questionData = null;
@@ -141,9 +130,10 @@ class Cell {
         let x = this.i * size;
         let y = this.j * size;
         
+        // WARNA DINDING NEON
         ctx.strokeStyle = "#00f2ff"; 
-        ctx.lineWidth = 2;
-        ctx.shadowBlur = 0; // Matikan shadow berat agar performa lancar di HP
+        ctx.lineWidth = 3;
+        ctx.lineCap = "round";
 
         ctx.beginPath();
         if (this.walls[0]) { ctx.moveTo(x, y); ctx.lineTo(x + size, y); }
@@ -152,13 +142,10 @@ class Cell {
         if (this.walls[3]) { ctx.moveTo(x, y + size); ctx.lineTo(x, y); }
         ctx.stroke();
 
-        // Gambar Tanda Tanya (Rintangan)
+        // 🖼️ GAMBAR RINTANGAN (Kristal)
         if (this.isQuestion) {
-            ctx.fillStyle = "#ff00cc";
-            ctx.font = "bold " + (size/1.5) + "px Arial"; 
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText("?", x + size/2, y + size/2);
+            let p = size * 0.2; // Padding 20%
+            ctx.drawImage(imgObstacle, x + p, y + p, size - (2*p), size - (2*p));
         }
     }
 
@@ -197,62 +184,52 @@ function removeWalls(a, b) {
     if (y === -1) { a.walls[2] = false; b.walls[0] = false; }
 }
 
-// --- FUNGSI GAMBAR (LOOPING) ---
+// --- RENDER LOOP ---
 function draw() {
-    // Cek status game
     if(!gameActive) return;
-
-    // Bersihkan layar
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Gambar Labirin
+    // 1. Gambar Semua Dinding & Rintangan
     for (let i = 0; i < grid.length; i++) {
         grid[i].show();
     }
 
-    // Gambar Player (Bola Kuning)
-    if(current) {
-        let x = current.i * size + size / 2;
-        let y = current.j * size + size / 2;
-        ctx.fillStyle = "#ffff00";
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = "#ffff00";
-        ctx.beginPath();
-        ctx.arc(x, y, size / 3, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-    }
-
-    // Gambar Finish (Kotak Hijau)
+    // 2. 🖼️ GAMBAR FINISH (Portal)
     if(finishNode) {
         let fx = finishNode.i * size;
         let fy = finishNode.j * size;
-        ctx.fillStyle = "#38ef7d";
-        ctx.fillRect(fx + 5, fy + 5, size - 10, size - 10);
+        ctx.drawImage(imgFinish, fx, fy, size, size);
+    }
+
+    // 3. 🖼️ GAMBAR PEMAIN (Robot)
+    if(current) {
+        let x = current.i * size;
+        let y = current.j * size;
+        // Gambar Robot sedikit lebih kecil dari kotak agar tidak nabrak visual dinding
+        let p = size * 0.1;
+        ctx.drawImage(imgPlayer, x + p, y + p, size - (2*p), size - (2*p));
     }
     
-    // Loop animasi
     requestAnimationFrame(draw);
 }
 
-// --- GERAKAN PEMAIN ---
+// --- LOGIKA GERAK & QUIZ ---
 function movePlayer(x, y) {
     if(!gameActive) return;
 
     let next;
     let blocked = false;
 
-    // Logika tabrak tembok
-    if (x === 1) { // Kanan
+    if (x === 1) { 
         if (current.walls[1]) blocked = true;
         else next = grid[index(current.i + 1, current.j)];
-    } else if (x === -1) { // Kiri
+    } else if (x === -1) { 
         if (current.walls[3]) blocked = true;
         else next = grid[index(current.i - 1, current.j)];
-    } else if (y === 1) { // Bawah
+    } else if (y === 1) { 
         if (current.walls[2]) blocked = true;
         else next = grid[index(current.i, current.j + 1)];
-    } else if (y === -1) { // Atas
+    } else if (y === -1) { 
         if (current.walls[0]) blocked = true;
         else next = grid[index(current.i, current.j - 1)];
     }
@@ -267,16 +244,13 @@ function movePlayer(x, y) {
     }
 }
 
-// --- LOGIKA QUIZ ---
 let pendingNode = null;
 
 function openQuiz(node) {
-    gameActive = false; // Pause game saat quiz muncul
+    gameActive = false; 
     pendingNode = node;
-    
     const modal = document.getElementById('quiz-modal');
     modal.style.display = 'flex';
-    
     document.getElementById('q-text').innerText = node.questionData.tanya;
     const input = document.getElementById('q-input');
     input.value = "";
@@ -287,25 +261,20 @@ function checkQuiz() {
     const userAns = document.getElementById('q-input').value.toLowerCase().trim();
     const correct = pendingNode.questionData.jawab.toLowerCase().trim();
 
-    // Toleransi jawaban (misal 'bumi' == 'bumi ')
     if (userAns.includes(correct) || correct.includes(userAns)) {
-        AudioManager.playCorrect();
-        alert("✅ BENAR! Jalan terbuka.");
+        try{ AudioManager.playCorrect(); } catch(e){}
+        alert("✅ BENAR! Kristal hancur.");
         document.getElementById('quiz-modal').style.display = 'none';
-        
-        pendingNode.isQuestion = false; // Hapus rintangan
+        pendingNode.isQuestion = false; 
         score += 20;
         document.getElementById('score').innerText = score;
-        
-        current = pendingNode; // Pindahkan player ke kotak tersebut
-        gameActive = true; // Lanjut game
-        draw(); // Paksa gambar ulang
+        current = pendingNode; 
+        gameActive = true; 
+        draw(); 
     } else {
-        AudioManager.playWrong();
-        alert(`❌ SALAH! Jawaban yang benar: ${pendingNode.questionData.jawab}`);
+        try{ AudioManager.playWrong(); } catch(e){}
+        alert(`❌ SALAH! Jawaban: ${pendingNode.questionData.jawab}`);
         document.getElementById('quiz-modal').style.display = 'none';
-        
-        // Jangan pindah posisi, tetap di tempat sebelumnya
         gameActive = true;
         draw();
     }
@@ -313,23 +282,19 @@ function checkQuiz() {
 
 function checkFinish() {
     if (current === finishNode) {
-        AudioManager.playWin();
+        try{ AudioManager.playWin(); } catch(e){}
         score += 50; 
         gameActive = false;
-        alert(`🏆 LABIRIN SELESAI! Total Skor: ${score}`);
-        
-        // Simpan Skor
+        alert(`🏆 MISI SELESAI! Skor: ${score}`);
         socket.emit('simpanSkor', {
             nama: playerName,
             skor: score,
             game: 'labirin'
         });
-        
         window.location.href = '/';
     }
 }
 
-// Keyboard Listener
 window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowUp') movePlayer(0, -1);
     if (e.key === 'ArrowRight') movePlayer(1, 0);
