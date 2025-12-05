@@ -115,10 +115,17 @@ io.on('connection', (socket) => {
     
     socket.on('updateScoreDuel', (data) => { socket.to(data.room).emit('opponentScoreUpdate', data.score); });
 
-    // --- CHAT ---
+    // --- CHAT (SUDAH DIPERBAIKI KE WIB) ---
     socket.on('chatMessage', (data) => {
         const now = new Date();
-        const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        
+        // Kita paksa format waktu ke Asia/Jakarta (WIB)
+        const timeString = now.toLocaleTimeString('id-ID', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            timeZone: 'Asia/Jakarta' // <--- INI KUNCI PERBAIKANNYA
+        });
+
         io.emit('chatMessage', { nama: data.nama, pesan: data.pesan, waktu: timeString });
     });
 
