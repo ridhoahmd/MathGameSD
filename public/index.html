@@ -222,19 +222,49 @@
         }
         function handleEnter(e) { if(e.key === 'Enter') kirimPesan(); }
         
+        // --- LOGIKA CHAT YANG SUDAH DIAMANKAN (ANTI-HACK) ---
         socket.on('chatMessage', (data) => {
             const box = document.getElementById('chat-box');
-            const myName = localStorage.getItem("playerName");
+            
+            // Cek nama untuk menentukan posisi bubble (Kanan/Kiri)
+            // Gunakan optional chaining (?.) jaga-jaga kalau auth belum siap
+            const myName = localStorage.getItem("playerName") || "Guest";
             const isMe = data.nama === myName;
             
+            // 1. Buat Elemen Pembungkus (Bubble)
             const div = document.createElement('div');
             div.className = isMe ? 'msg-bubble msg-me' : 'msg-bubble';
-            let timeHtml = data.waktu ? `<span class="msg-time">${data.waktu}</span>` : '';
-            div.innerHTML = `<span class="msg-name">${data.nama}</span>${data.pesan}${timeHtml}`;
+            
+            // 2. Buat Elemen Nama (Aman)
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'msg-name';
+            nameSpan.innerText = data.nama; // Pakai innerText agar aman
+            
+            // 3. Buat Elemen Pesan (SANGAT PENTING: Pakai textContent/innerText)
+            const msgSpan = document.createElement('span');
+            msgSpan.innerText = data.pesan; // Script jahat akan jadi teks biasa disini
+            
+            // 4. Buat Elemen Waktu
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'msg-time';
+            timeSpan.innerText = data.waktu || '';
+            
+            // 5. Rakit Semuanya
+            // Jika pesan orang lain, tampilkan namanya
+            if (!isMe) div.appendChild(nameSpan);
+            
+            div.appendChild(msgSpan); // Masukkan pesan
+            div.appendChild(document.createElement('br')); // Baris baru
+            div.appendChild(timeSpan); // Masukkan waktu
+            
+            // 6. Tampilkan ke Layar
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
+            
+            // Notifikasi jika chat tertutup
             if(!document.getElementById('chat-container').classList.contains('open')) {
-                document.getElementById('chat-notif').style.display = 'inline';
+                const notif = document.getElementById('chat-notif');
+                if(notif) notif.style.display = 'inline';
             }
         });
 
