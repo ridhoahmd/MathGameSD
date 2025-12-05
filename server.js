@@ -23,18 +23,30 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// --- GEMINI AI CONFIG ---
+// --- GEMINI AI CONFIG (AMAN) ---
 const apiKey = process.env.API_KEY; 
-const genAI = new GoogleGenerativeAI(apiKey);
+let genAI = null;
+let model = null;
 
-const model = genAI.getGenerativeModel({ 
-    model: "gemini-2.0-flash",
-    generationConfig: {
-        temperature: 0.85, 
-        topP: 0.95,
-        topK: 40,
+if (!apiKey) {
+    console.warn("⚠️ PERINGATAN: API_KEY tidak ditemukan di .env atau variable server.");
+    console.warn("ℹ️ Server tetap berjalan, tetapi fitur AI akan menggunakan Soal Cadangan (Fallback).");
+} else {
+    try {
+        genAI = new GoogleGenerativeAI(apiKey);
+        model = genAI.getGenerativeModel({ 
+            model: "gemini-2.0-flash",
+            generationConfig: {
+                temperature: 0.85, 
+                topP: 0.95,
+                topK: 40,
+            }
+        });
+        console.log("✅ AI System: Siap (Gemini 2.0 Flash)");
+    } catch (error) {
+        console.error("❌ Gagal inisialisasi AI:", error.message);
     }
-});
+}
 
 app.use(express.static('public'));
 
@@ -48,6 +60,14 @@ function getRandomObject() {
     const objects = ["Apel", "Robot", "Kucing", "Mobil", "Bintang", "Buku", "Pedang", "Pizza", "Bola", "Topi"];
     return objects[Math.floor(Math.random() * objects.length)];
 }
+
+// --- KODE BARU: Sisipkan ini sebelum io.on('connection') ---
+function sanitizeKey(key) {
+    if (!key) return "Guest";
+    // Mengubah simbol . # $ [ ] menjadi garis bawah (_) agar Firebase tidak error
+    return key.replace(/[.#$[\]]/g, '_');
+}
+
 
 io.on('connection', (socket) => {
     console.log('✅ User CONNECTED:', socket.id);
@@ -103,28 +123,23 @@ io.on('connection', (socket) => {
     });
 
 
-    // --- SIMPAN SKOR (AKUMULASI + VALIDASI KEAMANAN) ---
+    // ---  BLOK simpanSkor  ---
     socket.on('simpanSkor', async (data) => {
-        // 1. Validasi Input: Pastikan skor adalah Angka Positif yang Masuk Akal
         let skorMasuk = parseInt(data.skor);
         
-        // Tolak jika bukan angka atau negatif
-        if (isNaN(skorMasuk) || skorMasuk < 0) {
-            console.warn(`⚠️ Percobaan hack/bug skor dari ${data.nama}: ${data.skor}`);
-            return; // Batalkan proses
-        }
-
-        // Tolak jika skor terlalu tidak masuk akal (misal > 500 sekali main) untuk mencegah cheat
-        // Kecuali Anda mau membolehkan skor besar, batas ini bisa disesuaikan
-        if (skorMasuk > 1000) {
-            console.warn(`⚠️ Skor mencurigakan dari ${data.nama}: ${skorMasuk}`);
-            skorMasuk = 1000; // Cap (batasi) skor maksimal per sesi
-        }
+        // Validasi agar skor tidak aneh-aneh
+        if (isNaN(skorMasuk) || skorMasuk < 0) return;
+        if (skorMasuk > 1000) skorMasuk = 1000; 
 
         console.log(`💾 Simpan Valid: ${data.nama} +${skorMasuk} (${data.game})`);
 
         try {
-            const userRef = ref(database, 'leaderboard/' + data.nama);
+            // DISINI PERUBAHANNYA: Kita bersihkan nama user dulu
+            const safeName = sanitizeKey(data.nama); 
+            
+            // Kita gunakan nama yang aman (contoh: Mr_Aan) sebagai kunci database
+            const userRef = ref(database, 'leaderboard/' + safeName);
+            
             const snapshot = await get(userRef);
             const userData = snapshot.val() || {};
             
@@ -137,13 +152,14 @@ io.on('connection', (socket) => {
             if (!fieldSkor) return;
 
             const skorLama = userData[fieldSkor] || 0;
-            const totalBaru = skorLama + skorMasuk; // Gunakan skorMasuk yang sudah divalidasi
+            const totalBaru = skorLama + skorMasuk;
 
+            // Kita simpan nama ASLI di dalam data, tapi kuncinya pakai nama AMAN
             const updateData = { nama: data.nama, [fieldSkor]: totalBaru };
             if (fieldSkor === 'skor_math') updateData.waktu_math = new Date().toString();
             
             await update(userRef, updateData);
-            console.log(`✅ Total Baru: ${totalBaru}`);
+            console.log(`✅ Total Baru untuk ${safeName}: ${totalBaru}`);
         } catch (error) { console.error("❌ DB Error:", error); }
     });
 
@@ -151,6 +167,13 @@ io.on('connection', (socket) => {
     socket.on('mintaSoalAI', async (requestData) => {
         const { kategori, tingkat } = requestData;
         const level = tingkat || 'sedang';
+
+        // Jika model AI mati/null, langsung lempar ke Error agar pakai Fallback
+        if (!model) {
+            console.log("⚠️ AI Mati. Menggunakan Fallback.");
+            // Kode di bawah akan otomatis masuk ke catch(error) dan mengirim soal cadangan
+            throw new Error("API Key Missing or Model Error"); 
+        }
 
         try {
             console.log(`🤖 AI Request: ${kategori} (${level})`);

@@ -273,21 +273,47 @@
             }
         }
 
+        // --- KODE BARU: Masukkan ini menggantikan fungsi loginGoogle yang lama ---
+        
+        // Fungsi pembantu untuk membersihkan nama
+        function sanitizeName(name) {
+            if (!name) return "Guest";
+            return name.replace(/[.#$[\]]/g, '_');
+        }
+
         function loginGoogle() {
             const KODE_RAHASIA = "GURU2025"; 
             const inputKode = document.getElementById('input-kode-guru').value.trim();
+            
             auth.signInWithPopup(provider).then((result) => {
-                localStorage.setItem("playerName", result.user.displayName);
+                const originalName = result.user.displayName;
+                
+                // DISINI PERUBAHANNYA: Kita simpan versi aman ke browser
+                const safeName = sanitizeName(originalName);
+                
+                // Simpan nama yang aman (contoh: Mr_Aan) ke LocalStorage
+                localStorage.setItem("playerName", safeName); 
+                
                 let roleBaru = "siswa"; 
                 if (inputKode === KODE_RAHASIA) roleBaru = "guru";
-                database.ref('leaderboard/' + result.user.displayName).once('value').then(snapshot => {
+
+                // Cek database menggunakan nama yang aman
+                database.ref('leaderboard/' + safeName).once('value').then(snapshot => {
                     const data = snapshot.val();
                     const currentRole = data ? data.role : null;
+                    
+                    // Update data user (Simpan nama asli agar tampilan tetap bagus)
                     if (currentRole !== 'admin' && (currentRole !== 'guru' || roleBaru === 'guru')) {
-                         database.ref('leaderboard/' + result.user.displayName).update({ nama: result.user.displayName, role: roleBaru });
+                         database.ref('leaderboard/' + safeName).update({ 
+                             nama: originalName, // Nama asli untuk display
+                             role: roleBaru 
+                         });
                     }
+                    
+                    // Refresh halaman agar perubahan terlihat
+                    location.reload();
                 });
-            }).catch(e => alert(e.message));
+            }).catch(e => alert("Login Gagal: " + e.message));
         }
 
         function logout() { 

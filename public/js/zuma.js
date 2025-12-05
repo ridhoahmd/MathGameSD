@@ -106,19 +106,38 @@ class Enemy {
 }
 
 // --- GAME FLOW ---
+// --- GANTI FUNGSI startGameMultiplayer DENGAN INI ---
+
 function startGameMultiplayer() {
     const nameInput = document.getElementById('username').value;
     const roomInput = document.getElementById('room-code').value;
 
-    if(nameInput.trim() === "" || roomInput.trim() === "") {
-        alert("Isi Nama dan Room dulu!");
+    // 1. Validasi: Hanya Nama yang wajib diisi
+    if(nameInput.trim() === "") {
+        alert("Silakan isi Nama Pilot dulu!");
         return;
     }
-    myName = nameInput;
-    myRoom = roomInput;
 
+    myName = nameInput;
+
+    // 2. Logika Room Otomatis (Single vs Multiplayer)
+    if (roomInput.trim() === "") {
+        // Jika Room KOSONG -> Mode Single Player
+        // Kita buat nama room acak agar main sendirian (isolasi)
+        myRoom = "solo_" + myName + "_" + Math.floor(Math.random() * 10000);
+        console.log("Masuk Mode Single Player di room: " + myRoom);
+    } else {
+        // Jika Room DIISI -> Mode Multiplayer (bisa ketemu teman)
+        myRoom = roomInput;
+    }
+
+    // Lanjut ke proses koneksi server (kode asli)
     socket.emit('joinRoom', { username: myName, room: myRoom });
+    
+    // Tampilkan loading screen sementara
     document.getElementById('login-screen').innerHTML = "<h2 style='color:white;'>🛸 Meminta Misi ke AI...</h2>";
+    
+    // Minta soal ke AI sesuai tingkat kesulitan
     socket.emit('mintaSoalAI', { kategori: 'zuma', tingkat: selectedDifficulty });
 }
 
