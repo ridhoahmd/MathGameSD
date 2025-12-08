@@ -75,6 +75,28 @@
         .cursor-pointer { cursor: pointer; }
         .underline { text-decoration: underline; }
 
+.font-sizeable {
+    /* Gunakan ukuran font yang bisa disesuaikan */
+    font-size: 1.3rem; /* Ganti angka 1.1rem ini sesuai keinginan (contoh: 1.2rem, 1.5rem) */
+    font-weight: bold; /* Didefinisikan lagi agar pasti tebal */
+}
+
+/* Jika Anda ingin ukuran yang lebih kecil (seperti font-tiny lama): */
+.font-small-v2 {
+    font-size: 0.8rem;
+}
+
+
+
+
+/* WARNA BARU */
+.text-white {
+    color: white !important; /* Pastikan warna putih diterapkan */
+}
+/* Warna lama Anda (biarkan ada, tapi jangan dipakai di HTML) */
+.text-666 { color: #666; } 
+/* ... class warna lainnya ... */
+
         /* HEADER */
         .main-header {
             width: 100%; padding: 10px 40px; background: rgba(18, 18, 28, 0.95); 
@@ -163,7 +185,7 @@
         .game-card:hover { transform: translateY(-10px); background: rgba(255,255,255,0.1); border-color: #00f2ff; }
         
         .game-icon { font-size: 50px; margin-bottom: 10px; display: block; }
-        .game-title { font-weight: bold; font-size: 1.2rem; color: inherit; margin-bottom: 10px; }
+        .game-title { font-weight: bold; font-size: 1.1rem; color: white; margin-bottom: 10px; }
         .game-desc { color: #aaa; font-size: 0.9rem; margin-bottom: 20px; }
         
         .btn-play { padding: 10px 35px; border-radius: 30px; font-size: 0.8rem; font-weight: bold; color: white; border: none; margin-top: 15px; display: inline-block; }
