@@ -2,7 +2,7 @@ require('dotenv').config();
 
 // --- INISIALISASI FIREBASE ---
 const { initializeApp } = require("firebase/app");
-const { getDatabase, ref, update, get } = require("firebase/database");
+const { getDatabase, ref, update, get, set } = require("firebase/database");
 
 const firebaseConfig = {
     apiKey: process.env.FIREBASE_API_KEY || "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
@@ -32,17 +32,18 @@ if (!apiKey) {
     console.warn("⚠️ PERINGATAN: API_KEY tidak ditemukan di .env atau variable server.");
     console.warn("ℹ️ Server tetap berjalan, tetapi fitur AI akan menggunakan Soal Cadangan (Fallback).");
 } else {
-    try {
+   try {
         genAI = new GoogleGenerativeAI(apiKey);
         model = genAI.getGenerativeModel({ 
-            model: "gemini-2.0-flash",
+            // GANTI JADI INI (Sesuai daftar Anda & Kuota Besar)
+            model: "gemini-flash-latest", 
             generationConfig: {
                 temperature: 0.85, 
                 topP: 0.95,
                 topK: 40,
             }
         });
-        console.log("✅ AI System: Siap (Gemini 2.0 Flash)");
+        console.log("✅ AI System: Siap (Gemini Flash Latest)"); 
     } catch (error) {
         console.error("❌ Gagal inisialisasi AI:", error.message);
     }
@@ -115,15 +116,15 @@ io.on('connection', (socket) => {
     
     socket.on('updateScoreDuel', (data) => { socket.to(data.room).emit('opponentScoreUpdate', data.score); });
 
-    // --- CHAT (SUDAH DIPERBAIKI KE WIB) ---
+    // --- CHAT KE WIB ---
     socket.on('chatMessage', (data) => {
         const now = new Date();
         
-        // Kita paksa format waktu ke Asia/Jakarta (WIB)
+        // format waktu Asia/Jakarta (WIB)
         const timeString = now.toLocaleTimeString('id-ID', { 
             hour: '2-digit', 
             minute: '2-digit',
-            timeZone: 'Asia/Jakarta' // <--- INI KUNCI PERBAIKANNYA
+            timeZone: 'Asia/Jakarta' 
         });
 
         io.emit('chatMessage', { nama: data.nama, pesan: data.pesan, waktu: timeString });
@@ -141,10 +142,10 @@ io.on('connection', (socket) => {
         console.log(`💾 Simpan Valid: ${data.nama} +${skorMasuk} (${data.game})`);
 
         try {
-            // DISINI PERUBAHANNYA: Kita bersihkan nama user dulu
+            // bersihkan nama user dulu
             const safeName = sanitizeKey(data.nama); 
             
-            // Kita gunakan nama yang aman (contoh: Mr_Aan) sebagai kunci database
+            // gunakan nama yang aman (contoh: Mr_Aan) sebagai kunci database
             const userRef = ref(database, 'leaderboard/' + safeName);
             
             const snapshot = await get(userRef);
@@ -155,13 +156,16 @@ io.on('connection', (socket) => {
             else if (data.game === 'zuma') fieldSkor = 'skor_zuma';
             else if (data.game === 'memory') fieldSkor = 'skor_memory';
             else if (data.game === 'piano') fieldSkor = 'skor_piano';
+            else if (data.game === 'nabi') fieldSkor = 'skor_nabi';
+            else if (data.game === 'ayat') fieldSkor = 'skor_ayat';
+
 
             if (!fieldSkor) return;
 
             const skorLama = userData[fieldSkor] || 0;
             const totalBaru = skorLama + skorMasuk;
 
-            // Kita simpan nama ASLI di dalam data, tapi kuncinya pakai nama AMAN
+            // simpan nama ASLI di dalam data, tapi kuncinya pakai nama AMAN
             const updateData = { nama: data.nama, [fieldSkor]: totalBaru };
             if (fieldSkor === 'skor_math') updateData.waktu_math = new Date().toString();
             
@@ -170,30 +174,53 @@ io.on('connection', (socket) => {
         } catch (error) { console.error("❌ DB Error:", error); }
     });
 
-    // --- MINTA SOAL AI ---
+// --- MINTA SOAL AI (DENGAN SISTEM SMART WAREHOUSE) ---
     socket.on('mintaSoalAI', async (requestData) => {
         const { kategori, tingkat } = requestData;
         const level = tingkat || 'sedang';
 
-        // Jika model AI mati/null, langsung lempar ke Error agar pakai Fallback
-        if (!model) {
-            console.log("⚠️ AI Mati. Menggunakan Fallback.");
-            // Kode di bawah akan otomatis masuk ke catch(error) dan mengirim soal cadangan
-            throw new Error("API Key Missing or Model Error"); 
-        }
+        // 1. KUNCI GUDANG (CACHE KEY)
+        // Kita simpan stok berdasarkan kategori dan level.
+        // Contoh: "cache_soal/nabi_mudah" atau "cache_soal/zuma_sulit"
+        // Kita tambah '_v2' agar server membuat gudang baru yang bersih
+        const cacheKey = `cache_soal_v2/${kategori}_${level}`;
 
         try {
-            console.log(`🤖 AI Request: ${kategori} (${level})`);
+            // 2. CEK GUDANG DULU (GRATIS)
+            // console.log(`🔍 Mengecek Gudang: ${cacheKey}...`); // Debugging
+            const snapshot = await get(ref(database, cacheKey));
+            
+            if (snapshot.exists()) {
+                console.log(`⚡ CACHE HIT: Mengambil ${kategori} (${level}) dari Database.`);
+                let cachedData = snapshot.val();
+                
+                // Trik: Jika datanya Array (seperti Nabi/Ayat/Memory), kita acak urutannya
+                // supaya user merasa soalnya "beda" padahal stok lama.
+                if (Array.isArray(cachedData)) {
+                    cachedData.sort(() => Math.random() - 0.5);
+                }
+
+                socket.emit('soalDariAI', { kategori: kategori, data: cachedData });
+                return; // BERHENTI. Tidak perlu panggil AI.
+            }
+
+            // 3. JIKA GUDANG KOSONG, PANGGIL AI (PAKAI KUOTA)
+            console.log(`🤖 CACHE MISS: Gudang Kosong. Memanggil AI untuk ${kategori}...`);
+            
+            if (!model) throw new Error("Model AI belum siap.");
+
             let prompt = "";
             const temaAcak = getRandomTheme();
             const objekAcak = getRandomObject();
 
+            // --- PROMPT ENGINEERING ---
+            
             if (kategori === 'math') {
                 let range = level === 'mudah' ? '1-20' : (level === 'sedang' ? '10-100' : '50-500');
+                // Math tetap minta 1 soal (format object) agar tidak merusak frontend math.js
                 prompt = `Bertindak sebagai guru matematika. Buat 1 soal matematika SD.
                 Tingkat: ${level}. Range: ${range}. Tema: ${temaAcak}.
-                JANGAN GUNAKAN pola "A punya X apel". Gunakan variasi kreatif.
-                Output JSON: {"soal": "...", "jawaban": 0}. JANGAN ADA KOMENTAR.`;
+                Output JSON: {"soal": "...", "jawaban": 0}. NO COMMENTS.`;
             
             } else if (kategori === 'memory') {
                 let num = level === 'mudah' ? 4 : (level === 'sedang' ? 6 : 8);
@@ -203,67 +230,91 @@ io.on('connection', (socket) => {
             
             } else if (kategori === 'zuma') {
                 let spd = level === 'mudah' ? 'lambat' : (level === 'sedang' ? 'sedang' : 'cepat');
-                prompt = `Buat level game Zuma unik tema visual: ${temaAcak}.
-                Speed: ${spd}.
-                Output JSON: {"deskripsi":"Misi di ${temaAcak}...", "palet_warna":["#hex","#hex","#hex","#hex"], "speed":"${spd}"}.
-                PENTING: JANGAN tulis komentar // di samping kode warna. JSON Murni Saja.`;
+                prompt = `Buat level game Zuma unik tema visual: ${temaAcak}. Speed: ${spd}.
+                Output JSON: {"deskripsi":"Misi di ${temaAcak}...", "palet_warna":["#ff0000","#00ff00","#0000ff","#ffff00"], "speed":"${spd}"}. NO COMMENTS.`;
             
             } else if (kategori === 'kasir') {
                 let rng = level === 'mudah' ? 'ratusan' : (level === 'sedang' ? 'ribuan' : 'puluhan ribu');
-                prompt = `Buat skenario belanja unik di "Toko ${objekAcak}".
-                Barang aneh/lucu. Range: ${rng}.
+                prompt = `Buat skenario belanja unik di "Toko ${objekAcak}". Range: ${rng}.
                 Output JSON: {"cerita":"...", "total_belanja":0, "uang_bayar":0, "kembalian":0}. NO COMMENTS.`;
             
             } else if (kategori === 'labirin') {
                 let size = level === 'mudah' ? 10 : (level === 'sedang' ? 15 : 20);
                 let numQ = level === 'mudah' ? 3 : (level === 'sedang' ? 5 : 8);
-                prompt = `Buat konfigurasi labirin. Grid: ${size}x${size}.
-                Buat ${numQ} soal sains SD singkat (jawaban 1 kata).
+                prompt = `Buat konfigurasi labirin Grid: ${size}x${size}. Buat ${numQ} soal sains SD.
                 Output JSON: {"maze_size": ${size}, "soal_list": [{"tanya":"...","jawab":"..."}]}. NO COMMENTS.`;
             
             } else if (kategori === 'piano') {
                 let len = level === 'mudah' ? 4 : (level === 'sedang' ? 6 : 8);
-                prompt = `Buat urutan nada piano acak ${len} digit (1-9).
-                Output JSON: { "sequence": [1, 3, 5] }. NO COMMENTS.`;
+                prompt = `Buat urutan nada piano acak ${len} digit (1-9). Output JSON: { "sequence": [1, 3, 5] }. NO COMMENTS.`;
+            
+            } else if (kategori === 'nabi') {
+                let depth = level === 'mudah' ? 'dasar' : (level === 'sedang' ? 'peristiwa' : 'detail');
+                prompt = `Guru Agama Islam. Buat 5 soal pilihan ganda Kisah Nabi. Fokus: ${depth}.
+                Output JSON Array: [{"tanya": "...", "opsi": ["A", "B", "C", "D"], "jawab": "A"}]. NO COMMENTS.`;
+
+            } else if (kategori === 'ayat') {
+                let surahScope = level === 'mudah' ? 'An-Nas s.d Al-Fil' : 'Juz 30';
+                prompt = `Guru Tahfidz. Buat 5 soal Sambung Ayat surat pendek (${surahScope}).
+                Output JSON Array: [{"tanya": "Lanjut: ...", "opsi": ["A", "B", "C", "D"], "jawab": "A"}]. NO COMMENTS.`;
             }
 
             if (!prompt) return;
 
+            // Panggil AI
             const result = await model.generateContent(prompt);
-            const response = await result.response;
-            const text = response.text();
+            const text = result.response.text();
             
-            // --- CLEANING JSON TINGKAT LANJUT (ANTI-KOMENTAR) ---
+            // --- PARSING JSON ---
             const jsonStartIndex = text.indexOf('{');
-            const jsonEndIndex = text.lastIndexOf('}') + 1;
             const arrayStartIndex = text.indexOf('[');
-            const arrayEndIndex = text.lastIndexOf(']') + 1;
-
             let cleanJson;
-            if (kategori === 'memory' && arrayStartIndex !== -1) {
+            
+            // Kategori yang outputnya Array
+            const isArrayCategory = (kategori === 'memory' || kategori === 'nabi' || kategori === 'ayat');
+
+            if (isArrayCategory && arrayStartIndex !== -1) {
+                const arrayEndIndex = text.lastIndexOf(']') + 1;
                 cleanJson = text.substring(arrayStartIndex, arrayEndIndex);
             } else if (jsonStartIndex !== -1) {
+                const jsonEndIndex = text.lastIndexOf('}') + 1;
                 cleanJson = text.substring(jsonStartIndex, jsonEndIndex);
             } else {
-                throw new Error("JSON tidak ditemukan");
+                throw new Error("JSON tidak ditemukan di respon AI");
             }
-
-            // 🔥 HAPUS KOMENTAR JS (// ...) DARI JSON 🔥
-            cleanJson = cleanJson.replace(/\/\/.*$/gm, ''); 
-
+            
+            cleanJson = cleanJson.replace(/\/\/.*$/gm, ''); // Hapus komentar
             const soalData = JSON.parse(cleanJson);
+
+            // 4. SIMPAN KE DATABASE (RESTOCK GUDANG)
+            // Ini langkah kuncinya: Simpan hasil AI ke Firebase
+            console.log(`💾 Menyimpan stok soal baru ke: ${cacheKey}`);
+            await set(ref(database, cacheKey), soalData);
+
+            // Kirim ke Client
             socket.emit('soalDariAI', { kategori: kategori, data: soalData });
 
         } catch (error) {
-            console.error("❌ AI Error:", error.message);
-            // Fallback (Soal Cadangan)
+            console.error("❌ System Error:", error.message);
+            
+            // --- FALLBACK MANUAL (PLAN B) ---
+            // Digunakan jika AI Error DAN Database Kosong
             let fallback;
-            if (kategori === 'math') fallback = { soal: "10 + 10 = ?", jawaban: 20 };
-            if (kategori === 'kasir') fallback = { cerita: "Beli 500 bayar 1000", total_belanja: 500, uang_bayar: 1000, kembalian: 500 };
-            if (kategori === 'labirin') fallback = { maze_size: 10, soal_list: [{tanya:"1+1?", jawab:"2"}] };
-            if (kategori === 'piano') fallback = { sequence: [1,2,3,4] };
-            if (kategori === 'zuma') fallback = { deskripsi: "Offline Mode", palet_warna: ["#f00","#0f0","#00f","#ff0"], speed: "sedang" };
+            
+            if (kategori === 'nabi') fallback = [
+                {tanya: "Nabi Nuh terkenal dengan mukjizat?", opsi: ["Kapal Besar", "Membelah Laut", "Tongkat Ular", "Api Dingin"], jawab: "Kapal Besar"},
+                {tanya: "Nabi terakhir adalah?", opsi: ["Isa AS", "Musa AS", "Muhammad SAW", "Ibrahim AS"], jawab: "Muhammad SAW"}
+            ];
+            if (kategori === 'ayat') fallback = [
+                {tanya: "Qul huwallahu...", opsi: ["Ahad", "Somad", "Kufuwan", "Yalid"], jawab: "Ahad"},
+                {tanya: "Inna a'tainakal...", opsi: ["Kausar", "Abtar", "Wanhar", "Saniaka"], jawab: "Kausar"}
+            ];
+            if (kategori === 'math') fallback = {soal: "10 + 10 = ?", jawaban: 20};
+            if (kategori === 'zuma') fallback = {deskripsi: "Offline", palet_warna: ["#f00","#0f0"], speed: "sedang"};
             if (kategori === 'memory') fallback = [{a:"A", b:"B"}, {a:"C", b:"D"}];
+            if (kategori === 'kasir') fallback = {cerita: "Offline Mode", total_belanja: 500, uang_bayar: 1000, kembalian: 500};
+            if (kategori === 'labirin') fallback = {maze_size: 10, soal_list: [{tanya:"1+1", jawab:"2"}]};
+            if (kategori === 'piano') fallback = {sequence: [1,2,3,4]};
             
             if (fallback) socket.emit('soalDariAI', { kategori: kategori, data: fallback });
         }

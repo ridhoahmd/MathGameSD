@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jejak Para Nabi - Videa Class</title>
+    
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self' https: http: data: blob: 'unsafe-inline' 'unsafe-eval';
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.gstatic.com https://cdnjs.cloudflare.com;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' data: https://api.dicebear.com https://cdn-icons-png.flaticon.com;
+        connect-src * 'unsafe-inline';
+    ">
+
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/nabi.css">
+</head>
+<body>
+
+    <div class="top-bar">
+        <a href="/" class="btn-back">⬅ Kembali</a>
+        <div class="level-badge">Level: <span id="difficulty-display">Mudah</span></div>
+    </div>
+
+    <div class="game-container">
+        
+        <div class="game-header">
+            <h1 class="title-glow">JEJAK PARA NABI</h1>
+            <div class="stats-row">
+                <div class="stat-box">✨ Skor: <span id="score">0</span></div>
+                <div class="stat-box">⏳ Waktu: <span id="timer">00</span></div>
+            </div>
+        </div>
+
+        <div id="start-screen" class="panel active">
+            <p class="intro-text">"Sampaikanlah dariku walau hanya satu ayat."</p>
+            <p class="sub-text">Pilih tingkat kesulitan untuk memulai petualangan sejarah.</p>
+            
+            <div class="difficulty-selector">
+                <button class="btn-diff active" data-level="mudah">Mudah</button>
+                <button class="btn-diff" data-level="sedang">Sedang</button>
+                <button class="btn-diff" data-level="sulit">Sulit</button>
+            </div>
+
+            <button onclick="startGame()" class="btn-start">BUKA GULUNGAN SEJARAH</button>
+        </div>
+
+        <div id="game-screen" class="panel hidden">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+            
+            <div class="question-card">
+                <div class="q-number">Pertanyaan <span id="q-current">1</span>/<span id="q-total">5</span></div>
+                <h2 id="question-text">Sedang memuat kisah...</h2>
+            </div>
+
+            <div class="options-grid" id="options-container">
+                </div>
+        </div>
+
+        <div id="result-screen" class="panel hidden">
+            <h2>PETUALANGAN SELESAI</h2>
+            <div class="final-score-box">
+                <span>Skor Akhir</span>
+                <h1 id="final-score">0</h1>
+            </div>
+            <p id="result-msg">Masya Allah, usaha yang bagus!</p>
+            
+            <button onclick="location.reload()" class="btn-retry">ULANGI KISAH</button>
+            <button onclick="window.location.href='/'" class="btn-home">KEMBALI KE MENU</button>
+        </div>
+
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/nabi.js"></script>
+
+</body>
+</html>
