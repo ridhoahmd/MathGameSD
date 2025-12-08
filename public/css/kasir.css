@@ -1,61 +1,138 @@
-body { 
-            font-family: 'Poppins', sans-serif; margin: 0; padding: 0; 
-            background: radial-gradient(circle at top right, #11998e, #38ef7d); 
-            color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: auto;
-        }
-        .btn-back {
-            position: fixed; top: 20px; left: 20px; z-index: 1000;
-            padding: 10px 20px; background: rgba(0,0,0,0.2); 
-            color: white; border-radius: 30px; font-weight: bold; text-decoration: none;
-        }
-        .container {
-            background: rgba(20, 20, 20, 0.9); padding: 30px; border-radius: 20px; 
-            text-align: center; width: 90%; max-width: 600px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5); border: 4px solid #ffd700;
-            position: relative; margin-top: 50px; margin-bottom: 50px;
-        }
-        .cash-register-screen {
-            background: #000; color: #38ef7d; font-family: 'Courier New', monospace;
-            padding: 20px; border-radius: 10px; border: 2px inset #555;
-            text-align: left; margin-bottom: 20px; font-size: 1.1rem; line-height: 1.5;
-            min-height: 120px;
-        }
-        .input-group { margin: 15px 0; }
-        label { display: block; font-size: 0.9rem; color: #aaa; margin-bottom: 5px; }
-        input[type="number"] {
-            padding: 15px; width: 100%; border-radius: 10px; border: 2px solid #555;
-            background: #222; color: white; font-size: 1.5rem; text-align: center; outline: none;
-            font-family: 'Orbitron', sans-serif;
-        }
-        input:focus { border-color: #ffd700; }
-        
-        .btn-action {
-            width: 100%; padding: 15px; border-radius: 50px; border: none;
-            font-weight: bold; font-size: 1.2rem; cursor: pointer; margin-top: 10px;
-            background: linear-gradient(45deg, #ffd700, #ffca28); color: #000;
-            transition: 0.3s;
-        }
-        .btn-action:hover { transform: scale(1.05); box-shadow: 0 0 20px #ffd700; }
+/* GLOBAL SETTINGS */
+body {
+    margin: 0; padding: 0;
+    font-family: 'Poppins', sans-serif;
+    /* Background Toko Pastel */
+    background: radial-gradient(circle, #ffeaa7, #fab1a0);
+    background-color: #fab1a0;
+    color: #2d3436;
+    height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    overflow: hidden;
+}
 
-        /* TOMBOL SELESAI (BARU) */
-        .btn-finish {
-            width: 100%; padding: 12px; border-radius: 50px; border: none;
-            font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 25px;
-            background: linear-gradient(45deg, #ff5722, #f44336); color: white;
-            box-shadow: 0 0 10px rgba(244, 67, 54, 0.3);
-        }
-        .btn-finish:hover { transform: scale(1.05); }
+/* TOP BAR */
+.top-bar {
+    position: absolute; top: 15px; width: 90%; max-width: 800px;
+    display: flex; justify-content: space-between; align-items: center; z-index: 10;
+}
+.btn-back {
+    text-decoration: none; color: #d63031; border: 2px solid #d63031;
+    padding: 6px 15px; border-radius: 10px; font-weight: bold; font-size: 0.9rem;
+    background: rgba(255,255,255,0.8); transition: 0.3s;
+}
+.btn-back:hover { background: #d63031; color: white; }
 
-        .difficulty-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;}
-        .btn-level {
-            padding: 5px 15px; background: rgba(255,255,255,0.1); border: 1px solid #aaa; 
-            color: #aaa; border-radius: 20px; cursor: pointer; margin-top:5px;
-        }
-        .btn-level.active { background: #ffd700; color: black; border-color: #ffd700; }
-        
-        #result-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center;
-        }
-        .result-content { text-align: center; color: white; animation: popIn 0.3s; }
-        @keyframes popIn { from{transform:scale(0);} to{transform:scale(1);} }
+.level-badge {
+    background: white; color: #e17055;
+    padding: 5px 12px; border-radius: 10px; font-weight: bold; border: 2px solid #e17055;
+}
+
+/* CONTAINER (MESIN KASIR) */
+.game-container {
+    width: 90%; max-width: 450px; /* Lebih ramping seperti struk */
+    max-height: 90vh;
+    background: #0984e3; /* Warna Mesin Biru */
+    border-radius: 30px;
+    padding: 20px;
+    box-shadow: 0 15px 0 #074f85, 0 25px 30px rgba(0,0,0,0.3); /* Efek 3D Tebal */
+    text-align: center;
+    position: relative;
+    overflow-y: auto;
+}
+
+/* LAYAR DIGITAL KASIR */
+.register-header {
+    background: #2d3436;
+    padding: 15px; border-radius: 15px 15px 5px 5px;
+    margin-bottom: 10px; border: 4px solid #b2bec3;
+}
+.screen-display {
+    background: #00cec9; /* Layar LCD Hijau Tosca */
+    color: #2d3436;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.5rem; padding: 10px; border-radius: 5px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+    text-align: right; letter-spacing: 2px;
+}
+
+.stats-row { 
+    display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; 
+    color: white; font-weight: bold; font-family: 'VT323', monospace; font-size: 1.2rem;
+}
+
+/* PANEL */
+.panel { display: none; animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); width: 100%; }
+.panel.active { display: block; }
+@keyframes popUp { from{transform: scale(0.8); opacity:0;} to{transform: scale(1); opacity:1;} }
+
+/* MENU AWAL */
+.icon-big { font-size: 4rem; margin-bottom: 10px; }
+.difficulty-selector { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.btn-diff {
+    background: rgba(255,255,255,0.2); border: 2px solid white; color: white;
+    padding: 10px; border-radius: 10px; cursor: pointer; transition: 0.2s; font-weight: bold;
+}
+.btn-diff.active, .btn-diff:hover { background: #ffeaa7; color: #d63031; border-color: #ffeaa7; }
+.btn-start {
+    background: #e17055; color: white; border: none; width: 100%;
+    padding: 15px; border-radius: 50px; font-size: 1.2rem; 
+    font-weight: bold; cursor: pointer; box-shadow: 0 5px 0 #c0392b;
+    transition: transform 0.1s;
+}
+.btn-start:active { transform: translateY(5px); box-shadow: none; }
+
+/* KERTAS STRUK (GAMEPLAY) */
+.receipt-paper {
+    background: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    font-family: 'VT323', monospace; /* Font Struk Pixel */
+    position: relative;
+    clip-path: polygon(
+        0% 0%, 100% 0%, 100% 100%, 
+        95% 98%, 90% 100%, 85% 98%, 80% 100%, 75% 98%, 70% 100%, 
+        65% 98%, 60% 100%, 55% 98%, 50% 100%, 45% 98%, 40% 100%, 
+        35% 98%, 30% 100%, 25% 98%, 20% 100%, 15% 98%, 10% 100%, 
+        5% 98%, 0% 100%
+    ); /* Efek Sobekan Kertas di Bawah */
+    padding-bottom: 40px;
+}
+.receipt-header { text-align: center; margin-bottom: 15px; }
+.receipt-header h3 { margin: 0; font-size: 1.8rem; letter-spacing: 2px; }
+.receipt-header p { margin: 0; font-size: 1rem; color: #636e72; }
+.receipt-body hr { border: 1px dashed #b2bec3; }
+
+.story { font-size: 1.2rem; line-height: 1.2; text-align: left; margin-bottom: 15px; color: #2d3436; }
+.price-row { display: flex; justify-content: space-between; font-size: 1.4rem; margin-bottom: 5px; }
+.price { font-weight: bold; }
+.highlight { color: #d63031; font-weight: bold; margin-top: 10px; font-size: 1.5rem; }
+
+/* INPUT */
+.input-area { display: flex; gap: 5px; margin-top: 15px; align-items: center; }
+.rp-prefix { font-weight: bold; font-size: 1.2rem; }
+#input-answer {
+    width: 100%; padding: 10px; font-size: 1.5rem; font-family: 'VT323', monospace;
+    border: 2px solid #2d3436; border-radius: 5px; text-align: right;
+}
+.btn-enter {
+    background: #00b894; color: white; border: none; padding: 0 20px;
+    border-radius: 5px; font-weight: bold; cursor: pointer;
+}
+
+.feedback { font-weight: bold; margin-top: 10px; min-height: 20px; }
+.feedback.correct { color: #00b894; }
+.feedback.wrong { color: #d63031; }
+
+/* RESULT */
+.final-score-box {
+    margin: 20px 0; padding: 20px; background: white;
+    border-radius: 15px; color: #2d3436;
+}
+.btn-retry, .btn-home {
+    width: 100%; padding: 12px; border-radius: 10px; border: none; 
+    font-weight: bold; cursor: pointer; margin-top: 10px;
+}
+.btn-retry { background: #ffeaa7; color: #d63031; border: 2px solid #e17055; }
+.btn-home { background: rgba(0,0,0,0.2); color: white; }

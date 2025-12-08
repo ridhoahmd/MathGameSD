@@ -31,9 +31,18 @@ let playerName = localStorage.getItem("playerName") || "Guest";
 // 1. SETUP KESULITAN
 document.querySelectorAll('.btn-diff').forEach(btn => {
     btn.addEventListener('click', () => {
+        // Reset tampilan tombol lain
         document.querySelectorAll('.btn-diff').forEach(b => b.classList.remove('active'));
+        
+        // Aktifkan tombol yang dipilih
         btn.classList.add('active');
+        
+        // Update logic data
         currentLevel = btn.dataset.level;
+        
+        // --- PERBAIKAN DI SINI (UPDATE UI) ---
+        // Mengambil teks dari tombol (Mudah/Sedang/Sulit) dan menempelkannya ke pojok kanan
+        document.getElementById('difficulty-display').innerText = btn.innerText;
     });
 });
 

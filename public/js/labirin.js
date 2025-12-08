@@ -1,9 +1,8 @@
-// public/js/labirin.js - VERSI GRAFIS KEREN (SPRITES)
-
 const socket = io();
 const canvas = document.getElementById('mazeCanvas');
 const ctx = canvas.getContext('2d');
 
+// --- STATE GAME ---
 let level = 'mudah';
 let cols, rows;
 let size = 20; 
@@ -16,18 +15,15 @@ let gameActive = false;
 let finishNode;
 let playerName = localStorage.getItem("playerName") || "Guest";
 
-// --- 🎨 LOAD GAMBAR ASET (CARTOON STYLE) ---
-// Robot Lucu
+// --- 🎨 ASET GAMBAR ---
 const imgPlayer = new Image();
 imgPlayer.src = 'https://cdn-icons-png.flaticon.com/512/4140/4140047.png'; 
 
-// Portal Finish
 const imgFinish = new Image();
 imgFinish.src = 'https://cdn-icons-png.flaticon.com/512/1501/1501597.png'; 
 
-// Rintangan (Kristal/Gembok)
 const imgObstacle = new Image();
-imgObstacle.src = 'https://cdn-icons-png.flaticon.com/512/9183/9183226.png'; // Kristal Ungu
+imgObstacle.src = 'https://cdn-icons-png.flaticon.com/512/9183/9183226.png';
 
 // --- SETUP LEVEL ---
 document.querySelectorAll('.btn-level').forEach(btn => {
@@ -38,44 +34,47 @@ document.querySelectorAll('.btn-level').forEach(btn => {
     });
 });
 
-function requestGame() {
+// --- FUNGSI START ---
+// Kita tempel ke window agar HTML bisa memanggilnya
+window.requestGame = function() {
     const btn = document.querySelector('.btn-start');
-    btn.innerText = "⏳ MEMUAT MISI...";
+    btn.innerText = "⏳ MENGHUBUNGI AI...";
     btn.disabled = true;
+    
+    // Minta Server V2 mengirim struktur labirin & soal
     socket.emit('mintaSoalAI', { kategori: 'labirin', tingkat: level });
 }
 
-// --- TERIMA DATA ---
-socket.on('soalDariAI', (data) => {
+// --- TERIMA DATA DARI SERVER ---
+socket.on('soalDariAI', (response) => {
     document.getElementById('loading-screen').style.display = 'none';
 
-    if (data.kategori === 'labirin') {
-        let info = data.data; 
-        if (!info || !info.maze_size) {
-            info = {
-                maze_size: 10,
-                soal_list: [{tanya: "1 + 1?", jawab: "2"}]
-            };
-        }
+    if (response.kategori === 'labirin') {
+        let info = response.data; 
         
-        cols = info.maze_size;
-        rows = info.maze_size;
-        questions = info.soal_list;
+        cols = info.maze_size || 10;
+        rows = info.maze_size || 10;
+        questions = info.soal_list || [];
         
-        const maxSize = Math.min(window.innerWidth * 0.90, window.innerHeight * 0.65);
+        // --- [UPDATE] Responsif Canvas ---
+        // Gunakan 90% lebar layar ATAU 60% tinggi layar 
+        // (Angka 0.60 penting agar canvas tidak terlalu tinggi di HP)
+        const maxSize = Math.min(window.innerWidth * 0.90, window.innerHeight * 0.60);
+        
         size = Math.floor(maxSize / cols);
         
         canvas.width = cols * size;
         canvas.height = rows * size;
+        // ---------------------------------
 
-        generateMazeDataOnly();
+        setupMazeGrid();
         gameActive = true; 
         draw(); 
     }
 });
 
-// --- GENERATOR LOGIKA MAZE ---
-function generateMazeDataOnly() {
+// --- GENERATOR MAZE ---
+function setupMazeGrid() {
     grid = [];
     for (let j = 0; j < rows; j++) {
         for (let i = 0; i < cols; i++) {
@@ -105,18 +104,26 @@ function generateMazeDataOnly() {
         }
     }
 
+    // Sebar Soal
     let qIndex = 0;
-    for(let i=0; i<grid.length; i++) {
-        if(Math.random() < 0.15 && qIndex < questions.length && i > 5 && i < grid.length-5) {
-            grid[i].isQuestion = true;
-            grid[i].questionData = questions[qIndex];
-            qIndex++;
+    let randomGridIndices = Array.from({length: grid.length}, (_, i) => i).sort(() => Math.random() - 0.5);
+
+    for(let i of randomGridIndices) {
+        if(i > 0 && i < grid.length - 1 && qIndex < questions.length) {
+            if(Math.random() < 0.3) { 
+                grid[i].isQuestion = true;
+                grid[i].questionData = questions[qIndex];
+                qIndex++;
+            }
         }
     }
+    
     current = grid[0]; 
+    score = 0;
+    document.getElementById('score').innerText = score;
 }
 
-// --- CLASS CELL (DENGAN GAMBAR) ---
+// --- CLASS CELL ---
 class Cell {
     constructor(i, j) {
         this.i = i; this.j = j;
@@ -130,21 +137,19 @@ class Cell {
         let x = this.i * size;
         let y = this.j * size;
         
-        // WARNA DINDING NEON
         ctx.strokeStyle = "#00f2ff"; 
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
         ctx.lineCap = "round";
 
         ctx.beginPath();
-        if (this.walls[0]) { ctx.moveTo(x, y); ctx.lineTo(x + size, y); }
-        if (this.walls[1]) { ctx.moveTo(x + size, y); ctx.lineTo(x + size, y + size); }
-        if (this.walls[2]) { ctx.moveTo(x + size, y + size); ctx.lineTo(x, y + size); }
-        if (this.walls[3]) { ctx.moveTo(x, y + size); ctx.lineTo(x, y); }
+        if (this.walls[0]) { ctx.moveTo(x, y); ctx.lineTo(x + size, y); } 
+        if (this.walls[1]) { ctx.moveTo(x + size, y); ctx.lineTo(x + size, y + size); } 
+        if (this.walls[2]) { ctx.moveTo(x + size, y + size); ctx.lineTo(x, y + size); } 
+        if (this.walls[3]) { ctx.moveTo(x, y + size); ctx.lineTo(x, y); } 
         ctx.stroke();
 
-        // 🖼️ GAMBAR RINTANGAN (Kristal)
-        if (this.isQuestion) {
-            let p = size * 0.2; // Padding 20%
+        if (this.isQuestion && imgObstacle.complete) {
+            let p = size * 0.2; 
             ctx.drawImage(imgObstacle, x + p, y + p, size - (2*p), size - (2*p));
         }
     }
@@ -187,34 +192,32 @@ function removeWalls(a, b) {
 // --- RENDER LOOP ---
 function draw() {
     if(!gameActive) return;
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // 1. Gambar Semua Dinding & Rintangan
     for (let i = 0; i < grid.length; i++) {
         grid[i].show();
     }
 
-    // 2. 🖼️ GAMBAR FINISH (Portal)
-    if(finishNode) {
+    if(finishNode && imgFinish.complete) {
         let fx = finishNode.i * size;
         let fy = finishNode.j * size;
-        ctx.drawImage(imgFinish, fx, fy, size, size);
+        let p = size * 0.1;
+        ctx.drawImage(imgFinish, fx + p, fy + p, size - (2*p), size - (2*p));
     }
 
-    // 3. 🖼️ GAMBAR PEMAIN (Robot)
-    if(current) {
+    if(current && imgPlayer.complete) {
         let x = current.i * size;
         let y = current.j * size;
-        // Gambar Robot sedikit lebih kecil dari kotak agar tidak nabrak visual dinding
-        let p = size * 0.1;
+        let p = size * 0.15;
         ctx.drawImage(imgPlayer, x + p, y + p, size - (2*p), size - (2*p));
     }
     
     requestAnimationFrame(draw);
 }
 
-// --- LOGIKA GERAK & QUIZ ---
-function movePlayer(x, y) {
+// --- LOGIKA GERAK ---
+window.movePlayer = function(x, y) {
     if(!gameActive) return;
 
     let next;
@@ -236,9 +239,9 @@ function movePlayer(x, y) {
 
     if (!blocked && next) {
         if (next.isQuestion) {
-            openQuiz(next);
+            openQuiz(next); 
         } else {
-            current = next;
+            current = next; 
             checkFinish();
         }
     }
@@ -251,32 +254,70 @@ function openQuiz(node) {
     pendingNode = node;
     const modal = document.getElementById('quiz-modal');
     modal.style.display = 'flex';
-    document.getElementById('q-text').innerText = node.questionData.tanya;
+    
+    // Reset Tampilan Modal
+    const title = document.querySelector('#quiz-modal h2');
+    title.innerText = "RINTANGAN!";
+    title.style.color = "#ff00cc";
+    
+    const qText = document.getElementById('q-text');
+    qText.innerText = node.questionData.tanya;
+    qText.style.color = "white";
+
     const input = document.getElementById('q-input');
     input.value = "";
     input.focus();
 }
 
-function checkQuiz() {
+// --- LOGIKA CEK JAWABAN (TANPA ALERT) ---
+window.checkQuiz = function() {
     const userAns = document.getElementById('q-input').value.toLowerCase().trim();
     const correct = pendingNode.questionData.jawab.toLowerCase().trim();
+    
+    const title = document.querySelector('#quiz-modal h2');
+    const qText = document.getElementById('q-text');
 
-    if (userAns.includes(correct) || correct.includes(userAns)) {
+    if (userAns === correct || (correct.includes(userAns) && userAns.length > 1)) {
+        // --- JAWABAN BENAR ---
         try{ AudioManager.playCorrect(); } catch(e){}
-        alert("✅ BENAR! Kristal hancur.");
-        document.getElementById('quiz-modal').style.display = 'none';
-        pendingNode.isQuestion = false; 
-        score += 20;
-        document.getElementById('score').innerText = score;
-        current = pendingNode; 
-        gameActive = true; 
-        draw(); 
+        
+        // Ubah UI jadi Hijau
+        title.innerText = "✅ RINTANGAN HANCUR!";
+        title.style.color = "#00ff00";
+        qText.innerText = "Jalan terbuka...";
+        
+        setTimeout(() => {
+            document.getElementById('quiz-modal').style.display = 'none';
+            pendingNode.isQuestion = false;
+            
+            score += 20;
+            document.getElementById('score').innerText = score;
+            
+            current = pendingNode; 
+            gameActive = true; 
+            draw(); 
+            checkFinish();
+        }, 1000); // Jeda 1 detik agar user lihat notif
+
     } else {
+        // --- JAWABAN SALAH ---
         try{ AudioManager.playWrong(); } catch(e){}
-        alert(`❌ SALAH! Jawaban: ${pendingNode.questionData.jawab}`);
-        document.getElementById('quiz-modal').style.display = 'none';
-        gameActive = true;
-        draw();
+        
+        // Beri tahu salah di UI (Bukan Alert)
+        title.innerText = "❌ SALAH!";
+        title.style.color = "red";
+        qText.style.color = "#ff6b6b";
+        qText.innerText = "Coba lagi ya...";
+        
+        document.getElementById('q-input').value = "";
+        
+        // Kembalikan ke soal setelah 1.5 detik
+        setTimeout(() => {
+            title.innerText = "RINTANGAN!";
+            title.style.color = "#ff00cc";
+            qText.style.color = "white";
+            qText.innerText = pendingNode.questionData.tanya;
+        }, 1500);
     }
 }
 
@@ -285,16 +326,29 @@ function checkFinish() {
         try{ AudioManager.playWin(); } catch(e){}
         score += 50; 
         gameActive = false;
-        alert(`🏆 MISI SELESAI! Skor: ${score}`);
+        
         socket.emit('simpanSkor', {
             nama: playerName,
             skor: score,
             game: 'labirin'
         });
-        window.location.href = '/';
+        
+        // Untuk finish boleh pakai alert atau redirect langsung
+        // Kita pakai redirect smooth
+        const modal = document.getElementById('quiz-modal');
+        modal.style.display = 'flex';
+        document.querySelector('#quiz-modal h2').innerText = "🏆 MISI SELESAI!";
+        document.querySelector('#quiz-modal h2').style.color = "#00f2ff";
+        document.getElementById('q-text').innerText = `Skor Akhir: ${score}`;
+        document.getElementById('q-input').style.display = 'none';
+        document.querySelector('.btn-submit').innerText = "KEMBALI KE MENU";
+        document.querySelector('.btn-submit').onclick = function() {
+            window.location.href = '/';
+        };
     }
 }
 
+// Keyboard Listener
 window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowUp') movePlayer(0, -1);
     if (e.key === 'ArrowRight') movePlayer(1, 0);

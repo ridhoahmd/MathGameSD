@@ -3,62 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kasir Cilik - Videa Class</title>
     
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self' https: http: data: blob: 'unsafe-inline' 'unsafe-eval';
-        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.gstatic.com https://cdnjs.cloudflare.com;
-        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         font-src 'self' https://fonts.gstatic.com;
-        img-src 'self' data: https://api.dicebear.com https://cdn-icons-png.flaticon.com;
-        connect-src * 'unsafe-inline';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     ">
 
-    <title>Kasir Cilik - Videa Class</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/kasir.css">
-    
-
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
 </head>
 <body>
 
-    <a href="/" class="btn-back">⬅ MENU</a>
-
-    <div class="container">
-        <h1 style="font-family:'Orbitron', sans-serif; color:#ffd700; margin-top:0;">KASIR CILIK</h1>
-        
-        <div class="difficulty-selector">
-            <button class="btn-level active" data-level="mudah">Magang (Mudah)</button>
-            <button class="btn-level" data-level="sedang">Karyawan (Sedang)</button>
-            <button class="btn-level" data-level="sulit">Manajer (Sulit)</button>
-        </div>
-
-        <div class="cash-register-screen" id="story-display">
-            Menunggu pelanggan datang...
-        </div>
-
-        <div class="input-group">
-            <label>Hitung Kembalian (Rp):</label>
-            <input type="number" id="input-change" placeholder="Contoh: 5000">
-        </div>
-
-        <button onclick="checkAnswer()" class="btn-action">TERIMA BAYARAN 💵</button>
-        <p id="score-display" style="margin-top:10px; color:#aaa;">Gaji (Skor): 0</p>
-
-        <button onclick="endGame()" class="btn-finish">🛑 TUTUP TOKO (SIMPAN GAJI)</button>
+    <div class="top-bar">
+        <a href="/" class="btn-back">⬅ Tutup Toko</a>
+        <div class="level-badge">Simulasi Belanja</div>
     </div>
 
-    <div id="result-modal">
-        <div class="result-content">
-            <h1 id="res-title">BENAR!</h1>
-            <p id="res-desc">Kamu hebat!</p>
-            <button onclick="nextCustomer()" class="btn-action" style="width:auto; padding:10px 30px;">PELANGGAN BERIKUTNYA</button>
+    <div class="game-container">
+        
+        <div class="register-header">
+            <div class="screen-display">
+                <span id="screen-text">KASIR READY...</span>
+            </div>
         </div>
+
+        <div class="stats-row">
+            <div class="stat-box">💰 Omset: <span id="score">0</span></div>
+            <div class="stat-box">⏳ Shift: <span id="timer">00</span></div>
+        </div>
+
+        <div id="start-screen" class="panel active">
+            <div class="icon-big">🏪</div>
+            <p class="intro-text">"Selamat datang, mau beli apa?"</p>
+            <p class="sub-text">Hitung kembalian pelanggan dengan tepat!</p>
+            
+            <div class="difficulty-selector">
+                <button class="btn-diff active" data-level="mudah">Magang (Ratusan)</button>
+                <button class="btn-diff" data-level="sedang">Karyawan (Ribuan)</button>
+                <button class="btn-diff" data-level="sulit">Manajer (Puluhan Rb)</button>
+            </div>
+
+            <button onclick="startGame()" class="btn-start">BUKA KASIR</button>
+        </div>
+
+        <div id="game-screen" class="panel hidden">
+            
+            <div class="receipt-paper">
+                <div class="receipt-header">
+                    <h3>TOKO VIDEA</h3>
+                    <p>Jl. Pendidikan No. 1</p>
+                    <hr>
+                </div>
+                
+                <div class="receipt-body">
+                    <p id="story-text" class="story">Pelanggan membeli...</p>
+                    
+                    <div class="price-row">
+                        <span>Total Belanja:</span>
+                        <span id="display-total" class="price">Rp 0</span>
+                    </div>
+                    <div class="price-row">
+                        <span>Tunai:</span>
+                        <span id="display-pay" class="price">Rp 0</span>
+                    </div>
+                    <hr>
+                    <div class="price-row highlight">
+                        <span>KEMBALIAN?</span>
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <span class="rp-prefix">Rp</span>
+                    <input type="number" id="input-answer" placeholder="0" onkeypress="handleEnter(event)">
+                    <button onclick="checkAnswer()" class="btn-enter">BAYAR</button>
+                </div>
+                <p id="feedback-msg" class="feedback"></p>
+            </div>
+
+        </div>
+
+        <div id="result-screen" class="panel hidden">
+            <h2>TOKO TUTUP</h2>
+            <div class="final-score-box">
+                <span>Total Keuntungan</span>
+                <h1 id="final-score">Rp 0</h1>
+            </div>
+            <p id="result-msg">Kerja bagus hari ini!</p>
+            
+            <button onclick="location.reload()" class="btn-retry">SHIFT BERIKUTNYA</button>
+            <button onclick="window.location.href='/'" class="btn-home">PULANG</button>
+        </div>
+
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/kasir.js"></script>
+
 </body>
 </html>

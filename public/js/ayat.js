@@ -33,6 +33,8 @@ document.querySelectorAll('.btn-diff').forEach(btn => {
         document.querySelectorAll('.btn-diff').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentLevel = btn.dataset.level;
+
+        document.getElementById('difficulty-display').innerText = btn.innerText;
     });
 });
 

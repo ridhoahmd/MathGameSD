@@ -7,7 +7,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/guru.css">
-
+    <style>
+        /* Tambahan CSS agar tabel muat banyak kolom */
+        table { font-size: 0.85rem; }
+        th, td { padding: 10px 5px; text-align: center; }
+        .col-nama { text-align: left; min-width: 150px; }
+        /* Warna Header Khusus Agama */
+        th.agama { background-color: #16a085; color: white; }
+    </style>
 </head>
 <body>
 
@@ -20,7 +27,7 @@
             </button>
         </div>
 
-        <h1>📋 DATA SISWA & NILAI</h1>
+        <h1>📋 DATA SISWA & NILAI (V2.0)</h1>
 
         <div id="user-status-info" class="text-center mb-20"></div>
 
@@ -30,17 +37,19 @@
             <table id="tabel-nilai">
                 <thead>
                     <tr>
-                        <th>Nama Siswa</th>
+                        <th class="col-nama">Nama Siswa</th>
                         <th>Math</th>
                         <th>Zuma</th>
                         <th>Memory</th>
                         <th>Piano</th>
-                        <th>TOTAL</th>
+                        <th>Kasir</th>
+                        <th>Labirin</th>
+                        <th class="agama">Nabi</th> <th class="agama">Ayat</th> <th>TOTAL</th>
                         <th>Role</th>
                     </tr>
                 </thead>
                 <tbody id="table-body">
-                    <tr><td colspan="7" class="text-center">Memuat Data...</td></tr>
+                    <tr><td colspan="11" class="text-center">Memuat Data...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -97,7 +106,7 @@
             }
         });
 
-        // --- LOAD DATA ---
+        // --- LOAD DATA (UPDATED V2) ---
         function loadDataSiswa() {
             database.ref('leaderboard').on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -110,12 +119,20 @@
 
                 Object.keys(data).forEach(key => {
                     const user = data[key];
+                    
+                    // --- UPDATE 1: Ambil Semua Nilai ---
                     let sMath = user.skor_math || 0;
                     if (user.skor && !user.skor_math) sMath = user.skor;
                     let sZuma = user.skor_zuma || 0;
                     let sMemory = user.skor_memory || 0;
                     let sPiano = user.skor_piano || 0;
-                    let total = sMath + sZuma + sMemory + sPiano;
+                    let sKasir = user.skor_kasir || 0;
+                    let sLabirin = user.skor_labirin || 0;
+                    let sNabi = user.skor_nabi || 0; // Baru
+                    let sAyat = user.skor_ayat || 0; // Baru
+
+                    // --- UPDATE 2: Rumus Total ---
+                    let total = sMath + sZuma + sMemory + sPiano + sKasir + sLabirin + sNabi + sAyat;
                     let targetRole = user.role || "siswa";
 
                     // Logic Role Control
@@ -144,7 +161,7 @@
 
                     const row = `
                         <tr>
-                            <td>
+                            <td class="col-nama">
                                 <div style="display:flex; align-items:center;">
                                     <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${user.nama}" class="avatar-mini">
                                     <span>${user.nama}</span>
@@ -154,6 +171,10 @@
                             <td>${sZuma}</td>
                             <td>${sMemory}</td>
                             <td>${sPiano}</td>
+                            <td>${sKasir}</td>
+                            <td>${sLabirin}</td>
+                            <td style="color:#16a085; font-weight:bold;">${sNabi}</td>
+                            <td style="color:#16a085; font-weight:bold;">${sAyat}</td>
                             <td class="score-val">${total}</td>
                             <td>${roleControl}</td>
                         </tr>
@@ -192,55 +213,52 @@
             }
         }
 
-        // --- 🖨️ FUNGSI DOWNLOAD PDF (BARU) ---
+        // --- 🖨️ UPDATE PDF GENERATOR ---
         window.downloadPDF = function() {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+            const doc = new jsPDF('l', 'mm', 'a4'); // 'l' = Landscape (Melebar) agar muat banyak kolom
 
-            // Judul Dokumen
             doc.setFontSize(18);
-            doc.text("Laporan Nilai Siswa - Videa Class", 14, 20);
+            doc.text("Laporan Nilai Siswa Lengkap - Videa Class", 14, 20);
             
-            // Tanggal Cetak
             doc.setFontSize(10);
             const date = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             doc.text(`Dicetak pada: ${date}`, 14, 28);
 
-            // Generate Tabel dari HTML
-            // Kita ambil data manual agar input Select (Role) tidak berantakan
             let dataBody = [];
             const rows = document.querySelectorAll('#table-body tr');
             
             rows.forEach(row => {
                 const cols = row.querySelectorAll('td');
                 if(cols.length > 0 && row.style.display !== 'none') {
-                    // Ambil teks nama (bersihkan enter/spasi)
                     let nama = cols[0].innerText.trim();
                     let math = cols[1].innerText;
                     let zuma = cols[2].innerText;
                     let memory = cols[3].innerText;
                     let piano = cols[4].innerText;
-                    let total = cols[5].innerText;
+                    let kasir = cols[5].innerText;
+                    let labirin = cols[6].innerText;
+                    let nabi = cols[7].innerText;
+                    let ayat = cols[8].innerText;
+                    let total = cols[9].innerText;
                     
-                    // Ambil value dari Select atau Text untuk Role
-                    let roleSelect = cols[6].querySelector('select');
-                    let role = roleSelect ? roleSelect.value : cols[6].innerText;
+                    let roleSelect = cols[10].querySelector('select');
+                    let role = roleSelect ? roleSelect.value : cols[10].innerText;
 
-                    dataBody.push([nama, math, zuma, memory, piano, total, role.toUpperCase()]);
+                    dataBody.push([nama, math, zuma, memory, piano, kasir, labirin, nabi, ayat, total, role.toUpperCase()]);
                 }
             });
 
             doc.autoTable({
-                head: [['Nama Siswa', 'Math', 'Zuma', 'Memory', 'Piano', 'Total', 'Role']],
+                head: [['Nama Siswa', 'Math', 'Zuma', 'Memory', 'Piano', 'Kasir', 'Maze', 'Nabi', 'Ayat', 'Total', 'Role']],
                 body: dataBody,
                 startY: 35,
                 theme: 'grid',
-                headStyles: { fillColor: [0, 242, 255], textColor: [0,0,0] }, // Warna header cyan
-                styles: { fontSize: 10 }
+                headStyles: { fillColor: [0, 242, 255], textColor: [0,0,0] }, 
+                styles: { fontSize: 9 } // Font dikecilkan agar muat
             });
 
-            // Simpan File
-            doc.save(`Laporan_Nilai_Videa_${new Date().toISOString().slice(0,10)}.pdf`);
+            doc.save(`Laporan_Lengkap_${new Date().toISOString().slice(0,10)}.pdf`);
         }
     </script>
 </body>

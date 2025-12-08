@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
 </head>
 <body>
     <header class="main-header">
@@ -121,16 +122,16 @@
                     <div class="btn-play btn-start-math">START</div>
                 </a>
 
-                <a href="#" onclick="masukGame('nabi.html')" class="game-card" style="border-color: #FFD700;">
+                <a href="#" onclick="masukGame('nabi.html')" class="game-card" >
                     <div class="game-icon">🕌</div>
-                    <div class="game-title" style="color: #FFD700;">JEJAK NABI</div>
+                    <div class="game-title">JEJAK NABI</div>
                     <div class="game-desc">Petualangan menelusuri kisah 25 Nabi & Rasul.</div>
                     <div class="btn-play btn-start-math">START</div>
                 </a>
 
-                <a href="#" onclick="masukGame('ayat.html')" class="game-card" style="border-color: #16a085;">
+                <a href="#" onclick="masukGame('ayat.html')" class="game-card">
                     <div class="game-icon">📖</div>
-                    <div class="game-title" style="color: #16a085;">SAMBUNG AYAT</div>
+                    <div class="game-title">SAMBUNG AYAT</div>
                     <div class="game-desc">Lanjutkan potongan ayat Juz Amma (Juz 30).</div>
                     <div class="btn-play btn-start-math">START</div>
                 </a>
@@ -196,23 +197,35 @@
         // --- DAFTAR TEMA ---
         const themes = ['default', 'forest', 'ocean', 'hacker', 'crimson'];
         
+        // --- PERBAIKAN FUNGSI GANTI TEMA (INSTAN) ---
         function cycleTheme() {
-            let currentThemeIndex = 0;
+            const themes = ['default', 'forest', 'ocean', 'hacker', 'crimson'];
             const body = document.body;
             
+            // 1. Deteksi tema saat ini dari tampilan (bukan dari database)
+            let currentThemeIndex = 0;
             if (body.classList.contains('theme-forest')) currentThemeIndex = 1;
             else if (body.classList.contains('theme-ocean')) currentThemeIndex = 2;
             else if (body.classList.contains('theme-hacker')) currentThemeIndex = 3;
             else if (body.classList.contains('theme-crimson')) currentThemeIndex = 4;
 
+            // 2. Tentukan tema berikutnya
             let nextIndex = (currentThemeIndex + 1) % themes.length;
             let nextTheme = themes[nextIndex];
 
-            const targetName = auth.currentUser ? auth.currentUser.displayName : localStorage.getItem("playerName");
-            if(targetName) {
-                database.ref('leaderboard/' + targetName).update({ active_theme: nextTheme });
-            } else {
-                alert("Mohon refresh halaman.");
+            // 3. TERAPKAN LANGSUNG KE LAYAR (Agar user merasa cepat)
+            body.classList.remove('theme-forest', 'theme-ocean', 'theme-hacker', 'theme-crimson');
+            if (nextTheme !== 'default') {
+                body.classList.add('theme-' + nextTheme);
+            }
+
+            // 4. SIMPAN KE DATABASE (Background Process)
+            // Kita ambil nama dari LocalStorage karena pasti sudah disanitasi (aman dari titik)
+            const safeName = localStorage.getItem("playerName");
+            
+            if(safeName) {
+                database.ref('leaderboard/' + safeName).update({ active_theme: nextTheme })
+                    .catch(err => console.log("Gagal simpan preferensi tema:", err));
             }
         }
 

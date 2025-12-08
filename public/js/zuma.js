@@ -265,3 +265,15 @@ canvas.addEventListener('touchstart', (e) => {
     bullets.push(new Bullet(player.x, player.y, player.angle, player.currentAmmo));
     setTimeout(() => { player.currentAmmo = getNextAmmo(); }, 100);
 }, { passive: false });
+
+// DETEKSI KONEKSI PUTUS
+socket.on('disconnect', () => {
+    // Stop game agar tidak error
+    gameActive = false; 
+    
+    // Tampilkan pesan
+    alert("⚠️ Koneksi ke server terputus! Halaman akan dimuat ulang.");
+    
+    // Refresh otomatis
+    window.location.reload();
+});

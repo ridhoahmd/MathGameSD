@@ -17,8 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/labirin.css">
-        
-
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
 </head>
 <body>
 
@@ -31,15 +30,16 @@
 
     <div class="controls">
         <div class="spacer"></div>
-        <div class="btn-ctrl" onclick="movePlayer(0, -1)">▲</div>
+        <button class="btn-ctrl" onclick="movePlayer(0, -1)">▲</button>
         <div class="spacer"></div>
-        <div class="btn-ctrl" onclick="movePlayer(-1, 0)">◀</div>
-        <div class="btn-ctrl" onclick="movePlayer(0, 1)">▼</div>
-        <div class="btn-ctrl" onclick="movePlayer(1, 0)">▶</div>
+        
+        <button class="btn-ctrl" onclick="movePlayer(-1, 0)">◀</button>
+        <button class="btn-ctrl" onclick="movePlayer(0, 1)">▼</button>
+        <button class="btn-ctrl" onclick="movePlayer(1, 0)">▶</button>
     </div>
 
     <div id="loading-screen">
-        <h1 style="color:#00f2ff; font-family:'Orbitron';">LABIRIN ILMU</h1>
+        <h1>LABIRIN ILMU</h1>
         <p>Cari jalan keluar & jawab pertanyaan!</p>
         
         <div class="difficulty-selector">
@@ -53,10 +53,9 @@
 
     <div id="quiz-modal">
         <div class="quiz-content">
-            <h2 style="color:#ff00cc">RINTANGAN!</h2>
+            <h2>RINTANGAN!</h2>
             <p id="q-text">...</p>
-            <input type="text" id="q-input" placeholder="Jawab disini...">
-            <br>
+            <input type="text" id="q-input" placeholder="Jawab disini..." autocomplete="off">
             <button onclick="checkQuiz()" class="btn-submit">BUKA PINTU</button>
         </div>
     </div>

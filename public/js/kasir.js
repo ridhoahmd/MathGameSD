@@ -1,96 +1,162 @@
 const socket = io();
-let currentData = null;
-let score = 0;
-let level = 'mudah';
-const playerName = localStorage.getItem("playerName") || "Guest";
 
-// Setup Level Buttons
-document.querySelectorAll('.btn-level').forEach(btn => {
+const ui = {
+    screenText: document.getElementById('screen-text'),
+    storyText: document.getElementById('story-text'),
+    displayTotal: document.getElementById('display-total'),
+    displayPay: document.getElementById('display-pay'),
+    inputAnswer: document.getElementById('input-answer'),
+    feedback: document.getElementById('feedback-msg'),
+    score: document.getElementById('score'),
+    timer: document.getElementById('timer'),
+    finalScore: document.getElementById('final-score'),
+    startScreen: document.getElementById('start-screen'),
+    gameScreen: document.getElementById('game-screen'),
+    resultScreen: document.getElementById('result-screen')
+};
+
+let currentLevel = 'mudah';
+let questions = []; // Sekarang Array, bukan single object
+let currentIndex = 0;
+let score = 0;
+let timeLeft = 0;
+let timerInterval;
+let playerName = localStorage.getItem("playerName") || "Guest";
+
+// Setup Tombol Level
+document.querySelectorAll('.btn-diff').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.btn-level').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.btn-diff').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        level = btn.dataset.level;
-        requestSoal(); // Reset soal saat ganti level
+        currentLevel = btn.dataset.level;
     });
 });
 
-// 1. Minta Soal ke Server
-function requestSoal() {
-    document.getElementById('story-display').innerText = "⏳ Sedang melayani pelanggan...";
-    document.getElementById('input-change').value = "";
-    document.getElementById('result-modal').style.display = "none";
+function startGame() {
+    ui.startScreen.classList.remove('active');
+    ui.gameScreen.classList.add('active');
+    ui.score.innerText = "0";
+    score = 0;
     
-    socket.emit('mintaSoalAI', { kategori: 'kasir', tingkat: level });
+    // Minta stok soal baru
+    mintaSoalKeServer();
 }
 
-// 2. Terima Soal
-socket.on('soalDariAI', (data) => {
-    if (data.kategori === 'kasir') {
-        currentData = data.data; // { cerita, kembalian, dll }
+function mintaSoalKeServer() {
+    ui.screenText.innerText = "RESTOCKING...";
+    ui.storyText.innerText = "Mengambil data transaksi...";
+    socket.emit('mintaSoalAI', { kategori: 'kasir', tingkat: currentLevel });
+}
+
+socket.on('soalDariAI', (response) => {
+    if (response.kategori === 'kasir') {
+        // Jika server mengirim array, pakai langsung. Jika object, bungkus jadi array.
+        const data = response.data;
+        if (Array.isArray(data)) {
+            questions = data;
+        } else {
+            questions = [data];
+        }
         
-        // Efek ketik sederhana
-        const screen = document.getElementById('story-display');
-        screen.innerText = currentData.cerita;
-        
-        // Auto focus ke input
-        document.getElementById('input-change').focus();
+        currentIndex = 0;
+        tampilkanSoal();
     }
 });
 
-// 3. Cek Jawaban
-function checkAnswer() {
-    if(!currentData) return;
+function formatRupiah(angka) {
+    return "Rp " + angka.toLocaleString('id-ID');
+}
 
-    const userAns = parseInt(document.getElementById('input-change').value);
-    const correctAns = parseInt(currentData.kembalian);
-    const modal = document.getElementById('result-modal');
-    const title = document.getElementById('res-title');
-    const desc = document.getElementById('res-desc');
+function tampilkanSoal() {
+    // Cek apakah soal habis?
+    if (currentIndex >= questions.length) {
+        // Jika habis, minta lagi ke server (Endless Mode)
+        mintaSoalKeServer(); 
+        return;
+    }
 
-    modal.style.display = "flex";
+    const q = questions[currentIndex];
+    
+    ui.storyText.innerText = q.cerita;
+    ui.displayTotal.innerText = formatRupiah(q.total_belanja);
+    ui.displayPay.innerText = formatRupiah(q.uang_bayar);
+    ui.screenText.innerText = "INPUT KEMBALIAN";
+    
+    ui.inputAnswer.value = "";
+    ui.inputAnswer.focus();
+    ui.feedback.innerText = "";
+    ui.feedback.className = "feedback";
+    
+    startTimer(30); // 30 Detik per transaksi
+}
 
-    if (userAns === correctAns) {
+function startTimer(seconds) {
+    clearInterval(timerInterval);
+    timeLeft = seconds;
+    ui.timer.innerText = timeLeft;
+    
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        ui.timer.innerText = timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            checkAnswer(true); // Waktu Habis
+        }
+    }, 1000);
+}
+
+function handleEnter(e) {
+    if (e.key === 'Enter') checkAnswer();
+}
+
+function checkAnswer(isTimeOut = false) {
+    clearInterval(timerInterval);
+    
+    const q = questions[currentIndex];
+    const userAnswer = parseInt(ui.inputAnswer.value);
+    const correctAnswer = q.kembalian; // Pastikan server kirim field ini, atau hitung manual: q.uang_bayar - q.total_belanja
+    
+    // Fallback hitung manual jika AI lupa kirim key 'kembalian'
+    const realCorrect = (q.uang_bayar - q.total_belanja);
+
+    if (!isTimeOut && userAnswer === realCorrect) {
         // BENAR
-        score += 50; // Gaji lebih besar karena soal cerita
-        title.innerText = "✅ TRANSAKSI SUKSES!";
-        title.style.color = "#38ef7d";
-        desc.innerText = `Kembalian tepat Rp ${correctAns}. Pelanggan senang!`;
-        AudioManager.playCorrect();
+        ui.feedback.innerText = "LUNAS! TRANSAKSI BERHASIL.";
+        ui.feedback.classList.add('correct');
+        ui.screenText.innerText = "SUKSES";
+        try { AudioManager.playCorrect(); } catch(e){}
         
-        // Update Skor di Layar
-        document.getElementById('score-display').innerText = "Gaji (Skor): " + score;
+        let point = 100 + Math.floor(timeLeft * 5);
+        score += point;
+        ui.score.innerText = score;
+        
+        // Lanjut Soal Berikutnya (Array)
+        setTimeout(() => {
+            currentIndex++;
+            tampilkanSoal();
+        }, 1500);
+        
     } else {
         // SALAH
-        title.innerText = "❌ SALAH HITUNG!";
-        title.style.color = "#ff4757";
-        desc.innerText = `Harusnya kembalian Rp ${correctAns}. Toko rugi!`;
-        AudioManager.playWrong();
+        ui.feedback.innerText = `SALAH! Harusnya: ${formatRupiah(realCorrect)}`;
+        ui.feedback.classList.add('wrong');
+        ui.screenText.innerText = "GAGAL";
+        try { AudioManager.playWrong(); } catch(e){}
+        
+        // Game Over
+        setTimeout(endGame, 2500);
     }
 }
 
-// 4. Lanjut Main
-function nextCustomer() {
-    requestSoal();
-}
-
-// 5. Selesai (Simpan Skor)
 function endGame() {
+    ui.gameScreen.classList.remove('active');
+    ui.resultScreen.classList.add('active');
+    ui.finalScore.innerText = formatRupiah(score);
+    try { AudioManager.playWin(); } catch(e){}
+
     socket.emit('simpanSkor', {
         nama: playerName,
         skor: score,
-        game: 'kasir' // Kita pakai slot game baru
-        // Note: Di server.js, pastikan ada logic untuk 'skor_kasir' atau satukan ke 'skor_math'
-        // SEMENTARA: Kita masukkan ke skor_math saja agar tidak perlu ubah struktur DB banyak-banyak
+        game: 'kasir' 
     });
-    alert("Toko Tutup! Gaji kamu telah disimpan.");
-    window.location.href = "/";
-    AudioManager.playWin();
 }
-
-// Tambahan Logika Simpan Khusus Kasir di Client (Opsional)
-// Agar lebih rapi, di server.js sebaiknya tambahkan:
-// if (data.game === 'kasir') fieldSkor = 'skor_math'; 
-// (Jadi poin kasir dianggap poin matematika juga)
-
-// Mulai game pertama kali
-requestSoal();

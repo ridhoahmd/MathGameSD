@@ -139,6 +139,15 @@ body {
     font-size: 0.95rem; text-align: left; transition: 0.2s; 
     font-family: 'Poppins', sans-serif;
     line-height: 1.4; /* Jarak antar baris di opsi jawaban */
+
+    white-space: normal !important;  /* Izinkan teks turun ke bawah */
+    word-wrap: break-word;           /* Potong kata jika terlalu panjang */
+    min-height: 50px;                /* Tinggi minimal agar tombol enak dipencet */
+    height: auto;                    /* Tinggi menyesuaikan isi teks */
+    display: flex;                   
+    align-items: center;             /* Teks rata tengah vertikal */
+    line-height: 1.4;                /* Jarak antar baris teks */
+    text-align: left;
 }
 .btn-option:hover { background: rgba(255,255,255,0.2); border-color: #FFD700; }
 .btn-option.correct { background: #2ecc71; border-color: #2ecc71; color: white; }
