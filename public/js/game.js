@@ -266,3 +266,52 @@ function endGame() {
         setTimeout(() => location.reload(), 1000);
     }
 }
+
+// --- FITUR AUTO-RECONNECT (PASTE DI PALING BAWAH) ---
+
+// 1. Fungsi Membuat Tampilan Layar Gelap (Overlay)
+function createOfflineUI() {
+    if (document.getElementById('connection-overlay')) return; 
+
+    const overlay = document.createElement('div');
+    overlay.id = 'connection-overlay';
+    overlay.innerHTML = `
+        <div class="wifi-icon">📡</div>
+        <div class="conn-text">KONEKSI TERPUTUS</div>
+        <div class="conn-sub">Sedang mencoba menghubungkan kembali...</div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+createOfflineUI();
+
+// 2. Logika Saat Koneksi Putus & Nyambung Lagi
+let isReconnecting = false;
+
+socket.on('disconnect', (reason) => {
+    console.log("⚠️ Koneksi putus:", reason);
+    isReconnecting = true;
+    
+    const overlay = document.getElementById('connection-overlay');
+    if(overlay) overlay.style.display = 'flex';
+
+    if (typeof gameActive !== 'undefined') gameActive = false; 
+});
+
+socket.on('connect', () => {
+    if (isReconnecting) {
+        console.log("✅ Terhubung kembali!");
+        isReconnecting = false;
+
+        const overlay = document.getElementById('connection-overlay');
+        if(overlay) overlay.style.display = 'none';
+
+        // Resume Game Math
+        if (typeof gameActive !== 'undefined') {
+            gameActive = true;
+            // Math Battle tidak butuh requestAnimationFrame, cukup set gameActive true
+        }
+        
+        // Khusus PvP: Mungkin perlu kirim ulang status 'ready' (opsional)
+    }
+});

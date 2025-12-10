@@ -1,14 +1,18 @@
+// ==========================================
+// LABIRIN.JS - FIXED & OPTIMIZED
+// ==========================================
+
 const socket = io();
 const canvas = document.getElementById('mazeCanvas');
 const ctx = canvas.getContext('2d');
 
-// --- STATE GAME ---
+// --- STATE GAME GLOBAL ---
 let level = 'mudah';
 let cols, rows;
 let size = 20; 
 let grid = [];
 let current; 
-let stack = [];
+let stack = []; // Variabel ini akan di-reset di setupMazeGrid
 let questions = []; 
 let score = 0;
 let gameActive = false;
@@ -17,6 +21,7 @@ let playerName = localStorage.getItem("playerName") || "Guest";
 
 // --- 🎨 ASET GAMBAR ---
 const imgPlayer = new Image();
+// Gunakan path lokal jika sudah ada, atau tetap CDN untuk sekarang
 imgPlayer.src = 'https://cdn-icons-png.flaticon.com/512/4140/4140047.png'; 
 
 const imgFinish = new Image();
@@ -34,48 +39,61 @@ document.querySelectorAll('.btn-level').forEach(btn => {
     });
 });
 
-// --- FUNGSI START ---
-// Kita tempel ke window agar HTML bisa memanggilnya
+// --- FUNGSI MINTA GAME KE SERVER ---
 window.requestGame = function() {
     const btn = document.querySelector('.btn-start');
-    btn.innerText = "⏳ MENGHUBUNGI AI...";
+    btn.innerText = "⏳ MENGHUBUNGI SERVER...";
     btn.disabled = true;
+
+    // Ambil Kode Kelas (jika ada)
+    const inputKodeKelas = document.getElementById('inputKodeKelas');
+    const kodeAkses = inputKodeKelas ? inputKodeKelas.value.trim().toUpperCase() : ''; 
     
-    // Minta Server V2 mengirim struktur labirin & soal
-    socket.emit('mintaSoalAI', { kategori: 'labirin', tingkat: level });
+    // Siapkan data permintaan
+    const requestData = { 
+        kategori: 'labirin', 
+        tingkat: level, 
+        kodeAkses: kodeAkses 
+    };
+    
+    console.log("Mengirim permintaan soal dengan Kode Akses:", kodeAkses);
+    socket.emit('mintaSoalAI', requestData);
 }
 
 // --- TERIMA DATA DARI SERVER ---
 socket.on('soalDariAI', (response) => {
     document.getElementById('loading-screen').style.display = 'none';
 
-    if (response.kategori === 'labirin') {
+    if (response && response.kategori === 'labirin' && response.data) {
         let info = response.data; 
         
         cols = info.maze_size || 10;
         rows = info.maze_size || 10;
         questions = info.soal_list || [];
         
-        // --- [UPDATE] Responsif Canvas ---
-        // Gunakan 90% lebar layar ATAU 60% tinggi layar 
-        // (Angka 0.60 penting agar canvas tidak terlalu tinggi di HP)
+        // Responsif Canvas
         const maxSize = Math.min(window.innerWidth * 0.90, window.innerHeight * 0.60);
-        
         size = Math.floor(maxSize / cols);
         
         canvas.width = cols * size;
         canvas.height = rows * size;
-        // ---------------------------------
 
         setupMazeGrid();
         gameActive = true; 
         draw(); 
+    } else {
+        // Handle jika data kosong/error
+        alert(response.error || "Gagal memuat soal. Coba lagi.");
+        location.reload();
     }
 });
 
-// --- GENERATOR MAZE ---
+// --- GENERATOR MAZE (FIXED STRUCTURE) ---
 function setupMazeGrid() {
+    // 1. Reset Grid & Stack (PENTING!)
     grid = [];
+    stack = []; // Reset stack agar bersih saat main ulang
+
     for (let j = 0; j < rows; j++) {
         for (let i = 0; i < cols; i++) {
             let cell = new Cell(i, j);
@@ -83,11 +101,11 @@ function setupMazeGrid() {
         }
     }
 
+    // 2. Logika Pembuatan Labirin (DFS Algorithm)
     current = grid[0]; 
     current.visited = true;
     finishNode = grid[grid.length - 1]; 
 
-    let stack = [];
     let processing = true;
     
     while(processing) {
@@ -104,7 +122,7 @@ function setupMazeGrid() {
         }
     }
 
-    // Sebar Soal
+    // 3. Sebar Soal
     let qIndex = 0;
     let randomGridIndices = Array.from({length: grid.length}, (_, i) => i).sort(() => Math.random() - 0.5);
 
@@ -118,9 +136,27 @@ function setupMazeGrid() {
         }
     }
     
+    // 4. Setup Pemain Awal
     current = grid[0]; 
     score = 0;
     document.getElementById('score').innerText = score;
+    
+    // 5. Kontrol Layar Sentuh (Mobile) - Reset Event Listener Lama
+    const controlButtons = document.querySelectorAll('.btn-ctrl');
+    controlButtons.forEach(btn => {
+        // Clone node untuk menghapus semua event listener sebelumnya dengan bersih
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.addEventListener('click', (e) => {
+            e.preventDefault(); 
+            const direction = newBtn.innerText; 
+            if (direction === '▲') movePlayer(0, -1);
+            else if (direction === '▶') movePlayer(1, 0);
+            else if (direction === '▼') movePlayer(0, 1);
+            else if (direction === '◀') movePlayer(-1, 0);
+        });
+    });
 }
 
 // --- CLASS CELL ---
@@ -255,7 +291,6 @@ function openQuiz(node) {
     const modal = document.getElementById('quiz-modal');
     modal.style.display = 'flex';
     
-    // Reset Tampilan Modal
     const title = document.querySelector('#quiz-modal h2');
     title.innerText = "RINTANGAN!";
     title.style.color = "#ff00cc";
@@ -269,7 +304,7 @@ function openQuiz(node) {
     input.focus();
 }
 
-// --- LOGIKA CEK JAWABAN (TANPA ALERT) ---
+// --- LOGIKA CEK JAWABAN ---
 window.checkQuiz = function() {
     const userAns = document.getElementById('q-input').value.toLowerCase().trim();
     const correct = pendingNode.questionData.jawab.toLowerCase().trim();
@@ -278,10 +313,8 @@ window.checkQuiz = function() {
     const qText = document.getElementById('q-text');
 
     if (userAns === correct || (correct.includes(userAns) && userAns.length > 1)) {
-        // --- JAWABAN BENAR ---
         try{ AudioManager.playCorrect(); } catch(e){}
         
-        // Ubah UI jadi Hijau
         title.innerText = "✅ RINTANGAN HANCUR!";
         title.style.color = "#00ff00";
         qText.innerText = "Jalan terbuka...";
@@ -297,13 +330,11 @@ window.checkQuiz = function() {
             gameActive = true; 
             draw(); 
             checkFinish();
-        }, 1000); // Jeda 1 detik agar user lihat notif
+        }, 1000);
 
     } else {
-        // --- JAWABAN SALAH ---
         try{ AudioManager.playWrong(); } catch(e){}
         
-        // Beri tahu salah di UI (Bukan Alert)
         title.innerText = "❌ SALAH!";
         title.style.color = "red";
         qText.style.color = "#ff6b6b";
@@ -311,7 +342,6 @@ window.checkQuiz = function() {
         
         document.getElementById('q-input').value = "";
         
-        // Kembalikan ke soal setelah 1.5 detik
         setTimeout(() => {
             title.innerText = "RINTANGAN!";
             title.style.color = "#ff00cc";
@@ -333,8 +363,6 @@ function checkFinish() {
             game: 'labirin'
         });
         
-        // Untuk finish boleh pakai alert atau redirect langsung
-        // Kita pakai redirect smooth
         const modal = document.getElementById('quiz-modal');
         modal.style.display = 'flex';
         document.querySelector('#quiz-modal h2').innerText = "🏆 MISI SELESAI!";
@@ -354,4 +382,66 @@ window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight') movePlayer(1, 0);
     if (e.key === 'ArrowDown') movePlayer(0, 1);
     if (e.key === 'ArrowLeft') movePlayer(-1, 0);
+});
+
+// --- FITUR AUTO-RECONNECT & OVERLAY (Fixed & Delayed) ---
+
+// 1. Fungsi Membuat Tampilan Layar Gelap (Overlay)
+function createOfflineUI() {
+    if (document.getElementById('connection-overlay')) return; 
+
+    const overlay = document.createElement('div');
+    overlay.id = 'connection-overlay';
+    
+    // 🔥 PENTING: Set display none agar tidak muncul kedip di awal
+    overlay.style.display = 'none';
+    
+    overlay.innerHTML = `
+        <div class="wifi-icon">📡</div>
+        <div class="conn-text">KONEKSI TERPUTUS</div>
+        <div class="conn-sub">Sedang mencoba menghubungkan kembali...</div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+createOfflineUI();
+
+// 2. Logika Saat Koneksi Putus (Dengan Delay agar halus)
+let isReconnecting = false;
+let disconnectTimeout; // Timer untuk delay pesan error
+
+socket.on('disconnect', (reason) => {
+    console.log("⚠️ Koneksi putus:", reason);
+    
+    // 🔥 DELAY 1.5 DETIK: Jika hanya kedip sebentar, jangan ganggu user
+    disconnectTimeout = setTimeout(() => {
+        isReconnecting = true;
+        const overlay = document.getElementById('connection-overlay');
+        if(overlay) overlay.style.display = 'flex';
+
+        if (typeof gameActive !== 'undefined') gameActive = false; 
+    }, 1500); 
+});
+
+socket.on('connect', () => {
+    // Batalkan rencana pesan error jika koneksi sudah pulih cepat
+    clearTimeout(disconnectTimeout);
+
+    if (isReconnecting) {
+        console.log("✅ Terhubung kembali!");
+        isReconnecting = false;
+
+        const overlay = document.getElementById('connection-overlay');
+        if(overlay) overlay.style.display = 'none';
+
+        // Resume Game Logic
+        if (typeof gameActive !== 'undefined') {
+            gameActive = true;
+            if (typeof update === 'function') { 
+                // Khusus untuk game loop animasi seperti Zuma/Labirin
+                // requestAnimationFrame(update); // (Opsional, kadang double loop kalau tidak hati-hati)
+                requestAnimationFrame(draw); // Untuk Labirin pakai 'draw'
+            }
+        }
+    }
 });

@@ -1,35 +1,53 @@
+/* =========================================
+   LABIRIN.CSS - FIXED VERSION
+   ========================================= */
+
 /* RESET & DASAR */
-* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    -webkit-user-select: none; 
+    user-select: none; 
+}
 
 body { 
+    /* Background Galaksi */
     background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%); 
     color: white; 
     font-family: 'Poppins', sans-serif; 
+    
+    /* Mengunci layar agar tidak bisa di-scroll */
     overflow: hidden; 
-    width: 100vw; height: 100vh;
-    position: relative; /* Penting untuk absolute positioning */
+    width: 100vw; 
+    height: 100vh;
+    
+    /* Flexbox untuk menengahkan Canvas Game di tengah layar */
     display: flex;
     justify-content: center;
     align-items: center;
+    
+    /* Penting agar elemen absolute/fixed patuh pada viewport */
+    position: relative; 
 }
 
 /* --- 1. UI HEADER (MENU & SKOR) --- */
-/* Fixed: Melayang di atas canvas, lebar penuh, isi rata kiri-kanan */
 .ui-top {
     position: fixed; 
     top: 0; left: 0; 
     width: 100%;
-    padding: 20px 30px; /* Jarak dari pinggir */
+    padding: 20px 30px; 
     display: flex; 
-    justify-content: space-between; /* KUNCI: Memisahkan Menu (Kiri) dan Skor (Kanan) */
+    justify-content: space-between; 
     align-items: center;
-    z-index: 20; 
-    pointer-events: none; /* Agar klik di area kosong tembus ke canvas */
+    z-index: 20; /* Di atas canvas, tapi di bawah modal */
+    pointer-events: none; /* Klik tembus ke canvas */
 }
 
-/* Aktifkan pointer pada tombol agar bisa diklik */
+/* Aktifkan klik pada tombol & skor */
 .btn-back, .score-box {
-    pointer-events: auto; 
+    pointer-events: auto;
+    -webkit-backdrop-filter: blur(5px); 
     backdrop-filter: blur(5px);
 }
 
@@ -57,18 +75,26 @@ canvas {
     border: 2px solid #333;
     border-radius: 10px;
     box-shadow: 0 0 50px rgba(0, 242, 255, 0.15);
-    z-index: 10; /* Di bawah UI */
+    z-index: 10; /* Layer paling bawah */
 }
 
 /* --- 3. MODAL QUIZ (RINTANGAN) --- */
-/* FIX: display none agar tidak muncul di awal */
 #quiz-modal {
-    display: none; /* KUNCI: Sembunyi default! */
-    position: fixed; top: 0; left: 0; 
-    width: 100%; height: 100%;
+    display: none; /* Sembunyi default */
+    
+    /* 🔥 PERBAIKAN: Paksa Fixed agar melayang di atas segalanya */
+    position: fixed !important; 
+    top: 0; left: 0; 
+    width: 100vw; height: 100vh;
+    
     background: rgba(0,0,0,0.9); 
-    z-index: 200; /* Paling atas */
-    justify-content: center; align-items: center;
+    z-index: 8000; /* Tinggi, di atas UI Header */
+    
+    /* Flexbox untuk menengahkan KONTEN MODAL */
+    justify-content: center; 
+    align-items: center;
+    
+    -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
 }
 
@@ -100,11 +126,17 @@ canvas {
 
 /* --- 4. LOADING SCREEN --- */
 #loading-screen {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: #05050a; z-index: 100;
+    /* 🔥 PERBAIKAN: Paksa Fixed & Z-Index Tertinggi kedua */
+    position: fixed !important; 
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    
+    background: #05050a; 
+    z-index: 9000; /* Di atas Quiz Modal */
+    
     display: flex; flex-direction: column; 
     justify-content: center; align-items: center; padding: 20px;
 }
+
 #loading-screen h1 {
     font-family: 'Orbitron'; color: #00f2ff; font-size: 2.5rem; 
     text-shadow: 0 0 20px rgba(0, 242, 255, 0.6); text-align: center;
@@ -134,9 +166,25 @@ canvas {
     .btn-ctrl { 
         width: 60px; height: 60px; background: rgba(255,255,255,0.1); 
         border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; 
-        color: white; font-size: 1.5rem; display: flex; justify-content: center; align-items: center; 
+        color: white; font-size: 1.5rem; display: flex; justify-content: center; align-items: center;
+        -webkit-backdrop-filter: blur(5px); 
         backdrop-filter: blur(5px);
     }
     .btn-ctrl:active { background: #00f2ff; color: black; }
     .spacer { visibility: hidden; }
+}
+
+/* --- 6. TAMBAHAN PENTING: KONEKSI OVERLAY --- */
+/* Agar pesan "Koneksi Terputus" menutupi segalanya */
+#connection-overlay {
+    position: fixed !important;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 10000; /* KASTA TERTINGGI (Raja) */
+    
+    /* Flexbox centering diatur oleh JS saat display:flex, 
+       tapi kita bisa set default propertinya disini */
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
 }

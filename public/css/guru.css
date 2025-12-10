@@ -47,3 +47,53 @@
         .badge-info { font-size: 0.8rem; padding: 5px 10px; border-radius: 5px; border: 1px solid; display: inline-block; margin-bottom: 10px; }
         .text-center { text-align: center; }
         .mb-20 { margin-bottom: 20px; }
+
+        /* --- Tambahan Style untuk Input Soal --- */
+.container-input {
+    background: rgba(43, 16, 85, 0.5); /* Ungu gelap transparan */
+    padding: 20px;
+    border-radius: 15px;
+    margin-top: 20px;
+    border: 1px solid #00f2ff;
+}
+.container-input h2 { 
+    color: #fff; 
+    font-size: 1.4rem; 
+    margin-bottom: 15px;
+}
+.input-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+.input-row label {
+    font-weight: bold;
+    color: #00f2ff;
+    flex-shrink: 0;
+}
+.input-row select {
+    padding: 8px;
+    border-radius: 5px;
+    border: none;
+    background: #333;
+    color: white;
+}
+textarea, input[type="text"].soal-input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border: 1px solid #555;
+    background: #111;
+    color: white;
+
+
+/* Tambahan CSS dari HTML <style> */
+table { font-size: 0.85rem; }
+th, td { padding: 10px 5px; text-align: center; }
+.col-nama { text-align: left; min-width: 150px; }
+/* Warna Header Khusus Agama */
+th.agama { background-color: #16a085; color: white; }
+}

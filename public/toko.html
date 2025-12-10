@@ -81,27 +81,50 @@
             }
         });
 
-        function loadUserData(name, avatarUrl) {
+function loadUserData(name, avatarUrl) {
+            // Kita pakai .on() agar update realtime saat beli
             database.ref('leaderboard/' + name).on('value', snapshot => {
                 const data = snapshot.val() || {};
                 
-                // 1. Hitung Total Skor (Pendapatan Kotor)
-                let sMath = data.skor_math || 0;
-                if (data.skor && !data.skor_math) sMath = data.skor;
-                let sZuma = data.skor_zuma || 0;
-                let sMemory = data.skor_memory || 0;
-                let sPiano = data.skor_piano || 0;
-                let totalIncome = sMath + sZuma + sMemory + sPiano;
+                // --- 1. HITUNG PEMASUKAN (INCOME) ---
+                let totalIncome = 0;
 
-                // 2. Ambil Data Belanja
+                // OPSI A: Jika Server sudah menghitung koin (Recommended)
+                if (data.videa_coin !== undefined) {
+                    totalIncome = data.videa_coin;
+                } 
+                // OPSI B: Fallback (Jika data koin belum ada di DB, hitung manual)
+                // Rumus: Total Semua Skor Game dibagi 10
+                else {
+                    let sMath = data.skor_math || 0;
+                    if (data.skor && !data.skor_math) sMath = data.skor; // Support legacy
+                    
+                    let sZuma = data.skor_zuma || 0;
+                    let sMemory = data.skor_memory || 0;
+                    let sPiano = data.skor_piano || 0;
+                    let sKasir = data.skor_kasir || 0;   // Tambahan
+                    let sLabirin = data.skor_labirin || 0; // Tambahan
+                    let sNabi = data.skor_nabi || 0;     // Tambahan
+                    let sAyat = data.skor_ayat || 0;     // Tambahan
+
+                    let totalSkor = sMath + sZuma + sMemory + sPiano + sKasir + sLabirin + sNabi + sAyat;
+                    totalIncome = Math.floor(totalSkor / 10); // Bagi 10 biar adil
+                }
+
+                // --- 2. HITUNG PENGELUARAN (SPENT) ---
                 let spent = data.coins_spent || 0;
-                let inventory = data.inventory || { "default": true }; // Default punya standar
+                
+                // Data Inventory
+                let inventory = data.inventory || { "default": true };
                 let equipped = data.equipped_frame || "default";
 
-                // 3. Hitung Sisa Koin
+                // --- 3. HITUNG SALDO DOMPET ---
                 currentCoins = totalIncome - spent;
+                
+                // Update UI
                 document.getElementById('user-coins').innerText = currentCoins;
 
+                // Simpan state global untuk fungsi beli/equip
                 currentUserData = { name, totalIncome, spent, inventory, equipped };
                 
                 renderShop(avatarUrl);

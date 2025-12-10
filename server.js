@@ -1,12 +1,18 @@
 require('dotenv').config();
 
-// --- 1. INISIALISASI FIREBASE ---
-const { initializeApp } = require("firebase/app");
-const { getDatabase, ref, update, get, set } = require("firebase/database");
+const express = require('express');
+const app = express();
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
+const path = require('path');
 
-// Konfigurasi Firebase (Pastikan API Key benar di .env atau hardcoded di sini)
+// --- 1. SETUP FIREBASE ---
+const { initializeApp } = require("firebase/app");
+const { getDatabase, ref, set, get, update } = require("firebase/database");
+
+// Konfigurasi Firebase
 const firebaseConfig = {
-    apiKey: process.env.FIREBASE_API_KEY || "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
+    apiKey: "AIzaSyC7S2KwvMjVLdsaTebD002nZ_CEjSeBmHo",
     authDomain: "mathgamesd.firebaseapp.com",
     databaseURL: "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "mathgamesd",
@@ -18,288 +24,261 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const database = getDatabase(firebaseApp);
 
-// --- 2. SETUP SERVER & AI ---
-const express = require('express');
-const app = express();
-const http = require('http').createServer(app);
-const io = require('socket.io')(http);
+// --- 2. SETUP GEMINI AI ---
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+// Model Lite (Stabil & Ringan)
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
-// Konfigurasi Gemini AI
-const apiKey = process.env.API_KEY; 
-let genAI = null;
-let model = null;
+console.log("✅ AI System: Siap (Gemini 2.5 Flash Lite)");
 
-if (!apiKey) {
-    console.warn("⚠️ PERINGATAN: API_KEY tidak ditemukan. Fitur AI akan menggunakan mode offline (Fallback).");
-} else {
-   try {
-        genAI = new GoogleGenerativeAI(apiKey);
-        model = genAI.getGenerativeModel({ 
-            model: "gemini-flash-latest", // Pastikan model ini tersedia untuk akun Anda
-            generationConfig: {
-                temperature: 0.85, 
-                topP: 0.95,
-                topK: 40,
-            }
-        });
-        console.log("✅ AI System: Siap (Gemini Flash Latest)"); 
-    } catch (error) {
-        console.error("❌ Gagal inisialisasi AI:", error.message);
+// --- 3. SERVE STATIC FILES ---
+app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    next();
+});
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+// --- 4. HELPER FUNCTIONS ---
+function extractJSON(text) {
+    try {
+        const jsonMatch = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+        if (jsonMatch) {
+            let cleanText = jsonMatch[0];
+            cleanText = cleanText.replace(/\/\/.*$/gm, ""); 
+            cleanText = cleanText.replace(/\/\*[\s\S]*?\*\//g, "");
+            cleanText = cleanText.replace(/,\s*([\]}])/g, '$1');
+            return JSON.parse(cleanText);
+        }
+        return null;
+    } catch (e) {
+        console.error("JSON Parse Error:", e.message);
+        return null;
     }
 }
 
-app.use(express.static('public'));
+function sanitizeKey(key) {
+    if (!key) return "unknown";
+    return key.replace(/[.#$/\[\]]/g, "_");
+}
 
-// --- 3. FUNGSI HELPER (BANTUAN) ---
-
-// Pengacak Tema & Objek
 function getRandomTheme() {
-    const themes = ["Luar Angkasa", "Hutan Rimba", "Bawah Laut", "Dunia Dinosaurus", "Kota Futuristik", "Kerajaan Fantasi", "Dunia Permen", "Super Hero", "Gurun Pasir", "Kutub Utara"];
+    const themes = ["Luar Angkasa", "Hutan Ajaib", "Bawah Laut", "Dunia Robot", "Kerajaan Permen", "Dinosaurus", "Super Hero", "Pabrik Coklat"];
     return themes[Math.floor(Math.random() * themes.length)];
 }
 
 function getRandomObject() {
-    const objects = ["Apel", "Robot", "Kucing", "Mobil", "Bintang", "Buku", "Pedang", "Pizza", "Bola", "Topi"];
+    const objects = ["Toko Mainan", "Warung Buah", "Kantin Sekolah", "Supermarket", "Toko Buku"];
     return objects[Math.floor(Math.random() * objects.length)];
 }
 
-// Sanitasi Key Database (Mengubah simbol aneh jadi underscore)
-function sanitizeKey(key) {
-    if (!key) return "Guest";
-    return key.replace(/[.#$[\]]/g, '_');
-}
-
-// EKSTRAKTOR JSON PINTAR (Perbaikan Utama)
-// Mencari kurung {} atau [] di dalam teks AI, meskipun ada teks sampah lainnya.
-function extractJSON(text) {
-    try {
-        const match = text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-        if (match) return JSON.parse(match[0]);
-    } catch (e) {
-        return null;
-    }
-    return null;
-}
-
-
-// --- 4. LOGIKA SOCKET.IO (GAME ENGINE) ---
+// --- 5. SOCKET.IO CONNECTION ---
 io.on('connection', (socket) => {
-    console.log('✅ User CONNECTED:', socket.id);
+    console.log(`✅ User CONNECTED: ${socket.id}`);
 
-    // --- A. ROOM & SKOR REALTIME ---
-    socket.on('joinRoom', (data) => { socket.join(data.room); });
-    socket.on('laporSkor', (data) => { socket.to(data.room).emit('updateSkorLawan', data.skor); });
+    // ==========================================
+    // BAGIAN A: MINTA SOAL
+    // ==========================================
+    socket.on('mintaSoalAI', async (requestData) => {
+        const { kategori, tingkat, kodeAkses } = requestData;
+        const level = tingkat || 'sedang';
 
-    // --- B. MATH DUEL (MULTIPLAYER) ---
-    // Variabel lokal untuk menyimpan room duel sementara
-    let mathRooms = {}; 
-    
-    socket.on('joinMathDuel', async (data) => {
-        const { room, nama, tingkat } = data;
-        socket.join(room);
-        
-        // Simpan player ke memory
-        if (!mathRooms[room]) mathRooms[room] = [];
-        mathRooms[room].push({ id: socket.id, nama: nama });
+        const cacheKey = `cache_soal_v5/${kategori}_${level}`;
+        const manualPath = kodeAkses ? `content_manual/${kategori}/${kodeAkses.toUpperCase()}/${level}` : null;
 
-        // Jika sudah 2 orang, mulai game
-        if (mathRooms[room].length === 2) {
-            console.log(`🚀 Duel Mulai di Room ${room}`);
-            try {
-                // Gunakan AI untuk buat soal duel
-                const tema = getRandomTheme();
-                const prompt = `Buat 10 soal matematika SD tingkat ${tingkat} dengan tema cerita: ${tema}. 
-                JSON Array Murni: [{"q":"Soal cerita singkat","a":2}]. JANGAN ADA KOMENTAR.`;
-                
-                let paketSoal = null;
-                if (model) {
-                    const result = await model.generateContent(prompt);
-                    paketSoal = extractJSON(result.response.text());
+        let soalData = null;
+
+        try {
+            // --- CEK 1: KODE AKSES ---
+            if (kodeAkses && manualPath) {
+                const manualSnapshot = await get(ref(database, manualPath));
+                if (manualSnapshot.exists()) {
+                    console.log(`✅ Soal Ujian Khusus: ${kodeAkses}`);
+                    const dataManual = manualSnapshot.val();
+                    
+                    if (kategori === 'labirin') {
+                        soalData = { maze_size: (level==='mudah'?10:15), soal_list: Object.values(dataManual) };
+                    } else if (kategori === 'nabi' || kategori === 'ayat') {
+                        soalData = Object.values(dataManual);
+                    } else {
+                        const keys = Object.keys(dataManual);
+                        soalData = dataManual[keys[Math.floor(Math.random() * keys.length)]];
+                    }
+                    socket.emit('soalDariAI', { kategori, data: soalData });
+                    return;
                 }
-
-                // Jika AI gagal parsing, gunakan fallback
-                if (!paketSoal) {
-                     paketSoal = [{q:"5+5",a:10}, {q:"2x3",a:6}, {q:"10-4",a:6}, {q:"8+2",a:10}, {q:"20:2",a:10}];
-                }
-                
-                io.to(room).emit('startDuel', { soal: paketSoal });
-                delete mathRooms[room]; // Hapus room dari memory agar hemat
-            } catch (e) {
-                console.error("AI Duel Error:", e);
-                const fallback = [{q:"5+5",a:10}, {q:"2x3",a:6}, {q:"10-4",a:6}, {q:"8+2",a:10}, {q:"20:2",a:10}];
-                io.to(room).emit('startDuel', { soal: fallback });
             }
-        } else {
-            socket.emit('waitingForOpponent', "Menunggu lawan...");
+
+            // --- CEK 2: MODE UMUM (CACHE + AI) ---
+            const cacheSnapshot = await get(ref(database, cacheKey));
+            let dataGudang = null;
+
+            if (cacheSnapshot.exists()) {
+                dataGudang = cacheSnapshot.val();
+                console.log(`⚡ CACHE: Mengambil dari gudang soal...`);
+            } else {
+                console.log(`🤖 AI: Stok habis, memanggil Gemini...`);
+                if (!model) throw new Error("Model AI error.");
+
+                let prompt = "";
+                const tema = getRandomTheme();
+                
+                // --- LOGIKA PROMPT YANG BERVARIASI ---
+                if (kategori === 'math') {
+                    let r = level === 'mudah' ? '1-20' : (level === 'sedang' ? '10-100' : '50-500');
+                    let op = level === 'mudah' ? 'tambah/kurang' : 'campuran';
+                    prompt = `Buat 30 soal matematika SD unik. Level: ${level}. Range: ${r}. Operasi: ${op}. Tema: ${tema}. Output JSON Array: [{"soal":"1+1","jawaban":2}]. NO COMMENTS.`;
+                
+                } else if (kategori === 'nabi') {
+                    prompt = `Buat 20 soal pilihan ganda Nabi acak. Level: ${level}. Output JSON Array: [{"tanya":"...","opsi":["A","B"],"jawab":"A"}]. NO COMMENTS.`;
+                
+                } else if (kategori === 'ayat') {
+                    // Prompt Sambung Ayat (Juz 30)
+                    let scope = level === 'mudah' ? 'Surat An-Nas s.d. Ad-Dhuha' : 'Juz 30 (Juz Amma Full)';
+                    
+                    prompt = `Bertindak sebagai penguji Tahfidz Quran. Buat 20 soal sambung ayat dari ${scope}. 
+                    Format Soal: Tampilkan satu potongan ayat. 
+                    Format Jawaban: Potongan ayat kelanjutannya.
+                    Output HANYA JSON Array: 
+                    [{"tanya":"(Potongan ayat awal)...", "opsi":["(Kelanjutan Salah 1)", "(Kelanjutan Salah 2)", "(Kelanjutan Benar)", "(Kelanjutan Salah 3)"], "jawab":"(Kelanjutan Benar)"}]. 
+                    Pastikan opsi jawaban pengecoh mirip. NO COMMENTS.`;
+                
+                } else if (kategori === 'kasir') {
+                    prompt = `Buat 15 transaksi kasir unik. Tema: ${getRandomObject()}. Output JSON Array: [{"cerita":"...","total_belanja":500,"uang_bayar":1000,"kembalian":500}]. NO COMMENTS.`;
+                
+                } else if (kategori === 'memory' || kategori === 'labirin' || kategori === 'zuma' || kategori === 'piano') {
+                    if(kategori === 'memory') prompt = `Buat 10 pasang kartu memori tema ${tema}. Output HANYA JSON Array: [{"a":"Kata","b":"Gambar"}]. NO COMMENTS.`;
+                    if(kategori === 'labirin') prompt = `Buat konfigurasi Labirin size 15x15. Tambahkan 5 soal sains SD. Output HANYA JSON Object: {"maze_size":15, "soal_list":[{"tanya":"1+1","jawab":"2"}]}. NO COMMENTS.`;
+                    if(kategori === 'zuma') prompt = `Buat level Zuma tema ${tema}. Output HANYA JSON Object: {"deskripsi":"Misi di ${tema}...","palet_warna":["#ff0000","#00ff00","#0000ff"], "speed":"sedang"}. NO COMMENTS.`;
+                    if(kategori === 'piano') prompt = `Buat nada piano acak 8 digit (angka 1-7). Output HANYA JSON Object: {"sequence":[1,3,5,2,4,6,7,1]}. NO COMMENTS.`;
+                }
+
+                if (prompt) {
+                    const result = await model.generateContent(prompt);
+                    const text = result.response.text();
+                    dataGudang = extractJSON(text);
+                    
+                    if (dataGudang) await set(ref(database, cacheKey), dataGudang);
+                }
+            }
+
+            // --- PILIH ACAK DARI GUDANG ---
+            if (dataGudang) {
+                if (kategori === 'math' && Array.isArray(dataGudang)) {
+                    const acak = Math.floor(Math.random() * dataGudang.length);
+                    soalData = dataGudang[acak]; 
+                } 
+                else if ((kategori === 'nabi' || kategori === 'ayat') && Array.isArray(dataGudang)) {
+                    // 1. Ambil 5 soal acak dari stok
+                    let acakArray = [...dataGudang].sort(() => 0.5 - Math.random());
+                    let selectedQuestions = acakArray.slice(0, 5);
+
+                    // 2. 🔥 PERBAIKAN: ACAK POSISI OPSI JAWABAN (SHUFFLE) 🔥
+                    // Supaya jawaban benar tidak selalu di urutan pertama
+                    soalData = selectedQuestions.map(item => {
+                        // Jika punya properti 'opsi' (array), kita acak urutannya
+                        if (item.opsi && Array.isArray(item.opsi)) {
+                            item.opsi = item.opsi.sort(() => Math.random() - 0.5);
+                        }
+                        return item;
+                    });
+                }
+                else if (kategori === 'kasir' && Array.isArray(dataGudang)) {
+                    const acak = Math.floor(Math.random() * dataGudang.length);
+                    soalData = dataGudang[acak];
+                }
+                else {
+                    soalData = dataGudang;
+                }
+            }
+
+            if (soalData) {
+                socket.emit('soalDariAI', { kategori, data: soalData });
+            } else {
+                throw new Error("Gagal memproses data.");
+            }
+
+        } catch (error) {
+            console.error(`❌ Error ${kategori}:`, error.message);
+            
+            // --- FALLBACK (OFFLINE MODE) ---
+            let fallbackData = null;
+            if (kategori === 'math') fallbackData = { soal: "10 + 10 = ?", jawaban: 20 };
+            else if (kategori === 'nabi') fallbackData = [{ tanya: "Nabi terakhir?", opsi: ["Isa", "Muhammad"], jawab: "Muhammad" }];
+            
+            else if (kategori === 'ayat') fallbackData = [
+                { tanya: "Qul huwallahu ahad...", opsi: ["Allahus somad", "Maliki yaumiddin", "Iqra bismi", "Waddin"], jawab: "Allahus somad" }
+            ];
+            
+            else if (kategori === 'zuma') fallbackData = { deskripsi: "Mode Offline", palet_warna: ["#f00"], speed: "sedang" };
+            else if (kategori === 'memory') fallbackData = [{ a: "A", b: "B" }, { a: "C", b: "D" }];
+            else if (kategori === 'kasir') fallbackData = [{ cerita: "Offline Mode", total_belanja: 500, uang_bayar: 1000, kembalian: 500 }];
+            else if (kategori === 'labirin') fallbackData = { maze_size: 10, soal_list: [{ tanya: "1+1", jawab: "2" }] };
+            else if (kategori === 'piano') fallbackData = { sequence: [1, 2, 3, 4] };
+
+            if (fallbackData) {
+                console.log(`⚠️ Mengirim Data Darurat (Offline Mode) untuk ${kategori}`);
+                socket.emit('soalDariAI', { kategori: kategori, data: fallbackData });
+            } else {
+                socket.emit('soalDariAI', { kategori: kategori, data: null, error: "Server Gangguan" });
+            }
         }
     });
-    
-    socket.on('updateScoreDuel', (data) => { socket.to(data.room).emit('opponentScoreUpdate', data.score); });
 
-    // --- C. CHAT GLOBAL ---
-    socket.on('chatMessage', (data) => {
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('id-ID', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            timeZone: 'Asia/Jakarta' 
-        });
-        io.emit('chatMessage', { nama: data.nama, pesan: data.pesan, waktu: timeString });
-    });
-
-    // --- D. SIMPAN SKOR KE DATABASE (PERSISTENSI) ---
+    // ==========================================
+    // BAGIAN B: SIMPAN SKOR
+    // ==========================================
     socket.on('simpanSkor', async (data) => {
         let skorMasuk = parseInt(data.skor);
         if (isNaN(skorMasuk) || skorMasuk < 0) return;
-        if (skorMasuk > 2000) skorMasuk = 2000; // Cap maksimal skor agar tidak curang berlebih
+        if (skorMasuk > 2000) skorMasuk = 2000;
 
-        console.log(`💾 Simpan Valid: ${data.nama} +${skorMasuk} (${data.game})`);
+        const safeName = sanitizeKey(data.nama);
+        const now = new Date();
 
         try {
-            const safeName = sanitizeKey(data.nama); 
             const userRef = ref(database, 'leaderboard/' + safeName);
-            
             const snapshot = await get(userRef);
             const userData = snapshot.val() || {};
-            
-            // Tentukan field berdasarkan game
-            let fieldSkor = '';
-            switch(data.game) {
-                case 'math': fieldSkor = 'skor_math'; break;
-                case 'kasir': fieldSkor = 'skor_kasir'; break;
-                case 'labirin': fieldSkor = 'skor_labirin'; break;
-                case 'zuma': fieldSkor = 'skor_zuma'; break;
-                case 'memory': fieldSkor = 'skor_memory'; break;
-                case 'piano': fieldSkor = 'skor_piano'; break;
-                case 'nabi': fieldSkor = 'skor_nabi'; break;
-                case 'ayat': fieldSkor = 'skor_ayat'; break;
-            }
 
-            if (!fieldSkor) return;
-
+            let fieldSkor = `skor_${data.game}`;
             const skorLama = userData[fieldSkor] || 0;
             const totalBaru = skorLama + skorMasuk;
 
-            // Update database
-            const updateData = { nama: data.nama, [fieldSkor]: totalBaru };
-            if (fieldSkor === 'skor_math') updateData.waktu_math = new Date().toString();
-            
-            await update(userRef, updateData);
-        } catch (error) { console.error("❌ DB Error:", error); }
-    });
+            const koinDapat = Math.floor(skorMasuk / 10);
+            const koinLama = userData.videa_coin || 0;
+            const totalKoinBaru = koinLama + koinDapat;
 
-    // --- E. SISTEM AI GENERATOR (DENGAN CACHE) ---
-    socket.on('mintaSoalAI', async (requestData) => {
-        const { kategori, tingkat } = requestData;
-        const level = tingkat || 'sedang';
-        
-        // Kunci Gudang (Cache Key)
-        const cacheKey = `cache_soal_v5/${kategori}_${level}`;
+            await update(userRef, {
+                nama: data.nama,
+                [fieldSkor]: totalBaru,
+                videa_coin: totalKoinBaru,
+                last_played: now.toISOString()
+            });
 
-        try {
-            // 1. CEK GUDANG (DATABASE) DULU
-            const snapshot = await get(ref(database, cacheKey));
+            const historyEntry = {
+                game: data.game,
+                level: data.level || 'N/A',
+                skor: skorMasuk,
+                koin: koinDapat,
+                waktu: now.toISOString()
+            };
             
-            if (snapshot.exists()) {
-                console.log(`⚡ CACHE HIT: Mengambil ${kategori} (${level}) dari Database.`);
-                let cachedData = snapshot.val();
-                
-                // Jika array, acak urutannya agar terasa fresh
-                if (Array.isArray(cachedData)) {
-                    cachedData.sort(() => Math.random() - 0.5);
-                }
+            const historyPath = `score_history/${safeName}/${now.getTime()}`;
+            await set(ref(database, historyPath), historyEntry);
 
-                socket.emit('soalDariAI', { kategori: kategori, data: cachedData });
-                return; // STOP DI SINI, tidak perlu panggil AI
-            }
+            console.log(`✅ Saved: ${data.nama} | ${data.game}: +${skorMasuk} | Coin: +${koinDapat}`);
 
-            // 2. JIKA GUDANG KOSONG, PANGGIL AI
-            console.log(`🤖 CACHE MISS: Gudang Kosong. Memanggil AI untuk ${kategori}...`);
-            
-            if (!model) throw new Error("Model AI belum siap.");
-
-            let prompt = "";
-            const temaAcak = getRandomTheme();
-            const objekAcak = getRandomObject();
-
-            // --- PILIH PROMPT BERDASARKAN KATEGORI ---
-            if (kategori === 'math') {
-                let range = level === 'mudah' ? '1-20' : (level === 'sedang' ? '10-100' : '50-500');
-                prompt = `Bertindak sebagai guru matematika. Buat 1 soal matematika SD. Tingkat: ${level}. Range: ${range}. Tema: ${temaAcak}. Output JSON: {"soal": "...", "jawaban": 0}. NO COMMENTS.`;
-            
-            } else if (kategori === 'memory') {
-                let num = level === 'mudah' ? 4 : (level === 'sedang' ? 6 : 8);
-                const kategoriMemory = ["Ibukota Negara", "Nama Hewan Inggris", "Rumus Bangun Datar", "Antonim Kata", "Sinonim Kata", "Nama Planet"];
-                const katPilihan = kategoriMemory[Math.floor(Math.random() * kategoriMemory.length)];
-                prompt = `Buat ${num} pasang kartu memori SD. Kategori: ${katPilihan}. Output JSON Array: [{"a":"...","b":"..."}]. NO COMMENTS.`;
-            
-            } else if (kategori === 'zuma') {
-                let spd = level === 'mudah' ? 'lambat' : (level === 'sedang' ? 'sedang' : 'cepat');
-                prompt = `Buat level game Zuma unik tema visual: ${temaAcak}. Speed: ${spd}. Output JSON: {"deskripsi":"Misi di ${temaAcak}...", "palet_warna":["#ff0000","#00ff00","#0000ff","#ffff00"], "speed":"${spd}"}. NO COMMENTS.`;
-            
-            } else if (kategori === 'kasir') {
-                let rng = level === 'mudah' ? 'ratusan' : (level === 'sedang' ? 'ribuan' : 'puluhan ribu');
-                prompt = `Buat 10 transaksi unik kasir SD. Toko: ${objekAcak}. Level: ${level} (${rng}). Output JSON Array Murni: [{"cerita":"Adik beli permen Rp 500...", "total_belanja":500, "uang_bayar":1000, "kembalian":500}]. NO COMMENTS.`;
-            
-            } else if (kategori === 'labirin') {
-                let size = level === 'mudah' ? 10 : (level === 'sedang' ? 15 : 20);
-                let numQ = level === 'mudah' ? 3 : (level === 'sedang' ? 5 : 8);
-                prompt = `Buat konfigurasi labirin Grid: ${size}x${size}. Buat ${numQ} soal sains SD. Output JSON: {"maze_size": ${size}, "soal_list": [{"tanya":"...","jawab":"..."}]}. NO COMMENTS.`;
-            
-            } else if (kategori === 'piano') {
-                let len = level === 'mudah' ? 4 : (level === 'sedang' ? 6 : 8);
-                prompt = `Buat urutan nada piano acak ${len} digit (1-9). Output JSON: { "sequence": [1, 3, 5] }. NO COMMENTS.`;
-            
-            } else if (kategori === 'nabi') {
-                let depth = level === 'mudah' ? 'dasar' : (level === 'sedang' ? 'peristiwa' : 'detail');
-                prompt = `Guru Agama Islam. Buat 5 soal pilihan ganda Kisah Nabi. Fokus: ${depth}. Output JSON Array: [{"tanya": "...", "opsi": ["A", "B", "C", "D"], "jawab": "A"}]. NO COMMENTS.`;
-
-            } else if (kategori === 'ayat') {
-                let surahScope = level === 'mudah' ? 'An-Nas s.d Al-Fil' : 'Juz 30';
-                prompt = `Guru Tahfidz. Buat 5 soal Sambung Ayat surat pendek (${surahScope}). Output JSON Array: [{"tanya": "Lanjut: ...", "opsi": ["A", "B", "C", "D"], "jawab": "A"}]. NO COMMENTS.`;
-            }
-
-            if (!prompt) return;
-
-            // Eksekusi AI
-            const result = await model.generateContent(prompt);
-            const text = result.response.text();
-            
-            // Parsing JSON dengan fungsi aman yang baru
-            const soalData = extractJSON(text);
-
-            if (!soalData) throw new Error("Gagal parsing JSON dari AI");
-
-            // Simpan ke Cache
-            await set(ref(database, cacheKey), soalData);
-
-            // Kirim ke Client
-            socket.emit('soalDariAI', { kategori: kategori, data: soalData });
-
-        } catch (error) {
-            console.error("❌ System Error:", error.message);
-            
-            // --- DATA CADANGAN (FALLBACK) ---
-            // Digunakan jika AI Error DAN Cache Kosong
-            let fallback;
-            
-            if (kategori === 'nabi') fallback = [{tanya: "Nabi terakhir?", opsi: ["Isa", "Musa", "Muhammad", "Ibrahim"], jawab: "Muhammad"}];
-            if (kategori === 'ayat') fallback = [{tanya: "Qul huwallahu...", opsi: ["Ahad", "Somad", "Kufuwan", "Yalid"], jawab: "Ahad"}];
-            if (kategori === 'math') fallback = {soal: "10 + 10 = ?", jawaban: 20};
-            if (kategori === 'zuma') fallback = {deskripsi: "Offline Mode", palet_warna: ["#f00","#0f0"], speed: "sedang"};
-            if (kategori === 'memory') fallback = [{a:"A", b:"B"}, {a:"C", b:"D"}];
-            if (kategori === 'kasir') fallback = [{cerita: "Offline Mode", total_belanja: 500, uang_bayar: 1000, kembalian: 500}];
-            if (kategori === 'labirin') fallback = {maze_size: 10, soal_list: [{tanya:"1+1", jawab:"2"}]};
-            if (kategori === 'piano') fallback = {sequence: [1,2,3,4]};
-            
-            if (fallback) socket.emit('soalDariAI', { kategori: kategori, data: fallback });
+        } catch (e) {
+            console.error("❌ DB Error:", e.message);
         }
     });
 
-    socket.on('disconnect', () => { console.log('❌ User Left'); });
+    socket.on('disconnect', () => { });
 });
 
-// --- 5. START SERVER ---
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, () => console.log(`🚀 Server Siap di Port ${PORT}`));

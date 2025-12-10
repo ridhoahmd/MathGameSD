@@ -266,14 +266,64 @@ canvas.addEventListener('touchstart', (e) => {
     setTimeout(() => { player.currentAmmo = getNextAmmo(); }, 100);
 }, { passive: false });
 
-// DETEKSI KONEKSI PUTUS
-socket.on('disconnect', () => {
-    // Stop game agar tidak error
-    gameActive = false; 
+
+// ✅ PASTE KODE FINAL INI DI BAGIAN PALING BAWAH ZUMA.JS
+
+// 1. Fungsi Membuat Tampilan Layar Gelap (Overlay)
+function createOfflineUI() {
+    // Cek dulu, kalau sudah ada jangan dibuat lagi (biar tidak dobel)
+    if (document.getElementById('connection-overlay')) return; 
+
+    const overlay = document.createElement('div');
+    overlay.id = 'connection-overlay';
     
-    // Tampilkan pesan
-    alert("⚠️ Koneksi ke server terputus! Halaman akan dimuat ulang.");
+    // Isi HTML untuk ikon WiFi dan Teks
+    overlay.innerHTML = `
+        <div class="wifi-icon">📡</div>
+        <div class="conn-text">KONEKSI TERPUTUS</div>
+        <div class="conn-sub">Sedang mencoba menghubungkan kembali...</div>
+    `;
     
-    // Refresh otomatis
-    window.location.reload();
+    // Masukkan ke dalam body halaman
+    document.body.appendChild(overlay);
+}
+
+// Panggil fungsi ini agar elemennya siap
+createOfflineUI();
+
+// 2. Logika Saat Koneksi Putus & Nyambung Lagi
+let isReconnecting = false;
+
+socket.on('disconnect', (reason) => {
+    console.log("⚠️ Koneksi putus:", reason);
+    isReconnecting = true;
+    
+    // Tampilkan Layar Gelap
+    const overlay = document.getElementById('connection-overlay');
+    if(overlay) overlay.style.display = 'flex';
+
+    // PAUSE GAME (Agar musuh tidak jalan curang saat offline)
+    if (typeof gameActive !== 'undefined') gameActive = false; 
+});
+
+socket.on('connect', () => {
+    // Jika sebelumnya statusnya 'sedang putus', berarti ini RECONNECT
+    if (isReconnecting) {
+        console.log("✅ Terhubung kembali!");
+        isReconnecting = false;
+
+        // Sembunyikan Layar Gelap
+        const overlay = document.getElementById('connection-overlay');
+        if(overlay) overlay.style.display = 'none';
+
+        // LANJUTKAN GAME (RESUME)
+        if (typeof gameActive !== 'undefined') {
+            gameActive = true;
+            
+            // Khusus game animasi (Zuma/Labirin) jalankan ulang loop-nya
+            if (typeof update === 'function') { 
+                requestAnimationFrame(update); 
+            }
+        }
+    }
 });

@@ -118,3 +118,45 @@ input:focus { border-color: #00f2ff; box-shadow: 0 0 10px rgba(0, 242, 255, 0.3)
     background: rgba(0, 242, 255, 0.3); color: #00f2ff;
     border-color: #00f2ff; box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
 }
+
+/* --- TAMBAHAN WAJIB: OVERLAY KONEKSI --- */
+#connection-overlay {
+    position: fixed !important; /* Wajib Fixed agar melayang */
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.85); /* Latar gelap */
+    z-index: 10000; /* Paling atas */
+    
+    /* Flexbox untuk menengahkan teks */
+    display: none; /* Sembunyi di awal, dimunculkan JS saat putus */
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    backdrop-filter: blur(5px);
+}
+
+.wifi-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    animation: pulse 1.5s infinite;
+}
+
+.conn-text {
+    font-family: 'Poppins', sans-serif;
+    color: #ff4757;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+.conn-sub {
+    color: #ccc;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.5; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 0.5; transform: scale(0.9); }
+}
