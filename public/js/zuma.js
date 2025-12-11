@@ -295,47 +295,51 @@ canvas.addEventListener('touchstart', (e) => {
 }, { passive: false });
 
 
-// ✅ PASTE KODE FINAL INI DI BAGIAN PALING BAWAH ZUMA.JS
+// ==========================================
+// FITUR AUTO-RECONNECT (VERSI FINAL - ANTI ZOMBIE START)
+// ==========================================
 
 // 1. Fungsi Membuat Tampilan Layar Gelap (Overlay)
 function createOfflineUI() {
-    // Cek dulu, kalau sudah ada jangan dibuat lagi (biar tidak dobel)
     if (document.getElementById('connection-overlay')) return; 
 
     const overlay = document.createElement('div');
     overlay.id = 'connection-overlay';
-    
-    // Isi HTML untuk ikon WiFi dan Teks
     overlay.innerHTML = `
         <div class="wifi-icon">📡</div>
         <div class="conn-text">KONEKSI TERPUTUS</div>
         <div class="conn-sub">Sedang mencoba menghubungkan kembali...</div>
     `;
-    
-    // Masukkan ke dalam body halaman
     document.body.appendChild(overlay);
 }
 
-// Panggil fungsi ini agar elemennya siap
+// Panggil agar elemen siap
 createOfflineUI();
 
-// 2. Logika Saat Koneksi Putus & Nyambung Lagi
+// 2. Variabel Status Koneksi
 let isReconnecting = false;
+let wasPlaying = false; // 🔥 INI VARIABEL BARU: Mengingat status main
 
+// 3. Saat Koneksi Putus
 socket.on('disconnect', (reason) => {
     console.log("⚠️ Koneksi putus:", reason);
     isReconnecting = true;
+    
+    // 🔥 LOGIKA PENTING: Simpan status, apakah tadi sedang main?
+    // Jika gameActive true, berarti user sedang main.
+    // Jika gameActive false, berarti user cuma di menu login.
+    wasPlaying = gameActive; 
     
     // Tampilkan Layar Gelap
     const overlay = document.getElementById('connection-overlay');
     if(overlay) overlay.style.display = 'flex';
 
-    // PAUSE GAME (Agar musuh tidak jalan curang saat offline)
+    // Matikan game sementara
     if (typeof gameActive !== 'undefined') gameActive = false; 
 });
 
+// 4. Saat Terhubung Kembali
 socket.on('connect', () => {
-    // Jika sebelumnya statusnya 'sedang putus', berarti ini RECONNECT
     if (isReconnecting) {
         console.log("✅ Terhubung kembali!");
         isReconnecting = false;
@@ -344,14 +348,18 @@ socket.on('connect', () => {
         const overlay = document.getElementById('connection-overlay');
         if(overlay) overlay.style.display = 'none';
 
-        // LANJUTKAN GAME (RESUME)
-        if (typeof gameActive !== 'undefined') {
+        // 🔥 LOGIKA PENTING: Hanya lanjutkan game JIKA tadi memang sedang main
+        if (wasPlaying) {
+            console.log("▶️ Melanjutkan Game...");
             gameActive = true;
             
-            // Khusus game animasi (Zuma/Labirin) jalankan ulang loop-nya
+            // Jalankan ulang animasi loop
             if (typeof update === 'function') { 
                 requestAnimationFrame(update); 
             }
+        } else {
+            console.log("⏸️ User tadi di menu, jadi game tetap diam.");
+            // Game tetap diam (gameActive false), user tetap di menu login
         }
     }
 });

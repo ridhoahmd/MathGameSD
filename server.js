@@ -168,8 +168,9 @@ io.on('connection', (socket) => {
                 // --- LOGIKA PROMPT YANG BERVARIASI ---
                 if (kategori === 'math') {
                     let r = level === 'mudah' ? '1-20' : (level === 'sedang' ? '10-100' : '50-500');
-                    let op = level === 'mudah' ? 'tambah/kurang' : 'campuran';
-                    prompt = `Buat 30 soal matematika SD unik. Level: ${level}. Range: ${r}. Operasi: ${op}. Tema: ${tema}. Output JSON Array: [{"soal":"1+1","jawaban":2}]. NO COMMENTS.`;
+// Tambahkan instruksi "HASIL BULAT" di prompt
+let op = level === 'mudah' ? 'tambah/kurang' : 'campuran (jika pembagian, hasil wajib bilangan bulat)';
+prompt = `Buat 30 soal matematika SD unik. Level: ${level}. Range: ${r}. Operasi: ${op}. Tema: ${tema}. Output JSON Array: [{"soal":"10+10","jawaban":20}]. NO COMMENTS.`;
                 
                 } else if (kategori === 'nabi') {
                     // --- PROMPT DIPERBAIKI ---

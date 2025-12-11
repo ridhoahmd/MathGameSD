@@ -1,4 +1,4 @@
-const CACHE_NAME = 'videa-class-debug-v1';
+const CACHE_NAME = 'videa-class-final-v2';
 const urlsToCache = [
   '/',
   '/index.html',
