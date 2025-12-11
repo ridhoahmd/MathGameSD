@@ -199,11 +199,52 @@ io.on('connection', (socket) => {
                         prompt = `Buat ${pairs} pasang kata/konsep game memori. Tema: ${tema}. Output JSON Array: [{"a":"Kata","b":"Gambar"}]. NO COMMENTS.`;
                     }
                     if(kategori === 'labirin') {
-                        let size = level === 'mudah' ? 10 : (level === 'sedang' ? 15 : 20);
-                        let topic = level === 'mudah' ? 'Pengetahuan Umum SD' : 'Sains SD';
-                        let count = level === 'mudah' ? 3 : 5;
-                        prompt = `Buat konfigurasi Labirin ${size}x${size}. ${count} soal rintangan tentang ${topic}. Jawaban SATU KATA. Output JSON Object: {"maze_size":${size}, "soal_list":[{"tanya":"Ibukota?","jawab":"Jakarta"}]}. NO COMMENTS.`;
-                    }
+        // 🔥 LOGIKA LABIRIN 3 TINGKAT (FINAL & ROBUST)
+        let size, count, topic, exampleJSON;
+
+        if (level === 'mudah') {
+            // Level Mudah: Hewan & Buah (Anak Kelas 1-2)
+            size = 10;
+            count = 3;
+            topic = 'Hewan berkaki empat atau Buah-buahan';
+            exampleJSON = '[{"tanya": "Warna apel?", "jawab": "Merah"}, {"tanya": "Sapi makan?", "jawab": "Rumput"}]';
+        
+        } else if (level === 'sedang') {
+            // Level Sedang: IPA Dasar (Anak Kelas 3-4)
+            size = 15;
+            count = 5;
+            topic = 'Bagian Tubuh Manusia & Fungsi Tumbuhan';
+            exampleJSON = '[{"tanya": "Alat pernapasan ikan?", "jawab": "Insang"}, {"tanya": "Akar berfungsi menyerap?", "jawab": "Air"}]';
+        
+        } else { 
+            // Level Sulit: Pengetahuan Umum (Anak Kelas 5-6)
+            size = 20;
+            count = 7;
+            topic = 'Tata Surya, Ibukota Negara Asia, & Penemu';
+            exampleJSON = '[{"tanya": "Planet terbesar?", "jawab": "Jupiter"}, {"tanya": "Ibukota Jepang?", "jawab": "Tokyo"}]';
+        }
+
+        // Prompt yang sangat spesifik agar JSON tidak rusak
+        prompt = `
+        Bertindak sebagai Game Master. Buat konfigurasi level game Labirin untuk anak SD.
+        
+        SPESIFIKASI LEVEL:
+        - Tingkat: ${level.toUpperCase()}
+        - Ukuran Grid: ${size}
+        - Topik Soal: ${topic}
+        - Jumlah Rintangan: ${count}
+        
+        INSTRUKSI KHUSUS (WAJIB DIPATUHI):
+        1. Jawaban harus SATU KATA atau ANGKA SAJA (Tanpa spasi).
+        2. Output HANYA JSON murni. Jangan ada teks pembuka seperti "Tentu" atau markdown.
+        
+        CONTOH FORMAT OUTPUT:
+        {
+          "maze_size": ${size},
+          "soal_list": ${exampleJSON}
+        }
+        `;
+    }
                     if(kategori === 'zuma') {
                         let speed = level; 
                         prompt = `Buat level Zuma tema ${tema}. Level: ${level}. Output JSON Object: {"deskripsi":"Misi ${tema}","palet_warna":["#f00","#0f0","#00f"], "speed":"${speed}"}. NO COMMENTS.`;
