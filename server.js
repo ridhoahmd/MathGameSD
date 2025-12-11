@@ -228,15 +228,42 @@ io.on('connection', (socket) => {
                     Sekarang, buat 10 soal baru berdasarkan aturan di atas.
                     `;
                 
-                } else if (kategori === 'kasir') {
-                    prompt = `Buat 15 transaksi kasir unik. Tema: ${getRandomObject()}. Output JSON Array: [{"cerita":"...","total_belanja":500,"uang_bayar":1000,"kembalian":500}]. NO COMMENTS.`;
-                
-                } else if (kategori === 'memory' || kategori === 'labirin' || kategori === 'zuma' || kategori === 'piano') {
-                    if(kategori === 'memory') prompt = `Buat 10 pasang kartu memori tema ${tema}. Output HANYA JSON Array: [{"a":"Kata","b":"Gambar"}]. NO COMMENTS.`;
-                    if(kategori === 'labirin') prompt = `Buat konfigurasi Labirin size 15x15. Tambahkan 5 soal sains SD. Output HANYA JSON Object: {"maze_size":15, "soal_list":[{"tanya":"1+1","jawab":"2"}]}. NO COMMENTS.`;
-                    if(kategori === 'zuma') prompt = `Buat level Zuma tema ${tema}. Output HANYA JSON Object: {"deskripsi":"Misi di ${tema}...","palet_warna":["#ff0000","#00ff00","#0000ff"], "speed":"sedang"}. NO COMMENTS.`;
-                    if(kategori === 'piano') prompt = `Buat nada piano acak 8 digit (angka 1-7). Output HANYA JSON Object: {"sequence":[1,3,5,2,4,6,7,1]}. NO COMMENTS.`;
-                }
+
+} else if (kategori === 'kasir') {
+    // 🔥 LOGIKA LEVEL KASIR (Uang Kecil vs Besar)
+    let rangeUang = level === 'mudah' ? '500 - 5000 (kelipatan 500)' : 
+                   (level === 'sedang' ? '10000 - 50000' : '50000 - 200000');
+    let kompleksitas = level === 'sulit' ? 'dengan nilai pecahan tidak bulat' : 'nilai bulat sederhana';
+    
+    prompt = `Buat 15 transaksi kasir unik. Level: ${level}. Range Harga: ${rangeUang}. Kompleksitas: ${kompleksitas}. Tema: ${getRandomObject()}. Output JSON Array: [{"cerita":"Budi membeli...","total_belanja":5000,"uang_bayar":10000,"kembalian":5000}]. NO COMMENTS.`;
+
+} else if (kategori === 'memory' || kategori === 'labirin' || kategori === 'zuma' || kategori === 'piano') {
+    
+    if(kategori === 'memory') {
+        // 🔥 LOGIKA LEVEL MEMORY (Jumlah Kartu)
+        let pairs = level === 'mudah' ? 6 : (level === 'sedang' ? 10 : 15);
+        prompt = `Buat ${pairs} pasang kata/konsep yang saling berhubungan untuk game memori. Tema: ${tema}. Level: ${level}. Output HANYA JSON Array: [{"a":"Dokter","b":"Rumah Sakit"}]. NO COMMENTS.`;
+    }
+    
+    if(kategori === 'labirin') {
+        // 🔥 LOGIKA LEVEL LABIRIN (Ukuran & Soal)
+        let size = level === 'mudah' ? 10 : (level === 'sedang' ? 15 : 20);
+        let difficultyMath = level === 'mudah' ? 'penjumlahan dasar' : 'perkalian';
+        prompt = `Buat konfigurasi Labirin size ${size}x${size}. Tambahkan 5 soal matematika ${difficultyMath}. Output HANYA JSON Object: {"maze_size":${size}, "soal_list":[{"tanya":"10+10","jawab":"20"}]}. NO COMMENTS.`;
+    }
+    
+    if(kategori === 'zuma') {
+        // 🔥 LOGIKA LEVEL ZUMA (Kecepatan)
+        let speed = level; // mudah/sedang/sulit akan dibaca client
+        prompt = `Buat level Zuma tema ${tema}. Level: ${level}. Output HANYA JSON Object: {"deskripsi":"Misi ${tema} (${level})","palet_warna":["#ff0000","#00ff00","#0000ff"], "speed":"${speed}"}. NO COMMENTS.`;
+    }
+    
+    if(kategori === 'piano') {
+        // 🔥 LOGIKA LEVEL PIANO (Panjang Nada)
+        let length = level === 'mudah' ? 5 : (level === 'sedang' ? 8 : 12);
+        prompt = `Buat urutan nada piano acak sepanjang ${length} digit (angka 1-7). Output HANYA JSON Object: {"sequence":[1,3,5,2,4...]}. NO COMMENTS.`;
+    }
+}
 
                 if (prompt) {
                     const text = await tanyaGLM(prompt);
@@ -372,8 +399,23 @@ else if ((kategori === 'nabi' || kategori === 'ayat') && Array.isArray(dataGudan
         }
     });
 
+    //GLOBAL CHAT
+    socket.on('chatMessage', (msgData) => {
+        if (!msgData.pesan || msgData.pesan.trim() === "") return;
+        
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+        io.emit('chatMessage', {
+            nama: msgData.nama,
+            pesan: msgData.pesan,
+            waktu: timeString
+        });
+    });
+
     socket.on('disconnect', () => { });
 });
+
 
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, () => console.log(`🚀 Server Siap di Port ${PORT}`));

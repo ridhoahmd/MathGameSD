@@ -47,34 +47,43 @@
         const database = firebase.database();
         const rankList = document.getElementById('rank-list');
 
-        database.ref('leaderboard').once('value', (snapshot) => {
-            const data = snapshot.val();
-            
-            if (!data) {
-                rankList.innerHTML = "<tr><td colspan='3' class='empty-msg'>Belum ada data.</td></tr>";
-                return;
-            }
+        // ... (Kode Firebase Config di atas tetap sama) ...
 
-            let players = [];
-            Object.keys(data).forEach(key => {
-                const user = data[key];
-                
-                let sMath = user.skor_math || 0;
-                if (user.skor && !user.skor_math) sMath = user.skor;
-                let sZuma = user.skor_zuma || 0;
-                let sMemory = user.skor_memory || 0;
-                
-                // 👇 TAMBAHAN SKOR PIANO
-                let sPiano = user.skor_piano || 0; 
-                
-                // 👇 Update Rumus Total
-                let total = sMath + sZuma + sMemory + sPiano; 
+database.ref('leaderboard').once('value', (snapshot) => {
+    const data = snapshot.val();
+    
+    if (!data) {
+        rankList.innerHTML = "<tr><td colspan='3' class='empty-msg'>Belum ada data.</td></tr>";
+        return;
+    }
 
-                players.push({ 
-                    nama: user.nama || "Tanpa Nama", 
-                    total: total 
-                });
-            });
+    let players = [];
+    Object.keys(data).forEach(key => {
+        const user = data[key];
+        
+        // --- AMBIL SEMUA SKOR GAME (Ada 8 Game) ---
+        let sMath = user.skor_math || 0;
+        if (user.skor && !user.skor_math) sMath = user.skor; // Support legacy
+        
+        let sZuma = user.skor_zuma || 0;
+        let sMemory = user.skor_memory || 0;
+        let sPiano = user.skor_piano || 0;
+        
+        // 🔥 TAMBAHAN YANG HILANG SEBELUMNYA:
+        let sKasir = user.skor_kasir || 0;
+        let sLabirin = user.skor_labirin || 0;
+        let sNabi = user.skor_nabi || 0;
+        let sAyat = user.skor_ayat || 0;
+
+        // --- RUMUS TOTAL YANG BENAR ---
+        let total = sMath + sZuma + sMemory + sPiano + sKasir + sLabirin + sNabi + sAyat;
+
+        players.push({ 
+            nama: user.nama || "Tanpa Nama", 
+            total: total 
+        });
+    });
+
 
             players.sort((a, b) => b.total - a.total);
             rankList.innerHTML = ""; 
