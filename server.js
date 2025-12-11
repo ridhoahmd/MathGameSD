@@ -127,7 +127,7 @@ io.on('connection', (socket) => {
         const { kategori, tingkat, kodeAkses } = requestData;
         const level = tingkat || 'sedang';
 
-        const cacheKey = `cache_soal_v5/${kategori}_${level}`;
+        const cacheKey = `cache_soal_v6/${kategori}_${level}`;
         const manualPath = kodeAkses ? `content_manual/${kategori}/${kodeAkses.toUpperCase()}/${level}` : null;
 
         let soalData = null;
