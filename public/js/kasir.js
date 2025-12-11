@@ -33,13 +33,30 @@ document.querySelectorAll('.btn-diff').forEach(btn => {
 });
 
 function startGame() {
-    ui.startScreen.classList.remove('active');
-    ui.gameScreen.classList.add('active');
-    ui.score.innerText = "0";
-    score = 0;
+    const btn = document.querySelector('.btn-start'); // Pastikan class di HTML benar
     
-    // Minta stok soal baru
-    mintaSoalKeServer();
+    // 1. Tampilan Loading
+    btn.innerText = "⏳ Menyiapkan Toko...";
+    btn.disabled = true;
+    
+    // 2. Pancing Audio
+    if (typeof AudioManager !== 'undefined') AudioManager.init();
+
+    // 3. Reset Skor Internal
+    score = 0;
+    ui.score.innerText = "0";
+
+    // 4. Request Server
+    // Panggil fungsi request yang sudah ada, tapi kita modifikasi sedikit flow-nya
+    socket.emit('mintaSoalAI', { kategori: 'kasir', tingkat: currentLevel });
+
+    // 5. Safety Net
+    setTimeout(() => {
+        if (ui.startScreen.classList.contains('active')) {
+            btn.innerText = "⚠️ Gagal Buka Toko. Ulangi?";
+            btn.disabled = false;
+        }
+    }, 10000);
 }
 
 function mintaSoalKeServer() {
@@ -59,6 +76,14 @@ socket.on('soalDariAI', (response) => {
         }
         
         currentIndex = 0;
+        // 🔥 PINDAHKAN LOGIKA GANTI LAYAR KE SINI 🔥
+        ui.startScreen.classList.remove('active');
+        ui.gameScreen.classList.add('active');
+        
+        // Kembalikan tombol start ke kondisi semula (untuk main lagi nanti)
+        const btn = document.querySelector('.btn-start');
+        if(btn) { btn.innerText = "BUKA KASIR"; btn.disabled = false; }
+
         tampilkanSoal();
     }
 });
@@ -112,38 +137,46 @@ function handleEnter(e) {
 function checkAnswer(isTimeOut = false) {
     clearInterval(timerInterval);
     
-    const q = questions[currentIndex];
-    const userAnswer = parseInt(ui.inputAnswer.value);
-    const correctAnswer = q.kembalian; // Pastikan server kirim field ini, atau hitung manual: q.uang_bayar - q.total_belanja
+    // 1. Ambil nilai mentah dari input box
+    let rawValue = ui.inputAnswer.value;
+    let userAnswer = Math.abs(Math.floor(parseFloat(rawValue))) || 0;
     
-    // Fallback hitung manual jika AI lupa kirim key 'kembalian'
-    const realCorrect = (q.uang_bayar - q.total_belanja);
+    const q = questions[currentIndex];
 
-    if (!isTimeOut && userAnswer === realCorrect) {
-        // BENAR
+    const correctAnswer = (q.kembalian !== undefined) ? q.kembalian : (q.uang_bayar - q.total_belanja);
+    
+    // --- LOGIKA PENILAIAN ---
+    if (!isTimeOut && userAnswer === correctAnswer) {
+        // JIKA BENAR
         ui.feedback.innerText = "LUNAS! TRANSAKSI BERHASIL.";
-        ui.feedback.classList.add('correct');
+        ui.feedback.classList.remove('wrong'); // Hapus class merah
+        ui.feedback.classList.add('correct');  // Tambah class hijau
         ui.screenText.innerText = "SUKSES";
+        
         try { AudioManager.playCorrect(); } catch(e){}
         
+        // Poin: 100 dasar + Bonus kecepatan
         let point = 100 + Math.floor(timeLeft * 5);
         score += point;
         ui.score.innerText = score;
         
-        // Lanjut Soal Berikutnya (Array)
+        // Lanjut Soal Berikutnya setelah jeda 1.5 detik
         setTimeout(() => {
             currentIndex++;
             tampilkanSoal();
         }, 1500);
         
     } else {
-        // SALAH
-        ui.feedback.innerText = `SALAH! Harusnya: ${formatRupiah(realCorrect)}`;
+        // JIKA SALAH / WAKTU HABIS
+        // Tampilkan jawaban yang seharusnya
+        ui.feedback.innerText = `SALAH! Harusnya: ${formatRupiah(correctAnswer)}`;
+        ui.feedback.classList.remove('correct');
         ui.feedback.classList.add('wrong');
         ui.screenText.innerText = "GAGAL";
+        
         try { AudioManager.playWrong(); } catch(e){}
         
-        // Game Over
+        // Game Over setelah 2.5 detik
         setTimeout(endGame, 2500);
     }
 }

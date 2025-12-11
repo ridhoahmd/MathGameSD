@@ -1,18 +1,25 @@
 {
   "name": "mathgamesd",
   "version": "1.0.0",
-  "description": "",
+  "description": "Portal Game Edukasi Videa Class",
   "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "game",
+    "education",
+    "socket.io",
+    "firebase"
+  ],
+  "author": "Videa Class",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "firebase": "^12.6.0",

@@ -233,35 +233,63 @@ function endGame() {
     AudioManager.playWin();
 }
 
-// --- INPUT HANDLER (FIXED) ---
+// --- INPUT HANDLER (DENGAN SKALA OTOMATIS) ---
 
-// 1. Gerakkan bidikan (Mouse)
+// 1. Fungsi Helper: Menghitung Posisi Mouse/Touch Akurat
+function getMousePos(canvas, evt) {
+    const rect = canvas.getBoundingClientRect(); // Ukuran visual kanvas di layar HP
+    
+    // Hitung Rasio (Penting agar tidak meleset saat layar mengecil)
+    const scaleX = canvas.width / rect.width;    
+    const scaleY = canvas.height / rect.height;  
+
+    // Deteksi apakah ini Sentuhan (Touch) atau Mouse
+    const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+
+    // Kembalikan koordinat yang sudah dikalikan rasio
+    return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+    };
+}
+
+// 2. Gerakkan Bidikan (Mouse Move)
 canvas.addEventListener('mousemove', (e) => {
     if (!gameActive) return;
-    const rect = canvas.getBoundingClientRect();
-    player.angle = Math.atan2((e.clientY - rect.top) - player.y, (e.clientX - rect.left) - player.x);
+    
+    const pos = getMousePos(canvas, e);
+    // Hitung sudut berdasarkan posisi yang sudah dikoreksi
+    player.angle = Math.atan2(pos.y - player.y, pos.x - player.x);
 });
 
-// 2. Tembak (Mouse Click)
-canvas.addEventListener('mousedown', () => {
+// 3. Tembak (Mouse Click)
+canvas.addEventListener('mousedown', (e) => {
     if (!gameActive) return;
     
-    try { AudioManager.playTone(600, 0, 0.1); } catch(e){}
+    // Update sudut sekali lagi saat klik (biar presisi)
+    const pos = getMousePos(canvas, e);
+    player.angle = Math.atan2(pos.y - player.y, pos.x - player.x);
+
+    try { AudioManager.playTone(600, 0, 0.1); } catch(err){}
+    
+    // Tembak Peluru
     bullets.push(new Bullet(player.x, player.y, player.angle, player.currentAmmo));
     setTimeout(() => { player.currentAmmo = getNextAmmo(); }, 100);
 });
 
-// 3. Tembak & Bidik (Layar Sentuh HP) - TERPISAH DARI MOUSEDOWN
+// 4. Tembak & Bidik (Layar Sentuh HP)
 canvas.addEventListener('touchstart', (e) => {
     if (!gameActive) return;
-    e.preventDefault(); 
+    e.preventDefault(); // Mencegah layar scroll saat main
     
     try { sfxTembak.currentTime = 0; sfxTembak.play(); } catch(err){}
     
-    const rect = canvas.getBoundingClientRect();
-    const touch = e.touches[0];
-    player.angle = Math.atan2((touch.clientY - rect.top) - player.y, (touch.clientX - rect.left) - player.x);
+    // Gunakan fungsi helper yang sama
+    const pos = getMousePos(canvas, e);
+    player.angle = Math.atan2(pos.y - player.y, pos.x - player.x);
 
+    // Tembak Peluru
     bullets.push(new Bullet(player.x, player.y, player.angle, player.currentAmmo));
     setTimeout(() => { player.currentAmmo = getNextAmmo(); }, 100);
 }, { passive: false });

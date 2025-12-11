@@ -40,11 +40,26 @@ document.querySelectorAll('.btn-diff').forEach(btn => {
 
 function startGame() {
     const btnStart = document.querySelector('.btn-start');
+    
+    // 1. Tampilan Loading
     btnStart.innerText = "⏳ Membuka Mushaf...";
     btnStart.disabled = true;
 
-    // REQUEST KE SERVER (Kategori: ayat)
+    // 2. Pancing Audio
+    if (typeof AudioManager !== 'undefined') {
+        AudioManager.init();
+    }
+
+    // 3. Request ke Server
     socket.emit('mintaSoalAI', { kategori: 'ayat', tingkat: currentLevel });
+
+    // 4. Safety Net (10 Detik)
+    setTimeout(() => {
+        if (screens.start.classList.contains('active')) {
+            btnStart.innerText = "⚠️ Gagal. Coba Lagi?";
+            btnStart.disabled = false;
+        }
+    }, 10000);
 }
 
 socket.on('soalDariAI', (response) => {

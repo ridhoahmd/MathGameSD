@@ -49,11 +49,30 @@ document.querySelectorAll('.btn-diff').forEach(btn => {
 // 2. MULAI GAME
 function startGame() {
     const btnStart = document.querySelector('.btn-start');
+    
+    // 1. Ubah tampilan tombol jadi Loading
     btnStart.innerText = "⏳ Meminta Hikmah...";
-    btnStart.disabled = true;
+    btnStart.disabled = true; // Matikan tombol biar gak diklik dobel
+    
+    // 2. Pancing Audio agar browser mengizinkan suara nanti
+    if (typeof AudioManager !== 'undefined') {
+        AudioManager.init();
+    }
 
-    // Minta soal ke Server (AI)
+    // 3. Kirim permintaan ke Server
     socket.emit('mintaSoalAI', { kategori: 'nabi', tingkat: currentLevel });
+
+    // 🔥 4. SAFETY NET (Jaring Pengaman) 🔥
+    // Jika dalam 10 detik (10000 ms) server tidak menjawab...
+    setTimeout(() => {
+        // Cek apakah kita masih di layar start (belum masuk game)?
+        if (screens.start.classList.contains('active')) {
+            // Reset tombol agar bisa diklik lagi
+            btnStart.innerText = "⚠️ Gagal Koneksi. Coba Lagi?";
+            btnStart.disabled = false;
+            btnStart.style.background = "#e74c3c"; // Ubah warna jadi merah (opsional)
+        }
+    }, 10000);
 }
 
 // 3. TERIMA SOAL DARI SERVER

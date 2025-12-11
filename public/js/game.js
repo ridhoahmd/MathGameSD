@@ -44,53 +44,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function startGame() {
     const roomCode = document.getElementById('room-code').value.trim();
+    const btn = document.querySelector('button[onclick="startGame()"]');
     
-    // UI Reset (Masuk ke layar game)
-    document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('game-screen').classList.remove('hidden');
-    document.getElementById('game-screen').classList.add('block');
-    
-    score = 0;
-    scoreEl.innerText = "0";
-    opponentScoreEl.innerText = "0";
-    inputEl.value = "";
-    inputEl.disabled = false;
-    inputEl.focus();
-    gameActive = true;
-
-    // Reset Tombol Selesai (Jika main ulang)
-    const btnFinish = document.querySelector('.btn-finish');
-    if(btnFinish) {
-        btnFinish.disabled = false;
-        btnFinish.innerText = "🏆 SELESAI & SIMPAN SKOR";
-    }
+    // 1. Pancing Audio
+    if (typeof AudioManager !== 'undefined') AudioManager.init();
 
     if (roomCode === "") {
-        // --- MODE 1: SINGLE PLAYER (SENDIRI) ---
-        isPvP = false;
-        statusEl.innerText = "🎯 MODE LATIHAN (SENDIRI)";
-        statusEl.style.color = "#ffeb3b";
-        document.getElementById('q-total').innerText = "∞"; // Tak terbatas
+        // --- MODE SINGLE PLAYER ---
         
-        // Minta soal satu per satu
-        requestSingleSoal();
+        // Tampilan Loading
+        btn.innerText = "⏳ Memuat Arena...";
+        btn.disabled = true;
+
+        // Request Soal
+        isPvP = false;
+        document.getElementById('q-total').innerText = "∞"; 
+        socket.emit('mintaSoalAI', { kategori: 'math', tingkat: selectedDifficulty });
+
+        // Safety Net
+        setTimeout(() => {
+            // Cek apakah masih di login screen
+            if (!document.getElementById('login-screen').classList.contains('hidden')) {
+                btn.innerText = "⚠️ Gagal. Coba Lagi?";
+                btn.disabled = false;
+            }
+        }, 10000);
 
     } else {
-        // --- MODE 2: PVP DUEL (LAWAN TEMAN) ---
-        isPvP = true;
-        myRoom = roomCode;
-        statusEl.innerText = "⏳ Menunggu lawan bergabung...";
-        statusEl.style.color = "#00f2ff";
-        questionEl.innerText = "Waiting...";
-        inputEl.disabled = true; // Kunci input sampai musuh datang
-
-        // Gabung ke Server
-        socket.emit('joinMathDuel', { 
-            room: myRoom, 
-            nama: playerName, 
-            tingkat: selectedDifficulty 
-        });
+        // --- MODE PVP (Logika Lama Tetap Jalan) ---
+        masukModePvP(roomCode);
     }
+}
+
+// Fungsi helper kecil untuk memisahkan logika PvP (Copy saja ini ke bawah startGame)
+function masukModePvP(roomCode) {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('game-screen').classList.remove('hidden');
+    
+    score = 0; scoreEl.innerText = "0"; opponentScoreEl.innerText = "0";
+    gameActive = true;
+    isPvP = true; myRoom = roomCode;
+    
+    statusEl.innerText = "⏳ Menunggu lawan...";
+    statusEl.style.color = "#00f2ff";
+    questionEl.innerText = "Waiting...";
+    inputEl.disabled = true;
+
+    socket.emit('joinMathDuel', { room: myRoom, nama: playerName, tingkat: selectedDifficulty });
 }
 
 // ==========================================
@@ -104,9 +104,26 @@ function requestSingleSoal() {
 // Terima soal single dari AI
 socket.on('soalDariAI', (data) => {
     if (!isPvP && data.kategori === 'math') {
+        // 🔥 TAMBAHAN: Pindah Layar Otomatis saat data diterima
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+        document.getElementById('game-screen').classList.add('block');
+        
+        // Reset Tombol Start
+        const btn = document.querySelector('button[onclick="startGame()"]');
+        if(btn) { btn.innerText = "MULAI PERTEMPURAN 🚀"; btn.disabled = false; }
+
+        // Setup Game
+        gameActive = true;
+        scoreEl.innerText = score; // Pastikan skor tampil
+        inputEl.disabled = false;
+        inputEl.focus();
+        
+        // Load Soal
         currentProblem = { text: data.data.soal, jawaban: parseInt(data.data.jawaban) };
         questionEl.innerText = currentProblem.text;
         progressBar.style.width = "100%"; 
+        statusEl.innerText = "🎯 MODE LATIHAN";
     }
 });
 

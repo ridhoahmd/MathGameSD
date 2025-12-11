@@ -384,6 +384,55 @@ window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft') movePlayer(-1, 0);
 });
 
+// ==========================================
+// FITUR TAMBAHAN: KONTROL SWIPE (LAYAR SENTUH)
+// ==========================================
+
+// Variabel untuk menyimpan posisi awal jari
+let touchStartX = 0;
+let touchStartY = 0;
+
+// 1. Saat jari MENYENTUH layar (Mulai)
+document.addEventListener('touchstart', e => {
+    // Simpan koordinat X dan Y awal
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+}, {passive: false});
+
+// 2. Saat jari DIANGKAT dari layar (Selesai)
+document.addEventListener('touchend', e => {
+    // Ambil koordinat X dan Y akhir
+    const touchEndX = e.changedTouches[0].screenX;
+    const touchEndY = e.changedTouches[0].screenY;
+    
+    // Hitung arah geseran
+    handleSwipe(touchStartX, touchStartY, touchEndX, touchEndY);
+}, {passive: false});
+
+// 3. Logika Menghitung Arah
+function handleSwipe(sx, sy, ex, ey) {
+    // Hitung selisih jarak (Delta)
+    const dx = ex - sx; // Jarak Horizontal
+    const dy = ey - sy; // Jarak Vertikal
+    
+    // Cek mana yang lebih jauh? Geser Horizontal atau Vertikal?
+    if (Math.abs(dx) > Math.abs(dy)) {
+        // --- GERAK HORIZONTAL ---
+        // Threshold 30px: Harus geser minimal 30 piksel agar dianggap perintah
+        // (Biar kalau kesenggol dikit gak jalan)
+        if (Math.abs(dx) > 30) { 
+            if (dx > 0) movePlayer(1, 0);  // Kanan (Delta Positif)
+            else movePlayer(-1, 0);        // Kiri (Delta Negatif)
+        }
+    } else {
+        // --- GERAK VERTIKAL ---
+        if (Math.abs(dy) > 30) {
+            if (dy > 0) movePlayer(0, 1);  // Bawah
+            else movePlayer(0, -1);        // Atas
+        }
+    }
+}
+
 // --- FITUR AUTO-RECONNECT & OVERLAY (Fixed & Delayed) ---
 
 // 1. Fungsi Membuat Tampilan Layar Gelap (Overlay)
