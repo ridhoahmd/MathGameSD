@@ -404,7 +404,14 @@ else if ((kategori === 'nabi' || kategori === 'ayat') && Array.isArray(dataGudan
         if (!msgData.pesan || msgData.pesan.trim() === "") return;
         
         const now = new Date();
-        const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        
+        const timeString = now.toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'Asia/Jakarta'
+        });
+
+        let safeName = msgData.nama.substring(0, 20);
 
         io.emit('chatMessage', {
             nama: msgData.nama,
