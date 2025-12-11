@@ -12,7 +12,7 @@ const { getDatabase, ref, set, get, update, runTransaction } = require("firebase
 
 // Konfigurasi Firebase
 const firebaseConfig = {
-    apiKey: process.env.FIREBASE_API_KEY ,
+    apiKey: process.env.FIREBASE_API_KEY,
     authDomain: "mathgamesd.firebaseapp.com",
     databaseURL: "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "mathgamesd",
