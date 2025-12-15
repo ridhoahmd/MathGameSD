@@ -116,11 +116,21 @@ const PROMPT_STRATEGIES = {
     [{"cerita":"Beli A dan B...","total_belanja":5000,"uang_bayar":10000,"kembalian":5000}]`;
   },
 
-  // 5. MEMORY LAB
+  // 5. MEMORY LAB (OPTIMIZED & SAFE)
   memory: (level, tema) => {
     const pairs = level === "mudah" ? 6 : level === "sedang" ? 10 : 15;
-    return `Buat ${pairs} pasang kata-kunci untuk game memori. Tema: ${tema}.
-    Output JSON Array MURNI (Tanpa Markdown): [{"a":"Kata","b":"Pasangannya"}]`;
+
+    // Logika tema
+    const jenisPasangan =
+      tema === "bahasa"
+        ? "Sinonim/Antonim"
+        : tema === "geografi"
+        ? "Negara & Ibukota"
+        : "Kata & Pasangannya";
+
+    return `Buat ${pairs} pasang kartu untuk game memori. Tema: ${tema}. Jenis pasangan: ${jenisPasangan}.
+    Output JSON Array MURNI (Tanpa Markdown): 
+    [{"a":"Kata 1","b":"Pasangan Kata 1"}, {"a":"Kata 2","b":"Pasangan Kata 2"}]`;
   },
 
   // 6. LABIRIN ILMU
@@ -153,6 +163,22 @@ const PROMPT_STRATEGIES = {
     const len = level === "mudah" ? 3 : level === "sedang" ? 6 : 9;
     return `Urutan nada piano acak ${len} digit (angka 1-7).
     Output JSON Object MURNI (Tanpa Markdown): {"sequence":[1,3,5,2,4]}`;
+  },
+
+  // 9. AI TUTOR
+  tutor: (soal, jawabUser, jawabBenar, kategori) => {
+    return `Bertindak sebagai Guru yang ramah dan suportif. 
+    Siswa baru saja SALAH menjawab soal ${kategori}.
+    
+    Data:
+    - Pertanyaan: "${soal}"
+    - Jawaban Siswa (Salah): "${jawabUser}"
+    - Jawaban Benar: "${jawabBenar}"
+    
+    Tugas:
+    Berikan penjelasan SINGKAT (maksimal 2 kalimat) mengapa jawabannya adalah "${jawabBenar}" atau fakta menarik terkait jawaban benar tersebut. 
+    Jangan menyalahkan siswa. Gunakan bahasa Indonesia yang santai dan menyemangati.
+    Output langsung teks penjelasan (Plain Text), jangan format JSON.`;
   },
 };
 
@@ -338,18 +364,37 @@ io.on("connection", (socket) => {
 
       // 4. Kirim Data ke Klien
       if (finalData) {
-        // Randomize jika perlu (agar soal tidak selalu sama urutannya dari cache)
+        // A. Logika untuk Math & Kasir (Ambil 1 soal acak saja)
         if (["math", "kasir"].includes(kategori) && Array.isArray(finalData)) {
-          // Pilih 1 soal acak dari array
           finalData = finalData[Math.floor(Math.random() * finalData.length)];
-        } else if (
+        }
+
+        // B. Logika untuk Nabi, Ayat, Memory (Ambil banyak soal & ACAK OPSI)
+        else if (
           ["nabi", "ayat", "memory"].includes(kategori) &&
           Array.isArray(finalData)
         ) {
-          // Shuffle urutan
-          finalData = fisherYatesShuffle([...finalData]).slice(0, 10);
+          // 1. Acak dulu urutan nomor soalnya (misal: soal no 5 jadi no 1)
+          let shuffledQuestions = fisherYatesShuffle([...finalData]).slice(
+            0,
+            10
+          );
+
+          // 2.  ACAK POSISI OPSI JAWABAN (A, B, C, D)
+          finalData = shuffledQuestions.map((soal) => {
+            // Kita buat salinan objek soal biar aman
+            let newSoal = { ...soal };
+
+            // Cek apakah soal ini punya 'opsi' dan apakah itu sebuah Array?
+            if (newSoal.opsi && Array.isArray(newSoal.opsi)) {
+              // Kalau iya, acak posisi opsinya!
+              newSoal.opsi = fisherYatesShuffle(newSoal.opsi);
+            }
+            return newSoal;
+          });
         }
 
+        // Kirim data yang sudah diacak ke frontend
         socket.emit("soalDariAI", { kategori, data: finalData });
       } else {
         throw new Error("Data hasil AI null/rusak");
@@ -415,7 +460,7 @@ io.on("connection", (socket) => {
     if (!msg.pesan || !msg.pesan.trim()) return;
 
     // Filter Kata Kasar Sederhana
-    const badWords = ["anjing", "babi", "bodoh", "kasar"]; // Tambahkan sesuai kebutuhan
+    const badWords = ["anjing", "babi", "bodoh", "kasar"]; // tambahin sesuai kebutuhan bocil
     let cleanPesan = msg.pesan.substring(0, 100);
     badWords.forEach((word) => {
       const regex = new RegExp(word, "gi");
@@ -428,8 +473,40 @@ io.on("connection", (socket) => {
       waktu: new Date().toLocaleTimeString("id-ID", {
         hour: "2-digit",
         minute: "2-digit",
+        timeZone: "Asia/Jakarta",
       }),
     });
+  });
+
+  // --- D. FITUR AI TUTOR (Penjelasan Jawaban Salah) ---
+  socket.on("mintaPenjelasan", async (data) => {
+    // Validasi data sederhana
+    if (!data.soal || !data.jawabBenar) return;
+
+    try {
+      console.log(`👨‍🏫 Tutor dipanggil oleh ${data.nama || "User"}...`);
+
+      // 1. Ambil Prompt Tutor dari Strategi
+      // Kita gunakan kategori 'Umum' jika tidak spesifik
+      const prompt = PROMPT_STRATEGIES.tutor(
+        data.soal,
+        data.jawabUser,
+        data.jawabBenar,
+        data.kategori || "Pelajaran Umum"
+      );
+
+      // 2. Minta jawaban ke AI
+      const penjelasan = await tanyaGLM(prompt);
+
+      // 3. Kirim balik ke siswa
+      socket.emit("penjelasanTutor", { teks: penjelasan });
+    } catch (e) {
+      console.error("❌ Tutor Error:", e.message);
+      // Fallback jika AI sibuk/gagal
+      socket.emit("penjelasanTutor", {
+        teks: `Jawaban yang tepat adalah ${data.jawabBenar}. Jangan menyerah, coba lagi ya!`,
+      });
+    }
   });
 });
 

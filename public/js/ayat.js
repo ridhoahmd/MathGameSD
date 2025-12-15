@@ -2,24 +2,26 @@ const socket = io();
 
 // DOM Elements
 const screens = {
-    start: document.getElementById('start-screen'),
-    game: document.getElementById('game-screen'),
-    result: document.getElementById('result-screen')
+  start: document.getElementById("start-screen"),
+  game: document.getElementById("game-screen"),
+  result: document.getElementById("result-screen"),
 };
 
+// Pastikan ID di HTML cocok dengan ini:
+// <span id="q-current"></span> dan <span id="q-total"></span>
 const ui = {
-    questionText: document.getElementById('question-text'),
-    optionsContainer: document.getElementById('options-container'),
-    qCurrent: document.getElementById('q-current'),
-    qTotal: document.getElementById('q-total'),
-    score: document.getElementById('score'),
-    timer: document.getElementById('timer'),
-    progressFill: document.getElementById('progress'),
-    finalScore: document.getElementById('final-score'),
-    resultMsg: document.getElementById('result-msg')
+  questionText: document.getElementById("question-text"),
+  optionsContainer: document.getElementById("options-container"),
+  qCurrent: document.getElementById("q-current"), // Pengganti questionNumber
+  qTotal: document.getElementById("q-total"), // Pengganti questionNumber
+  score: document.getElementById("score"),
+  timer: document.getElementById("timer"),
+  progressFill: document.getElementById("progress"),
+  finalScore: document.getElementById("final-score"),
+  resultMsg: document.getElementById("result-msg"),
 };
 
-let currentLevel = 'mudah';
+let currentLevel = "mudah";
 let questions = [];
 let currentIndex = 0;
 let score = 0;
@@ -27,235 +29,296 @@ let timeLeft = 0;
 let timerInterval;
 let playerName = localStorage.getItem("playerName") || "Guest";
 
-// Setup Buttons
-document.querySelectorAll('.btn-diff').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.btn-diff').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentLevel = btn.dataset.level;
+// Variabel Tutor
+let tutorUsageCount = 0;
+const MAX_TUTOR_USAGE = 3;
 
-        document.getElementById('difficulty-display').innerText = btn.innerText;
-    });
+// Setup Buttons Difficulty
+document.querySelectorAll(".btn-diff").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document
+      .querySelectorAll(".btn-diff")
+      .forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentLevel = btn.dataset.level;
+    const disp = document.getElementById("difficulty-display");
+    if (disp) disp.innerText = btn.innerText;
+  });
 });
 
 function startGame() {
-    const btnStart = document.querySelector('.btn-start');
-    
-    // 1. Tampilan Loading
-    btnStart.innerText = "⏳ Membuka Mushaf...";
-    btnStart.disabled = true;
+  const btnStart = document.querySelector(".btn-start");
 
-    // 2. Pancing Audio
-    if (typeof AudioManager !== 'undefined') {
-        AudioManager.init();
+  // 1. Tampilan Loading
+  btnStart.innerText = "⏳ Membuka Mushaf...";
+  btnStart.disabled = true;
+
+  // 2. Pancing Audio
+  if (typeof AudioManager !== "undefined") {
+    AudioManager.init();
+  }
+
+  // 3. Request ke Server
+  socket.emit("mintaSoalAI", { kategori: "ayat", tingkat: currentLevel });
+
+  // 4. Safety Net (10 Detik)
+  setTimeout(() => {
+    if (screens.start.classList.contains("active")) {
+      btnStart.innerText = "⚠️ Gagal. Coba Lagi?";
+      btnStart.disabled = false;
     }
-
-    // 3. Request ke Server
-    socket.emit('mintaSoalAI', { kategori: 'ayat', tingkat: currentLevel });
-
-    // 4. Safety Net (10 Detik)
-    setTimeout(() => {
-        if (screens.start.classList.contains('active')) {
-            btnStart.innerText = "⚠️ Gagal. Coba Lagi?";
-            btnStart.disabled = false;
-        }
-    }, 10000);
+  }, 10000);
 }
 
-socket.on('soalDariAI', (response) => {
-    if (response.kategori === 'ayat') {
-        questions = response.data;
-        currentIndex = 0;
-        score = 0;
-        ui.score.innerText = "0";
-        ui.qTotal.innerText = questions.length;
-        
-        screens.start.classList.remove('active');
-        screens.game.classList.add('active');
-        
-        loadQuestion();
-    }
+socket.on("soalDariAI", (response) => {
+  if (response.kategori === "ayat") {
+    questions = response.data;
+    currentIndex = 0;
+    score = 0;
+    ui.score.innerText = "0";
+
+    // Update Total Soal di UI
+    if (ui.qTotal) ui.qTotal.innerText = questions.length;
+
+    screens.start.classList.remove("active");
+    screens.game.classList.add("active");
+
+    loadQuestion();
+  }
 });
 
+// --- FUNGSI LOAD SOAL (SUDAH DIPERBAIKI UI & TIMER) ---
 function loadQuestion() {
-    if (currentIndex >= questions.length) {
-        endGame();
-        return;
-    }
+  // Reset Timer & UI
+  clearInterval(timerInterval);
+  if (ui.progressFill) ui.progressFill.style.width = "100%";
 
-    const q = questions[currentIndex];
-    ui.questionText.innerText = q.tanya; 
-    ui.qCurrent.innerText = currentIndex + 1;
-    
-    const pct = ((currentIndex) / questions.length) * 100;
-    ui.progressFill.style.width = `${pct}%`;
+  // Cek Game Over
+  if (currentIndex >= questions.length) {
+    endGame();
+    return;
+  }
 
-    ui.optionsContainer.innerHTML = '';
-    
-    // Fungsi pembersih teks
-    const clean = (str) => str ? str.toString().trim().toLowerCase().replace(/\s+/g, ' ') : "";
+  const q = questions[currentIndex];
 
-    // Tambahkan parameter 'index' di sini
-    q.opsi.forEach((opt, index) => {
-        const btn = document.createElement('button');
-        btn.className = 'btn-option';
-        btn.innerText = opt;
-        
-        // --- LOGIKA PENANDA RAHASIA (UPDATE FINAL) ---
-        let isAnswer = false;
+  // Tampilkan Soal
+  if (ui.questionText) ui.questionText.innerText = q.tanya;
 
-        // Cek 1: Apakah Kunci Jawaban di database cuma satu huruf (A/B/C/D)?
-        // AI kadang malas dan cuma kirim "B" sebagai jawaban
-        const key = clean(q.jawab);
-        const optionsIndex = ["a", "b", "c", "d"];
-        
-        if (optionsIndex.includes(key)) {
-            // Jika jawaban "A" -> Index 0 benar
-            // Jika jawaban "B" -> Index 1 benar, dst.
-            if (index === optionsIndex.indexOf(key)) isAnswer = true;
-        } 
-        // Cek 2: Jika bukan huruf, lakukan pencocokan teks (Smart Matching)
-        else {
-             isAnswer = clean(opt) === key || 
-                        clean(opt).includes(key) || 
-                        key.includes(clean(opt));
-        }
-                         
-        if (isAnswer) {
-            btn.dataset.correct = "true"; 
-        }
+  // 🔥 PERBAIKAN UI DISINI 🔥
+  // Menggunakan qCurrent dan qTotal, bukan questionNumber
+  if (ui.qCurrent) ui.qCurrent.innerText = currentIndex + 1;
+  if (ui.qTotal) ui.qTotal.innerText = questions.length;
 
-        btn.onclick = () => checkAnswer(btn); 
-        ui.optionsContainer.appendChild(btn);
+  // Bersihkan container opsi lama
+  ui.optionsContainer.innerHTML = "";
+
+  // Pastikan opsi ada
+  if (q.opsi && Array.isArray(q.opsi)) {
+    q.opsi.forEach((opt) => {
+      const btn = document.createElement("button");
+      btn.className = "btn-option";
+      btn.innerText = opt;
+
+      // Kirim 'btn' sebagai argumen ketiga
+      btn.onclick = () => checkAnswer(opt, q.jawab, btn);
+
+      ui.optionsContainer.appendChild(btn);
     });
+  } else {
+    console.error("Format opsi salah/kosong", q);
+  }
 
-    startTimer(20);
+  // 🔥 PERBAIKAN TIMER: Beri waktu 20 detik (atau sesuai level) 🔥
+  startTimer(20);
 }
 
 function startTimer(seconds) {
-    clearInterval(timerInterval);
-    timeLeft = seconds;
-    ui.timer.innerText = timeLeft;
-    
-    timerInterval = setInterval(() => {
-        timeLeft--;
-        ui.timer.innerText = timeLeft;
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            handleTimeOut();
-        }
-    }, 1000);
+  clearInterval(timerInterval);
+  timeLeft = seconds;
+  if (ui.timer) ui.timer.innerText = timeLeft;
+
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    if (ui.timer) ui.timer.innerText = timeLeft;
+
+    // Update Progress Bar (Opsional)
+    if (ui.progressFill) {
+      const percent = (timeLeft / seconds) * 100;
+      ui.progressFill.style.width = `${percent}%`;
+    }
+
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      handleTimeOut();
+    }
+  }, 1000);
 }
 
 function handleTimeOut() {
-    try { AudioManager.playWrong(); } catch(e){}
-    const buttons = document.querySelectorAll('.btn-option');
-    buttons.forEach(btn => btn.disabled = true);
-    setTimeout(() => {
-        currentIndex++;
-        loadQuestion();
-    }, 1000);
+  try {
+    AudioManager.playWrong();
+  } catch (e) {}
+
+  const buttons = document.querySelectorAll(".btn-option");
+  buttons.forEach((btn) => (btn.disabled = true));
+
+  // Highlight jawaban benar jika waktu habis (Opsional)
+  const q = questions[currentIndex];
+  // ... logika highlight ...
+
+  setTimeout(() => {
+    currentIndex++;
+    loadQuestion();
+  }, 2000);
 }
 
-function checkAnswer(btnElement) {
-    clearInterval(timerInterval);
-    
-    const allButtons = document.querySelectorAll('.btn-option');
-    allButtons.forEach(b => b.disabled = true);
+// --- FUNGSI CHECK ANSWER (SUDAH AMAN) ---
+function checkAnswer(selectedRaw, correctRaw, btnElement) {
+  clearInterval(timerInterval);
 
-    // Cek apakah tombol yang diklik punya stempel 'correct'?
-    const isCorrect = btnElement.dataset.correct === "true";
+  // Fungsi pembersih string yang aman
+  const cleanStr = (str) => {
+    if (str === null || str === undefined) return "";
+    return String(str).trim().replace(/\s+/g, " ");
+  };
 
-    if (isCorrect) {
-        // --- JIKA JAWABAN BENAR ---
-        btnElement.classList.add('correct');
-        try { AudioManager.playCorrect(); } catch(e){}
-        score += 20;
-        score += Math.floor(timeLeft / 2);
-        ui.score.innerText = score;
-    } else {
-        // --- JIKA JAWABAN SALAH ---
-        btnElement.classList.add('wrong');
-        try { AudioManager.playWrong(); } catch(e){}
-        
-        // --- SOLUSI PASTI MUNCUL ---
-        // Cari tombol lain yang punya stempel 'correct'
-        const correctBtn = document.querySelector('button[data-correct="true"]');
-        if (correctBtn) {
-            correctBtn.classList.add('correct'); // Warnai Hijau
-        }
-    }
+  const selected = cleanStr(selectedRaw);
+  const correct = cleanStr(correctRaw);
+
+  const allButtons = document.querySelectorAll(".btn-option");
+  allButtons.forEach((b) => (b.disabled = true));
+
+  if (selected === correct) {
+    // === BENAR ===
+    if (btnElement) btnElement.classList.add("correct");
+    try {
+      AudioManager.playCorrect();
+    } catch (e) {}
+
+    score += 20;
+    score += Math.floor(timeLeft / 2);
+    ui.score.innerText = score;
 
     setTimeout(() => {
+      currentIndex++;
+      loadQuestion();
+    }, 2000);
+  } else {
+    // === SALAH ===
+    if (btnElement) btnElement.classList.add("wrong");
+    try {
+      AudioManager.playWrong();
+    } catch (e) {}
+
+    // Highlight Jawaban Benar
+    allButtons.forEach((b) => {
+      if (cleanStr(b.innerText) === correct) {
+        b.classList.add("correct");
+      }
+    });
+
+    // === LOGIKA AI TUTOR ===
+    if (tutorUsageCount < MAX_TUTOR_USAGE) {
+      tutorUsageCount++;
+
+      const modal = document.getElementById("tutor-overlay");
+      const textEl = document.getElementById("tutor-text");
+      const titleEl = document.querySelector(".tutor-title");
+
+      if (modal) modal.style.display = "flex";
+      if (titleEl)
+        titleEl.innerText = `GURU AI (SISA: ${
+          MAX_TUTOR_USAGE - tutorUsageCount
+        })`;
+      if (textEl)
+        textEl.innerText = "Ustaz AI sedang mengecek tafsir ayat... 📖";
+
+      const soalElem = document.getElementById("question-text");
+      const soalTeks = soalElem ? soalElem.innerText : "Soal Ayat";
+
+      socket.emit("mintaPenjelasan", {
+        soal: soalTeks,
+        jawabUser: selectedRaw,
+        jawabBenar: correctRaw,
+        kategori: "Sambung Ayat",
+      });
+    } else {
+      console.log("Kuota Tutor Habis.");
+      setTimeout(() => {
         currentIndex++;
         loadQuestion();
-    }, 2500);
+      }, 2500);
+    }
+  }
 }
 
 function endGame() {
-    screens.game.classList.remove('active');
-    screens.result.classList.add('active');
-    ui.finalScore.innerText = score;
-    
-    if(score >= 80) ui.resultMsg.innerText = "Muntaz! Hafalanmu sangat kuat.";
-    else if(score >= 50) ui.resultMsg.innerText = "Jayyid. Teruslah murojaah.";
-    else ui.resultMsg.innerText = "Semangat! Ulangi lagi hafalannya.";
+  screens.game.classList.remove("active");
+  screens.result.classList.add("active");
+  ui.finalScore.innerText = score;
 
-    try { AudioManager.playWin(); } catch(e){}
+  if (score >= 80) ui.resultMsg.innerText = "Muntaz! Hafalanmu sangat kuat.";
+  else if (score >= 50) ui.resultMsg.innerText = "Jayyid. Teruslah murojaah.";
+  else ui.resultMsg.innerText = "Semangat! Ulangi lagi hafalannya.";
 
-    // SIMPAN SKOR (Game: 'ayat')
-    socket.emit('simpanSkor', {
-        nama: playerName,
-        skor: score,
-        game: 'ayat' 
-    });
+  try {
+    AudioManager.playWin();
+  } catch (e) {}
+
+  socket.emit("simpanSkor", {
+    nama: playerName,
+    skor: score,
+    game: "ayat",
+  });
 }
 
-// --- FITUR AUTO-RECONNECT (PASTE DI PALING BAWAH) ---
+// --- 🔥 PENERIMA PESAN TUTOR (YANG TADI HILANG) 🔥 ---
+socket.on("penjelasanTutor", (data) => {
+  const textEl = document.getElementById("tutor-text");
+  if (!textEl) return;
 
-// 1. Fungsi Membuat Tampilan Layar Gelap (Overlay)
-function createOfflineUI() {
-    if (document.getElementById('connection-overlay')) return; 
-
-    const overlay = document.createElement('div');
-    overlay.id = 'connection-overlay';
-    overlay.innerHTML = `
-        <div class="wifi-icon">📡</div>
-        <div class="conn-text">KONEKSI TERPUTUS</div>
-        <div class="conn-sub">Sedang mencoba menghubungkan kembali...</div>
-    `;
-    document.body.appendChild(overlay);
-}
-
-createOfflineUI();
-
-// 2. Logika Saat Koneksi Putus & Nyambung Lagi
-let isReconnecting = false;
-
-socket.on('disconnect', (reason) => {
-    console.log("⚠️ Koneksi putus:", reason);
-    isReconnecting = true;
-    
-    const overlay = document.getElementById('connection-overlay');
-    if(overlay) overlay.style.display = 'flex';
-
-    if (typeof gameActive !== 'undefined') gameActive = false; 
+  const text = data.teks;
+  textEl.innerHTML = "";
+  let i = 0;
+  function typeWriter() {
+    if (i < text.length) {
+      textEl.innerHTML += text.charAt(i);
+      i++;
+      setTimeout(typeWriter, 15);
+    }
+  }
+  typeWriter();
 });
 
-socket.on('connect', () => {
-    if (isReconnecting) {
-        console.log("✅ Terhubung kembali!");
-        isReconnecting = false;
+// Fungsi Tutup Modal Tutor
+window.tutupTutor = function () {
+  const modal = document.getElementById("tutor-overlay");
+  if (modal) modal.style.display = "none";
+  currentIndex++;
+  loadQuestion();
+};
 
-        const overlay = document.getElementById('connection-overlay');
-        if(overlay) overlay.style.display = 'none';
+// --- AUTO RECONNECT ---
+function createOfflineUI() {
+  if (document.getElementById("connection-overlay")) return;
+  const overlay = document.createElement("div");
+  overlay.id = "connection-overlay";
+  overlay.innerHTML = `<div class="wifi-icon">📡</div><div class="conn-text">KONEKSI TERPUTUS</div>`;
+  document.body.appendChild(overlay);
+}
+createOfflineUI();
 
-        // Resume Game Math
-        if (typeof gameActive !== 'undefined') {
-            gameActive = true;
-            // Math Battle tidak butuh requestAnimationFrame, cukup set gameActive true
-        }
-        
-        // Khusus PvP: Mungkin perlu kirim ulang status 'ready' (opsional)
-    }
+let isReconnecting = false;
+socket.on("disconnect", () => {
+  isReconnecting = true;
+  const overlay = document.getElementById("connection-overlay");
+  if (overlay) overlay.style.display = "flex";
+});
+
+socket.on("connect", () => {
+  if (isReconnecting) {
+    isReconnecting = false;
+    const overlay = document.getElementById("connection-overlay");
+    if (overlay) overlay.style.display = "none";
+  }
 });
