@@ -1,38 +1,46 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Toko Avatar - Videa Class</title>
 
-    <meta http-equiv="Content-Security-Policy" content="
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
         default-src 'self' https: http: data: blob: 'unsafe-inline' 'unsafe-eval';
         script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.gstatic.com https://cdnjs.cloudflare.com;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         font-src 'self' https://fonts.gstatic.com;
         img-src 'self' data: https://api.dicebear.com https://cdn-icons-png.flaticon.com;
         connect-src * 'unsafe-inline';
-    ">
+    "
+    />
 
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="css/toko.css?v=final">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
 
-</head>
-<body>
-
+    <link rel="stylesheet" href="css/toko.css?v=final" />
+  </head>
+  <body>
     <div class="container">
-        <div class="header-shop">
-            <a href="/" class="btn-back">⬅ Kembali</a>
-            <div class="coin-balance">💰 <span id="user-coins">0</span> Videa Coins</div>
+      <div class="header-shop">
+        <a href="/" class="btn-back">⬅ Kembali</a>
+        <div class="coin-balance">
+          💰 <span id="user-coins">0</span> Videa Coins
         </div>
+      </div>
 
-        <h1>TOKO BINGKAI AVATAR</h1>
-        <p style="text-align:center; color:#aaa; margin-bottom:30px;">Tukarkan hasil belajarmu dengan gaya keren!</p>
+      <h1>TOKO BINGKAI AVATAR</h1>
+      <p style="text-align: center; color: #aaa; margin-bottom: 30px">
+        Tukarkan hasil belajarmu dengan gaya keren!
+      </p>
 
-        <div class="shop-grid" id="shop-container">
-            <p style="text-align:center;">Memuat Toko...</p>
-        </div>
+      <div class="shop-grid" id="shop-container">
+        <p style="text-align: center">Memuat Toko...</p>
+      </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -40,152 +48,173 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // CONFIG SAMA SEPERTI SEBELUMNYA
-        const firebaseConfig = {
-            apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
-            authDomain: "mathgamesd.firebaseapp.com",
-            databaseURL: "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "mathgamesd",
-            storageBucket: "mathgamesd.firebasestorage.app",
-            messagingSenderId: "595640141584",
-            appId: "1:595640141584:web:d02523bc844e52550f4795"
-        };
-        try { firebase.initializeApp(firebaseConfig); } catch(e) {}
-        const auth = firebase.auth();
-        const database = firebase.database();
+      // CONFIG SAMA SEPERTI SEBELUMNYA
+      const firebaseConfig = {
+        apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
+        authDomain: "mathgamesd.firebaseapp.com",
+        databaseURL:
+          "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "mathgamesd",
+        storageBucket: "mathgamesd.firebasestorage.app",
+        messagingSenderId: "595640141584",
+        appId: "1:595640141584:web:d02523bc844e52550f4795",
+      };
+      try {
+        firebase.initializeApp(firebaseConfig);
+      } catch (e) {}
+      const auth = firebase.auth();
+      const database = firebase.database();
 
-        // DAFTAR ITEM TOKO
-        const shopItems = [
-            { id: "default", name: "Standar", price: 0, class: "frame-default" },
-            { id: "neon", name: "Neon Cyber", price: 500, class: "frame-neon" },
-            { id: "gold", name: "Sultan Gold", price: 1500, class: "frame-gold" },
-            { id: "royal", name: "Royal Purple", price: 3000, class: "frame-royal" },
-            { id: "fire", name: "Api Membara", price: 5000, class: "frame-fire" }
-        ];
+      // DAFTAR ITEM TOKO
+      const shopItems = [
+        { id: "default", name: "Standar", price: 0, class: "frame-default" },
+        { id: "neon", name: "Neon Cyber", price: 500, class: "frame-neon" },
+        { id: "gold", name: "Sultan Gold", price: 1500, class: "frame-gold" },
+        {
+          id: "royal",
+          name: "Royal Purple",
+          price: 3000,
+          class: "frame-royal",
+        },
+        { id: "fire", name: "Api Membara", price: 5000, class: "frame-fire" },
+      ];
 
-        let currentUserData = null;
-        let currentCoins = 0;
+      let currentUserData = null;
+      let currentCoins = 0;
 
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                loadUserData(user.displayName, user.photoURL);
-            } else {
-                // Support Guest Mode (LocalStorage)
-                const localName = localStorage.getItem("playerName");
-                if(localName) {
-                    const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${localName}`;
-                    loadUserData(localName, avatarUrl);
-                } else {
-                    window.location.href = "/";
-                }
-            }
-        });
-
-function loadUserData(name, avatarUrl) {
-            // Kita pakai .on() agar update realtime saat beli
-            database.ref('leaderboard/' + name).on('value', snapshot => {
-                const data = snapshot.val() || {};
-                
-                // --- 1. HITUNG PEMASUKAN (INCOME) ---
-                let totalIncome = 0;
-
-                // OPSI A: Jika Server sudah menghitung koin (Recommended)
-                if (data.videa_coin !== undefined) {
-                    totalIncome = data.videa_coin;
-                } 
-                // OPSI B: Fallback (Jika data koin belum ada di DB, hitung manual)
-                // Rumus: Total Semua Skor Game dibagi 10
-                else {
-                    let sMath = data.skor_math || 0;
-                    if (data.skor && !data.skor_math) sMath = data.skor; // Support legacy
-                    
-                    let sZuma = data.skor_zuma || 0;
-                    let sMemory = data.skor_memory || 0;
-                    let sPiano = data.skor_piano || 0;
-                    let sKasir = data.skor_kasir || 0;   // Tambahan
-                    let sLabirin = data.skor_labirin || 0; // Tambahan
-                    let sNabi = data.skor_nabi || 0;     // Tambahan
-                    let sAyat = data.skor_ayat || 0;     // Tambahan
-
-                    let totalSkor = sMath + sZuma + sMemory + sPiano + sKasir + sLabirin + sNabi + sAyat;
-                    totalIncome = Math.floor(totalSkor / 10); // Bagi 10 biar adil
-                }
-
-                // --- 2. HITUNG PENGELUARAN (SPENT) ---
-                let spent = data.coins_spent || 0;
-                
-                // Data Inventory
-                let inventory = data.inventory || { "default": true };
-                let equipped = data.equipped_frame || "default";
-
-                // --- 3. HITUNG SALDO DOMPET ---
-                currentCoins = totalIncome - spent;
-                
-                // Update UI
-                document.getElementById('user-coins').innerText = currentCoins;
-
-                // Simpan state global untuk fungsi beli/equip
-                currentUserData = { name, totalIncome, spent, inventory, equipped };
-                
-                renderShop(avatarUrl);
-            });
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          loadUserData(user.displayName, user.photoURL);
+        } else {
+          // Support Guest Mode (LocalStorage)
+          const localName = localStorage.getItem("playerName");
+          if (localName) {
+            const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${localName}`;
+            loadUserData(localName, avatarUrl);
+          } else {
+            window.location.href = "/";
+          }
         }
+      });
 
-        function renderShop(avatarUrl) {
-            const container = document.getElementById('shop-container');
-            container.innerHTML = "";
+      function loadUserData(name, avatarUrl) {
+        // Kita pakai .on() agar update realtime saat beli
+        database.ref("leaderboard/" + name).on("value", (snapshot) => {
+          const data = snapshot.val() || {};
 
-            shopItems.forEach(item => {
-                const isOwned = currentUserData.inventory[item.id] === true;
-                const isEquipped = currentUserData.equipped === item.id;
-                const canAfford = currentCoins >= item.price;
+          // --- 1. HITUNG PEMASUKAN (INCOME) ---
+          let totalIncome = 0;
 
-                let btnHtml = "";
-                if (isEquipped) {
-                    btnHtml = `<button class="btn-equipped">SEDANG DIPAKAI</button>`;
-                } else if (isOwned) {
-                    btnHtml = `<button class="btn-equip" onclick="equipItem('${item.id}')">PAKAI</button>`;
-                } else if (canAfford) {
-                    btnHtml = `<button class="btn-buy" onclick="buyItem('${item.id}', ${item.price})">BELI (${item.price})</button>`;
-                } else {
-                    btnHtml = `<button class="btn-poor">Kurang ${item.price - currentCoins} Koin</button>`;
-                }
+          // OPSI A: Jika Server sudah menghitung koin (Recommended)
+          if (data.videa_coin !== undefined) {
+            totalIncome = data.videa_coin;
+          }
+          // OPSI B: Fallback (Jika data koin belum ada di DB, hitung manual)
+          // Rumus: Total Semua Skor Game dibagi 10
+          else {
+            let sMath = data.skor_math || 0;
+            if (data.skor && !data.skor_math) sMath = data.skor; // Support legacy
 
-                const card = `
+            let sZuma = data.skor_zuma || 0;
+            let sMemory = data.skor_memory || 0;
+            let sPiano = data.skor_piano || 0;
+            let sKasir = data.skor_kasir || 0; // Tambahan
+            let sLabirin = data.skor_labirin || 0; // Tambahan
+            let sNabi = data.skor_nabi || 0; // Tambahan
+            let sAyat = data.skor_ayat || 0; // Tambahan
+
+            let totalSkor =
+              sMath +
+              sZuma +
+              sMemory +
+              sPiano +
+              sKasir +
+              sLabirin +
+              sNabi +
+              sAyat;
+            totalIncome = Math.floor(totalSkor / 10); // Bagi 10 biar adil
+          }
+
+          // --- 2. HITUNG PENGELUARAN (SPENT) ---
+          let spent = data.coins_spent || 0;
+
+          // Data Inventory
+          let inventory = data.inventory || { default: true };
+          let equipped = data.equipped_frame || "default";
+
+          // --- 3. HITUNG SALDO DOMPET ---
+          currentCoins = totalIncome - spent;
+
+          // Update UI
+          document.getElementById("user-coins").innerText = currentCoins;
+
+          // Simpan state global untuk fungsi beli/equip
+          currentUserData = { name, totalIncome, spent, inventory, equipped };
+
+          renderShop(avatarUrl);
+        });
+      }
+
+      function renderShop(avatarUrl) {
+        const container = document.getElementById("shop-container");
+        container.innerHTML = "";
+
+        shopItems.forEach((item) => {
+          const isOwned = currentUserData.inventory[item.id] === true;
+          const isEquipped = currentUserData.equipped === item.id;
+          const canAfford = currentCoins >= item.price;
+
+          let btnHtml = "";
+          if (isEquipped) {
+            btnHtml = `<button class="btn-equipped">SEDANG DIPAKAI</button>`;
+          } else if (isOwned) {
+            btnHtml = `<button class="btn-equip" onclick="equipItem('${item.id}')">PAKAI</button>`;
+          } else if (canAfford) {
+            btnHtml = `<button class="btn-buy" onclick="buyItem('${item.id}', ${item.price})">BELI (${item.price})</button>`;
+          } else {
+            btnHtml = `<button class="btn-poor">Kurang ${
+              item.price - currentCoins
+            } Koin</button>`;
+          }
+
+          const card = `
                     <div class="shop-card">
                         <div class="preview-box ${item.class}">
                             <img src="${avatarUrl}" class="preview-img">
                         </div>
                         <span class="item-name">${item.name}</span>
-                        ${!isOwned ? `<span class="item-price">Harga: ${item.price}</span>` : `<span class="item-price" style="color:#38ef7d">SUDAH DIMILIKI</span>`}
+                        ${
+                          !isOwned
+                            ? `<span class="item-price">Harga: ${item.price}</span>`
+                            : `<span class="item-price" style="color:#38ef7d">SUDAH DIMILIKI</span>`
+                        }
                         ${btnHtml}
                     </div>
                 `;
-                container.innerHTML += card;
-            });
+          container.innerHTML += card;
+        });
+      }
+
+      // FUNGSI BELI
+      window.buyItem = function (itemId, price) {
+        if (confirm(`Yakin ingin membeli ${itemId} seharga ${price} koin?`)) {
+          const newSpent = currentUserData.spent + price;
+          const newInventory = { ...currentUserData.inventory, [itemId]: true };
+
+          database.ref("leaderboard/" + currentUserData.name).update({
+            coins_spent: newSpent,
+            inventory: newInventory,
+          });
+          // Efek suara kaching bisa ditambahkan disini
         }
+      };
 
-        // FUNGSI BELI
-        window.buyItem = function(itemId, price) {
-            if (confirm(`Yakin ingin membeli ${itemId} seharga ${price} koin?`)) {
-                const newSpent = currentUserData.spent + price;
-                const newInventory = { ...currentUserData.inventory, [itemId]: true };
-
-                database.ref('leaderboard/' + currentUserData.name).update({
-                    coins_spent: newSpent,
-                    inventory: newInventory
-                });
-                // Efek suara kaching bisa ditambahkan disini
-            }
-        }
-
-        // FUNGSI PAKAI
-        window.equipItem = function(itemId) {
-            database.ref('leaderboard/' + currentUserData.name).update({
-                equipped_frame: itemId
-            });
-        }
-
+      // FUNGSI PAKAI
+      window.equipItem = function (itemId) {
+        database.ref("leaderboard/" + currentUserData.name).update({
+          equipped_frame: itemId,
+        });
+      };
     </script>
-</body>
+  </body>
 </html>

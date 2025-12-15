@@ -1,222 +1,400 @@
 /* GLOBAL SETTINGS */
 body {
-    margin: 0; padding: 0;
-    font-family: 'Poppins', sans-serif;
-    /* Background Malam Gurun */
-    background: radial-gradient(circle at top, #203A43, #2C5364);
-    background-color: #0F2027;
-    color: #fff;
-    height: 100vh;
-    width: 100vw;
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center;
-    overflow: hidden; /* Mencegah scroll pada body utama */
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+  /* Background Malam Gurun */
+  background: radial-gradient(circle at top, #203a43, #2c5364);
+  background-color: #0f2027;
+  color: #fff;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; /* Mencegah scroll pada body utama */
 }
 
 /* TOP BAR */
 .top-bar {
-    position: absolute; top: 15px; width: 90%; max-width: 800px;
-    display: flex; justify-content: space-between; align-items: center; z-index: 10;
+  position: absolute;
+  top: 15px;
+  width: 90%;
+  max-width: 800px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
 }
 .btn-back {
-    text-decoration: none; color: #FFD700; border: 1px solid #FFD700;
-    padding: 6px 15px; border-radius: 30px; font-weight: bold; font-size: 0.9rem;
-    background: rgba(0,0,0,0.3); transition: 0.3s;
+  text-decoration: none;
+  color: #ffd700;
+  border: 1px solid #ffd700;
+  padding: 6px 15px;
+  border-radius: 30px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  background: rgba(0, 0, 0, 0.3);
+  transition: 0.3s;
 }
-.btn-back:hover { background: #FFD700; color: #000; }
+.btn-back:hover {
+  background: #ffd700;
+  color: #000;
+}
 
 .level-badge {
-    background: rgba(255, 215, 0, 0.2); color: #FFD700;
-    padding: 5px 12px; border-radius: 10px; border: 1px solid #FFD700; font-size: 0.9rem;
+  background: rgba(255, 215, 0, 0.2);
+  color: #ffd700;
+  padding: 5px 12px;
+  border-radius: 10px;
+  border: 1px solid #ffd700;
+  font-size: 0.9rem;
 }
 
-/* CONTAINER UTAMA (PERBAIKAN SCROLLING) */
+/* =========================================
+   CONTAINER UTAMA & SCROLLBAR
+   ========================================= */
+
 .game-container {
-    width: 90%; 
-    max-width: 700px;
-    /* Jangan pakai height fixed, pakai max-height agar responsif */
-    max-height: 85vh; 
-    display: flex;
-    flex-direction: column;
-    
-    background: rgba(15, 32, 39, 0.9);
-    border: 2px solid #C0A062;
-    border-radius: 20px;
-    padding: 20px; /* Padding sedikit dikurangi untuk HP */
-    box-shadow: 0 0 50px rgba(0,0,0,0.5), inset 0 0 30px rgba(192, 160, 98, 0.1);
-    text-align: center;
-    position: relative;
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
+  /* --- Layout & Desain --- */
+  width: 90%;
+  max-width: 700px;
+  max-height: 85vh; /* Pakai max-height agar responsif */
 
-    /* INI KUNCINYA: Agar bisa di-scroll jika konten panjang */
-    overflow-y: auto; 
-    scrollbar-width: thin; /* Firefox */
-    scrollbar-color: #FFD700 #203A43;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  text-align: center;
+  padding: 20px;
+
+  /* --- Warna & Efek Kaca --- */
+  background: rgba(15, 32, 39, 0.9);
+  border: 2px solid #c0a062;
+  border-radius: 20px;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5),
+    inset 0 0 30px rgba(192, 160, 98, 0.1);
+
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+
+  /* --- PENGATURAN SCROLLBAR (BAGIAN 1: MODERN) --- */
+  /* Wajib ada: overflow-y agar konten bisa digulung */
+  overflow-y: auto;
+
+  /* Dibaca oleh: Firefox, Chrome versi 121+, Edge baru */
+  scrollbar-width: thin;
+  scrollbar-color: #ffd700 #203a43; /* [Warna Jempol] [Warna Trek] */
 }
 
-/* Kustomisasi Scrollbar (Chrome/Edge/Safari) */
-.game-container::-webkit-scrollbar { width: 8px; }
-.game-container::-webkit-scrollbar-track { background: #203A43; border-radius: 10px; }
-.game-container::-webkit-scrollbar-thumb { background: #FFD700; border-radius: 10px; }
+/* --- PENGATURAN SCROLLBAR (BAGIAN 2: WEBKIT / IPHONE) --- */
+/* Dibaca oleh: Safari (iPhone/Mac), Chrome lama, Samsung Internet */
+/* PENTING: Kode ini harus berada DI LUAR kurung kurawal .game-container */
+
+/* 1. Ukuran Lebar Scrollbar */
+.game-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* 2. Warna & Bentuk Jalur (Track) */
+.game-container::-webkit-scrollbar-track {
+  background: #203a43;
+  border-radius: 10px;
+  margin-block: 10px; /* Jarak aman atas-bawah */
+}
+
+/* 3. Warna & Bentuk Batang Geser (Thumb) */
+.game-container::-webkit-scrollbar-thumb {
+  background-color: #ffd700;
+  border-radius: 10px;
+  border: 2px solid #203a43; /* Memberi efek border agar rapi */
+}
 
 /* HEADER */
 .title-glow {
-    font-family: 'Cinzel', serif;
-    color: #FFD700;
-    font-size: 2rem; margin: 10px 0 15px 0;
-    text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
-    letter-spacing: 2px;
+  font-family: "Cinzel", serif;
+  color: #ffd700;
+  font-size: 2rem;
+  margin: 10px 0 15px 0;
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+  letter-spacing: 2px;
 }
 .stats-row {
-    display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;
-    flex-shrink: 0; /* Mencegah header mengecil gepeng */
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 15px;
+  flex-shrink: 0; /* Mencegah header mengecil gepeng */
 }
 .stat-box {
-    background: rgba(255,255,255,0.05); padding: 8px 15px;
-    border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 0.9rem;
-    border-bottom: 2px solid #FFD700;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.9rem;
+  border-bottom: 2px solid #ffd700;
 }
 
 /* PANEL */
-.panel { display: none; animation: fadeIn 0.5s ease; width: 100%; }
-.panel.active { display: block; }
-@keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+.panel {
+  display: none;
+  animation: fadeIn 0.5s ease;
+  width: 100%;
+}
+.panel.active {
+  display: block;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 /* LOADING / START SCREEN */
-.intro-text { font-style: italic; color: #aaa; margin-bottom: 5px; font-size: 0.95rem; }
-.sub-text { margin-bottom: 25px; font-size: 0.9rem; }
-
-.difficulty-selector { display: flex; justify-content: center; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
-.btn-diff {
-    background: transparent; border: 1px solid #555; color: #aaa;
-    padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: 0.3s; font-size: 0.9rem;
+.intro-text {
+  font-style: italic;
+  color: #aaa;
+  margin-bottom: 5px;
+  font-size: 0.95rem;
 }
-.btn-diff.active, .btn-diff:hover {
-    border-color: #FFD700; color: #FFD700; background: rgba(255, 215, 0, 0.1);
+.sub-text {
+  margin-bottom: 25px;
+  font-size: 0.9rem;
+}
+
+.difficulty-selector {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+.btn-diff {
+  background: transparent;
+  border: 1px solid #555;
+  color: #aaa;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 0.9rem;
+}
+.btn-diff.active,
+.btn-diff:hover {
+  border-color: #ffd700;
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.1);
 }
 
 .btn-start {
-    background: linear-gradient(45deg, #FFD700, #FDB931);
-    border: none; padding: 12px 35px; border-radius: 50px;
-    font-size: 1.1rem; font-weight: bold; color: #0F2027;
-    cursor: pointer; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
-    margin-bottom: 10px;
+  background: linear-gradient(45deg, #ffd700, #fdb931);
+  border: none;
+  padding: 12px 35px;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #0f2027;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+  margin-bottom: 10px;
 }
 
 /* GAMEPLAY UI - PERBAIKAN RESPONSIF */
 .progress-bar {
-    width: 100%; height: 6px; background: #333;
-    border-radius: 3px; margin-bottom: 15px; overflow: hidden;
-    flex-shrink: 0;
+  width: 100%;
+  height: 6px;
+  background: #333;
+  border-radius: 3px;
+  margin-bottom: 15px;
+  overflow: hidden;
+  flex-shrink: 0;
 }
-.progress-fill { height: 100%; width: 0%; background: #FFD700; transition: width 0.5s; }
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: #ffd700;
+  transition: width 0.5s;
+}
 
 .question-card {
-    background: rgba(255,255,255,0.05);
-    padding: 15px; border-radius: 12px; margin-bottom: 20px;
-    border-left: 4px solid #FFD700;
-    text-align: left; /* Teks soal rata kiri agar lebih enak dibaca */
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border-left: 4px solid #ffd700;
+  text-align: left; /* Teks soal rata kiri agar lebih enak dibaca */
 }
-.q-number { font-size: 0.75rem; color: #FFD700; text-transform: uppercase; margin-bottom: 8px; display: block; }
-
-#question-text { 
-    /* Gunakan ukuran font responsif */
-    font-size: 1.1rem; 
-    line-height: 1.6; 
-    margin: 0; 
-    font-weight: 500;
+.q-number {
+  font-size: 0.75rem;
+  color: #ffd700;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: block;
 }
 
-.options-grid { 
-    display: flex; flex-direction: column; gap: 10px; 
-    padding-bottom: 10px; /* Jarak aman scroll bawah */
+#question-text {
+  /* Gunakan ukuran font responsif */
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin: 0;
+  font-weight: 500;
+}
+
+.options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 10px; /* Jarak aman scroll bawah */
 }
 .btn-option {
-    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-    padding: 12px 15px; border-radius: 10px; color: white; cursor: pointer;
-    font-size: 0.95rem; text-align: left; transition: 0.2s; 
-    font-family: 'Poppins', sans-serif;
-    line-height: 1.4; /* Jarak antar baris di opsi jawaban */
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 12px 15px;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  font-size: 0.95rem;
+  text-align: left;
+  transition: 0.2s;
+  font-family: "Poppins", sans-serif;
+  line-height: 1.4; /* Jarak antar baris di opsi jawaban */
 
-    white-space: normal !important;  /* Izinkan teks turun ke bawah */
-    word-wrap: break-word;           /* Potong kata jika terlalu panjang */
-    min-height: 50px;                /* Tinggi minimal agar tombol enak dipencet */
-    height: auto;                    /* Tinggi menyesuaikan isi teks */
-    display: flex;                   
-    align-items: center;             /* Teks rata tengah vertikal */
-    line-height: 1.4;                /* Jarak antar baris teks */
-    text-align: left;
+  white-space: normal !important; /* Izinkan teks turun ke bawah */
+  word-wrap: break-word; /* Potong kata jika terlalu panjang */
+  min-height: 50px; /* Tinggi minimal agar tombol enak dipencet */
+  height: auto; /* Tinggi menyesuaikan isi teks */
+  display: flex;
+  align-items: center; /* Teks rata tengah vertikal */
+  line-height: 1.4; /* Jarak antar baris teks */
+  text-align: left;
 }
-.btn-option:hover { background: rgba(255,255,255,0.2); border-color: #FFD700; }
-.btn-option.correct { background: #2ecc71; border-color: #2ecc71; color: white; }
-.btn-option.wrong { background: #e74c3c; border-color: #e74c3c; color: white; }
+.btn-option:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #ffd700;
+}
+.btn-option.correct {
+  background: #2ecc71;
+  border-color: #2ecc71;
+  color: white;
+}
+.btn-option.wrong {
+  background: #e74c3c;
+  border-color: #e74c3c;
+  color: white;
+}
 
 /* RESULT SCREEN */
 .final-score-box {
-    margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.3);
-    border-radius: 15px; border: 1px solid #FFD700;
+  margin: 20px 0;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+  border: 1px solid #ffd700;
 }
-.btn-retry, .btn-home {
-    width: 100%; padding: 12px; margin-top: 8px; border-radius: 30px;
-    border: none; font-weight: bold; cursor: pointer; font-size: 0.9rem;
+.btn-retry,
+.btn-home {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  border-radius: 30px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 0.9rem;
 }
-.btn-retry { background: #FFD700; color: #000; }
-.btn-home { background: transparent; border: 1px solid #aaa; color: #ccc; }
+.btn-retry {
+  background: #ffd700;
+  color: #000;
+}
+.btn-home {
+  background: transparent;
+  border: 1px solid #aaa;
+  color: #ccc;
+}
 
 /* MEDIA QUERY UNTUK HP KECIL (RESPONSIF) */
 @media (max-height: 700px) {
-    .title-glow { font-size: 1.5rem; margin-bottom: 5px; }
-    .game-container { max-height: 90vh; padding: 15px; }
-    #question-text { font-size: 1rem; }
-    .btn-option { padding: 10px; font-size: 0.85rem; }
+  .title-glow {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+  }
+  .game-container {
+    max-height: 90vh;
+    padding: 15px;
+  }
+  #question-text {
+    font-size: 1rem;
+  }
+  .btn-option {
+    padding: 10px;
+    font-size: 0.85rem;
+  }
 }
 
 @media (max-width: 480px) {
-    .game-container { width: 95%; }
-    .btn-start { width: 100%; }
+  .game-container {
+    width: 95%;
+  }
+  .btn-start {
+    width: 100%;
+  }
 }
 
 /* --- TAMBAHAN WAJIB: OVERLAY KONEKSI --- */
 #connection-overlay {
-    position: fixed !important; /* Wajib Fixed agar melayang */
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    background: rgba(0, 0, 0, 0.85); /* Latar gelap */
-    z-index: 10000; /* Paling atas */
-    
-    /* Flexbox untuk menengahkan teks */
-    display: none; /* Sembunyi di awal, dimunculkan JS saat putus */
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    backdrop-filter: blur(5px);
+  position: fixed !important; /* Wajib Fixed agar melayang */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85); /* Latar gelap */
+  z-index: 10000; /* Paling atas */
+
+  /* Flexbox untuk menengahkan teks */
+  display: none; /* Sembunyi di awal, dimunculkan JS saat putus */
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
 }
 
 .wifi-icon {
-    font-size: 3rem;
-    margin-bottom: 15px;
-    animation: pulse 1.5s infinite;
+  font-size: 3rem;
+  margin-bottom: 15px;
+  animation: pulse 1.5s infinite;
 }
 
 .conn-text {
-    font-family: 'Poppins', sans-serif;
-    color: #ff4757;
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-align: center;
+  font-family: "Poppins", sans-serif;
+  color: #ff4757;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
 }
 
 .conn-sub {
-    color: #ccc;
-    font-size: 0.9rem;
-    margin-top: 5px;
+  color: #ccc;
+  font-size: 0.9rem;
+  margin-top: 5px;
 }
 
 @keyframes pulse {
-    0% { opacity: 0.5; transform: scale(0.9); }
-    50% { opacity: 1; transform: scale(1.1); }
-    100% { opacity: 0.5; transform: scale(0.9); }
+  0% {
+    opacity: 0.5;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0.5;
+    transform: scale(0.9);
+  }
 }

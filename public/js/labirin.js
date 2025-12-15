@@ -384,11 +384,8 @@ window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft') movePlayer(-1, 0);
 });
 
-// ==========================================
-// FITUR TAMBAHAN: KONTROL SWIPE (LAYAR SENTUH)
-// ==========================================
 
-// Variabel untuk menyimpan posisi awal jari
+// layarr sentuh Variabel untuk menyimpan posisi awal jari
 let touchStartX = 0;
 let touchStartY = 0;
 

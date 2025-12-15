@@ -1,463 +1,564 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Portal Game Videa Class</title>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="css/style.css?v=final">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-</head>
-<body>
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="css/style.css?v=final" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  </head>
+  <body>
     <header class="main-header">
-        <div class="logo-area">
-            <img src="/logo-videa.png" class="logo-img" alt="Logo">
-            <span class="portal-title">PORTAL GAME EDUKASI VIDEA CLASS</span>
-        </div>
-        
-        <div class="header-right" style="display: flex; align-items: center; gap: 15px;">
-            <button class="btn-theme-toggle" onclick="cycleTheme()" title="Ganti Tampilan">🎨</button>
-            <div class="role-badge" id="role-display">GUEST</div>
-        </div>
+      <div class="logo-area">
+        <img src="/logo-videa.png" class="logo-img" alt="Logo" />
+        <span class="portal-title">PORTAL GAME EDUKASI VIDEA CLASS</span>
+      </div>
+
+      <div
+        class="header-right"
+        style="display: flex; align-items: center; gap: 15px"
+      >
+        <button
+          class="btn-theme-toggle"
+          onclick="cycleTheme()"
+          title="Ganti Tampilan"
+        >
+          🎨
+        </button>
+        <div class="role-badge" id="role-display">GUEST</div>
+      </div>
     </header>
 
     <div class="dashboard-container">
-        <aside class="sidebar">
-            <div class="avatar-container" id="avatar-box">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guest" id="user-avatar" class="avatar" alt="Avatar">
+      <aside class="sidebar">
+        <div class="avatar-container" id="avatar-box">
+          <img
+            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guest"
+            id="user-avatar"
+            class="avatar"
+            alt="Avatar"
+          />
+        </div>
+
+        <div class="profile-name" id="display-name">Silakan Login</div>
+        <div class="font-small text-gray mb-20" id="user-email">...</div>
+
+        <div class="stats-box">
+          <div class="font-small text-ccc">TOTAL SKOR</div>
+          <span class="stat-value" id="total-score">-</span>
+        </div>
+
+        <div class="menu-section">
+          <div class="font-sizeable text-bold text-white mb-10">MENU SISWA</div>
+
+          <a href="toko.html" class="link-wrapper">
+            <button class="btn-menu btn-shop">🛍️ TOKO KAMU</button>
+          </a>
+
+          <a href="leaderboard.html" class="link-wrapper">
+            <button class="btn-menu btn-common">🏆 PERINGKAT</button>
+          </a>
+
+          <button class="btn-menu btn-common" onclick="toggleChat()">
+            💬 RUANG CHAT<span
+              id="chat-notif"
+              style="display: none; color: #00f2ff; margin-left: 5px"
+              >●</span
+            >
+          </button>
+        </div>
+
+        <div class="menu-section hidden" id="guru-panel">
+          <div class="font-sizeable text-bold text-green mb-10">MENU GURU</div>
+          <a href="guru.html" class="link-wrapper">
+            <button class="btn-menu btn-guru">
+              📋 Panel Guru (Nilai & Role)
+            </button>
+          </a>
+        </div>
+
+        <div class="menu-section hidden" id="admin-panel">
+          <div class="font-sizeable text-bold text-red mb-10">ADMIN PANEL</div>
+
+          <a href="guru.html" class="link-wrapper">
+            <button class="btn-menu btn-admin">👥 Kelola Semua User</button>
+          </a>
+
+          <button class="btn-menu btn-admin" onclick="adminReset()">
+            ⚠️ Reset Sistem
+          </button>
+        </div>
+
+        <div class="sidebar-footer">
+          <div id="guru-input-area" class="hidden">
+            <input
+              type="password"
+              id="input-kode-guru"
+              placeholder="Kode Rahasia Guru"
+              class="input-guru"
+            />
+          </div>
+          <button onclick="loginGoogle()" class="btn-google" id="btn-login">
+            G Masuk Google
+          </button>
+          <p
+            id="text-guru"
+            class="font-tiny text-666 cursor-pointer underline mt-10"
+            onclick="toggleInputGuru()"
+          >
+            Apakah Anda Guru?
+          </p>
+          <button onclick="logout()" class="btn-logout hidden" id="btn-logout">
+            Keluar
+          </button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <h2 class="misi-title">PILIH GAME</h2>
+        <div class="grid-games">
+          <a href="#" onclick="masukGame('math.html')" class="game-card">
+            <div class="game-icon">🚀</div>
+            <div class="game-title">TARUNG MATEMATIKA</div>
+            <div class="game-desc">Duel matematika cepat antar galaksi!</div>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
+          <a href="#" onclick="masukGame('zuma.html')" class="game-card">
+            <div class="game-icon">☄️</div>
+            <div class="game-title">TEMBAK ANGKA</div>
+            <div class="game-desc">Hancurkan bola angka sebelum meledak!</div>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
+          <a href="#" onclick="masukGame('memory.html')" class="game-card">
+            <div class="game-icon">🧩</div>
+            <div class="game-title">LAB MEMORI</div>
+            <div class="game-desc">
+              Aktifkan sel otakmu dengan kartu memori.
             </div>
-            
-            <div class="profile-name" id="display-name">Silakan Login</div>
-            <div class="font-small text-gray mb-20" id="user-email">...</div>
-            
-            <div class="stats-box">
-                <div class="font-small text-ccc">TOTAL SKOR</div>
-                <span class="stat-value" id="total-score">-</span>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
+
+          <a href="#" onclick="masukGame('piano.html')" class="game-card">
+            <div class="game-icon">🎹</div>
+            <div class="game-title">MATEMATIKA PIANO</div>
+            <div class="game-desc">Tekan tuts piano sesuai hasil hitungan.</div>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
+
+          <a href="#" onclick="masukGame('kasir.html')" class="game-card">
+            <div class="game-icon">🏪</div>
+            <div class="game-title">KASIR CILIK</div>
+            <div class="game-desc">Simulasi belanja & hitung kembalian.</div>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
+
+          <a href="#" onclick="masukGame('labirin.html')" class="game-card">
+            <div class="game-icon">🌀</div>
+            <div class="game-title">LABIRIN ILMU</div>
+            <div class="game-desc">Cari jalan keluar & jawab rintangan!</div>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
+
+          <a href="#" onclick="masukGame('nabi.html')" class="game-card">
+            <div class="game-icon">🕌</div>
+            <div class="game-title">JEJAK NABI</div>
+            <div class="game-desc">
+              Petualangan menelusuri kisah 25 Nabi & Rasul.
             </div>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
 
-            <div class="menu-section">
-                <div class="font-sizeable text-bold text-white mb-10">MENU SISWA</div>
-                
-                <a href="toko.html" class="link-wrapper">
-                    <button class="btn-menu btn-shop">🛍️ TOKO KAMU</button>
-                </a>
-
-                <a href="leaderboard.html" class="link-wrapper">
-                    <button class="btn-menu btn-common">🏆 PERINGKAT</button>
-                </a>
-                
-                <button class="btn-menu btn-common" onclick="toggleChat()">💬 RUANG CHAT<span id="chat-notif" style="display:none; color:#00f2ff; margin-left:5px;">●</span></button>
+          <a href="#" onclick="masukGame('ayat.html')" class="game-card">
+            <div class="game-icon">📖</div>
+            <div class="game-title">SAMBUNG AYAT</div>
+            <div class="game-desc">
+              Lanjutkan potongan ayat Juz Amma (Juz 30).
             </div>
-
-            <div class="menu-section hidden" id="guru-panel">
-            
-                <div class="font-sizeable text-bold text-green mb-10">MENU GURU</div>
-                <a href="guru.html" class="link-wrapper">
-                    <button class="btn-menu btn-guru">📋 Panel Guru (Nilai & Role)</button>
-                </a>
-            </div>
-
-            <div class="menu-section hidden" id="admin-panel">
-                <div class="font-sizeable text-bold text-red mb-10">ADMIN PANEL</div>
-                
-                <a href="guru.html" class="link-wrapper">
-                    <button class="btn-menu btn-admin">👥 Kelola Semua User</button>
-                </a>
-                
-                <button class="btn-menu btn-admin" onclick="adminReset()">⚠️ Reset Sistem</button>
-            </div>
-
-            <div class="sidebar-footer">
-                <div id="guru-input-area" class="hidden">
-                    <input type="password" id="input-kode-guru" placeholder="Kode Rahasia Guru" class="input-guru">
-                </div>
-                <button onclick="loginGoogle()" class="btn-google" id="btn-login">G Masuk Google</button>
-                <p id="text-guru" class="font-tiny text-666 cursor-pointer underline mt-10" onclick="toggleInputGuru()">
-                    Apakah Anda Guru?
-                </p>
-                <button onclick="logout()" class="btn-logout hidden" id="btn-logout">Keluar</button>
-            </div>
-        </aside>
-
-        <main class="main-content">
-            <h2 class="misi-title">PILIH GAME</h2>
-            <div class="grid-games">
-                <a href="#" onclick="masukGame('math.html')" class="game-card">
-                    <div class="game-icon">🚀</div>
-                    <div class="game-title">TARUNG MATEMATIKA</div>
-                    <div class="game-desc">Duel matematika cepat antar galaksi!</div>
-                    <div class="btn-play btn-start-math">MULAI</div>
-                </a>
-                <a href="#" onclick="masukGame('zuma.html')" class="game-card">
-                    <div class="game-icon">☄️</div>
-                    <div class="game-title">TEMBAK ANGKA</div>
-                    <div class="game-desc">Hancurkan bola angka sebelum meledak!</div>
-                    <div class="btn-play btn-start-math">MULAI</div>
-                </a>
-                <a href="#" onclick="masukGame('memory.html')" class="game-card">
-                    <div class="game-icon">🧩</div>
-                    <div class="game-title">LAB MEMORI</div>
-                    <div class="game-desc">Aktifkan sel otakmu dengan kartu memori.</div>
-                    <div class="btn-play btn-start-math">MULAI</div>
-                </a>
-                
-                <a href="#" onclick="masukGame('piano.html')" class="game-card">
-                    <div class="game-icon">🎹</div>
-                    <div class="game-title">MATEMATIKA PIANO </div>
-                    <div class="game-desc">Tekan tuts piano sesuai hasil hitungan.</div>
-                    <div class="btn-play btn-start-math">MULAI</div>
-                </a>
-
-                <a href="#" onclick="masukGame('kasir.html')" class="game-card">
-                    <div class="game-icon">🏪</div>
-                    <div class="game-title">KASIR CILIK</div>
-                    <div class="game-desc">Simulasi belanja & hitung kembalian.</div>
-                    <div class="btn-play btn-start-math">MULAI</div>
-                </a>
-
-                <a href="#" onclick="masukGame('labirin.html')" class="game-card">
-                    <div class="game-icon">🌀</div>
-                    <div class="game-title">LABIRIN ILMU</div>
-                    <div class="game-desc">Cari jalan keluar & jawab rintangan!</div>
-                    <div class="btn-play btn-start-math">MULAI</div>
-                </a>
-
-                <a href="#" onclick="masukGame('nabi.html')" class="game-card" >
-                    <div class="game-icon">🕌</div>
-                    <div class="game-title">JEJAK NABI</div>
-                    <div class="game-desc">Petualangan menelusuri kisah 25 Nabi & Rasul.</div>
-                    <div class="btn-play btn-start-math">MULAI</div>
-                </a>
-
-                <a href="#" onclick="masukGame('ayat.html')" class="game-card">
-                    <div class="game-icon">📖</div>
-                    <div class="game-title">SAMBUNG AYAT</div>
-                    <div class="game-desc">Lanjutkan potongan ayat Juz Amma (Juz 30).</div>
-                    <div class="btn-play btn-start-math">MULAI</div>
-                </a>
-
-
-            </div>
-        </main>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
+        </div>
+      </main>
     </div>
 
     <div id="chat-container">
-        <div class="chat-header" onclick="minimizeChat()">
-            <span>💬 Global Chat</span>
-            <div class="chat-controls">
-                <button onclick="event.stopPropagation(); minimizeChat()">_</button>
-                <button onclick="event.stopPropagation(); toggleChat()">✖</button>
-            </div>
+      <div class="chat-header" onclick="minimizeChat()">
+        <span>💬 Global Chat</span>
+        <div class="chat-controls">
+          <button onclick="event.stopPropagation(); minimizeChat()">_</button>
+          <button onclick="event.stopPropagation(); toggleChat()">✖</button>
         </div>
-        <div class="chat-messages" id="chat-box">
-            <div class="chat-welcome">Selamat datang di Chat Global!</div>
-        </div>
-        <div class="chat-input-area">
-            <input type="text" id="chat-input" class="chat-input" placeholder="Tulis pesan..." onkeypress="handleEnter(event)">
-            <button class="chat-send" onclick="kirimPesan()">➤</button>
-        </div>
+      </div>
+      <div class="chat-messages" id="chat-box">
+        <div class="chat-welcome">Selamat datang di Chat Global!</div>
+      </div>
+      <div class="chat-input-area">
+        <input
+          type="text"
+          id="chat-input"
+          class="chat-input"
+          placeholder="Tulis pesan..."
+          onkeypress="handleEnter(event)"
+        />
+        <button class="chat-send" onclick="kirimPesan()">➤</button>
+      </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
+
     <script src="js/audio.js"></script>
 
     <script>
-        const socket = io(); 
-        const firebaseConfig = {
-            apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
-            authDomain: "mathgamesd.firebaseapp.com",
-            databaseURL: "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "mathgamesd",
-            storageBucket: "mathgamesd.firebasestorage.app",
-            messagingSenderId: "595640141584",
-            appId: "1:595640141584:web:d02523bc844e52550f4795"
-        };
-        try { firebase.initializeApp(firebaseConfig); } catch(e) {}
-        const auth = firebase.auth();
-        const database = firebase.database();
-        const provider = new firebase.auth.GoogleAuthProvider();
-        let currentUser = null;
+      const socket = io();
+      const firebaseConfig = {
+        apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
+        authDomain: "mathgamesd.firebaseapp.com",
+        databaseURL:
+          "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "mathgamesd",
+        storageBucket: "mathgamesd.firebasestorage.app",
+        messagingSenderId: "595640141584",
+        appId: "1:595640141584:web:d02523bc844e52550f4795",
+      };
+      try {
+        firebase.initializeApp(firebaseConfig);
+      } catch (e) {}
+      const auth = firebase.auth();
+      const database = firebase.database();
+      const provider = new firebase.auth.GoogleAuthProvider();
+      let currentUser = null;
 
-        // --- GUEST LOGIC ---
-        if (!localStorage.getItem("playerName")) {
-            const randomGuest = "Guest_" + Math.floor(Math.random() * 10000);
-            localStorage.setItem("playerName", randomGuest);
+      // --- GUEST LOGIC ---
+      if (!localStorage.getItem("playerName")) {
+        const randomGuest = "Guest_" + Math.floor(Math.random() * 10000);
+        localStorage.setItem("playerName", randomGuest);
+      }
+      const localName = localStorage.getItem("playerName");
+      document.getElementById("display-name").innerText = localName;
+      document.getElementById(
+        "user-avatar"
+      ).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${localName}`;
+
+      loadUserData(localName);
+      checkRole(localName);
+
+      // --- DAFTAR TEMA ---
+      const themes = ["default", "forest", "ocean", "hacker", "crimson"];
+
+      // --- PERBAIKAN FUNGSI GANTI TEMA (INSTAN) ---
+      function cycleTheme() {
+        const themes = ["default", "forest", "ocean", "hacker", "crimson"];
+        const body = document.body;
+
+        // 1. Deteksi tema saat ini dari tampilan (bukan dari database)
+        let currentThemeIndex = 0;
+        if (body.classList.contains("theme-forest")) currentThemeIndex = 1;
+        else if (body.classList.contains("theme-ocean")) currentThemeIndex = 2;
+        else if (body.classList.contains("theme-hacker")) currentThemeIndex = 3;
+        else if (body.classList.contains("theme-crimson"))
+          currentThemeIndex = 4;
+
+        // 2. Tentukan tema berikutnya
+        let nextIndex = (currentThemeIndex + 1) % themes.length;
+        let nextTheme = themes[nextIndex];
+
+        // 3. TERAPKAN LANGSUNG KE LAYAR (Agar user merasa cepat)
+        body.classList.remove(
+          "theme-forest",
+          "theme-ocean",
+          "theme-hacker",
+          "theme-crimson"
+        );
+        if (nextTheme !== "default") {
+          body.classList.add("theme-" + nextTheme);
         }
-        const localName = localStorage.getItem("playerName");
-        document.getElementById('display-name').innerText = localName;
-        document.getElementById('user-avatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${localName}`;
 
-        loadUserData(localName); 
-        checkRole(localName);
+        // 4. SIMPAN KE DATABASE (Background Process)
+        // Kita ambil nama dari LocalStorage karena pasti sudah disanitasi (aman dari titik)
+        const safeName = localStorage.getItem("playerName");
 
-        // --- DAFTAR TEMA ---
-        const themes = ['default', 'forest', 'ocean', 'hacker', 'crimson'];
-        
-        // --- PERBAIKAN FUNGSI GANTI TEMA (INSTAN) ---
-        function cycleTheme() {
-            const themes = ['default', 'forest', 'ocean', 'hacker', 'crimson'];
-            const body = document.body;
+        if (safeName) {
+          database
+            .ref("leaderboard/" + safeName)
+            .update({ active_theme: nextTheme })
+            .catch((err) => console.log("Gagal simpan preferensi tema:", err));
+        }
+      }
+
+      // --- CHAT LOGIC ---
+      function toggleChat() {
+        const chatBox = document.getElementById("chat-container");
+        if (chatBox.classList.contains("minimized"))
+          chatBox.classList.remove("minimized");
+        chatBox.classList.toggle("open");
+        document.getElementById("chat-notif").style.display = "none";
+      }
+      function minimizeChat() {
+        const chatBox = document.getElementById("chat-container");
+        if (!chatBox.classList.contains("open")) chatBox.classList.add("open");
+        chatBox.classList.toggle("minimized");
+      }
+      function kirimPesan() {
+        const input = document.getElementById("chat-input");
+        const msg = input.value.trim();
+        if (!msg) return;
+        const namaPengirim = localStorage.getItem("playerName") || "Guest";
+        socket.emit("chatMessage", { nama: namaPengirim, pesan: msg });
+        input.value = "";
+      }
+      function handleEnter(e) {
+        if (e.key === "Enter") kirimPesan();
+      }
+
+      socket.on("chatMessage", (data) => {
+        const box = document.getElementById("chat-box");
+        const myName = localStorage.getItem("playerName") || "Guest";
+        const isMe = data.nama === myName;
+
+        // ELEMEN BUBBLE
+        const div = document.createElement("div");
+        div.className = isMe ? "msg-bubble msg-me" : "msg-bubble";
+
+        // NAMA PENGIRIM
+        if (!isMe) {
+          const nameSpan = document.createElement("span");
+          nameSpan.className = "msg-name";
+          nameSpan.innerText = data.nama;
+          div.appendChild(nameSpan);
+        }
+
+        // PESAN (AMAN)
+        const msgSpan = document.createElement("span");
+        msgSpan.innerText = data.pesan;
+        div.appendChild(msgSpan);
+
+        // WAKTU
+        const timeSpan = document.createElement("span");
+        timeSpan.className = "msg-time";
+        timeSpan.innerText = data.waktu || "";
+        div.appendChild(document.createElement("br"));
+        div.appendChild(timeSpan);
+
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+        if (
+          !document.getElementById("chat-container").classList.contains("open")
+        ) {
+          const notif = document.getElementById("chat-notif");
+          if (notif) notif.style.display = "inline";
+        }
+      });
+
+      // --- LOGIN & ROLE ---
+      function toggleInputGuru() {
+        const area = document.getElementById("guru-input-area");
+        const text = document.getElementById("text-guru");
+        if (area.classList.contains("hidden")) {
+          area.classList.remove("hidden");
+          area.classList.add("block");
+          text.innerText = "Batal (Masuk sebagai Siswa)";
+        } else {
+          area.classList.remove("block");
+          area.classList.add("hidden");
+          text.innerText = "Apakah Anda Guru?";
+          document.getElementById("input-kode-guru").value = "";
+        }
+      }
+
+
+      // Fungsi pembantu untuk membersihkan nama
+      function sanitizeName(name) {
+        if (!name) return "Guest";
+        return name.replace(/[.#$[\]]/g, "_");
+      }
+
+      function loginGoogle() {
+        const KODE_RAHASIA = "GURU2025";
+        const inputKode = document
+          .getElementById("input-kode-guru")
+          .value.trim();
+
+        auth
+          .signInWithPopup(provider)
+          .then((result) => {
+            const originalName = result.user.displayName;
+
             
-            // 1. Deteksi tema saat ini dari tampilan (bukan dari database)
-            let currentThemeIndex = 0;
-            if (body.classList.contains('theme-forest')) currentThemeIndex = 1;
-            else if (body.classList.contains('theme-ocean')) currentThemeIndex = 2;
-            else if (body.classList.contains('theme-hacker')) currentThemeIndex = 3;
-            else if (body.classList.contains('theme-crimson')) currentThemeIndex = 4;
+            const safeName = sanitizeName(originalName);
 
-            // 2. Tentukan tema berikutnya
-            let nextIndex = (currentThemeIndex + 1) % themes.length;
-            let nextTheme = themes[nextIndex];
+            // Simpan nama yang aman (contoh: Mr_Aan) ke LocalStorage
+            localStorage.setItem("playerName", safeName);
 
-            // 3. TERAPKAN LANGSUNG KE LAYAR (Agar user merasa cepat)
-            body.classList.remove('theme-forest', 'theme-ocean', 'theme-hacker', 'theme-crimson');
-            if (nextTheme !== 'default') {
-                body.classList.add('theme-' + nextTheme);
-            }
+            let roleBaru = "siswa";
+            if (inputKode === KODE_RAHASIA) roleBaru = "guru";
 
-            // 4. SIMPAN KE DATABASE (Background Process)
-            // Kita ambil nama dari LocalStorage karena pasti sudah disanitasi (aman dari titik)
-            const safeName = localStorage.getItem("playerName");
-            
-            if(safeName) {
-                database.ref('leaderboard/' + safeName).update({ active_theme: nextTheme })
-                    .catch(err => console.log("Gagal simpan preferensi tema:", err));
-            }
-        }
-
-        // --- CHAT LOGIC ---
-        function toggleChat() {
-            const chatBox = document.getElementById('chat-container');
-            if (chatBox.classList.contains('minimized')) chatBox.classList.remove('minimized');
-            chatBox.classList.toggle('open');
-            document.getElementById('chat-notif').style.display = 'none';
-        }
-        function minimizeChat() {
-            const chatBox = document.getElementById('chat-container');
-            if (!chatBox.classList.contains('open')) chatBox.classList.add('open');
-            chatBox.classList.toggle('minimized');
-        }
-        function kirimPesan() {
-            const input = document.getElementById('chat-input');
-            const msg = input.value.trim();
-            if(!msg) return;
-            const namaPengirim = localStorage.getItem("playerName") || "Guest";
-            socket.emit('chatMessage', { nama: namaPengirim, pesan: msg });
-            input.value = "";
-        }
-        function handleEnter(e) { if(e.key === 'Enter') kirimPesan(); }
-        
-        socket.on('chatMessage', (data) => {
-            const box = document.getElementById('chat-box');
-            const myName = localStorage.getItem("playerName") || "Guest";
-            const isMe = data.nama === myName;
-            
-            // ELEMEN BUBBLE
-            const div = document.createElement('div');
-            div.className = isMe ? 'msg-bubble msg-me' : 'msg-bubble';
-            
-            // NAMA PENGIRIM
-            if (!isMe) {
-                const nameSpan = document.createElement('span');
-                nameSpan.className = 'msg-name';
-                nameSpan.innerText = data.nama;
-                div.appendChild(nameSpan);
-            }
-            
-            // PESAN (AMAN)
-            const msgSpan = document.createElement('span');
-            msgSpan.innerText = data.pesan;
-            div.appendChild(msgSpan);
-            
-            // WAKTU
-            const timeSpan = document.createElement('span');
-            timeSpan.className = 'msg-time';
-            timeSpan.innerText = data.waktu || '';
-            div.appendChild(document.createElement('br'));
-            div.appendChild(timeSpan);
-            
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-            if(!document.getElementById('chat-container').classList.contains('open')) {
-                const notif = document.getElementById('chat-notif');
-                if(notif) notif.style.display = 'inline';
-            }
-        });
-
-        // --- LOGIN & ROLE ---
-        function toggleInputGuru() {
-            const area = document.getElementById('guru-input-area');
-            const text = document.getElementById('text-guru');
-            if (area.classList.contains('hidden')) {
-                area.classList.remove('hidden'); area.classList.add('block');
-                text.innerText = "Batal (Masuk sebagai Siswa)";
-            } else {
-                area.classList.remove('block'); area.classList.add('hidden');
-                text.innerText = "Apakah Anda Guru?";
-                document.getElementById('input-kode-guru').value = "";
-            }
-        }
-
-        // --- KODE BARU: Masukkan ini menggantikan fungsi loginGoogle yang lama ---
-        
-        // Fungsi pembantu untuk membersihkan nama
-        function sanitizeName(name) {
-            if (!name) return "Guest";
-            return name.replace(/[.#$[\]]/g, '_');
-        }
-
-        function loginGoogle() {
-            const KODE_RAHASIA = "GURU2025"; 
-            const inputKode = document.getElementById('input-kode-guru').value.trim();
-            
-            auth.signInWithPopup(provider).then((result) => {
-                const originalName = result.user.displayName;
-                
-                // DISINI PERUBAHANNYA: Kita simpan versi aman ke browser
-                const safeName = sanitizeName(originalName);
-                
-                // Simpan nama yang aman (contoh: Mr_Aan) ke LocalStorage
-                localStorage.setItem("playerName", safeName); 
-                
-                let roleBaru = "siswa"; 
-                if (inputKode === KODE_RAHASIA) roleBaru = "guru";
-
-                // Cek database menggunakan nama yang aman
-                database.ref('leaderboard/' + safeName).once('value').then(snapshot => {
-                    const data = snapshot.val();
-                    const currentRole = data ? data.role : null;
-                    
-                    // Update data user (Simpan nama asli agar tampilan tetap bagus)
-                    if (currentRole !== 'admin' && (currentRole !== 'guru' || roleBaru === 'guru')) {
-                         database.ref('leaderboard/' + safeName).update({ 
-                             nama: originalName, // Nama asli untuk display
-                             role: roleBaru 
-                         });
-                    }
-                    
-                    // Refresh halaman agar perubahan terlihat
-                    location.reload();
-                });
-            }).catch(e => alert("Login Gagal: " + e.message));
-        }
-
-        function logout() { 
-            auth.signOut().then(() => { localStorage.removeItem("playerName"); location.reload(); }); 
-        }
-
-        function checkRole(name) {
-            database.ref('leaderboard/' + name).on('value', snapshot => {
+            // Cek database menggunakan nama yang aman
+            database
+              .ref("leaderboard/" + safeName)
+              .once("value")
+              .then((snapshot) => {
                 const data = snapshot.val();
-                let role = (data && data.role) ? data.role : "siswa";
-                document.getElementById('role-display').innerText = role.toUpperCase();
-                
-                const guruPanel = document.getElementById('guru-panel');
-                const adminPanel = document.getElementById('admin-panel');
-                
-                guruPanel.classList.add('hidden'); guruPanel.classList.remove('block');
-                adminPanel.classList.add('hidden'); adminPanel.classList.remove('block');
-                
-                if(role === 'admin') {
-                    guruPanel.classList.remove('hidden'); guruPanel.classList.add('block');
-                    adminPanel.classList.remove('hidden'); adminPanel.classList.add('block');
-                } else if(role === 'guru') {
-                    guruPanel.classList.remove('hidden'); guruPanel.classList.add('block');
-                }
-            });
-        }
+                const currentRole = data ? data.role : null;
 
-        auth.onAuthStateChanged((user) => {
-            if(user) {
-                currentUser = user;
-                document.getElementById('btn-login').classList.add('hidden');
-                document.getElementById('text-guru').classList.add('hidden');
-                document.getElementById('guru-input-area').classList.add('hidden');
-                document.getElementById('btn-logout').classList.remove('hidden');
-                document.getElementById('display-name').innerText = user.displayName;
-                document.getElementById('user-email').innerText = user.email;
-                document.getElementById('user-avatar').src = user.photoURL;
-                loadUserData(user.displayName);
-                checkRole(user.displayName);
+                // Update data user (Simpan nama asli agar tampilan tetap bagus)
+                if (
+                  currentRole !== "admin" &&
+                  (currentRole !== "guru" || roleBaru === "guru")
+                ) {
+                  database.ref("leaderboard/" + safeName).update({
+                    nama: originalName, // Nama asli untuk display
+                    role: roleBaru,
+                  });
+                }
+
+                // Refresh halaman agar perubahan terlihat
+                location.reload();
+              });
+          })
+          .catch((e) => alert("Login Gagal: " + e.message));
+      }
+
+      function logout() {
+        auth.signOut().then(() => {
+          localStorage.removeItem("playerName");
+          location.reload();
+        });
+      }
+
+      function checkRole(name) {
+        database.ref("leaderboard/" + name).on("value", (snapshot) => {
+          const data = snapshot.val();
+          let role = data && data.role ? data.role : "siswa";
+          document.getElementById("role-display").innerText =
+            role.toUpperCase();
+
+          const guruPanel = document.getElementById("guru-panel");
+          const adminPanel = document.getElementById("admin-panel");
+
+          guruPanel.classList.add("hidden");
+          guruPanel.classList.remove("block");
+          adminPanel.classList.add("hidden");
+          adminPanel.classList.remove("block");
+
+          if (role === "admin") {
+            guruPanel.classList.remove("hidden");
+            guruPanel.classList.add("block");
+            adminPanel.classList.remove("hidden");
+            adminPanel.classList.add("block");
+          } else if (role === "guru") {
+            guruPanel.classList.remove("hidden");
+            guruPanel.classList.add("block");
+          }
+        });
+      }
+
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          currentUser = user;
+          document.getElementById("btn-login").classList.add("hidden");
+          document.getElementById("text-guru").classList.add("hidden");
+          document.getElementById("guru-input-area").classList.add("hidden");
+          document.getElementById("btn-logout").classList.remove("hidden");
+          document.getElementById("display-name").innerText = user.displayName;
+          document.getElementById("user-email").innerText = user.email;
+          document.getElementById("user-avatar").src = user.photoURL;
+          loadUserData(user.displayName);
+          checkRole(user.displayName);
+        }
+      });
+
+      function loadUserData(name) {
+        database.ref("leaderboard/" + name).on("value", (snapshot) => {
+          const data = snapshot.val();
+          let total = 0;
+          if (data) {
+            let sMath = data.skor_math || 0;
+            if (data.skor && !data.skor_math) sMath = data.skor; // Support skor lama
+
+            let sZuma = data.skor_zuma || 0;
+            let sMemory = data.skor_memory || 0;
+            let sPiano = data.skor_piano || 0;
+            let sKasir = data.skor_kasir || 0;
+            let sLabirin = data.skor_labirin || 0;
+            let sNabi = data.skor_nabi || 0;
+            let sAyat = data.skor_ayat || 0; // Persiapan untuk game Ayat nanti
+
+            // rumus total game buat leaderboard 
+            total =
+              sMath +
+              sZuma +
+              sMemory +
+              sPiano +
+              sKasir +
+              sLabirin +
+              sNabi +
+              sAyat;
+
+            const avatarBox = document.getElementById("avatar-box");
+            avatarBox.className = "avatar-container";
+            if (data.equipped_frame && data.equipped_frame !== "default") {
+              avatarBox.classList.add("frame-" + data.equipped_frame);
             }
+
+            document.body.classList.remove(
+              "theme-forest",
+              "theme-ocean",
+              "theme-hacker",
+              "theme-crimson"
+            );
+            const myTheme = data.active_theme || "default";
+            if (myTheme !== "default") {
+              document.body.classList.add("theme-" + myTheme);
+            }
+          }
+          document.getElementById("total-score").innerText = total;
         });
-        
-        function loadUserData(name) {
-            database.ref('leaderboard/' + name).on('value', snapshot => {
-                const data = snapshot.val();
-                let total = 0;
-                if (data) {
-                    let sMath = data.skor_math || 0;
-                if (data.skor && !data.skor_math) sMath = data.skor; // Support skor lama
-                
-                let sZuma = data.skor_zuma || 0;
-                let sMemory = data.skor_memory || 0;
-                let sPiano = data.skor_piano || 0;
-                let sKasir = data.skor_kasir || 0;
-                let sLabirin = data.skor_labirin || 0;
-                
-                // --- TAMBAHAN GAME BARU ---
-                let sNabi = data.skor_nabi || 0;
-                let sAyat = data.skor_ayat || 0; // Persiapan untuk game Ayat nanti
+      }
 
-                // --- RUMUS TOTAL YANG BENAR ---
-                total = sMath + sZuma + sMemory + sPiano + sKasir + sLabirin + sNabi + sAyat;
+      function masukGame(url) {
+        if (localStorage.getItem("playerName")) window.location.href = url;
+        else alert("Silakan refresh halaman untuk mendapatkan ID Guest.");
+      }
 
-                    const avatarBox = document.getElementById('avatar-box');
-                    avatarBox.className = "avatar-container"; 
-                    if (data.equipped_frame && data.equipped_frame !== "default") {
-                        avatarBox.classList.add("frame-" + data.equipped_frame);
-                    }
+      function adminReset() {
+        const roleEl = document.getElementById("role-display").innerText;
+        if (roleEl !== "ADMIN") return alert("Anda bukan Admin!");
+        if (confirm("⚠️ Reset Sistem?"))
+          alert("Fitur Reset Chat akan aktif di versi 2.0!");
+      }
 
-                    document.body.classList.remove('theme-forest', 'theme-ocean', 'theme-hacker', 'theme-crimson');
-                    const myTheme = data.active_theme || 'default';
-                    if (myTheme !== 'default') {
-                        document.body.classList.add('theme-' + myTheme);
-                    }
-                }
-                document.getElementById('total-score').innerText = total;
-            });
-        }
-
-        function masukGame(url) { 
-            if(localStorage.getItem("playerName")) window.location.href = url; 
-            else alert("Silakan refresh halaman untuk mendapatkan ID Guest.");
-        }
-
-        function adminReset() {
-            const roleEl = document.getElementById('role-display').innerText;
-            if(roleEl !== 'ADMIN') return alert("Anda bukan Admin!");
-            if(confirm("⚠️ Reset Sistem?")) alert("Fitur Reset Chat akan aktif di versi 2.0!");
-        }
-
-        // --- AUDIO LISTENER (DIPINDAHKAN KESINI) ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const allButtons = document.querySelectorAll('button, .game-card');
-            allButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    if(typeof AudioManager !== 'undefined') AudioManager.playClick();
-                });
-            });
+      //  audio listen
+      document.addEventListener("DOMContentLoaded", () => {
+        const allButtons = document.querySelectorAll("button, .game-card");
+        allButtons.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            if (typeof AudioManager !== "undefined") AudioManager.playClick();
+          });
         });
+      });
 
-        // ✅ TEMPEL KODE PWA DI SINI (PALING BAWAH)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('SW Registered'))
-                    .catch(err => console.log('SW Error:', err));
-            });
-        }
-
-
-
+      // pwaa
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((reg) => console.log("SW Registered"))
+            .catch((err) => console.log("SW Error:", err));
+        });
+      }
     </script>
-</body>
+  </body>
 </html>

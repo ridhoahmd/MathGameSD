@@ -1,108 +1,123 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kasir Cilik - Videa Class</title>
-    
-    <meta http-equiv="Content-Security-Policy" content="
+
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
         default-src 'self' https: http: data: blob: 'unsafe-inline' 'unsafe-eval';
         font-src 'self' https://fonts.gstatic.com;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    ">
+    "
+    />
 
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="css/kasir.css?v=final">
-    <link rel="icon" type="image/png" href="/logo-videa.png">
-</head>
-<body>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=Poppins:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
 
+    <link rel="stylesheet" href="css/kasir.css?v=final" />
+    <link rel="icon" type="image/png" href="/logo-videa.png" />
+  </head>
+  <body>
     <div class="top-bar">
-        <a href="/" class="btn-back">⬅ Tutup Toko</a>
-        <div class="level-badge">Simulasi Belanja</div>
+      <a href="/" class="btn-back">⬅ Tutup Toko</a>
+      <div class="level-badge">Simulasi Belanja</div>
     </div>
 
     <div class="game-container">
-        
-        <div class="register-header">
-            <div class="screen-display">
-                <span id="screen-text">KASIR READY...</span>
+      <div class="register-header">
+        <div class="screen-display">
+          <span id="screen-text">KASIR READY...</span>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-box">💰 Omset: <span id="score">0</span></div>
+        <div class="stat-box">⏳ Shift: <span id="timer">00</span></div>
+      </div>
+
+      <div id="start-screen" class="panel active">
+        <div class="icon-big">🏪</div>
+        <p class="intro-text">"Selamat datang, mau beli apa?"</p>
+        <p class="sub-text">Hitung kembalian pelanggan dengan tepat!</p>
+
+        <div class="difficulty-selector">
+          <button class="btn-diff active" data-level="mudah">
+            Magang (Ratusan)
+          </button>
+          <button class="btn-diff" data-level="sedang">
+            Karyawan (Ribuan)
+          </button>
+          <button class="btn-diff" data-level="sulit">
+            Manajer (Puluhan Rb)
+          </button>
+        </div>
+
+        <button onclick="startGame()" class="btn-start">BUKA KASIR</button>
+      </div>
+
+      <div id="game-screen" class="panel hidden">
+        <div class="receipt-paper">
+          <div class="receipt-header">
+            <h3>TOKO VIDEA</h3>
+            <p>Jl. Pendidikan No. 1</p>
+            <hr />
+          </div>
+
+          <div class="receipt-body">
+            <p id="story-text" class="story">Pelanggan membeli...</p>
+
+            <div class="price-row">
+              <span>Total Belanja:</span>
+              <span id="display-total" class="price">Rp 0</span>
             </div>
-        </div>
-
-        <div class="stats-row">
-            <div class="stat-box">💰 Omset: <span id="score">0</span></div>
-            <div class="stat-box">⏳ Shift: <span id="timer">00</span></div>
-        </div>
-
-        <div id="start-screen" class="panel active">
-            <div class="icon-big">🏪</div>
-            <p class="intro-text">"Selamat datang, mau beli apa?"</p>
-            <p class="sub-text">Hitung kembalian pelanggan dengan tepat!</p>
-            
-            <div class="difficulty-selector">
-                <button class="btn-diff active" data-level="mudah">Magang (Ratusan)</button>
-                <button class="btn-diff" data-level="sedang">Karyawan (Ribuan)</button>
-                <button class="btn-diff" data-level="sulit">Manajer (Puluhan Rb)</button>
+            <div class="price-row">
+              <span>Tunai:</span>
+              <span id="display-pay" class="price">Rp 0</span>
             </div>
-
-            <button onclick="startGame()" class="btn-start">BUKA KASIR</button>
-        </div>
-
-        <div id="game-screen" class="panel hidden">
-            
-            <div class="receipt-paper">
-                <div class="receipt-header">
-                    <h3>TOKO VIDEA</h3>
-                    <p>Jl. Pendidikan No. 1</p>
-                    <hr>
-                </div>
-                
-                <div class="receipt-body">
-                    <p id="story-text" class="story">Pelanggan membeli...</p>
-                    
-                    <div class="price-row">
-                        <span>Total Belanja:</span>
-                        <span id="display-total" class="price">Rp 0</span>
-                    </div>
-                    <div class="price-row">
-                        <span>Tunai:</span>
-                        <span id="display-pay" class="price">Rp 0</span>
-                    </div>
-                    <hr>
-                    <div class="price-row highlight">
-                        <span>KEMBALIAN?</span>
-                    </div>
-                </div>
-
-                <div class="input-area">
-                    <span class="rp-prefix">Rp</span>
-                    <input type="number" id="input-answer" placeholder="0" onkeypress="handleEnter(event)">
-                    <button onclick="checkAnswer()" class="btn-enter">BAYAR</button>
-                </div>
-                <p id="feedback-msg" class="feedback"></p>
+            <hr />
+            <div class="price-row highlight">
+              <span>KEMBALIAN?</span>
             </div>
+          </div>
 
+          <div class="input-area">
+            <span class="rp-prefix">Rp</span>
+            <input
+              type="number"
+              id="input-answer"
+              placeholder="0"
+              onkeypress="handleEnter(event)"
+            />
+            <button onclick="checkAnswer()" class="btn-enter">BAYAR</button>
+          </div>
+          <p id="feedback-msg" class="feedback"></p>
         </div>
+      </div>
 
-        <div id="result-screen" class="panel hidden">
-            <h2>TOKO TUTUP</h2>
-            <div class="final-score-box">
-                <span>Total Keuntungan</span>
-                <h1 id="final-score">Rp 0</h1>
-            </div>
-            <p id="result-msg">Kerja bagus hari ini!</p>
-            
-            <button onclick="location.reload()" class="btn-retry">SHIFT BERIKUTNYA</button>
-            <button onclick="window.location.href='/'" class="btn-home">PULANG</button>
+      <div id="result-screen" class="panel hidden">
+        <h2>TOKO TUTUP</h2>
+        <div class="final-score-box">
+          <span>Total Keuntungan</span>
+          <h1 id="final-score">Rp 0</h1>
         </div>
+        <p id="result-msg">Kerja bagus hari ini!</p>
 
+        <button onclick="location.reload()" class="btn-retry">
+          SHIFT BERIKUTNYA
+        </button>
+        <button onclick="window.location.href='/'" class="btn-home">
+          PULANG
+        </button>
+      </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/audio.js?v=final"></script>
     <script src="js/kasir.js?v=final"></script>
-
-</body>
+  </body>
 </html>

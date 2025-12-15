@@ -1,391 +1,439 @@
-require('dotenv').config();
-
-const express = require('express');
+require("dotenv").config();
+const express = require("express");
 const app = express();
-const http = require('http').createServer(app);
-const io = require('socket.io')(http, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
+const http = require("http").createServer(app);
+const io = require("socket.io")(http, {
+  cors: {
+    origin: "*", // Tips: Ganti '*' dengan domain production nanti untuk keamanan ekstra
+    methods: ["GET", "POST"],
+  },
 });
-const path = require('path');
-
-// --- 1. SETUP FIREBASE ---
+const path = require("path");
 const { initializeApp } = require("firebase/app");
-const { getDatabase, ref, set, get, update, runTransaction } = require("firebase/database");
+const {
+  getDatabase,
+  ref,
+  set,
+  get,
+  runTransaction,
+} = require("firebase/database");
 
-// Konfigurasi Firebase
+// ==========================================
+// 1. KONFIGURASI DATABASE
+// ==========================================
 const firebaseConfig = {
-    apiKey: process.env.FIREBASE_API_KEY,
-    authDomain: "mathgamesd.firebaseapp.com",
-    databaseURL: "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "mathgamesd",
-    storageBucket: "mathgamesd.firebasestorage.app",
-    messagingSenderId: "595640141584",
-    appId: "1:595640141584:web:d02523bc844e52550f4795"
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: "mathgamesd.firebaseapp.com",
+  databaseURL:
+    "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "mathgamesd",
+  storageBucket: "mathgamesd.firebasestorage.app",
+  messagingSenderId: "595640141584",
+  appId: "1:595640141584:web:d02523bc844e52550f4795",
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
 const database = getDatabase(firebaseApp);
 
-// --- 2. SETUP AI ENGINE (GLM-4 / ZHIPU AI) ---
-console.log("✅ AI System: Menggunakan GLM-4-Flash (Zhipu AI)");
+console.log("✅ Server: System Online (GLM-4 + Firebase)");
 
-async function tanyaGLM(promptText) {
-    const url = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
-    const apiKey = process.env.ZHIPU_API_KEY; 
+// ==========================================
+// 2. STRATEGI PROMPT AI (MODULAR & ANTI-ERROR)
+// ==========================================
+const PROMPT_STRATEGIES = {
+  // 1. MATH BATTLE
+  math: (level, tema) => {
+    let range, op, constraint;
+    if (level === "mudah") {
+      range = "1-20";
+      op = "penjumlahan dan pengurangan";
+      constraint = "hasil bilangan bulat positif 1-50";
+    } else if (level === "sedang") {
+      range = "10-100";
+      op = "perkalian dan pembagian";
+      constraint = "hasil bilangan bulat positif (tanpa koma)";
+    } else {
+      range = "50-500";
+      op = "campuran (+, -, *, /)";
+      constraint =
+        "hasil bilangan bulat positif, utamakan perkalian/pembagian dulu";
+    }
+    return `Bertindak sebagai Guru Matematika SD. Buat 30 soal hitungan (bukan cerita).
+    Level: ${level}. Range: ${range}. Operasi: ${op}. Tema: ${tema}.
+    Constraint: ${constraint}. Jangan ada soal duplikat.
+    Output JSON Array MURNI (Tanpa Markdown \`\`\`json): [{"soal":"10+10","jawaban":20}]`;
+  },
 
-    if (!apiKey) throw new Error("ZHIPU_API_KEY belum dipasang di .env");
+  // 2. JEJAK NABI
+  nabi: (level) => {
+    let topik;
+    if (level === "mudah") topik = "Nabi Ulul Azmi & Mukjizat";
+    else if (level === "sedang") topik = "Kisah Kaum & Kitab Suci 25 Nabi";
+    else topik = "Detail Sejarah, Keluarga Nabi & Ayat Terkait";
 
-    const response = await fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-            model: "glm-4-flash",
-            messages: [
-                { role: "user", content: promptText }
-            ],
-            temperature: 0.7 
-        })
-    });
+    return `Guru SKI. Buat 10 soal PG tentang: ${topik}. Level: ${level}. Sumber Sahih.
+    Output JSON Array MURNI (Tanpa Markdown): 
+    [{"tanya":"Siapa nabi pembelah laut?","opsi":["Musa","Isa","Nuh","Ibrahim"],"jawab":"Musa"}]
+    ATURAN:
+    1. Jawaban harus sama persis dengan salah satu string di opsi.
+    2. JANGAN gunakan tanda kutip ganda (") di dalam isi teks soal kecuali di-escape (\\").`;
+  },
 
-    const data = await response.json();
+  // 3. SAMBUNG AYAT (OPTIMIZED: 5 SOAL SAJA AGAR CEPAT)
+  ayat: (level) => {
+    let scope;
+    if (level === "mudah") scope = "Surat Pendek (Ad-Dhuha s/d An-Nas)";
+    else if (level === "sedang") scope = "Juz 30 Full (An-Naba s/d An-Nas)";
+    else scope = "Ayat Tengah Juz 30 (Acak)";
+
+    return `Bertindak sebagai ahli Tahfidz. Buat 6 soal sambung ayat. Lingkup: ${scope}.
+    Output JSON Array MURNI: [{"tanya":"TEKS_ARAB","opsi":["A","B","C","D"],"jawab":"JAWABAN_BENAR"}].
     
-    if (data.error) {
-        throw new Error(`GLM Error: ${data.error.message}`);
+    ATURAN FORMAT (PENTING):
+    1. Pastikan Teks Arab LENGKAP dengan Harakat.
+    2. JANGAN gunakan tanda kutip ganda (") di dalam isi teks Arab. Gunakan tanda kurung khas Arab ﴿...﴾ jika perlu.
+    3. Jawaban harus sama persis dengan salah satu string di opsi.
+    4. Pastikan encoding UTF-8 benar.`;
+  },
+
+  // 4. KASIR CILIK
+  kasir: (level) => {
+    let range, note;
+    if (level === "mudah") {
+      range = "500-5000";
+      note = "Kelipatan 500";
+    } else if (level === "sedang") {
+      range = "10000-50000";
+      note = "Ribuan acak";
+    } else {
+      range = "50000-200000";
+      note = "Angka keriting (misal 53.750)";
     }
 
-    return data.choices[0].message.content;
+    return `Simulasi Kasir. 15 transaksi. Level ${level}. Range ${range}. Note: ${note}.
+    Uang bayar >= Total. 
+    Output JSON Array MURNI (Tanpa Markdown): 
+    [{"cerita":"Beli A dan B...","total_belanja":5000,"uang_bayar":10000,"kembalian":5000}]`;
+  },
+
+  // 5. MEMORY LAB
+  memory: (level, tema) => {
+    const pairs = level === "mudah" ? 6 : level === "sedang" ? 10 : 15;
+    return `Buat ${pairs} pasang kata-kunci untuk game memori. Tema: ${tema}.
+    Output JSON Array MURNI (Tanpa Markdown): [{"a":"Kata","b":"Pasangannya"}]`;
+  },
+
+  // 6. LABIRIN ILMU
+  labirin: (level) => {
+    let size = level === "mudah" ? 10 : level === "sedang" ? 15 : 20;
+    let count = level === "mudah" ? 3 : level === "sedang" ? 5 : 7;
+    let topic =
+      level === "mudah"
+        ? "Hewan/Buah"
+        : level === "sedang"
+        ? "Tubuh/Tumbuhan"
+        : "Geografi Asia";
+
+    return `Game Master Labirin. Level ${level}. Grid ${size}x${size}. ${count} soal tentang ${topic}.
+    Jawaban MAKSIMAL 1 KATA. 
+    Output JSON Object MURNI (Tanpa Markdown):
+    { "maze_size": ${size}, "soal_list": [{"tanya":"Ibukota RI?","jawab":"Jakarta"}] }`;
+  },
+
+  // 7. ZUMA SPACE
+  zuma: (level, tema) => {
+    let speed =
+      level === "mudah" ? "lambat" : level === "sedang" ? "sedang" : "cepat";
+    return `Konfigurasi Level Zuma. Tema ${tema}. Speed ${speed}.
+    Output JSON Object MURNI (Tanpa Markdown): {"deskripsi":"Misi...","palet_warna":["#F00","#0F0","#00F"],"speed":"${speed}"}`;
+  },
+
+  // 8. PIANO SPEED
+  piano: (level) => {
+    const len = level === "mudah" ? 3 : level === "sedang" ? 6 : 9;
+    return `Urutan nada piano acak ${len} digit (angka 1-7).
+    Output JSON Object MURNI (Tanpa Markdown): {"sequence":[1,3,5,2,4]}`;
+  },
+};
+
+// ==========================================
+// 3. HELPER FUNCTIONS (UTILITIES)
+// ==========================================
+
+// Data Darurat jika AI Offline
+function getFallbackData(kategori) {
+  const fallbacks = {
+    math: { soal: "10 + 10 = ?", jawaban: 20 },
+    nabi: [
+      { tanya: "Nabi terakhir?", opsi: ["Isa", "Muhammad"], jawab: "Muhammad" },
+    ],
+    ayat: [
+      {
+        tanya: "Al-Fatihah 1?",
+        opsi: ["Bismillah", "Alhamdulillah"],
+        jawab: "Bismillah",
+      },
+    ],
+    kasir: [
+      {
+        cerita: "Offline Mode",
+        total_belanja: 500,
+        uang_bayar: 1000,
+        kembalian: 500,
+      },
+    ],
+    memory: [
+      { a: "A", b: "B" },
+      { a: "C", b: "D" },
+    ],
+    labirin: { maze_size: 10, soal_list: [{ tanya: "1+1", jawab: "2" }] },
+    zuma: { deskripsi: "Mode Offline", palet_warna: ["#f00"], speed: "sedang" },
+    piano: { sequence: [1, 2, 3, 4, 5] },
+  };
+  return fallbacks[kategori] || { error: "Data tidak tersedia" };
 }
 
-// --- 3. SERVE STATIC FILES ---
-app.use((req, res, next) => {
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
-    next();
-});
-
-app.use(express.static(path.join(__dirname, 'public')));
-
-// --- 4. HELPER FUNCTIONS ---
+// Pembersih JSON (Regex Kuat)
 function extractJSON(text) {
-    try {
-        const jsonMatch = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-        if (jsonMatch) {
-            let cleanText = jsonMatch[0];
-            cleanText = cleanText.replace(/```json/g, "").replace(/```/g, "");
-            cleanText = cleanText.replace(/\/\/.*$/gm, ""); 
-            cleanText = cleanText.replace(/\/\*[\s\S]*?\*\//g, "");
-            cleanText = cleanText.replace(/,\s*([\]}])/g, '$1');
-            return JSON.parse(cleanText);
-        }
-        return null;
-    } catch (e) {
-        console.error("JSON Parse Error:", e.message);
-        return null;
+  try {
+    const jsonMatch = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    if (jsonMatch) {
+      let cleanText = jsonMatch[0]
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .replace(/\/\/.*$/gm, "") // Hapus komentar JS
+        .replace(/\n/g, " "); // Hapus newline
+      return JSON.parse(cleanText);
     }
+    return null;
+  } catch (e) {
+    console.error("JSON Parse Error:", e.message);
+    return null;
+  }
+}
+
+// Fetch AI dengan Timeout & AbortController
+async function tanyaGLM(promptText) {
+  const apiKey = process.env.ZHIPU_API_KEY;
+  if (!apiKey) throw new Error("ZHIPU_API_KEY Missing");
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000); // Max 60 detik
+
+  try {
+    const response = await fetch(
+      "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "glm-4-flash",
+          messages: [{ role: "user", content: promptText }],
+          temperature: 0.7,
+        }),
+        signal: controller.signal,
+      }
+    );
+
+    clearTimeout(timeout);
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.choices[0].message.content;
+  } catch (err) {
+    clearTimeout(timeout);
+    throw err;
+  }
 }
 
 function sanitizeKey(key) {
-    if (!key) return "unknown";
-    return key.replace(/[.#$/\[\]]/g, "_");
+  return key ? key.replace(/[.#$/\[\]]/g, "_") : "unknown";
 }
 
-function getRandomTheme() {
-    const themes = ["Luar Angkasa", "Hutan Ajaib", "Bawah Laut", "Dunia Robot", "Kerajaan Permen", "Dinosaurus", "Super Hero", "Pabrik Coklat"];
-    return themes[Math.floor(Math.random() * themes.length)];
-}
-
-function getRandomObject() {
-    const objects = ["Toko Mainan", "Warung Buah", "Kantin Sekolah", "Supermarket", "Toko Buku"];
-    return objects[Math.floor(Math.random() * objects.length)];
-}
-
-// Fungsi Pengacakan Sempurna (Fisher-Yates)
 function fisherYatesShuffle(array) {
-    if (!Array.isArray(array)) return array;
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
+  if (!Array.isArray(array)) return array;
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }
 
-// --- 5. SOCKET.IO CONNECTION ---
-io.on('connection', (socket) => {
-    console.log(`✅ User CONNECTED: ${socket.id}`);
+// ==========================================
+// 4. MIDDLEWARE & STATIC
+// ==========================================
+app.use((req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
+app.use(express.static(path.join(__dirname, "public")));
 
-    // ==========================================
-    // BAGIAN A: MINTA SOAL
-    // ==========================================
-    socket.on('mintaSoalAI', async (requestData) => {
-        const { kategori, tingkat, kodeAkses } = requestData;
-        const level = tingkat || 'sedang';
+// ==========================================
+// 5. SOCKET.IO LOGIC UTAMA
+// ==========================================
+io.on("connection", (socket) => {
+  console.log(`✅ User CONNECTED: ${socket.id}`);
 
-        const cacheKey = `cache_soal_v6/${kategori}_${level}`;
-        const manualPath = kodeAkses ? `content_manual/${kategori}/${kodeAkses.toUpperCase()}/${level}` : null;
+  // --- A. PERMINTAAN SOAL ---
+  socket.on("mintaSoalAI", async (reqData) => {
+    const { kategori, tingkat, kodeAkses } = reqData || {};
+    const level = tingkat || "sedang";
 
-        let soalData = null;
+    if (!kategori) return;
 
-        try {
-            // --- CEK 1: KODE AKSES ---
-            if (kodeAkses && manualPath) {
-                const manualSnapshot = await get(ref(database, manualPath));
-                if (manualSnapshot.exists()) {
-                    console.log(`✅ Soal Ujian Khusus: ${kodeAkses}`);
-                    const dataManual = manualSnapshot.val();
-                    
-                    if (kategori === 'labirin') {
-                        soalData = { maze_size: (level==='mudah'?10:15), soal_list: Object.values(dataManual) };
-                    } else if (kategori === 'nabi' || kategori === 'ayat') {
-                        soalData = Object.values(dataManual);
-                    } else {
-                        const keys = Object.keys(dataManual);
-                        soalData = dataManual[keys[Math.floor(Math.random() * keys.length)]];
-                    }
-                    socket.emit('soalDariAI', { kategori, data: soalData });
-                    return;
-                }
-            }
+    try {
+      // 1. Cek Mode Manual (Ujian Khusus)
+      if (kodeAkses) {
+        const manualPath = `content_manual/${kategori}/${kodeAkses.toUpperCase()}/${level}`;
+        const manualSnapshot = await get(ref(database, manualPath));
+        if (manualSnapshot.exists()) {
+          console.log(`🔑 Akses Ujian: ${kodeAkses}`);
+          let dataManual = Object.values(manualSnapshot.val());
 
-            // --- CEK 2: MODE UMUM (CACHE + AI) ---
-            const cacheSnapshot = await get(ref(database, cacheKey));
-            let dataGudang = null;
+          // Format ulang khusus Labirin agar sesuai struktur game
+          if (kategori === "labirin") {
+            const mazeSize =
+              level === "mudah" ? 10 : level === "sedang" ? 15 : 20;
+            dataManual = { maze_size: mazeSize, soal_list: dataManual };
+          }
 
-            if (cacheSnapshot.exists()) {
-                dataGudang = cacheSnapshot.val();
-                console.log(`⚡ CACHE: Mengambil dari gudang soal...`);
-            } else {
-                console.log(`🤖 AI: Stok habis, memanggil GLM-4...`);
-                
-                let prompt = "";
-                const tema = getRandomTheme();
-                
-                if (kategori === 'math') {
-                    let r = level === 'mudah' ? '1-20' : (level === 'sedang' ? '10-100' : '50-500');
-                    let op = level === 'mudah' ? 'tambah/kurang' : 'campuran (jika pembagian, hasil wajib bilangan bulat)';
-                    prompt = `Buat 30 soal matematika SD unik. Level: ${level}. Range: ${r}. Operasi: ${op}. Tema: ${tema}. Output JSON Array: [{"soal":"10+10","jawaban":20}]. NO COMMENTS.`;
-                
-                } else if (kategori === 'nabi') {
-                    prompt = `
-                    Bertindak sebagai Guru Sejarah Kebudayaan Islam (SKI).
-                    Buat 10 soal pilihan ganda tentang Kisah 25 Nabi & Rasul. Level: ${level}.
-                    ATURAN: Sumber Al-Quran/Hadits Shahih. Output JSON Array.
-                    CONTOH: [{"tanya":"...","opsi":["A","B","C","D"],"jawab":"A"}]
-                    `;
-                
-                } else if (kategori === 'ayat') {
-                    let scope = level === 'mudah' ? 'Surat pendek Juz 30' : 'Seluruh Juz 30';
-                    prompt = `
-                    Bertindak sebagai ahli Tahfidz. Buat 10 soal "Sambung Ayat" dari ${scope}.
-                    ATURAN: Arab Utsmani. Jawaban benar & salah harus dari Juz 30. Output JSON Array.
-                    CONTOH: [{"tanya":"...","opsi":["A","B","C","D"],"jawab":"A"}]
-                    `;
+          socket.emit("soalDariAI", { kategori, data: dataManual });
+          return; // Selesai, jangan lanjut ke AI
+        }
+      }
 
-                } else if (kategori === 'kasir') {
-                    let rangeUang = level === 'mudah' ? '500 - 5000 (kelipatan 500)' : 
-                                   (level === 'sedang' ? '10000 - 50000' : '50000 - 200000');
-                    let kompleksitas = level === 'sulit' ? 'dengan nilai pecahan tidak bulat' : 'nilai bulat sederhana';
-                    prompt = `Buat 15 transaksi kasir unik. Level: ${level}. Range Harga: ${rangeUang}. Kompleksitas: ${kompleksitas}. Tema: ${getRandomObject()}. Output JSON Array: [{"cerita":"Budi membeli...","total_belanja":5000,"uang_bayar":10000,"kembalian":5000}]. NO COMMENTS.`;
+      // 2. Cek Cache Database
+      const cacheKey = `cache_soal_v6/${kategori}_${level}`;
+      const cacheSnapshot = await get(ref(database, cacheKey));
+      let finalData = null;
 
-                } else if (kategori === 'memory' || kategori === 'labirin' || kategori === 'zuma' || kategori === 'piano') {
-                    if(kategori === 'memory') {
-                        let pairs = level === 'mudah' ? 6 : (level === 'sedang' ? 10 : 15);
-                        prompt = `Buat ${pairs} pasang kata/konsep game memori. Tema: ${tema}. Output JSON Array: [{"a":"Kata","b":"Gambar"}]. NO COMMENTS.`;
-                    }
-                    if(kategori === 'labirin') {
-        // 🔥 LOGIKA LABIRIN 3 TINGKAT (FINAL & ROBUST)
-        let size, count, topic, exampleJSON;
+      if (cacheSnapshot.exists()) {
+        console.log(`⚡ Cache Hit: ${kategori} (${level})`);
+        finalData = cacheSnapshot.val();
+      } else {
+        // 3. Generate AI Baru
+        console.log(`🤖 AI Generating: ${kategori} (${level})...`);
 
-        if (level === 'mudah') {
-            // Level Mudah: Hewan & Buah (Anak Kelas 1-2)
-            size = 10;
-            count = 3;
-            topic = 'Hewan berkaki empat atau Buah-buahan';
-            exampleJSON = '[{"tanya": "Warna apel?", "jawab": "Merah"}, {"tanya": "Sapi makan?", "jawab": "Rumput"}]';
-        
-        } else if (level === 'sedang') {
-            // Level Sedang: IPA Dasar (Anak Kelas 3-4)
-            size = 15;
-            count = 5;
-            topic = 'Bagian Tubuh Manusia & Fungsi Tumbuhan';
-            exampleJSON = '[{"tanya": "Alat pernapasan ikan?", "jawab": "Insang"}, {"tanya": "Akar berfungsi menyerap?", "jawab": "Air"}]';
-        
-        } else { 
-            // Level Sulit: Pengetahuan Umum (Anak Kelas 5-6)
-            size = 20;
-            count = 7;
-            topic = 'Tata Surya, Ibukota Negara Asia, & Penemu';
-            exampleJSON = '[{"tanya": "Planet terbesar?", "jawab": "Jupiter"}, {"tanya": "Ibukota Jepang?", "jawab": "Tokyo"}]';
+        let prompt = null;
+        const tema = ["Antariksa", "Hutan", "Laut", "Robot", "Dino"].sort(
+          () => 0.5 - Math.random()
+        )[0];
+
+        // Ambil prompt dari strategi yang sudah didefinisikan di atas
+        if (PROMPT_STRATEGIES[kategori]) {
+          prompt = PROMPT_STRATEGIES[kategori](level, tema);
         }
 
-        // Prompt yang sangat spesifik agar JSON tidak rusak
-        prompt = `
-        Bertindak sebagai Game Master. Buat konfigurasi level game Labirin untuk anak SD.
-        
-        SPESIFIKASI LEVEL:
-        - Tingkat: ${level.toUpperCase()}
-        - Ukuran Grid: ${size}
-        - Topik Soal: ${topic}
-        - Jumlah Rintangan: ${count}
-        
-        INSTRUKSI KHUSUS (WAJIB DIPATUHI):
-        1. Jawaban harus SATU KATA atau ANGKA SAJA (Tanpa spasi).
-        2. Output HANYA JSON murni. Jangan ada teks pembuka seperti "Tentu" atau markdown.
-        
-        CONTOH FORMAT OUTPUT:
-        {
-          "maze_size": ${size},
-          "soal_list": ${exampleJSON}
+        if (prompt) {
+          const rawText = await tanyaGLM(prompt);
+          finalData = extractJSON(rawText);
+          if (finalData) {
+            // Simpan ke cache untuk user berikutnya
+            await set(ref(database, cacheKey), finalData);
+          }
         }
-        `;
+      }
+
+      // 4. Kirim Data ke Klien
+      if (finalData) {
+        // Randomize jika perlu (agar soal tidak selalu sama urutannya dari cache)
+        if (["math", "kasir"].includes(kategori) && Array.isArray(finalData)) {
+          // Pilih 1 soal acak dari array
+          finalData = finalData[Math.floor(Math.random() * finalData.length)];
+        } else if (
+          ["nabi", "ayat", "memory"].includes(kategori) &&
+          Array.isArray(finalData)
+        ) {
+          // Shuffle urutan
+          finalData = fisherYatesShuffle([...finalData]).slice(0, 10);
+        }
+
+        socket.emit("soalDariAI", { kategori, data: finalData });
+      } else {
+        throw new Error("Data hasil AI null/rusak");
+      }
+    } catch (e) {
+      console.error(`❌ Error (${kategori}):`, e.message);
+      // Kirim Fallback Data agar game tidak macet
+      socket.emit("soalDariAI", {
+        kategori,
+        data: getFallbackData(kategori),
+        isFallback: true,
+      });
     }
-                    if(kategori === 'zuma') {
-                        let speed = level; 
-                        prompt = `Buat level Zuma tema ${tema}. Level: ${level}. Output JSON Object: {"deskripsi":"Misi ${tema}","palet_warna":["#f00","#0f0","#00f"], "speed":"${speed}"}. NO COMMENTS.`;
-                    }
-                    if(kategori === 'piano') {
-                        let length = level === 'mudah' ? 5 : (level === 'sedang' ? 8 : 12);
-                        prompt = `Buat urutan nada piano acak ${length} digit (1-7). Output JSON Object: {"sequence":[1,3,5...]}. NO COMMENTS.`;
-                    }
-                }
+  });
 
-                if (prompt) {
-                    const text = await tanyaGLM(prompt);
-                    dataGudang = extractJSON(text);
-                    if (dataGudang) await set(ref(database, cacheKey), dataGudang);
-                }
-            }
+  // --- B. PENYIMPANAN SKOR (DENGAN VALIDASI) ---
+  socket.on("simpanSkor", async (data) => {
+    // 1. Validasi Input
+    if (!data || !data.nama || !data.game) return;
 
-            // --- PILIH ACAK DARI GUDANG ---
-            if (dataGudang) {
-                if (kategori === 'math' && Array.isArray(dataGudang)) {
-                    const acak = Math.floor(Math.random() * dataGudang.length);
-                    soalData = dataGudang[acak]; 
-                } 
-                else if ((kategori === 'nabi' || kategori === 'ayat') && Array.isArray(dataGudang)) {
-                    let allQuestions = fisherYatesShuffle([...dataGudang]);
-                    let selectedQuestions = allQuestions.slice(0, 5);
-                    soalData = selectedQuestions.map(item => {
-                        let newItem = { ...item };
-                        if (newItem.opsi && Array.isArray(newItem.opsi)) {
-                            newItem.opsi = fisherYatesShuffle([...newItem.opsi]);
-                        }
-                        return newItem;
-                    });
-                }
-                else if (kategori === 'kasir' && Array.isArray(dataGudang)) {
-                    const acak = Math.floor(Math.random() * dataGudang.length);
-                    soalData = dataGudang[acak];
-                }
-                else {
-                    soalData = dataGudang;
-                }
-            }
+    let skor = parseInt(data.skor);
 
-            if (soalData) {
-                socket.emit('soalDariAI', { kategori, data: soalData });
-            } else {
-                throw new Error("Gagal memproses data.");
-            }
+    // Cek Cheat Dasar
+    if (isNaN(skor) || skor < 0) return;
+    if (skor > 10000) {
+      console.warn(`🚨 CHEAT DETECTED: User ${data.nama} skor ${skor}`);
+      skor = 0; // Batalkan skor
+    }
 
-        } catch (error) { // ✅ INI BAGIAN YANG TADI HILANG!
-            console.error(`❌ Error ${kategori}:`, error.message);
-            
-            // --- FALLBACK (OFFLINE MODE) ---
-            let fallbackData = null;
-            if (kategori === 'math') fallbackData = { soal: "10 + 10 = ?", jawaban: 20 };
-            else if (kategori === 'nabi') fallbackData = [{ tanya: "Nabi terakhir?", opsi: ["Isa", "Muhammad"], jawab: "Muhammad" }];
-            else if (kategori === 'ayat') fallbackData = [{ tanya: "Al-Fatihah 1?", opsi: ["Bismillah", "Alhamdulillah"], jawab: "Bismillah" }];
-            else if (kategori === 'zuma') fallbackData = { deskripsi: "Mode Offline", palet_warna: ["#f00"], speed: "sedang" };
-            else if (kategori === 'memory') fallbackData = [{ a: "A", b: "B" }, { a: "C", b: "D" }];
-            else if (kategori === 'kasir') fallbackData = [{ cerita: "Offline Mode", total_belanja: 500, uang_bayar: 1000, kembalian: 500 }];
-            else if (kategori === 'labirin') fallbackData = { maze_size: 10, soal_list: [{ tanya: "1+1", jawab: "2" }] };
-            else if (kategori === 'piano') fallbackData = { sequence: [1, 2, 3, 4] };
+    const safeName = sanitizeKey(data.nama.substring(0, 30));
+    const now = new Date();
+    const koin = Math.floor(skor / 10);
+    const userRef = ref(database, "leaderboard/" + safeName);
 
-            if (fallbackData) {
-                console.log(`⚠️ Mengirim Data Darurat (Offline Mode) untuk ${kategori}`);
-                socket.emit('soalDariAI', { kategori: kategori, data: fallbackData });
-            } else {
-                socket.emit('soalDariAI', { kategori: kategori, data: null, error: "Server Gangguan" });
-            }
+    try {
+      await runTransaction(userRef, (userData) => {
+        if (!userData) {
+          return {
+            nama: safeName, // Gunakan nama yang sudah disanitasi
+            [`skor_${data.game}`]: skor,
+            videa_coin: koin,
+            last_played: now.toISOString(),
+            role: "siswa",
+          };
         }
+        // Akumulasi Skor
+        userData[`skor_${data.game}`] =
+          (userData[`skor_${data.game}`] || 0) + skor;
+        // Akumulasi Koin
+        userData.videa_coin = (userData.videa_coin || 0) + koin;
+        userData.last_played = now.toISOString();
+        return userData;
+      });
+
+      console.log(`💾 Skor Tersimpan: ${safeName} | ${data.game} (+${skor})`);
+    } catch (e) {
+      console.error("DB Error:", e.message);
+    }
+  });
+
+  // --- C. GLOBAL CHAT ---
+  socket.on("chatMessage", (msg) => {
+    if (!msg.pesan || !msg.pesan.trim()) return;
+
+    // Filter Kata Kasar Sederhana
+    const badWords = ["anjing", "babi", "bodoh", "kasar"]; // Tambahkan sesuai kebutuhan
+    let cleanPesan = msg.pesan.substring(0, 100);
+    badWords.forEach((word) => {
+      const regex = new RegExp(word, "gi");
+      cleanPesan = cleanPesan.replace(regex, "***");
     });
 
-    // ==========================================
-    // BAGIAN B: SIMPAN SKOR (ANTI RACE CONDITION)
-    // ==========================================
-    socket.on('simpanSkor', async (data) => {
-        let skorMasuk = parseInt(data.skor);
-        if (isNaN(skorMasuk) || skorMasuk < 0) return;
-        if (skorMasuk > 5000) skorMasuk = 5000; 
-
-        const safeName = sanitizeKey(data.nama);
-        const now = new Date();
-        const koinDapat = Math.floor(skorMasuk / 10);
-        const userRef = ref(database, 'leaderboard/' + safeName);
-
-        try {
-            await runTransaction(userRef, (userData) => {
-                if (userData === null) {
-                    return {
-                        nama: data.nama,
-                        [`skor_${data.game}`]: skorMasuk,
-                        videa_coin: koinDapat,
-                        last_played: now.toISOString(),
-                        role: 'siswa'
-                    };
-                } else {
-                    const skorLama = userData[`skor_${data.game}`] || 0;
-                    userData[`skor_${data.game}`] = skorLama + skorMasuk;
-                    const koinLama = userData.videa_coin || 0;
-                    userData.videa_coin = koinLama + koinDapat;
-                    userData.last_played = now.toISOString();
-                    userData.nama = data.nama;
-                    return userData;
-                }
-            });
-
-            // Simpan Riwayat
-            const historyEntry = { game: data.game, skor: skorMasuk, koin: koinDapat, waktu: now.toISOString() };
-            const historyPath = `score_history/${safeName}/${now.getTime()}`;
-            await set(ref(database, historyPath), historyEntry);
-
-            console.log(`✅ Transaction Sukses: ${data.nama} | ${data.game}: +${skorMasuk}`);
-        } catch (e) {
-            console.error("❌ Transaction Gagal:", e.message);
-        }
+    io.emit("chatMessage", {
+      nama: sanitizeKey(msg.nama).substring(0, 15),
+      pesan: cleanPesan,
+      waktu: new Date().toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     });
-
-    // ==========================================
-    // BAGIAN C: GLOBAL CHAT (WIB)
-    // ==========================================
-    socket.on('chatMessage', (msgData) => {
-        if (!msgData.pesan || msgData.pesan.trim() === "") return;
-        
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('id-ID', { 
-            hour: '2-digit', 
-            minute: '2-digit', 
-            timeZone: 'Asia/Jakarta' 
-        });
-
-        let safeName = msgData.nama.substring(0, 20);
-
-        io.emit('chatMessage', {
-            nama: safeName,
-            pesan: msgData.pesan.substring(0, 200),
-            waktu: timeString
-        });
-    });
-
-    socket.on('disconnect', () => { });
+  });
 });
 
 const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => console.log(`🚀 Server Siap di Port ${PORT}`));
+http.listen(PORT, () =>
+  console.log(`🚀 Server Videa Class Siap di Port ${PORT}`)
+);

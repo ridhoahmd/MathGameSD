@@ -1,52 +1,56 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Memory Lab - Videa Class</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="css/memory.css?v=final">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
 
-</head>
-<body>
-
+    <link rel="stylesheet" href="css/memory.css?v=final" />
+  </head>
+  <body>
     <a href="/" class="btn-back">⬅ MENU</a>
 
     <div class="game-container">
-        <h1>MEMORY LAB</h1>
-        <p>Retas sistem dengan mencocokkan kode!</p>
-        
-        <!-- UI PEMILIHAN KESULITAN -->
-        <div class="difficulty-selector">
-            <button class="btn-difficulty active" data-level="mudah">Mudah</button>
-            <button class="btn-difficulty" data-level="sedang">Sedang</button>
-            <button class="btn-difficulty" data-level="sulit">Sulit</button>
-        </div>
+      <h1>MEMORY LAB</h1>
+      <p>Retas sistem dengan mencocokkan kode!</p>
 
-        <button onclick="initGame()" class="btn-action btn-retry">MULAI</button>
-        
-        <div class="info-panel">
-            <span>Langkah: <span id="moves" class="info-val">0</span></span>
-        </div>
+      <!-- UI PEMILIHAN KESULITAN -->
+      <div class="difficulty-selector">
+        <button class="btn-difficulty active" data-level="mudah">Mudah</button>
+        <button class="btn-difficulty" data-level="sedang">Sedang</button>
+        <button class="btn-difficulty" data-level="sulit">Sulit</button>
+      </div>
 
-        <div class="memory-board" id="board">
-            </div>
+      <button onclick="initGame()" class="btn-action btn-retry">MULAI</button>
+
+      <div class="info-panel">
+        <span>Langkah: <span id="moves" class="info-val">0</span></span>
+      </div>
+
+      <div class="memory-board" id="board"></div>
     </div>
 
     <div id="win-screen" class="win-modal">
-        <div class="win-content">
-            <h2 class="win-title">MISSION COMPLETE!</h2>
-            <p>Skor Kamu</p>
-            <div class="win-score" id="final-score">0</div>
-            
-            <button onclick="location.reload()" class="btn-action btn-retry">MAIN LAGI</button>
-            <button onclick="window.location.href='/'" class="btn-action btn-home">KEMBALI KE BASE</button>
-        </div>
+      <div class="win-content">
+        <h2 class="win-title">MISSION COMPLETE!</h2>
+        <p>Skor Kamu</p>
+        <div class="win-score" id="final-score">0</div>
+
+        <button onclick="location.reload()" class="btn-action btn-retry">
+          MAIN LAGI
+        </button>
+        <button onclick="window.location.href='/'" class="btn-action btn-home">
+          KEMBALI KE BASE
+        </button>
+      </div>
     </div>
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="js/audio.js?v=final"></script>
     <script src="js/memory.js?v=final"></script>
-</body>
+  </body>
 </html>
