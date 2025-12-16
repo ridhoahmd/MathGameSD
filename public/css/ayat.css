@@ -384,3 +384,13 @@ body {
     transform: translateY(0px);
   }
 }
+
+/* --- TEXT LATIN (HYBRID MODE) --- */
+#latin-text {
+  display: none; /* Sembunyi secara default */
+  color: #ffd700; /* Warna Emas */
+  font-style: italic;
+  font-size: 1rem;
+  margin-top: 10px;
+  font-family: "Poppins", sans-serif; /* Pastikan font terbaca jelas */
+}

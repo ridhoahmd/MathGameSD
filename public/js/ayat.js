@@ -11,6 +11,7 @@ const screens = {
 // <span id="q-current"></span> dan <span id="q-total"></span>
 const ui = {
   questionText: document.getElementById("question-text"),
+  latinText: document.getElementById("latin-text"), // <--- 🔥 TAMBAHKAN INI
   optionsContainer: document.getElementById("options-container"),
   qCurrent: document.getElementById("q-current"), // Pengganti questionNumber
   qTotal: document.getElementById("q-total"), // Pengganti questionNumber
@@ -87,7 +88,7 @@ socket.on("soalDariAI", (response) => {
   }
 });
 
-// --- FUNGSI LOAD SOAL (SUDAH DIPERBAIKI UI & TIMER) ---
+// --- FUNGSI LOAD SOAL (UPDATED HYBRID LATIN) ---
 function loadQuestion() {
   // Reset Timer & UI
   clearInterval(timerInterval);
@@ -101,34 +102,38 @@ function loadQuestion() {
 
   const q = questions[currentIndex];
 
-  // Tampilkan Soal
+  // 1. Tampilkan Soal Arab
   if (ui.questionText) ui.questionText.innerText = q.tanya;
 
-  // 🔥 PERBAIKAN UI DISINI 🔥
-  // Menggunakan qCurrent dan qTotal, bukan questionNumber
+  // 🔥 2. LOGIKA LATIN (Hanya Level Mudah) 🔥
+  if (ui.latinText) {
+    // Cek apakah level saat ini 'mudah' DAN data latin tersedia dari server
+    if (currentLevel === "mudah" && q.latin) {
+      ui.latinText.innerText = q.latin;
+      ui.latinText.style.display = "block"; // Munculkan
+    } else {
+      ui.latinText.style.display = "none"; // Sembunyikan (untuk Sedang/Sulit)
+    }
+  }
+
+  // Update Nomor Soal
   if (ui.qCurrent) ui.qCurrent.innerText = currentIndex + 1;
   if (ui.qTotal) ui.qTotal.innerText = questions.length;
 
   // Bersihkan container opsi lama
   ui.optionsContainer.innerHTML = "";
 
-  // Pastikan opsi ada
+  // Render Opsi Jawaban
   if (q.opsi && Array.isArray(q.opsi)) {
     q.opsi.forEach((opt) => {
       const btn = document.createElement("button");
       btn.className = "btn-option";
       btn.innerText = opt;
-
-      // Kirim 'btn' sebagai argumen ketiga
       btn.onclick = () => checkAnswer(opt, q.jawab, btn);
-
       ui.optionsContainer.appendChild(btn);
     });
-  } else {
-    console.error("Format opsi salah/kosong", q);
   }
 
-  // 🔥 PERBAIKAN TIMER: Beri waktu 20 detik (atau sesuai level) 🔥
   startTimer(20);
 }
 

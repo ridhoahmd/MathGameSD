@@ -35,13 +35,13 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const database = getDatabase(firebaseApp);
 
-console.log("✅ Server: System Online (GLM-4 + Firebase)");
+console.log("✅ Server: System Online (GLM-4 + Firebase + Multiplayer Ready)");
 
 // ==========================================
 // 2. STRATEGI PROMPT AI (MODULAR & ANTI-ERROR)
 // ==========================================
 const PROMPT_STRATEGIES = {
-  // 1. MATH BATTLE
+  // 1. MATH BATTLE (Optimized: Constraint Tipe Data & Pembagian)
   math: (level, tema) => {
     let range, op, constraint;
     if (level === "mudah") {
@@ -51,89 +51,148 @@ const PROMPT_STRATEGIES = {
     } else if (level === "sedang") {
       range = "10-100";
       op = "perkalian dan pembagian";
-      constraint = "hasil bilangan bulat positif (tanpa koma)";
+      constraint =
+        "hasil bilangan bulat positif. UNTUK PEMBAGIAN: Pastikan habis dibagi (sisa 0).";
     } else {
       range = "50-500";
       op = "campuran (+, -, *, /)";
       constraint =
-        "hasil bilangan bulat positif, utamakan perkalian/pembagian dulu";
+        "hasil bilangan bulat positif. UNTUK PEMBAGIAN: Pastikan habis dibagi (sisa 0).";
     }
     return `Bertindak sebagai Guru Matematika SD. Buat 30 soal hitungan (bukan cerita).
     Level: ${level}. Range: ${range}. Operasi: ${op}. Tema: ${tema}.
     Constraint: ${constraint}. Jangan ada soal duplikat.
-    Output JSON Array MURNI (Tanpa Markdown \`\`\`json): [{"soal":"10+10","jawaban":20}]`;
+    
+    FORMAT RESPONSE WAJIB (JSON ARRAY):
+    [{"soal":"10 + 10","jawaban":20}]
+    
+    ATURAN JSON:
+    1. Field 'jawaban' HARUS tipe NUMBER (jangan pakai kutip).
+    2. Keluarkan HANYA JSON mentah. Jangan pakai markdown \`\`\`.`;
   },
 
-  // 2. JEJAK NABI
+  // 2. JEJAK NABI (Optimized: Content Integrity & Format Safety)
   nabi: (level) => {
     let topik;
-    if (level === "mudah") topik = "Nabi Ulul Azmi & Mukjizat";
-    else if (level === "sedang") topik = "Kisah Kaum & Kitab Suci 25 Nabi";
-    else topik = "Detail Sejarah, Keluarga Nabi & Ayat Terkait";
+    if (level === "mudah") {
+      topik = "Nabi Ulul Azmi, Mukjizat Terkenal, & Nama Nabi (25 Nabi)";
+    } else if (level === "sedang") {
+      topik = "Kisah Kaum (Ad, Tsamud, dll), Kitab Suci, & Peristiwa Penting";
+    } else {
+      topik =
+        "Detail Silsilah Keluarga, Tempat Diutus, & Gelar Khusus (misal: Khalilullah)";
+    }
 
-    return `Guru SKI. Buat 10 soal PG tentang: ${topik}. Level: ${level}. Sumber Sahih.
-    Output JSON Array MURNI (Tanpa Markdown): 
-    [{"tanya":"Siapa nabi pembelah laut?","opsi":["Musa","Isa","Nuh","Ibrahim"],"jawab":"Musa"}]
-    ATURAN:
-    1. Jawaban harus sama persis dengan salah satu string di opsi.
-    2. JANGAN gunakan tanda kutip ganda (") di dalam isi teks soal kecuali di-escape (\\").`;
-  },
-
-  // 3. SAMBUNG AYAT (OPTIMIZED: 5 SOAL SAJA AGAR CEPAT)
-  ayat: (level) => {
-    let scope;
-    if (level === "mudah") scope = "Surat Pendek (Ad-Dhuha s/d An-Nas)";
-    else if (level === "sedang") scope = "Juz 30 Full (An-Naba s/d An-Nas)";
-    else scope = "Ayat Tengah Juz 30 (Acak)";
-
-    return `Bertindak sebagai ahli Tahfidz. Buat 6 soal sambung ayat. Lingkup: ${scope}.
-    Output JSON Array MURNI: [{"tanya":"TEKS_ARAB","opsi":["A","B","C","D"],"jawab":"JAWABAN_BENAR"}].
+    return `Bertindak sebagai Guru Sejarah Kebudayaan Islam (SKI). Buat 10 soal Pilihan Ganda tentang: ${topik}.
+    Level: ${level}. Gunakan Bahasa Indonesia yang baku dan sumber yang sahih (Al-Qur'an/Hadits).
     
-    ATURAN FORMAT (PENTING):
-    1. Pastikan Teks Arab LENGKAP dengan Harakat.
-    2. JANGAN gunakan tanda kutip ganda (") di dalam isi teks Arab. Gunakan tanda kurung khas Arab ﴿...﴾ jika perlu.
-    3. Jawaban harus sama persis dengan salah satu string di opsi.
-    4. Pastikan encoding UTF-8 benar.`;
+    FORMAT RESPONSE WAJIB (JSON ARRAY):
+    [
+      {
+        "tanya": "Siapa nabi yang membelah lautan?",
+        "opsi": ["Nabi Musa", "Nabi Isa", "Nabi Nuh", "Nabi Ibrahim"],
+        "jawab": "Nabi Musa"
+      }
+    ]
+    
+    ATURAN KRUSIAL:
+    1. Field 'jawab' HARUS SAMA PERSIS (copy-paste string) dengan salah satu string di dalam array 'opsi'. 
+    2. JANGAN isi 'jawab' dengan huruf A/B/C/D. Isi dengan teks jawaban penuh.
+    3. Pastikan tidak ada jawaban ganda/duplikat di dalam opsi.
+    4. HANYA JSON mentah.`;
   },
 
-  // 4. KASIR CILIK
+  // 3. SAMBUNG AYAT ( Transliterasi Indonesia )
+  ayat: (level) => {
+    let scope, outputInstruction;
+    // Tetap gunakan 3 soal untuk level mudah agar cepat & tidak timeout
+    let count = level === "mudah" ? 3 : 5;
+
+    if (level === "mudah") {
+      scope = "Surat Pendek (Ad-Dhuha s/d An-Nas)";
+
+      // 🔥 PERBAIKAN UTAMA DI SINI 🔥
+      outputInstruction = `
+      FORMAT RESPONSE WAJIB (JSON ARRAY):
+      [{
+        "tanya": "(Potongan Ayat Arab)",
+        "latin": "(Tuliskan CARA BACA / TRANSLITERASI dalam ejaan Indonesia. Contoh: 'Qul a'udzu birabbin nas'. JANGAN BERIKAN ARTINYA!)",
+        "opsi": ["(Lanjutan A)", "(Lanjutan B)", "(Lanjutan C)", "(Lanjutan D)"],
+        "jawab": "(Lanjutan Benar)"
+      }]`;
+    } else {
+      scope =
+        level === "sedang"
+          ? "Juz 30 Full (An-Naba s/d An-Nas)"
+          : "Ayat Tengah Juz 30 (Acak)";
+      outputInstruction = `
+      FORMAT RESPONSE WAJIB (JSON ARRAY):
+      [{
+        "tanya": "(Potongan Ayat Arab)",
+        "opsi": ["(Lanjutan A)", "(Lanjutan B)", "(Lanjutan C)", "(Lanjutan D)"],
+        "jawab": "(Lanjutan Benar)"
+      }]`;
+    }
+
+    return `Bertindak sebagai ahli Tahfidz. Buat ${count} soal sambung ayat. Lingkup: ${scope}.
+    
+    ${outputInstruction}
+    
+    ATURAN KRUSIAL:
+    1. Teks Arab HARUS berharakat lengkap.
+    2. JANGAN gunakan tanda kutip ganda (") di dalam teks Arab/Latin.
+    3. Field 'latin' HARUS berupa cara baca (bunyi), BUKAN terjemahan bahasa Inggris/Indonesia.
+    4. Field 'jawab' HARUS SAMA PERSIS (karakter per karakter) dengan salah satu string di 'opsi'.
+    5. HANYA JSON mentah.`;
+  },
+
+  // 4. KASIR CILIK (Optimized: Logika Uang Masuk Akal)
   kasir: (level) => {
     let range, note;
     if (level === "mudah") {
       range = "500-5000";
-      note = "Kelipatan 500";
+      note = "Kelipatan 500 (Uang Pas/Lebih dikit)";
     } else if (level === "sedang") {
       range = "10000-50000";
-      note = "Ribuan acak";
+      note = "Ribuan acak. Uang bayar pecahan lazim (10rb, 20rb, 50rb).";
     } else {
       range = "50000-200000";
-      note = "Angka keriting (misal 53.750)";
+      note = "Angka keriting. Uang bayar pecahan lazim (50rb, 100rb).";
     }
 
-    return `Simulasi Kasir. 15 transaksi. Level ${level}. Range ${range}. Note: ${note}.
-    Uang bayar >= Total. 
-    Output JSON Array MURNI (Tanpa Markdown): 
-    [{"cerita":"Beli A dan B...","total_belanja":5000,"uang_bayar":10000,"kembalian":5000}]`;
+    return `Simulasi Kasir. 15 transaksi. Level ${level}. Range Harga ${range}.
+    
+    FORMAT RESPONSE WAJIB (JSON ARRAY):
+    [{"cerita":"Ibu membeli gula...","total_belanja":5000,"uang_bayar":10000,"kembalian":5000}]
+    
+    ATURAN:
+    1. Pastikan 'uang_bayar' >= 'total_belanja'.
+    2. Hitungan 'kembalian' HARUS MATEMATIS BENAR.
+    3. Semua angka dalam format NUMBER (tanpa kutip).
+    4. HANYA JSON mentah.`;
   },
 
-  // 5. MEMORY LAB (OPTIMIZED & SAFE)
+  // 5. MEMORY LAB (Optimized: Kejelasan Pasangan)
   memory: (level, tema) => {
-    const pairs = level === "mudah" ? 6 : level === "sedang" ? 10 : 15;
+    const pairs = level === "mudah" ? 6 : level === "sedang" ? 8 : 10; // Sedikit dikurangi agar tidak terlalu penuh di HP
 
-    // Logika tema
-    const jenisPasangan =
+    const context =
       tema === "bahasa"
-        ? "Sinonim/Antonim"
+        ? "Kata (A) dan Antonim/Sinonimnya (B)"
         : tema === "geografi"
-        ? "Negara & Ibukota"
-        : "Kata & Pasangannya";
+        ? "Negara (A) dan Ibukotanya (B)"
+        : "Objek (A) dan Pasangannya (B)";
 
-    return `Buat ${pairs} pasang kartu untuk game memori. Tema: ${tema}. Jenis pasangan: ${jenisPasangan}.
-    Output JSON Array MURNI (Tanpa Markdown): 
-    [{"a":"Kata 1","b":"Pasangan Kata 1"}, {"a":"Kata 2","b":"Pasangan Kata 2"}]`;
+    return `Buat ${pairs} pasang kartu unik untuk game memori. Tema: ${tema}. Konteks: ${context}.
+    Kata-kata harus singkat (maksimal 2 kata).
+    
+    FORMAT RESPONSE WAJIB (JSON ARRAY):
+    [{"a":"Hitam","b":"Putih"}, {"a":"Panas","b":"Dingin"}]
+    
+    ATURAN: HANYA JSON mentah.`;
   },
 
-  // 6. LABIRIN ILMU
+  // 6. LABIRIN ILMU (Optimized: Single Word Answer)
   labirin: (level) => {
     let size = level === "mudah" ? 10 : level === "sedang" ? 15 : 20;
     let count = level === "mudah" ? 3 : level === "sedang" ? 5 : 7;
@@ -141,44 +200,50 @@ const PROMPT_STRATEGIES = {
       level === "mudah"
         ? "Hewan/Buah"
         : level === "sedang"
-        ? "Tubuh/Tumbuhan"
-        : "Geografi Asia";
+        ? "Pengetahuan Umum SD"
+        : "Geografi/Sains";
 
-    return `Game Master Labirin. Level ${level}. Grid ${size}x${size}. ${count} soal tentang ${topic}.
-    Jawaban MAKSIMAL 1 KATA. 
-    Output JSON Object MURNI (Tanpa Markdown):
-    { "maze_size": ${size}, "soal_list": [{"tanya":"Ibukota RI?","jawab":"Jakarta"}] }`;
+    return `Game Master Labirin. Grid ${size}x${size}. ${count} soal singkat tentang ${topic}.
+    
+    FORMAT RESPONSE WAJIB (JSON OBJECT):
+    { "maze_size": ${size}, "soal_list": [{"tanya":"Ibukota Indonesia?","jawab":"Jakarta"}] }
+    
+    ATURAN:
+    1. Jawaban 'jawab' HARUS 1 KATA SAJA (karena user mengetik manual).
+    2. Jawaban tidak boleh case-sensitive (gunakan huruf umum).
+    3. HANYA JSON mentah.`;
   },
 
-  // 7. ZUMA SPACE
+  // 7. ZUMA SPACE (No Change - Sudah OK)
   zuma: (level, tema) => {
     let speed =
       level === "mudah" ? "lambat" : level === "sedang" ? "sedang" : "cepat";
     return `Konfigurasi Level Zuma. Tema ${tema}. Speed ${speed}.
-    Output JSON Object MURNI (Tanpa Markdown): {"deskripsi":"Misi...","palet_warna":["#F00","#0F0","#00F"],"speed":"${speed}"}`;
+    Output JSON Object MURNI (Tanpa Markdown): {"deskripsi":"Misi Galaksi...","palet_warna":["#F00","#0F0","#00F"],"speed":"${speed}"}`;
   },
 
-  // 8. PIANO SPEED
+  // 8. PIANO SPEED (No Change - Sudah OK)
   piano: (level) => {
     const len = level === "mudah" ? 3 : level === "sedang" ? 6 : 9;
     return `Urutan nada piano acak ${len} digit (angka 1-7).
     Output JSON Object MURNI (Tanpa Markdown): {"sequence":[1,3,5,2,4]}`;
   },
 
-  // 9. AI TUTOR
+  // 9. AI TUTOR (Optimized: Persona Guru)
   tutor: (soal, jawabUser, jawabBenar, kategori) => {
-    return `Bertindak sebagai Guru yang ramah dan suportif. 
+    return `Kamu adalah Guru yang ramah, lucu, dan suportif untuk anak SD.
     Siswa baru saja SALAH menjawab soal ${kategori}.
     
     Data:
-    - Pertanyaan: "${soal}"
-    - Jawaban Siswa (Salah): "${jawabUser}"
+    - Soal: "${soal}"
+    - Jawaban Siswa: "${jawabUser}"
     - Jawaban Benar: "${jawabBenar}"
     
     Tugas:
-    Berikan penjelasan SINGKAT (maksimal 2 kalimat) mengapa jawabannya adalah "${jawabBenar}" atau fakta menarik terkait jawaban benar tersebut. 
-    Jangan menyalahkan siswa. Gunakan bahasa Indonesia yang santai dan menyemangati.
-    Output langsung teks penjelasan (Plain Text), jangan format JSON.`;
+    1. Koreksi kesalahan siswa dengan lembut.
+    2. Berikan 1 fakta menarik atau "jembatan keledai" (cara hafal) agar siswa ingat jawaban yang benar.
+    3. Maksimal 2-3 kalimat pendek.
+    4. Output LANGSUNG teks (Plain Text), jangan JSON.`;
   },
 };
 
@@ -507,6 +572,79 @@ io.on("connection", (socket) => {
         teks: `Jawaban yang tepat adalah ${data.jawabBenar}. Jangan menyerah, coba lagi ya!`,
       });
     }
+  });
+
+  // 🔥 [BARU] E. LOGIKA MULTIPLAYER / ROOM (ZUMA & MATH) 🔥
+  // -----------------------------------------------------------------
+
+  // 1. Join Room (Umum & Zuma)
+  socket.on("joinRoom", (data) => {
+    if (!data.room) return;
+    socket.join(data.room);
+    console.log(`👥 ${data.username} masuk room: ${data.room}`);
+
+    // Beritahu orang lain di room
+    socket.to(data.room).emit("playerJoined", data.username);
+  });
+
+  // 2. Lapor Skor Real-time (Untuk update UI lawan di Zuma)
+  socket.on("laporSkor", (data) => {
+    // Data = { skor: 100, room: "kodeRoom" }
+    if (data.room) {
+      socket.to(data.room).emit("updateSkorLawan", data.skor);
+    }
+  });
+
+  // 3. Join Math Duel (Khusus Math Battle)
+  socket.on("joinMathDuel", async (data) => {
+    // Data = { room, nama, tingkat }
+    const room = data.room;
+    socket.join(room);
+
+    // Hitung jumlah pemain di room
+    const players = await io.in(room).allSockets(); // Set of socket IDs
+    const playerCount = players.size;
+
+    if (playerCount === 1) {
+      socket.emit("waitingForOpponent", "Menunggu pemain kedua...");
+    } else if (playerCount === 2) {
+      // Jika sudah 2 orang, mulai game!
+      // Minta soal ke AI dulu (sekali saja utk berdua)
+      const level = data.tingkat || "mudah";
+      // Pakai cache key yang sama agar cepat
+      const cacheKey = `cache_soal_v6/math_${level}`;
+
+      // (Kita pakai logika cache simple disini, ambil existing logic)
+      // Agar cepat, kita trigger event mintaSoalAI manual atau ambil cache
+      let soalDuel = getFallbackData("math"); // Default kalau AI gagal
+
+      try {
+        // Coba ambil dari cache DB
+        const cacheSnapshot = await get(ref(database, cacheKey));
+        if (cacheSnapshot.exists()) {
+          const rawData = cacheSnapshot.val();
+          if (Array.isArray(rawData)) {
+            // Ambil 10 soal acak untuk duel
+            soalDuel = fisherYatesShuffle([...rawData])
+              .slice(0, 10)
+              .map((s) => ({ q: s.soal, a: s.jawaban }));
+          }
+        }
+      } catch (e) {
+        console.log("Duel Cache Error, use fallback");
+      }
+
+      // Kirim sinyal MULAI ke semua di room
+      io.in(room).emit("startDuel", { soal: soalDuel });
+    } else {
+      socket.emit("waitingForOpponent", "Room Penuh (Max 2).");
+    }
+  });
+
+  // 4. Update Skor Duel (Math Battle)
+  socket.on("updateScoreDuel", (data) => {
+    // Data = { room, score }
+    socket.to(data.room).emit("opponentScoreUpdate", data.score);
   });
 });
 
