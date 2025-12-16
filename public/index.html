@@ -385,7 +385,6 @@
         }
       }
 
-
       // Fungsi pembantu untuk membersihkan nama
       function sanitizeName(name) {
         if (!name) return "Guest";
@@ -403,7 +402,6 @@
           .then((result) => {
             const originalName = result.user.displayName;
 
-            
             const safeName = sanitizeName(originalName);
 
             // Simpan nama yang aman (contoh: Mr_Aan) ke LocalStorage
@@ -501,9 +499,10 @@
             let sKasir = data.skor_kasir || 0;
             let sLabirin = data.skor_labirin || 0;
             let sNabi = data.skor_nabi || 0;
-            let sAyat = data.skor_ayat || 0; // Persiapan untuk game Ayat nanti
+            let sAyat = data.skor_ayat || 0;
+            let sTajwid = data.skor_tajwid || 0;
 
-            // rumus total game buat leaderboard 
+            // rumus total game buat leaderboard
             total =
               sMath +
               sZuma +
@@ -512,7 +511,8 @@
               sKasir +
               sLabirin +
               sNabi +
-              sAyat;
+              sAyat +
+              sTajwid;
 
             const avatarBox = document.getElementById("avatar-box");
             avatarBox.className = "avatar-container";

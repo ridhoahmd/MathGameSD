@@ -565,7 +565,63 @@ io.on("connection", (socket) => {
     }
   });
 
-  // --- C. GLOBAL CHAT ---
+  // --- [BAGIAN BARU] C. LOGIKA LEADERBOARD ---
+  socket.on("mintaLeaderboard", async () => {
+    try {
+      // 1. Ambil referensi ke root 'leaderboard'
+      // Sesuai kode simpanSkor Anda, data ada di: "leaderboard/" + safeName
+      const leaderboardRef = ref(database, "leaderboard");
+      const snapshot = await get(leaderboardRef);
+
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const leaderboard = [];
+
+        // 2. Loop semua user untuk menghitung Total Skor
+        Object.keys(data).forEach((key) => {
+          const val = data[key];
+
+          // 3. RUMUS PENJUMLAHAN TOTAL (Termasuk Tajwid)
+          // Pastikan semua game dijumlahkan di sini
+          const totalSkor =
+            (val.skor_math || 0) +
+            (val.skor_nabi || 0) +
+            (val.skor_ayat || 0) +
+            (val.skor_kasir || 0) +
+            (val.skor_memory || 0) +
+            (val.skor_labirin || 0) +
+            (val.skor_zuma || 0) +
+            (val.skor_piano || 0) +
+            (val.skor_tajwid || 0); // 🔥 TAJWID DITAMBAHKAN DI SINI
+
+          leaderboard.push({
+            nama: val.nama || "User",
+            skor: totalSkor,
+            koin: val.videa_coin || 0,
+            role: val.role || "siswa",
+            // Opsional: Kirim rincian jika ingin ditampilkan di frontend
+            rincian: {
+              tajwid: val.skor_tajwid || 0,
+            },
+          });
+        });
+
+        // 4. Urutkan dari Skor Tertinggi ke Terendah
+        leaderboard.sort((a, b) => b.skor - a.skor);
+
+        // 5. Kirim Top 10 ke Client
+        socket.emit("updateLeaderboard", leaderboard.slice(0, 10));
+      } else {
+        // Jika database kosong
+        socket.emit("updateLeaderboard", []);
+      }
+    } catch (err) {
+      console.error("❌ Error ambil leaderboard:", err.message);
+      socket.emit("updateLeaderboard", []);
+    }
+  });
+
+  // --- D. GLOBAL CHAT ---
   socket.on("chatMessage", (msg) => {
     if (!msg.pesan || !msg.pesan.trim()) return;
 
@@ -588,7 +644,7 @@ io.on("connection", (socket) => {
     });
   });
 
-  // --- D. FITUR AI TUTOR (Penjelasan Jawaban Salah) ---
+  // --- E. FITUR AI TUTOR (Penjelasan Jawaban Salah) ---
   socket.on("mintaPenjelasan", async (data) => {
     // Validasi data sederhana
     if (!data.soal || !data.jawabBenar) return;
@@ -619,7 +675,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  // 🔥 [BARU] E. LOGIKA MULTIPLAYER / ROOM (ZUMA & MATH) 🔥
+  // 🔥 [BARU] F. LOGIKA MULTIPLAYER / ROOM (ZUMA & MATH) 🔥
   // -----------------------------------------------------------------
 
   // 1. Join Room (Umum & Zuma)

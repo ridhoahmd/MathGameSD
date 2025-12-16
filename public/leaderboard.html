@@ -1,103 +1,120 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Papan Peringkat Juara</title>
-    
-    <link rel="stylesheet" href="css/leaderboard.css?v=final">
 
-</head>
-<body>
-
+    <link rel="stylesheet" href="css/leaderboard.css?v=final" />
+  </head>
+  <body>
     <div class="leaderboard-container">
-        <a href="/" class="back-btn">⬅ Kembali ke Menu</a>
-        <h1>🏆 TOP GLOBAL RANKING 🏆</h1>
+      <a href="/" class="back-btn">⬅ Kembali ke Menu</a>
+      <h1>🏆 TOP GLOBAL RANKING 🏆</h1>
 
-        <table class="rank-table">
-            <thead>
-                <tr>
-                    <th width="10%">#</th>
-                    <th>Pemain</th>
-                    <th class="th-right">Total Skor</th>
-                </tr>
-            </thead>
-            <tbody id="rank-list">
-                <tr><td colspan="3" class="empty-msg">Memuat Data... 🔄</td></tr>
-            </tbody>
-        </table>
+      <table class="rank-table">
+        <thead>
+          <tr>
+            <th width="10%">#</th>
+            <th>Pemain</th>
+            <th class="th-right">Total Skor</th>
+          </tr>
+        </thead>
+        <tbody id="rank-list">
+          <tr>
+            <td colspan="3" class="empty-msg">Memuat Data... 🔄</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
-            authDomain: "mathgamesd.firebaseapp.com",
-            // 👇 URL DATABASE ASLI ANDA
-            databaseURL: "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app", 
-            projectId: "mathgamesd",
-            storageBucket: "mathgamesd.firebasestorage.app",
-            messagingSenderId: "595640141584",
-            appId: "1:595640141584:web:d02523bc844e52550f4795"
-        };
+      const firebaseConfig = {
+        apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
+        authDomain: "mathgamesd.firebaseapp.com",
+        // 👇 URL DATABASE ASLI ANDA
+        databaseURL:
+          "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "mathgamesd",
+        storageBucket: "mathgamesd.firebasestorage.app",
+        messagingSenderId: "595640141584",
+        appId: "1:595640141584:web:d02523bc844e52550f4795",
+      };
 
-        try { firebase.initializeApp(firebaseConfig); } catch(e) {}
-        const database = firebase.database();
-        const rankList = document.getElementById('rank-list');
+      try {
+        firebase.initializeApp(firebaseConfig);
+      } catch (e) {}
+      const database = firebase.database();
+      const rankList = document.getElementById("rank-list");
 
-        // ... (Kode Firebase Config di atas tetap sama) ...
+      // ... (Kode Firebase Config di atas tetap sama) ...
 
-database.ref('leaderboard').once('value', (snapshot) => {
-    const data = snapshot.val();
-    
-    if (!data) {
-        rankList.innerHTML = "<tr><td colspan='3' class='empty-msg'>Belum ada data.</td></tr>";
-        return;
-    }
+      database.ref("leaderboard").once("value", (snapshot) => {
+        const data = snapshot.val();
 
-    let players = [];
-    Object.keys(data).forEach(key => {
-        const user = data[key];
-        
-        // --- AMBIL SEMUA SKOR GAME (Ada 8 Game) ---
-        let sMath = user.skor_math || 0;
-        if (user.skor && !user.skor_math) sMath = user.skor; // Support legacy
-        
-        let sZuma = user.skor_zuma || 0;
-        let sMemory = user.skor_memory || 0;
-        let sPiano = user.skor_piano || 0;
-        
-        // 🔥 TAMBAHAN YANG HILANG SEBELUMNYA:
-        let sKasir = user.skor_kasir || 0;
-        let sLabirin = user.skor_labirin || 0;
-        let sNabi = user.skor_nabi || 0;
-        let sAyat = user.skor_ayat || 0;
+        if (!data) {
+          rankList.innerHTML =
+            "<tr><td colspan='3' class='empty-msg'>Belum ada data.</td></tr>";
+          return;
+        }
 
-        // --- RUMUS TOTAL YANG BENAR ---
-        let total = sMath + sZuma + sMemory + sPiano + sKasir + sLabirin + sNabi + sAyat;
+        let players = [];
+        Object.keys(data).forEach((key) => {
+          const user = data[key];
 
-        players.push({ 
-            nama: user.nama || "Tanpa Nama", 
-            total: total 
+          // --- AMBIL SEMUA SKOR GAME (Ada 9 Game) ---
+          let sMath = user.skor_math || 0;
+          if (user.skor && !user.skor_math) sMath = user.skor; // Support legacy
+          let sZuma = user.skor_zuma || 0;
+          let sMemory = user.skor_memory || 0;
+          let sPiano = user.skor_piano || 0;
+          let sKasir = user.skor_kasir || 0;
+          let sLabirin = user.skor_labirin || 0;
+          let sNabi = user.skor_nabi || 0;
+          let sAyat = user.skor_ayat || 0;
+          let sTajwid = user.skor_tajwid || 0;
+
+          // --- RUMUS TOTAL YANG BENAR ---
+          let total =
+            sMath +
+            sZuma +
+            sMemory +
+            sPiano +
+            sKasir +
+            sLabirin +
+            sNabi +
+            sAyat +
+            sTajwid;
+
+          players.push({
+            nama: user.nama || "Tanpa Nama",
+            total: total,
+          });
         });
-    });
 
+        players.sort((a, b) => b.total - a.total);
+        rankList.innerHTML = "";
 
-            players.sort((a, b) => b.total - a.total);
-            rankList.innerHTML = ""; 
-            
-            players.forEach((player, index) => {
-                const rank = index + 1;
-                let rankClass = "rank-cell";
-                let icon = "#" + rank;
+        players.forEach((player, index) => {
+          const rank = index + 1;
+          let rankClass = "rank-cell";
+          let icon = "#" + rank;
 
-                if (rank === 1) { rankClass += " rank-1"; icon = "🥇"; }
-                else if (rank === 2) { rankClass += " rank-2"; icon = "🥈"; }
-                else if (rank === 3) { rankClass += " rank-3"; icon = "🥉"; }
+          if (rank === 1) {
+            rankClass += " rank-1";
+            icon = "🥇";
+          } else if (rank === 2) {
+            rankClass += " rank-2";
+            icon = "🥈";
+          } else if (rank === 3) {
+            rankClass += " rank-3";
+            icon = "🥉";
+          }
 
-                const row = `
+          const row = `
                     <tr class="row-highlight">
                         <td class="${rankClass}">${icon}</td>
                         <td>
@@ -109,9 +126,9 @@ database.ref('leaderboard').once('value', (snapshot) => {
                         <td class="total-score">${player.total}</td>
                     </tr>
                 `;
-                rankList.innerHTML += row;
-            });
+          rankList.innerHTML += row;
         });
+      });
     </script>
-</body>
+  </body>
 </html>
