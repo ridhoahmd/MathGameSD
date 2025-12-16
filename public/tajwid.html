@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pilah Hukum Tajwid - Videa Class</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Poppins:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css?v=fix_ui_1" />
+    <link rel="stylesheet" href="css/tajwid.css?v=fix_ui_1" />
+  </head>
+  <body>
+    <div class="top-bar">
+      <a href="/" class="btn-back">⬅ Kembali</a>
+      <div class="score-badge">✨ Skor: <span id="score">0</span></div>
+    </div>
+
+    <div class="game-wrapper">
+      <div id="start-screen" class="panel active">
+        <div class="game-logo">⚖️</div>
+        <h1 class="title">PILAH HUKUM</h1>
+        <p class="desc">Geser kartu Arab ke keranjang hukum yang benar!</p>
+
+        <div class="difficulty-label">Pilih Tingkat Kesulitan:</div>
+        <div class="difficulty-selector">
+          <button class="btn-diff active" data-level="mudah">Mudah</button>
+          <button class="btn-diff" data-level="sedang">Sedang</button>
+          <button class="btn-diff" data-level="sulit">Sulit</button>
+        </div>
+
+        <button onclick="startGame()" class="btn-start">MULAI MAIN</button>
+      </div>
+
+      <div id="game-screen" class="panel hidden">
+        <div class="buckets-area">
+          <div class="bucket left-bucket" onclick="handleInput('kiri')">
+            <div class="bucket-icon">⬅</div>
+            <div class="bucket-name" id="label-left">KIRI</div>
+          </div>
+
+          <div class="bucket right-bucket" onclick="handleInput('kanan')">
+            <div class="bucket-icon">➡</div>
+            <div class="bucket-name" id="label-right">KANAN</div>
+          </div>
+        </div>
+
+        <div class="card-container">
+          <div id="card" class="flashcard">
+            <span id="arabic-text">...</span>
+          </div>
+          <div class="drag-hint">Geser (HP) atau Tekan Panah (PC)</div>
+        </div>
+
+        <div id="feedback-overlay"></div>
+      </div>
+
+      <div id="result-screen" class="panel hidden">
+        <h2>WAKTU HABIS!</h2>
+        <div class="final-score-box">
+          <p>Total Skor</p>
+          <h1 id="final-score">0</h1>
+        </div>
+        <div class="action-buttons">
+          <button onclick="location.reload()" class="btn-retry">
+            MAIN LAGI
+          </button>
+          <button onclick="window.location.href='/'" class="btn-home">
+            MENU UTAMA
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/audio.js?v=fix_ui_1"></script>
+    <script src="js/tajwid.js?v=fix_ui_1"></script>
+  </body>
+</html>

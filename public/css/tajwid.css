@@ -1,0 +1,267 @@
+/* RESET & LAYOUT UTAMA */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+  background: radial-gradient(circle at center, #1e3c72, #2a5298);
+  color: white;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden; /* Kunci scroll */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* CONTAINER TENGAH */
+.game-wrapper {
+  width: 90%;
+  max-width: 450px; /* Ukuran pas HP */
+  height: 85vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* UI HEADER */
+.top-bar {
+  position: absolute;
+  top: 15px;
+  width: 90%;
+  max-width: 600px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 20;
+}
+.btn-back,
+.score-badge {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 15px;
+  border-radius: 20px;
+  text-decoration: none;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+/* PANEL (Start/Game/Result) */
+/* --- PERBAIKAN LOGIKA PANEL (STRICT MODE) --- */
+
+/* 1. Default: Semua panel HILANG/SEMBUNYI */
+.panel {
+  display: none !important; /* Paksa hilang */
+  width: 100%;
+  text-align: center;
+}
+
+/* 2. State Active: HANYA muncul jika punya class .active */
+/* Kita gunakan Flexbox agar layout rapi ke bawah */
+.panel.active {
+  display: flex !important; /* Paksa muncul */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%; /* Pastikan memenuhi container */
+}
+
+/* Khusus Game Screen butuh space-evenly agar keranjang & kartu berjarak */
+#game-screen.active {
+  justify-content: space-evenly;
+}
+
+/* START SCREEN */
+.game-logo {
+  font-size: 4rem;
+  margin-bottom: 10px;
+  animation: bounce 2s infinite;
+}
+.title {
+  font-size: 2rem;
+  margin: 0;
+  color: #ffd700;
+  text-shadow: 0 0 10px #ffd700;
+}
+.desc {
+  color: #ddd;
+  font-size: 0.9rem;
+  margin-bottom: 25px;
+}
+
+.difficulty-label {
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #00f2ff;
+}
+.difficulty-selector {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+.btn-diff {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid #fff;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.btn-diff.active {
+  background: #00f2ff;
+  color: #000;
+  border-color: #00f2ff;
+  font-weight: bold;
+}
+
+.btn-start,
+.btn-retry {
+  background: linear-gradient(45deg, #ffd700, #ffa500);
+  border: none;
+  color: #000;
+  padding: 15px 40px;
+  border-radius: 50px;
+  font-weight: bold;
+  font-size: 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(255, 165, 0, 0.4);
+}
+.btn-home {
+  margin-top: 15px;
+  background: transparent;
+  border: 1px solid #aaa;
+  color: #ccc;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+/* --- GAMEPLAY AREA (INI YANG DIPERBAIKI) --- */
+/* Gunakan Flexbox Column agar elemen tersusun rapi ke bawah */
+#game-screen {
+  display: none; /* di-handle JS */
+  height: 100%;
+  flex-direction: column;
+  justify-content: space-evenly; /* Bagi ruang secara rata */
+  align-items: center;
+}
+#game-screen.active {
+  display: flex !important;
+}
+
+/* 1. BUCKETS (KERANJANG) */
+.buckets-area {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+  margin-top: 40px; /* Jarak dari top bar */
+}
+.bucket {
+  flex: 1; /* Lebar rata */
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 15px;
+  padding: 15px 5px;
+  cursor: pointer;
+  transition: 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.bucket:active {
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 0.2);
+}
+.left-bucket {
+  border-color: #4cd137;
+  color: #4cd137;
+}
+.right-bucket {
+  border-color: #e84118;
+  color: #e84118;
+}
+.bucket-icon {
+  font-size: 1.5rem;
+  margin-bottom: 5px;
+}
+.bucket-name {
+  font-weight: bold;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+/* 2. CARD (KARTU) */
+.card-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 1;
+  justify-content: center; /* Kartu di tengah sisa ruang */
+}
+.flashcard {
+  width: 240px;
+  height: 240px;
+  background: white;
+  color: #333;
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  font-family: "Amiri", serif;
+  font-size: 3.5rem;
+  text-align: center;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  z-index: 10;
+}
+
+/* Animasi Swipe */
+.swipe-left {
+  transform: translateX(-200px) rotate(-15deg) !important;
+  opacity: 0;
+}
+.swipe-right {
+  transform: translateX(200px) rotate(15deg) !important;
+  opacity: 0;
+}
+
+.drag-hint {
+  margin-top: 15px;
+  font-size: 0.8rem;
+  color: #aaa;
+  opacity: 0.7;
+}
+
+/* FEEDBACK OVERLAY */
+#feedback-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+  transition: background 0.2s;
+}
+.bg-correct {
+  background-color: rgba(46, 213, 115, 0.3);
+}
+.bg-wrong {
+  background-color: rgba(255, 71, 87, 0.3);
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}

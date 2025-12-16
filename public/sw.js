@@ -1,4 +1,4 @@
-const CACHE_NAME = 'videa-class-final-v2';
+const CACHE_NAME = 'videa-class-final-v4';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -7,6 +7,9 @@ const urlsToCache = [
   '/css/labirin.css',
   '/css/nabi.css',
   '/css/ayat.css',
+  '/tajwid.html',
+  '/css/tajwid.css',
+  '/js/tajwid.js',
   '/js/audio.js',
   '/logo-videa.png'
 ];

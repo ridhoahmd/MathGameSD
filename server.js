@@ -245,6 +245,51 @@ const PROMPT_STRATEGIES = {
     3. Maksimal 2-3 kalimat pendek.
     4. Output LANGSUNG teks (Plain Text), jangan JSON.`;
   },
+
+  // 10. PILAH HUKUM (TAJWID SORTER - FIXED LEVELS)
+  tajwid: (level) => {
+    let pair;
+
+    // Logika Tingkat Kesulitan
+    if (level === "mudah") {
+      // Paling Dasar: Huruf Syamsiah vs Qamariyah
+      pair = { a: "Al-Qamariyah (Jelas)", b: "Al-Syamsiyah (Lebur)" };
+    } else if (level === "sedang") {
+      // Hukum Nun Mati: Jelas vs Samar
+      pair = { a: "Izhar (Jelas)", b: "Ikhfa (Samar)" };
+    } else {
+      // Level SULIT: Hukum Mim Mati / Qalqalah
+      // Kita acak agar lebih variatif untuk expert
+      const hardPairs = [
+        { a: "Qalqalah Sugra (Tengah)", b: "Qalqalah Kubra (Akhir)" },
+        {
+          a: "Idgham Bighunnah (Dengung)",
+          b: "Idgham Bilaghunnah (Tanpa Dengung)",
+        },
+      ];
+      pair = hardPairs[Math.floor(Math.random() * hardPairs.length)];
+    }
+
+    return `Bertindak sebagai Guru Tajwid SD. Saya butuh contoh kata pendek untuk hukum: "${pair.a}" dan "${pair.b}".
+    
+    Tugas:
+    Berikan total 15 kata Arab pendek (maksimal 2 kata) yang mengandung hukum tersebut.
+    
+    FORMAT RESPONSE WAJIB (JSON OBJECT):
+    {
+      "kategori_kiri": "${pair.a}",
+      "kategori_kanan": "${pair.b}",
+      "data": [
+        {"teks": "الْحَمْدُ", "hukum": "kiri"}, 
+        {"teks": "الرَّحْمَنِ", "hukum": "kanan"}
+      ]
+    }
+    
+    ATURAN KRUSIAL:
+    1. Teks Arab HARUS berharakat lengkap.
+    2. Pastikan contohnya JELAS (tidak ambigu).
+    3. HANYA JSON MENTAH.`;
+  },
 };
 
 // ==========================================
