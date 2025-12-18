@@ -1,5 +1,5 @@
 // ==========================================
-// LABIRIN.JS - FIXED & OPTIMIZED
+// LABIRIN.JS - FIXED & OPTIMIZED + AI TUTOR
 // ==========================================
 
 const socket = io();
@@ -12,16 +12,21 @@ let cols, rows;
 let size = 20;
 let grid = [];
 let current;
-let stack = []; // Variabel ini akan di-reset di setupMazeGrid
+let stack = [];
 let questions = [];
 let score = 0;
 let gameActive = false;
 let finishNode;
 let playerName = localStorage.getItem("playerName") || "Guest";
 
+// 🔥 [BARU] VARIABEL AI TUTOR
+const tutorOverlay = document.getElementById("tutor-overlay");
+const tutorText = document.getElementById("tutor-text");
+let tutorUsageCount = 0;
+const MAX_TUTOR_USAGE = 3;
+
 // --- 🎨 ASET GAMBAR ---
 const imgPlayer = new Image();
-// Gunakan path lokal jika sudah ada, atau tetap CDN untuk sekarang
 imgPlayer.src = "https://cdn-icons-png.flaticon.com/512/4140/4140047.png";
 
 const imgFinish = new Image();
@@ -41,11 +46,27 @@ document.querySelectorAll(".btn-level").forEach((btn) => {
   });
 });
 
+// 🔥 [BARU] LISTENER PENJELASAN AI
+socket.on("penjelasanTutor", (data) => {
+  if (tutorText) tutorText.innerText = data.penjelasan;
+});
+
+// 🔥 [BARU] FUNGSI TUTUP TUTOR
+window.tutupTutorLabirin = function () {
+  if (tutorOverlay) tutorOverlay.style.display = "none";
+  // Opsional: Buka kembali modal kuis agar user bisa jawab ulang
+  const modal = document.getElementById("quiz-modal");
+  if (modal) modal.style.display = "flex";
+};
+
 // --- FUNGSI MINTA GAME KE SERVER ---
 window.requestGame = function () {
   const btn = document.querySelector(".btn-start");
   btn.innerText = "⏳ MENGHUBUNGI SERVER...";
   btn.disabled = true;
+
+  // Reset kuota tutor setiap game baru
+  tutorUsageCount = 0;
 
   // Ambil Kode Kelas (jika ada)
   const inputKodeKelas = document.getElementById("inputKodeKelas");
@@ -71,7 +92,7 @@ socket.on("soalDariAI", (response) => {
   if (response && response.kategori === "labirin") {
     // 🔥 VAKSIN DATA
     let info = response.data;
-    if (Array.isArray(info)) info = info[0]; // Ambil isi
+    if (Array.isArray(info)) info = info[0];
 
     cols = info.maze_size || 10;
     rows = info.maze_size || 10;
@@ -86,7 +107,6 @@ socket.on("soalDariAI", (response) => {
     gameActive = true;
     draw();
   } else {
-    // Handle jika data kosong/error
     alert(response.error || "Gagal memuat soal. Coba lagi.");
     location.reload();
   }
@@ -94,9 +114,8 @@ socket.on("soalDariAI", (response) => {
 
 // --- GENERATOR MAZE (FIXED STRUCTURE) ---
 function setupMazeGrid() {
-  // 1. Reset Grid & Stack (PENTING!)
   grid = [];
-  stack = []; // Reset stack agar bersih saat main ulang
+  stack = [];
 
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
@@ -105,7 +124,6 @@ function setupMazeGrid() {
     }
   }
 
-  // 2. Logika Pembuatan Labirin (DFS Algorithm)
   current = grid[0];
   current.visited = true;
   finishNode = grid[grid.length - 1];
@@ -126,7 +144,6 @@ function setupMazeGrid() {
     }
   }
 
-  // 3. Sebar Soal
   let qIndex = 0;
   let randomGridIndices = Array.from({ length: grid.length }, (_, i) => i).sort(
     () => Math.random() - 0.5
@@ -142,15 +159,12 @@ function setupMazeGrid() {
     }
   }
 
-  // 4. Setup Pemain Awal
   current = grid[0];
   score = 0;
   document.getElementById("score").innerText = score;
 
-  // 5. Kontrol Layar Sentuh (Mobile) - Reset Event Listener Lama
   const controlButtons = document.querySelectorAll(".btn-ctrl");
   controlButtons.forEach((btn) => {
-    // Clone node untuk menghapus semua event listener sebelumnya dengan bersih
     const newBtn = btn.cloneNode(true);
     btn.parentNode.replaceChild(newBtn, btn);
 
@@ -335,7 +349,7 @@ function openQuiz(node) {
   input.focus();
 }
 
-// --- LOGIKA CEK JAWABAN ---
+// --- LOGIKA CEK JAWABAN (MODIFIED FOR AI TUTOR) ---
 window.checkQuiz = function () {
   const userAns = document.getElementById("q-input").value.toLowerCase().trim();
   const correct = pendingNode.questionData.jawab.toLowerCase().trim();
@@ -372,19 +386,42 @@ window.checkQuiz = function () {
       AudioManager.playWrong();
     } catch (e) {}
 
-    title.innerText = "❌ SALAH!";
-    title.style.color = "red";
-    qText.style.color = "#ff6b6b";
-    qText.innerText = "Coba lagi ya...";
+    // 🔥 LOGIKA AI TUTOR: Jika Salah, Cek Kuota & Panggil AI
+    if (tutorUsageCount < MAX_TUTOR_USAGE) {
+      tutorUsageCount++;
 
-    document.getElementById("q-input").value = "";
+      // Tutup modal quiz sementara biar overlay AI terlihat
+      document.getElementById("quiz-modal").style.display = "none";
 
-    setTimeout(() => {
-      title.innerText = "RINTANGAN!";
-      title.style.color = "#ff00cc";
-      qText.style.color = "white";
-      qText.innerText = pendingNode.questionData.tanya;
-    }, 1500);
+      if (tutorOverlay) {
+        tutorOverlay.style.display = "flex";
+        tutorText.innerText = `Guru Videa sedang membaca peta... (Sisa Bantuan: ${
+          MAX_TUTOR_USAGE - tutorUsageCount
+        })`;
+      }
+
+      socket.emit("mintaPenjelasan", {
+        game: "labirin",
+        soal: document.getElementById("q-text").innerText,
+        jawabanUser: userAns,
+        jawabanBenar: correct,
+      });
+    } else {
+      // Jika Kuota Habis, Jalankan Logika Salah Biasa (Original)
+      title.innerText = "❌ SALAH! (Bantuan Habis)";
+      title.style.color = "red";
+      qText.style.color = "#ff6b6b";
+      qText.innerText = "Coba lagi ya...";
+
+      document.getElementById("q-input").value = "";
+
+      setTimeout(() => {
+        title.innerText = "RINTANGAN!";
+        title.style.color = "#ff00cc";
+        qText.style.color = "white";
+        qText.innerText = pendingNode.questionData.tanya;
+      }, 1500);
+    }
   }
 };
 
@@ -431,7 +468,6 @@ let touchStartY = 0;
 document.addEventListener(
   "touchstart",
   (e) => {
-    // Simpan koordinat X dan Y awal
     touchStartX = e.changedTouches[0].screenX;
     touchStartY = e.changedTouches[0].screenY;
   },
@@ -442,11 +478,8 @@ document.addEventListener(
 document.addEventListener(
   "touchend",
   (e) => {
-    // Ambil koordinat X dan Y akhir
     const touchEndX = e.changedTouches[0].screenX;
     const touchEndY = e.changedTouches[0].screenY;
-
-    // Hitung arah geseran
     handleSwipe(touchStartX, touchStartY, touchEndX, touchEndY);
   },
   { passive: false }
@@ -454,40 +487,29 @@ document.addEventListener(
 
 // 3. Logika Menghitung Arah
 function handleSwipe(sx, sy, ex, ey) {
-  // Hitung selisih jarak (Delta)
-  const dx = ex - sx; // Jarak Horizontal
-  const dy = ey - sy; // Jarak Vertikal
+  const dx = ex - sx;
+  const dy = ey - sy;
 
-  // Cek mana yang lebih jauh? Geser Horizontal atau Vertikal?
   if (Math.abs(dx) > Math.abs(dy)) {
-    // --- GERAK HORIZONTAL ---
-    // Threshold 30px: Harus geser minimal 30 piksel agar dianggap perintah
-    // (Biar kalau kesenggol dikit gak jalan)
     if (Math.abs(dx) > 30) {
-      if (dx > 0) movePlayer(1, 0); // Kanan (Delta Positif)
-      else movePlayer(-1, 0); // Kiri (Delta Negatif)
+      if (dx > 0) movePlayer(1, 0);
+      else movePlayer(-1, 0);
     }
   } else {
-    // --- GERAK VERTIKAL ---
     if (Math.abs(dy) > 30) {
-      if (dy > 0) movePlayer(0, 1); // Bawah
-      else movePlayer(0, -1); // Atas
+      if (dy > 0) movePlayer(0, 1);
+      else movePlayer(0, -1);
     }
   }
 }
 
-// --- FITUR AUTO-RECONNECT & OVERLAY (Fixed & Delayed) ---
+// --- FITUR AUTO-RECONNECT & OVERLAY ---
 
-// 1. Fungsi Membuat Tampilan Layar Gelap (Overlay)
 function createOfflineUI() {
   if (document.getElementById("connection-overlay")) return;
-
   const overlay = document.createElement("div");
   overlay.id = "connection-overlay";
-
-  // 🔥 PENTING: Set display none agar tidak muncul kedip di awal
   overlay.style.display = "none";
-
   overlay.innerHTML = `
         <div class="wifi-icon">📡</div>
         <div class="conn-text">KONEKSI TERPUTUS</div>
@@ -498,42 +520,30 @@ function createOfflineUI() {
 
 createOfflineUI();
 
-// 2. Logika Saat Koneksi Putus (Dengan Delay agar halus)
 let isReconnecting = false;
-let disconnectTimeout; // Timer untuk delay pesan error
+let disconnectTimeout;
 
 socket.on("disconnect", (reason) => {
   console.log("⚠️ Koneksi putus:", reason);
-
-  // 🔥 DELAY 1.5 DETIK: Jika hanya kedip sebentar, jangan ganggu user
   disconnectTimeout = setTimeout(() => {
     isReconnecting = true;
     const overlay = document.getElementById("connection-overlay");
     if (overlay) overlay.style.display = "flex";
-
     if (typeof gameActive !== "undefined") gameActive = false;
   }, 1500);
 });
 
 socket.on("connect", () => {
-  // Batalkan rencana pesan error jika koneksi sudah pulih cepat
   clearTimeout(disconnectTimeout);
-
   if (isReconnecting) {
     console.log("✅ Terhubung kembali!");
     isReconnecting = false;
-
     const overlay = document.getElementById("connection-overlay");
     if (overlay) overlay.style.display = "none";
-
-    // Resume Game Logic
     if (typeof gameActive !== "undefined") {
       gameActive = true;
-      if (typeof update === "function") {
-        // Khusus untuk game loop animasi seperti Zuma/Labirin
-        // requestAnimationFrame(update); // (Opsional, kadang double loop kalau tidak hati-hati)
-        requestAnimationFrame(draw); // Untuk Labirin pakai 'draw'
-      }
+      if (typeof update === "function") requestAnimationFrame(draw);
+      else requestAnimationFrame(draw);
     }
   }
 });

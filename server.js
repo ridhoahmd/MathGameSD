@@ -573,7 +573,6 @@ io.on("connection", (socket) => {
           });
         }
 
-
         socket.emit("soalDariAI", { kategori, data: finalData });
       } else {
         throw new Error("Data hasil AI null/rusak/kosong");
@@ -712,33 +711,68 @@ io.on("connection", (socket) => {
     });
   });
 
-  // --- E. FITUR AI TUTOR (Penjelasan Jawaban Salah) ---
+  // --- E. FITUR AI TUTOR (UNIVERSAL - SUDAH DIPERBAIKI) ---
   socket.on("mintaPenjelasan", async (data) => {
-    // Validasi data sederhana
-    if (!data.soal || !data.jawabBenar) return;
+    // 1. NORMALISASI VARIABLE (Penyelamat Game Lama & Baru)
+    // Server akan mencari 'jawabanBenar', kalau tidak ada, cari 'jawabBenar', dst.
+    const cleanSoal = data.soal || "";
+    const cleanJawabBenar = data.jawabanBenar || data.jawabBenar;
+    const cleanJawabUser = data.jawabanUser || data.jawabUser;
+    const gameType = data.game || data.kategori || "Umum"; // Nabi/Ayat pakai 'kategori', Tajwid/Labirin pakai 'game'
+
+    // 2. VALIDASI KUAT
+    // Jika data penting tidak ada, stop agar tidak error
+    if (!cleanSoal || !cleanJawabBenar) {
+      console.error("❌ Data Tutor Tidak Lengkap:", data);
+      return;
+    }
 
     try {
-      console.log(`👨‍🏫 Tutor dipanggil oleh ${data.nama || "User"}...`);
+      console.log(`👨‍🏫 Tutor dipanggil di game: ${gameType}`);
 
-      // 1. Ambil Prompt Tutor dari Strategi
-      // Kita gunakan kategori 'Umum' jika tidak spesifik
-      const prompt = PROMPT_STRATEGIES.tutor(
-        data.soal,
-        data.jawabUser,
-        data.jawabBenar,
-        data.kategori || "Pelajaran Umum"
-      );
+      let prompt = "";
 
-      // 2. Minta jawaban ke AI
-      const penjelasan = await askAI(prompt);
+      // 3. STRATEGI PROMPT SPESIFIK
+      if (gameType === "tajwid") {
+        prompt = `Seorang anak SD salah menebak hukum tajwid.
+          Soal: "${cleanSoal}". Jawaban Anak: "${cleanJawabUser}". Jawaban Benar: "${cleanJawabBenar}". 
+          Jelaskan max 2 kalimat kenapa salah dan apa ciri hukum yang benar. Gunakan bahasa ceria.`;
+      } else if (gameType === "labirin") {
+        prompt = `Siswa salah jawab kuis pengetahuan umum: "${cleanSoal}".
+          Jawabannya: "${cleanJawabUser}". Yang benar: "${cleanJawabBenar}".
+          Berikan "jembatan keledai" (cara hafal) atau fakta unik super singkat (max 15 kata) agar dia ingat.`;
+      } else {
+        // STRATEGI LAMA (Nabi & Ayat)
+        if (
+          typeof PROMPT_STRATEGIES !== "undefined" &&
+          PROMPT_STRATEGIES.tutor
+        ) {
+          prompt = PROMPT_STRATEGIES.tutor(
+            cleanSoal,
+            cleanJawabUser,
+            cleanJawabBenar,
+            gameType
+          );
+        } else {
+          prompt = `Siswa salah jawab soal "${cleanSoal}". Benarnya "${cleanJawabBenar}". Beri semangat singkat.`;
+        }
+      }
 
-      // 3. Kirim balik ke siswa
-      socket.emit("penjelasanTutor", { teks: penjelasan });
+      // 4. REQUEST AI
+      const penjelasanAI = await askAI(prompt);
+
+      // 5. KIRIM DATA HYBRID (Agar semua Client mengerti)
+      socket.emit("penjelasanTutor", {
+        teks: penjelasanAI, // Dibaca oleh Nabi.js & Ayat.js
+        penjelasan: penjelasanAI, // Dibaca oleh Tajwid.js & Labirin.js
+      });
     } catch (e) {
       console.error("❌ Tutor Error:", e.message);
-      // Fallback jika AI sibuk/gagal
+      const pesanError = `Jawaban yang benar adalah: ${cleanJawabBenar}. Tetap semangat ya!`;
+
       socket.emit("penjelasanTutor", {
-        teks: `Jawaban yang tepat adalah ${data.jawabBenar}. Jangan menyerah, coba lagi ya!`,
+        teks: pesanError,
+        penjelasan: pesanError,
       });
     }
   });
