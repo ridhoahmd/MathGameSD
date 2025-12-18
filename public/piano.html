@@ -1,68 +1,91 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Piano Speed - Videa Class</title>
-    
-    <meta http-equiv="Content-Security-Policy" content="
+
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
         default-src 'self' https: http: data: blob: 'unsafe-inline' 'unsafe-eval';
         script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.gstatic.com https://cdnjs.cloudflare.com;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         font-src 'self' https://fonts.gstatic.com;
         img-src 'self' data: https://api.dicebear.com https://cdn-icons-png.flaticon.com;
         connect-src * 'unsafe-inline';
-    ">
+    "
+    />
 
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-   
-    <link rel="stylesheet" href="css/piano.css?v=final">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
 
-</head>
-<body>
-
+    <link rel="stylesheet" href="css/style.css?v=final" />
+    <link rel="stylesheet" href="css/piano.css?v=final" />
+  </head>
+  <body>
     <a href="/" class="btn-back">⬅ Menu</a>
 
     <div class="hud">
-        <div class="score-box">Skor: <span id="score">0</span></div>
-        <div class="timer-box">⏳ <span id="timer">60</span>s</div>
+      <div class="score-box">Skor: <span id="score">0</span></div>
+      <div class="timer-box">⏳ <span id="timer">60</span>s</div>
     </div>
 
     <div class="question-box" id="question">PILIH LEVEL & MULAI</div>
 
     <div class="controls-area" id="start-controls">
-        <div class="difficulty-selector">
-            <button class="btn-level active" data-level="mudah">Mudah (3 Nada)</button>
-            <button class="btn-level" data-level="sedang">Sedang (5 Nada)</button>
-            <button class="btn-level" data-level="sulit">Sulit (7 Nada)</button>
-        </div>
-        <button onclick="startGameSession()" class="btn-start">MULAI 🎵</button>
+      <div class="difficulty-selector">
+        <button class="btn-level active" data-level="mudah">
+          Mudah (3 Nada)
+        </button>
+        <button class="btn-level" data-level="sedang">Sedang (5 Nada)</button>
+        <button class="btn-level" data-level="sulit">Sulit (7 Nada)</button>
+      </div>
+      <button onclick="startGameSession()" class="btn-start">MULAI 🎵</button>
     </div>
 
     <div class="piano-container">
-        <div class="key" data-val="1" onclick="playNote(1)">1</div>
-        <div class="key" data-val="2" onclick="playNote(2)">2</div>
-        <div class="key" data-val="3" onclick="playNote(3)">3</div>
-        <div class="key" data-val="4" onclick="playNote(4)">4</div>
-        <div class="key" data-val="5" onclick="playNote(5)">5</div>
-        <div class="key" data-val="6" onclick="playNote(6)">6</div>
-        <div class="key" data-val="7" onclick="playNote(7)">7</div>
-        <div class="key" data-val="8" onclick="playNote(8)">8</div>
-        <div class="key" data-val="9" onclick="playNote(9)">9</div>
-        <div class="key" data-val="0" onclick="playNote(0)">0</div>
+      <div class="key" data-val="1" onclick="playNote(1)">1</div>
+      <div class="key" data-val="2" onclick="playNote(2)">2</div>
+      <div class="key" data-val="3" onclick="playNote(3)">3</div>
+      <div class="key" data-val="4" onclick="playNote(4)">4</div>
+      <div class="key" data-val="5" onclick="playNote(5)">5</div>
+      <div class="key" data-val="6" onclick="playNote(6)">6</div>
+      <div class="key" data-val="7" onclick="playNote(7)">7</div>
+      <div class="key" data-val="8" onclick="playNote(8)">8</div>
+      <div class="key" data-val="9" onclick="playNote(9)">9</div>
+      <div class="key" data-val="0" onclick="playNote(0)">0</div>
     </div>
 
     <div class="modal" id="game-over-modal">
-        <div class="modal-content">
-            <h1 style="color:#ff4757">WAKTU HABIS!</h1>
-            <p style="color:#aaa">Skor Akhir:</p>
-            <h2 style="font-size:3rem; margin:10px 0; color:#ffeb3b" id="final-score">0</h2>
-            <button onclick="location.reload()" class="btn-start">MAIN LAGI</button>
-            <button onclick="window.location.href='/'" style="background:transparent; border:1px solid #555; color:#ccc; margin-top:10px; padding:10px;">KEMBALI</button>
-        </div>
+      <div class="modal-content">
+        <h1 style="color: #ff4757">WAKTU HABIS!</h1>
+        <p style="color: #aaa">Skor Akhir:</p>
+        <h2
+          style="font-size: 3rem; margin: 10px 0; color: #ffeb3b"
+          id="final-score"
+        >
+          0
+        </h2>
+        <button onclick="location.reload()" class="btn-start">MAIN LAGI</button>
+        <button
+          onclick="window.location.href='/'"
+          style="
+            background: transparent;
+            border: 1px solid #555;
+            color: #ccc;
+            margin-top: 10px;
+            padding: 10px;
+          "
+        >
+          KEMBALI
+        </button>
+      </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/piano.js?v=final"></script>
-</body>
+  </body>
 </html>

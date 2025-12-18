@@ -2,6 +2,36 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
+
+// --- MULAI TAMBAHAN KEAMANAN (RATE LIMITER) ---
+const rateLimit = require("express-rate-limit");
+
+// ==========================================
+// [BARU] KONFIGURASI AI (MANUAL SWITCH)
+// ==========================================
+const OpenAI = require("openai");
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// GANTI MANUAL DI SINI: 'gpt-5-nano' ATAU 'glm'
+const CURRENT_AI_MODEL = "glm";
+
+// Konfigurasi Limiter (Dilonggarkan untuk Development)
+const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // Durasi jendela waktu: 15 menit
+  max: 100, // SAYA UBAH JADI 100 (Biar kamu puas testing tanpa kena blokir)
+  message: {
+    error: "Terlalu banyak permintaan AI. Santai dulu, coba lagi nanti.",
+  },
+  standardHeaders: true, // Mengirim info limit di header respons
+  legacyHeaders: false, // Nonaktifkan header lama
+});
+
+// Terapkan limiter HANYA ke jalur AI
+// (Pastikan endpoint ini sesuai dengan yang kamu pakai di fungsi AI nanti)
+app.use("/api/ask-ai", aiLimiter);
+app.use("/api/generate-quiz", aiLimiter);
+// --- SELESAI TAMBAHAN KEAMANAN ---
+
 const io = require("socket.io")(http, {
   cors: {
     origin: "*", // Tips: Ganti '*' dengan domain production nanti untuk keamanan ekstra
@@ -348,6 +378,38 @@ function extractJSON(text) {
   }
 }
 
+// [BARU] FUNGSI UTAMA PENGENDALI AI
+async function askAI(promptText) {
+  console.log(`🧠 Mode AI Aktif: ${CURRENT_AI_MODEL.toUpperCase()}`);
+
+  if (CURRENT_AI_MODEL === "gpt-5-nano") {
+    // --- JALUR 1: OPENAI (GPT-5-NANO) ---
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-5-nano", // Pastikan model ini tersedia di akunmu
+        messages: [
+          // System prompt agar output bersih (hemat token & processing)
+          {
+            role: "system",
+            content:
+              "Kamu adalah server game edukasi. Output HANYA JSON mentah tanpa markdown.",
+          },
+          { role: "user", content: promptText },
+        ],
+        temperature: 0.7,
+      });
+      return completion.choices[0].message.content;
+    } catch (e) {
+      console.error("❌ Error OpenAI:", e.message);
+      throw new Error("Gagal mengambil data dari OpenAI");
+    }
+  } else {
+    // --- JALUR 2: GLM (ZHIPU) ---
+    // Langsung panggil fungsi lama kamu
+    return await tanyaGLM(promptText);
+  }
+}
+
 // Fetch AI dengan Timeout & AbortController
 async function tanyaGLM(promptText) {
   const apiKey = process.env.ZHIPU_API_KEY;
@@ -412,7 +474,7 @@ app.use(express.static(path.join(__dirname, "public")));
 io.on("connection", (socket) => {
   console.log(`✅ User CONNECTED: ${socket.id}`);
 
-  // --- A. PERMINTAAN SOAL ---
+  // --- A. PERMINTAAN SOAL (VERSI DEBUG & FIX) ---
   socket.on("mintaSoalAI", async (reqData) => {
     const { kategori, tingkat, kodeAkses } = reqData || {};
     const level = tingkat || "sedang";
@@ -428,20 +490,18 @@ io.on("connection", (socket) => {
           console.log(`🔑 Akses Ujian: ${kodeAkses}`);
           let dataManual = Object.values(manualSnapshot.val());
 
-          // Format ulang khusus Labirin agar sesuai struktur game
           if (kategori === "labirin") {
             const mazeSize =
               level === "mudah" ? 10 : level === "sedang" ? 15 : 20;
             dataManual = { maze_size: mazeSize, soal_list: dataManual };
           }
-
           socket.emit("soalDariAI", { kategori, data: dataManual });
-          return; // Selesai, jangan lanjut ke AI
+          return;
         }
       }
 
-      // 2. Cek Cache Database
-      const cacheKey = `cache_soal_v6/${kategori}_${level}`;
+      // 2. Cek Cache Database (GANTI KE V7 BIAR FRESH)
+      const cacheKey = `cache_soal_v7/${kategori}_${level}`;
       const cacheSnapshot = await get(ref(database, cacheKey));
       let finalData = null;
 
@@ -457,16 +517,33 @@ io.on("connection", (socket) => {
           () => 0.5 - Math.random()
         )[0];
 
-        // Ambil prompt dari strategi yang sudah didefinisikan di atas
         if (PROMPT_STRATEGIES[kategori]) {
           prompt = PROMPT_STRATEGIES[kategori](level, tema);
         }
 
         if (prompt) {
-          const rawText = await tanyaGLM(prompt);
-          finalData = extractJSON(rawText);
+          const rawText = await askAI(prompt);
+          let parsedData = extractJSON(rawText);
+
+          // 🔥 FIX OTOMATIS: Jika data terbungkus object {data: [...]}, ambil isinya 🔥
+          if (
+            parsedData &&
+            !Array.isArray(parsedData) &&
+            typeof parsedData === "object"
+          ) {
+            const keys = Object.keys(parsedData);
+            // Cek jika cuma ada 1 kunci (misal "soal" atau "data") yang isinya array
+            if (keys.length === 1 && Array.isArray(parsedData[keys[0]])) {
+              console.log(
+                `📦 UNWRAP: Membuka bungkus JSON dari key '${keys[0]}'`
+              );
+              parsedData = parsedData[keys[0]];
+            }
+          }
+
+          finalData = parsedData;
+
           if (finalData) {
-            // Simpan ke cache untuk user berikutnya
             await set(ref(database, cacheKey), finalData);
           }
         }
@@ -474,44 +551,35 @@ io.on("connection", (socket) => {
 
       // 4. Kirim Data ke Klien
       if (finalData) {
-        // A. Logika untuk Math & Kasir (Ambil 1 soal acak saja)
+        // A. Logika Math & Kasir (Ambil 1 soal acak)
         if (["math", "kasir"].includes(kategori) && Array.isArray(finalData)) {
           finalData = finalData[Math.floor(Math.random() * finalData.length)];
         }
-
-        // B. Logika untuk Nabi, Ayat, Memory (Ambil banyak soal & ACAK OPSI)
+        // B. Logika Nabi, Ayat, Memory (Acak Soal & Opsi)
         else if (
           ["nabi", "ayat", "memory"].includes(kategori) &&
           Array.isArray(finalData)
         ) {
-          // 1. Acak dulu urutan nomor soalnya (misal: soal no 5 jadi no 1)
           let shuffledQuestions = fisherYatesShuffle([...finalData]).slice(
             0,
             10
           );
-
-          // 2.  ACAK POSISI OPSI JAWABAN (A, B, C, D)
           finalData = shuffledQuestions.map((soal) => {
-            // Kita buat salinan objek soal biar aman
             let newSoal = { ...soal };
-
-            // Cek apakah soal ini punya 'opsi' dan apakah itu sebuah Array?
             if (newSoal.opsi && Array.isArray(newSoal.opsi)) {
-              // Kalau iya, acak posisi opsinya!
               newSoal.opsi = fisherYatesShuffle(newSoal.opsi);
             }
             return newSoal;
           });
         }
 
-        // Kirim data yang sudah diacak ke frontend
+
         socket.emit("soalDariAI", { kategori, data: finalData });
       } else {
-        throw new Error("Data hasil AI null/rusak");
+        throw new Error("Data hasil AI null/rusak/kosong");
       }
     } catch (e) {
       console.error(`❌ Error (${kategori}):`, e.message);
-      // Kirim Fallback Data agar game tidak macet
       socket.emit("soalDariAI", {
         kategori,
         data: getFallbackData(kategori),
@@ -662,7 +730,7 @@ io.on("connection", (socket) => {
       );
 
       // 2. Minta jawaban ke AI
-      const penjelasan = await tanyaGLM(prompt);
+      const penjelasan = await askAI(prompt);
 
       // 3. Kirim balik ke siswa
       socket.emit("penjelasanTutor", { teks: penjelasan });

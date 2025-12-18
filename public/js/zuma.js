@@ -193,9 +193,11 @@ function startGameMultiplayer() {
 
 socket.on("soalDariAI", (data) => {
   if (data.kategori === "zuma") {
-    levelData = data.data;
-    console.log("Misi diterima:", levelData);
+    // 🔥 VAKSIN DATA
+    let info = data.data;
+    if (Array.isArray(info)) info = info[0]; // Ambil isi
 
+    levelData = info;
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("game-hud").style.display = "block";
 

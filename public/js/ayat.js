@@ -81,8 +81,13 @@ socket.on("soalDariAI", (response) => {
     // Update Total Soal di UI
     if (ui.qTotal) ui.qTotal.innerText = questions.length;
 
+    // 2. PINDAH LAYAR (FIX LAYAR BLANK)
     screens.start.classList.remove("active");
-    screens.game.classList.add("active");
+    screens.start.classList.add("hidden"); // Sembunyikan layar start
+
+    // 🔥 INI KUNCI PERBAIKANNYA:
+    screens.game.classList.remove("hidden"); // Buang class hidden!
+    screens.game.classList.add("active"); // Aktifkan layar game
 
     loadQuestion();
   }
@@ -232,7 +237,7 @@ function checkAnswer(selectedRaw, correctRaw, btnElement) {
 
       if (modal) modal.style.display = "flex";
       if (titleEl)
-        titleEl.innerText = `GURU AI (SISA: ${
+        titleEl.innerText = `GURU VIDEA (SISA: ${
           MAX_TUTOR_USAGE - tutorUsageCount
         })`;
       if (textEl)
@@ -259,7 +264,12 @@ function checkAnswer(selectedRaw, correctRaw, btnElement) {
 
 function endGame() {
   screens.game.classList.remove("active");
+  screens.game.classList.add("hidden"); // Tambah hidden ke game
+
+  screens.result.classList.remove("hidden"); // <--- WAJIB ADA INI
   screens.result.classList.add("active");
+
+
   ui.finalScore.innerText = score;
 
   if (score >= 80) ui.resultMsg.innerText = "Muntaz! Hafalanmu sangat kuat.";

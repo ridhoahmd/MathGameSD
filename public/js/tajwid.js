@@ -1,3 +1,5 @@
+// public/js/tajwid.js - FIXED UI & DATA VAKSIN
+
 const socket = io();
 
 // UI Elements
@@ -20,18 +22,15 @@ let currentItem = null;
 let score = 0;
 let isProcessing = false;
 let playerName = localStorage.getItem("playerName") || "Guest";
-let selectedLevel = "mudah"; // Default Level
+let selectedLevel = "mudah";
 
 // --- 1. SETUP TOMBOL KESULITAN ---
 document.addEventListener("DOMContentLoaded", () => {
   const diffButtons = document.querySelectorAll(".btn-diff");
   diffButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
-      // Hapus class active dari semua tombol
       diffButtons.forEach((b) => b.classList.remove("active"));
-      // Tambah ke tombol yang diklik
       btn.classList.add("active");
-      // Simpan level
       selectedLevel = btn.dataset.level;
     });
   });
@@ -45,22 +44,26 @@ function startGame() {
 
   if (typeof AudioManager !== "undefined") AudioManager.init();
 
-  // Minta soal ke AI dengan LEVEL yang dipilih
+  // Minta soal ke AI
   socket.emit("mintaSoalAI", {
     kategori: "tajwid",
     tingkat: selectedLevel,
   });
 }
 
-// --- 3. TERIMA DATA DARI SERVER ---
+// --- 3. TERIMA DATA (DENGAN VAKSIN) ---
 socket.on("soalDariAI", (response) => {
-  // Reset tombol jika data sudah masuk
   const btnStart = document.querySelector(".btn-start");
   btnStart.innerText = "MULAI MAIN";
   btnStart.disabled = false;
 
   if (response.kategori === "tajwid") {
-    gameData = response.data; // { kategori_kiri, kategori_kanan, data: [] }
+    // 🔥 PERBAIKAN 1: VAKSIN DATA (Cek Array vs Object)
+    let rawData = response.data;
+    if (Array.isArray(rawData)) {
+      rawData = rawData[0]; // Ambil isinya jika terbungkus array
+    }
+    gameData = rawData;
 
     // Validasi data
     if (!gameData || !gameData.data || gameData.data.length === 0) {
@@ -78,13 +81,17 @@ socket.on("soalDariAI", (response) => {
     score = 0;
     ui.score.innerText = "0";
 
+    // 🔥 PERBAIKAN 2: BUKA TIRAI (REMOVE HIDDEN)
     ui.start.style.display = "none";
     ui.start.classList.remove("active");
+    ui.start.classList.add("hidden"); // Tutup start screen rapi
 
     ui.game.style.display = "flex";
+    ui.game.classList.remove("hidden"); // <--- WAJIB DIBUANG
     ui.game.classList.add("active");
 
     ui.result.classList.remove("active");
+    ui.result.classList.add("hidden");
 
     nextCard();
   }
@@ -97,11 +104,11 @@ function nextCard() {
     return;
   }
 
-  // Reset posisi kartu (Hapus kelas animasi sebelumnya)
+  // Reset posisi kartu
   ui.card.className = "flashcard";
   ui.card.style.transform = "translate(0, 0)";
 
-  currentItem = queue.pop(); // Ambil 1 soal dari tumpukan
+  currentItem = queue.pop();
   ui.text.innerText = currentItem.teks;
   isProcessing = false;
 }
@@ -109,23 +116,17 @@ function nextCard() {
 // --- 5. LOGIKA INPUT (JAWAB) ---
 function handleInput(direction) {
   if (isProcessing) return;
-
-  // Cegah input jika game tidak aktif
   if (!ui.game.classList.contains("active")) return;
 
   isProcessing = true;
+  const isCorrect = direction === currentItem.hukum;
 
-  const correctDir = currentItem.hukum; // 'kiri' atau 'kanan'
-  const isCorrect = direction === correctDir;
-
-  // Animasi Kartu Terbang
   if (direction === "kiri") {
     ui.card.classList.add("swipe-left");
   } else {
     ui.card.classList.add("swipe-right");
   }
 
-  // Feedback & Score
   if (isCorrect) {
     score += 10;
     ui.score.innerText = score;
@@ -140,7 +141,6 @@ function handleInput(direction) {
     } catch (e) {}
   }
 
-  // Munculkan kartu baru setelah animasi selesai (300ms)
   setTimeout(() => {
     nextCard();
   }, 300);
@@ -151,50 +151,43 @@ function showFeedback(type) {
   setTimeout(() => (ui.overlay.className = ""), 300);
 }
 
-// --- 6. EVENT LISTENER (INPUT USER) ---
-
-// A. Keyboard (Panah Kiri/Kanan)
+// --- 6. EVENT LISTENER ---
 document.addEventListener("keydown", (e) => {
   if (!ui.game.classList.contains("active")) return;
   if (e.key === "ArrowLeft") handleInput("kiri");
   if (e.key === "ArrowRight") handleInput("kanan");
 });
 
-// B. Klik Mouse / Touch Screen
 document.addEventListener("click", (e) => {
   if (!ui.game.classList.contains("active")) return;
-
-  // PENTING: Jangan trigger jika yang diklik adalah tombol/elemen UI lain
   if (
     e.target.closest(".btn-back") ||
-    e.target.closest(".bucket") || // Bucket punya onclick sendiri di HTML (opsional)
+    e.target.closest(".bucket") ||
     e.target.closest(".btn-retry") ||
     e.target.closest(".btn-home")
-  ) {
+  )
     return;
-  }
 
-  // Logika Split Screen: Klik Kiri vs Klik Kanan
   const screenWidth = window.innerWidth;
-  if (e.clientX < screenWidth / 2) {
-    handleInput("kiri");
-  } else {
-    handleInput("kanan");
-  }
+  if (e.clientX < screenWidth / 2) handleInput("kiri");
+  else handleInput("kanan");
 });
 
-// --- 7. GAME OVER ---
+// --- 7. GAME OVER (FIXED UI) ---
 function endGame() {
   ui.game.style.display = "none";
   ui.game.classList.remove("active");
+  ui.game.classList.add("hidden"); // Sembunyikan game
+
   ui.result.style.display = "flex";
+  ui.result.classList.remove("hidden"); // 🔥 FIX: Munculkan layar skor
   ui.result.classList.add("active");
+
   ui.finalScore.innerText = score;
   try {
     AudioManager.playWin();
   } catch (e) {}
 
-  // Simpan ke Firebase
   socket.emit("simpanSkor", {
     nama: playerName,
     skor: score,
@@ -202,10 +195,9 @@ function endGame() {
   });
 }
 
-// --- 8. FITUR AUTO-RECONNECT (Standard Portal Videa) ---
+// --- 8. AUTO RECONNECT ---
 function createOfflineUI() {
   if (document.getElementById("connection-overlay")) return;
-
   const overlay = document.createElement("div");
   overlay.id = "connection-overlay";
   overlay.innerHTML = `
@@ -215,18 +207,15 @@ function createOfflineUI() {
     `;
   document.body.appendChild(overlay);
 }
-
 createOfflineUI();
 
 let isReconnecting = false;
-
 socket.on("disconnect", (reason) => {
   console.log("⚠️ Koneksi putus:", reason);
   isReconnecting = true;
   const overlay = document.getElementById("connection-overlay");
   if (overlay) overlay.style.display = "flex";
 });
-
 socket.on("connect", () => {
   if (isReconnecting) {
     console.log("✅ Terhubung kembali!");

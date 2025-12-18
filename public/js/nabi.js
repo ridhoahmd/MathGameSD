@@ -93,6 +93,10 @@ socket.on("soalDariAI", (response) => {
 
     // Pindah Layar
     screens.start.classList.remove("active");
+    screens.start.classList.add("hidden"); // (Opsional) Biar start screen sembunyi rapi
+
+    // 🔥 INI YANG KURANG TADI:
+    screens.game.classList.remove("hidden"); // BUANG KELAS HIDDEN!
     screens.game.classList.add("active");
 
     loadQuestion();
@@ -163,102 +167,113 @@ function handleTimeOut() {
 
 // 6. Cek jwbn benar atau salah + tutor ai
 function checkAnswer(selectedRaw, correctRaw, btnElement) {
-    clearInterval(timerInterval); // 1. Stop waktu dulu
-    
-    // Normalisasi teks (agar huruf kecil/besar tidak masalah)
-    const cleanStr = (str) => str.trim().toLowerCase().replace(/\s+/g, ' ');
-    const selected = cleanStr(selectedRaw);
-    const correct = cleanStr(correctRaw);
+  clearInterval(timerInterval); // 1. Stop waktu dulu
 
-    // Kunci semua tombol agar tidak bisa dipencet lagi
-    const allButtons = document.querySelectorAll('.btn-option');
-    allButtons.forEach(b => b.disabled = true);
+  // Normalisasi teks (agar huruf kecil/besar tidak masalah)
+  const cleanStr = (str) => str.trim().toLowerCase().replace(/\s+/g, " ");
+  const selected = cleanStr(selectedRaw);
+  const correct = cleanStr(correctRaw);
 
-    // Cek apakah jawaban benar?
-    const isCorrect = (selected === correct) || 
-                      selected.includes(correct) || 
-                      correct.includes(selected);
+  // Kunci semua tombol agar tidak bisa dipencet lagi
+  const allButtons = document.querySelectorAll(".btn-option");
+  allButtons.forEach((b) => (b.disabled = true));
 
-    if (isCorrect) {
-        // ===================================
-        // JIKA JAWABAN BENAR (Tidak Berubah)
-        // ===================================
-        btnElement.classList.add('correct');
-        try { AudioManager.playCorrect(); } catch(e){}
-        
-        // Tambah Skor
-        score += 20; 
-        score += Math.floor(timeLeft / 2);
-        ui.score.innerText = score;
+  // Cek apakah jawaban benar?
+  const isCorrect =
+    selected === correct ||
+    selected.includes(correct) ||
+    correct.includes(selected);
 
-        // Lanjut ke soal berikutnya setelah 2 detik
-        setTimeout(() => {
-            currentIndex++;
-            loadQuestion();
-        }, 2000);
+  if (isCorrect) {
+    // ===================================
+    // JIKA JAWABAN BENAR (Tidak Berubah)
+    // ===================================
+    btnElement.classList.add("correct");
+    try {
+      AudioManager.playCorrect();
+    } catch (e) {}
 
+    // Tambah Skor
+    score += 20;
+    score += Math.floor(timeLeft / 2);
+    ui.score.innerText = score;
+
+    // Lanjut ke soal berikutnya setelah 2 detik
+    setTimeout(() => {
+      currentIndex++;
+      loadQuestion();
+    }, 2000);
+  } else {
+    // ===================================
+    // JIKA JAWABAN SALAH (Logika Baru)
+    // ===================================
+    btnElement.classList.add("wrong");
+    try {
+      AudioManager.playWrong();
+    } catch (e) {}
+
+    // Beritahu siswa mana jawaban yang benar (Highlight Hijau)
+    allButtons.forEach((b) => {
+      const btnText = cleanStr(b.innerText);
+      if (
+        btnText === correct ||
+        btnText.includes(correct) ||
+        correct.includes(btnText)
+      ) {
+        b.classList.add("correct");
+      }
+    });
+
+    // 🔥 CEK KUOTA DULU SEBELUM PANGGIL GURU AI 🔥
+    if (tutorUsageCount < MAX_TUTOR_USAGE) {
+      // A. KUOTA MASIH ADA (Panggil AI)
+      tutorUsageCount++; // Kurangi jatah 1
+
+      // Siapkan Modal/Pop-up
+      const modal = document.getElementById("tutor-overlay");
+      const textEl = document.getElementById("tutor-text");
+      const titleEl = document.querySelector(".tutor-title");
+
+      modal.style.display = "flex";
+
+      // Ubah Judul untuk memberitahu sisa kuota
+      // Contoh: "GURU AI (SISA: 2)"
+      if (titleEl)
+        titleEl.innerText = `GURU VIDEA (SISA: ${
+          MAX_TUTOR_USAGE - tutorUsageCount
+        })`;
+
+      textEl.innerText = "Sabar ya, Guru sedang mengetik penjelasan... ✍️";
+
+      // Kirim pesan ke Server
+      const soalTeks = document.getElementById("question-text").innerText;
+      socket.emit("mintaPenjelasan", {
+        soal: soalTeks,
+        jawabUser: selectedRaw,
+        jawabBenar: correctRaw,
+        kategori: "Sejarah Nabi",
+      });
+
+      // (Disini kita TIDAK pakai setTimeout, karena menunggu siswa klik tombol "PAHAM")
     } else {
-        // ===================================
-        // JIKA JAWABAN SALAH (Logika Baru)
-        // ===================================
-        btnElement.classList.add('wrong');
-        try { AudioManager.playWrong(); } catch(e){}
-        
-        // Beritahu siswa mana jawaban yang benar (Highlight Hijau)
-        allButtons.forEach(b => {
-            const btnText = cleanStr(b.innerText);
-            if (btnText === correct || btnText.includes(correct) || correct.includes(btnText)) {
-                b.classList.add('correct');
-            }
-        });
+      // B. KUOTA HABIS (Jangan Panggil AI)
+      console.log("Kuota Tutor Habis. Lanjut manual.");
 
-        // 🔥 CEK KUOTA DULU SEBELUM PANGGIL GURU AI 🔥
-        if (tutorUsageCount < MAX_TUTOR_USAGE) {
-            
-            // A. KUOTA MASIH ADA (Panggil AI)
-            tutorUsageCount++; // Kurangi jatah 1
-            
-            // Siapkan Modal/Pop-up
-            const modal = document.getElementById('tutor-overlay');
-            const textEl = document.getElementById('tutor-text');
-            const titleEl = document.querySelector('.tutor-title');
-
-            modal.style.display = 'flex';
-            
-            // Ubah Judul untuk memberitahu sisa kuota
-            // Contoh: "GURU AI (SISA: 2)"
-            if(titleEl) titleEl.innerText = `GURU AI (SISA: ${MAX_TUTOR_USAGE - tutorUsageCount})`;
-            
-            textEl.innerText = "Sabar ya, Guru sedang mengetik penjelasan... ✍️";
-
-            // Kirim pesan ke Server
-            const soalTeks = document.getElementById('question-text').innerText;
-            socket.emit('mintaPenjelasan', {
-                soal: soalTeks,
-                jawabUser: selectedRaw,
-                jawabBenar: correctRaw,
-                kategori: 'Sejarah Nabi'
-            });
-
-            // (Disini kita TIDAK pakai setTimeout, karena menunggu siswa klik tombol "PAHAM")
-
-        } else {
-            
-            // B. KUOTA HABIS (Jangan Panggil AI)
-            console.log("Kuota Tutor Habis. Lanjut manual.");
-            
-            // Langsung lanjut ke soal berikutnya setelah 2 detik
-            setTimeout(() => {
-                currentIndex++;
-                loadQuestion();
-            }, 2000); 
-        }
+      // Langsung lanjut ke soal berikutnya setelah 2 detik
+      setTimeout(() => {
+        currentIndex++;
+        loadQuestion();
+      }, 2000);
     }
+  }
 }
 
 // 7. GAME SELESAI
 function endGame() {
   screens.game.classList.remove("active");
+  screens.game.classList.add("hidden"); // Tambah hidden ke game
+
+  screens.result.classList.remove("hidden"); // <--- WAJIB ADA INI
   screens.result.classList.add("active");
 
   ui.finalScore.innerText = score;

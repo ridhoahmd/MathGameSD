@@ -280,19 +280,4 @@ canvas {
   }
 }
 
-/* --- 6. TAMBAHAN PENTING: KONEKSI OVERLAY --- */
-/* Agar pesan "Koneksi Terputus" menutupi segalanya */
-#connection-overlay {
-  position: fixed !important;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 10000; /* KASTA TERTINGGI (Raja) */
 
-  /* Flexbox centering diatur oleh JS saat display:flex, 
-       tapi kita bisa set default propertinya disini */
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-}

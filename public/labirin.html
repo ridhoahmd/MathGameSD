@@ -1,72 +1,96 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Labirin Ilmu - Videa Class</title>
-    
-    <meta http-equiv="Content-Security-Policy" content="
+
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
         default-src 'self' https: http: data: blob: 'unsafe-inline' 'unsafe-eval';
         script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.gstatic.com https://cdnjs.cloudflare.com;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         font-src 'self' https://fonts.gstatic.com;
         img-src 'self' data: https://api.dicebear.com https://cdn-icons-png.flaticon.com;
         connect-src * 'unsafe-inline';
-    ">
+    "
+    />
 
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="css/labirin.css?v=final">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-</head>
-<body>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
 
+    <link rel="stylesheet" href="css/style.css?v=final" />
+    <link rel="stylesheet" href="css/labirin.css?v=final" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  </head>
+  <body>
     <div class="ui-top">
-        <a href="/" class="btn-back">⬅ Menu</a>
-        <div class="score-box">Skor: <span id="score">0</span></div>
+      <a href="/" class="btn-back">⬅ Menu</a>
+      <div class="score-box">Skor: <span id="score">0</span></div>
     </div>
 
     <canvas id="mazeCanvas"></canvas>
 
     <div class="controls">
-        <div class="spacer"></div>
-        <button class="btn-ctrl" onclick="movePlayer(0, -1)">▲</button>
-        <div class="spacer"></div>
-        
-        <button class="btn-ctrl" onclick="movePlayer(-1, 0)">◀</button>
-        <button class="btn-ctrl" onclick="movePlayer(0, 1)">▼</button>
-        <button class="btn-ctrl" onclick="movePlayer(1, 0)">▶</button>
+      <div class="spacer"></div>
+      <button class="btn-ctrl" onclick="movePlayer(0, -1)">▲</button>
+      <div class="spacer"></div>
+
+      <button class="btn-ctrl" onclick="movePlayer(-1, 0)">◀</button>
+      <button class="btn-ctrl" onclick="movePlayer(0, 1)">▼</button>
+      <button class="btn-ctrl" onclick="movePlayer(1, 0)">▶</button>
     </div>
 
     <div id="loading-screen">
-        <h1>LABIRIN ILMU</h1>
-        <p>Cari jalan keluar & jawab pertanyaan!</p>
+      <h1>LABIRIN ILMU</h1>
+      <p>Cari jalan keluar & jawab pertanyaan!</p>
 
-        <div style="margin-bottom: 20px;">
-    <input type="text" id="inputKodeKelas" placeholder="Masukkan Kode Kelas (Kosongkan jika Umum)" 
-        style="padding: 10px; width: 80%; max-width: 300px; border-radius: 5px; border: 1px solid #00f2ff; background: #000; color: white; text-align: center;">
-</div>
-        
-        <div class="difficulty-selector">
-            <button class="btn-level active" data-level="mudah">Mudah</button>
-            <button class="btn-level" data-level="sedang">Sedang</button>
-            <button class="btn-level" data-level="sulit">Sulit</button>
-        </div>
-        
-        <button onclick="requestGame()" class="btn-start">MULAI MISI</button>
+      <div style="margin-bottom: 20px">
+        <input
+          type="text"
+          id="inputKodeKelas"
+          placeholder="Masukkan Kode Kelas (Kosongkan jika Umum)"
+          style="
+            padding: 10px;
+            width: 80%;
+            max-width: 300px;
+            border-radius: 5px;
+            border: 1px solid #00f2ff;
+            background: #000;
+            color: white;
+            text-align: center;
+          "
+        />
+      </div>
+
+      <div class="difficulty-selector">
+        <button class="btn-level active" data-level="mudah">Mudah</button>
+        <button class="btn-level" data-level="sedang">Sedang</button>
+        <button class="btn-level" data-level="sulit">Sulit</button>
+      </div>
+
+      <button onclick="requestGame()" class="btn-start">MULAI MISI</button>
     </div>
 
     <div id="quiz-modal">
-        <div class="quiz-content">
-            <h2>RINTANGAN!</h2>
-            <p id="q-text">...</p>
-            <input type="text" id="q-input" placeholder="Jawab disini..." autocomplete="off">
-            <button onclick="checkQuiz()" class="btn-submit">BUKA PINTU</button>
-        </div>
+      <div class="quiz-content">
+        <h2>RINTANGAN!</h2>
+        <p id="q-text">...</p>
+        <input
+          type="text"
+          id="q-input"
+          placeholder="Jawab disini..."
+          autocomplete="off"
+        />
+        <button onclick="checkQuiz()" class="btn-submit">BUKA PINTU</button>
+      </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/audio.js?v=final"></script>
     <script src="js/labirin.js?v=final"></script>
-</body>
+  </body>
 </html>

@@ -1,229 +1,199 @@
-// public/memory.js - VERSI ONLINE (AI POWERED)
+// public/memory.js - VERSI FINAL (CLEAN & ANTI-CRASH)
 
-// 1. Inisialisasi Socket
 const socket = io();
 
-const board = document.getElementById('board');
-const movesEl = document.getElementById('moves');
-const finalScoreEl = document.getElementById('final-score');
-const winScreen = document.getElementById('win-screen');
+// Element DOM
+const board = document.getElementById("board");
+const movesEl = document.getElementById("moves");
+const finalScoreEl = document.getElementById("final-score");
+const winScreen = document.getElementById("win-screen");
 
+// Game State
 let cards = [];
 let hasFlippedCard = false;
 let lockBoard = false;
 let firstCard, secondCard;
 let matchesFound = 0;
 let moves = 0;
-let totalPairs = 0; // Akan diisi otomatis dari data AI
-
-// Ambil nama pemain
+let totalPairs = 0;
 let playerName = localStorage.getItem("playerName") || "Guest";
+let selectedDifficulty = "mudah";
 
-// --- LOGIKA KESULITAN ---
-let selectedDifficulty = 'mudah'; // Nilai default
-
-document.addEventListener('DOMContentLoaded', () => {
-    const buttons = document.querySelectorAll('.btn-difficulty');
-    buttons.forEach(button => {
-        button.addEventListener('click', () => {
-            buttons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            selectedDifficulty = button.dataset.level;
-        });
+// 1. Event Listener Tombol Kesulitan
+document.addEventListener("DOMContentLoaded", () => {
+  const buttons = document.querySelectorAll(".btn-difficulty");
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      buttons.forEach((btn) => btn.classList.remove("active"));
+      button.classList.add("active");
+      selectedDifficulty = button.dataset.level;
     });
+  });
 });
 
-// --- MULAI GAME (MINTA KARTU KE AI) ---
+// 2. Fungsi Mulai Game
 function initGame() {
-    console.log("🔧 Meminta kartu ke AI...");
-    
-    // Tampilkan pesan loading di papan
-    board.innerHTML = '<p style="color:white; grid-column:span 4; text-align:center;">🧠 AI sedang menyusun kartu...</p>';
-    
-    // Reset status
-    moves = 0;
-    matchesFound = 0;
-    movesEl.innerText = moves;
-    winScreen.style.display = 'none';
+  console.log("🔧 Meminta kartu ke AI...");
 
-    // Request ke Server
-    socket.emit('mintaSoalAI', { 
-        kategori: 'memory', 
-        tingkat: selectedDifficulty 
-    });
+  // Pesan Loading Rapi
+  board.innerHTML =
+    '<div style="grid-column: 1/-1; text-align: center; color: white;">🧠 Sedang mengacak kartu...</div>';
+
+  // Reset Status
+  moves = 0;
+  matchesFound = 0;
+  if (movesEl) movesEl.innerText = moves;
+  if (winScreen) winScreen.style.display = "none";
+
+  // Request Server
+  socket.emit("mintaSoalAI", {
+    kategori: "memory",
+    tingkat: selectedDifficulty,
+  });
 }
 
-// --- MENERIMA DATA KARTU DARI SERVER ---
-socket.on('soalDariAI', (data) => {
-    if (data.kategori === 'memory') {
-        // Data dari server berbentuk array pasangan: [{a: "...", b: "..."}, ...]
-        const rawPairs = data.data; 
-        
-        let gameCards = [];
-        totalPairs = rawPairs.length;
+// 3. Menerima Data (Anti-Crash Logic)
+socket.on("soalDariAI", (response) => {
+  console.log("🔥 MEMORY DATA:", response);
 
-        // Ubah format data agar cocok dengan logika game
-        rawPairs.forEach((pair, index) => {
-            // Kartu A (Misal: "Indonesia")
-            gameCards.push({ content: pair.a, value: index });
-            // Kartu B (Misal: "Jakarta")
-            gameCards.push({ content: pair.b, value: index });
-        });
+  if (response.kategori === "memory") {
+    let rawPairs = response.data;
 
-        // Setup Papan
-        setupBoard(gameCards);
+    // --- A. DATA CLEANING (PEMBERSIH) ---
+    // Jaga-jaga jika AI mengirim format yang aneh
+    if (!Array.isArray(rawPairs)) {
+      if (rawPairs && rawPairs.data && Array.isArray(rawPairs.data)) {
+        rawPairs = rawPairs.data;
+      } else if (typeof rawPairs === "object") {
+        rawPairs = [rawPairs];
+      }
     }
+
+    // Hapus data kosong
+    rawPairs = rawPairs.filter((item) => item && item.a && item.b);
+
+    if (rawPairs.length === 0) {
+      board.innerHTML =
+        '<p style="color:red; text-align:center;">Data kosong. Coba lagi.</p>';
+      return;
+    }
+
+    // --- B. MENYUSUN KARTU ---
+    let gameCards = [];
+    totalPairs = rawPairs.length;
+
+    rawPairs.forEach((pair, index) => {
+      gameCards.push({ content: pair.a, value: index });
+      gameCards.push({ content: pair.b, value: index });
+    });
+
+    setupBoard(gameCards);
+  }
 });
 
 function setupBoard(cardsArray) {
-    board.innerHTML = '';
-    
-    // Acak posisi kartu
-    cardsArray.sort(() => 0.5 - Math.random());
+  board.innerHTML = "";
 
-    // Render kartu ke HTML
-    cardsArray.forEach((item) => {
-        const card = document.createElement('div');
-        card.classList.add('card', 'hidden');
-        card.dataset.value = item.value; // ID pasangan (0, 1, 2...)
-        
-        const front = document.createElement('div');
-        front.classList.add('front');
-        // Sesuaikan ukuran font jika teks panjang
-        if(item.content.length > 10) front.style.fontSize = "0.8rem";
-        front.innerText = item.content; 
-        
-        card.appendChild(front);
-        card.addEventListener('click', flipCard);
-        board.appendChild(card);
-    });
+  // Acak Kartu
+  cardsArray.sort(() => 0.5 - Math.random());
+
+  // Render ke HTML
+  cardsArray.forEach((item) => {
+    const card = document.createElement("div");
+
+    // 🔥 PENTING: Gunakan 'card-closed' (sesuai CSS baru), BUKAN 'hidden'
+    card.classList.add("card", "card-closed");
+
+    card.dataset.value = item.value;
+
+    const front = document.createElement("div");
+    front.classList.add("front");
+    if (item.content.length > 8) front.style.fontSize = "0.8rem"; // Kecilkan font jika panjang
+    front.innerText = item.content;
+
+    card.appendChild(front);
+    card.addEventListener("click", flipCard);
+    board.appendChild(card);
+  });
 }
 
-// --- LOGIKA PERMAINAN (SAMA SEPERTI SEBELUMNYA) ---
+// 4. Logika Klik Kartu
 function flipCard() {
-    if (lockBoard) return;
-    if (this === firstCard) return;
+  if (lockBoard) return;
+  if (this === firstCard) return;
 
-    AudioManager.playClick();
+  // Buka Kartu: Hapus class tertutup
+  this.classList.remove("card-closed");
 
-    this.classList.remove('hidden');
+  if (typeof AudioManager !== "undefined") AudioManager.playClick();
 
-    if (!hasFlippedCard) {
-        hasFlippedCard = true;
-        firstCard = this;
-        return;
-    }
+  if (!hasFlippedCard) {
+    hasFlippedCard = true;
+    firstCard = this;
+    return;
+  }
 
-    secondCard = this;
-    moves++;
-    movesEl.innerText = moves;
+  secondCard = this;
+  moves++;
+  if (movesEl) movesEl.innerText = moves;
 
-    checkForMatch();
+  checkForMatch();
 }
 
 function checkForMatch() {
-    // Cek apakah value (ID pasangan) sama
-    let isMatch = firstCard.dataset.value === secondCard.dataset.value;
-    isMatch ? disableCards() : unflipCards();
+  let isMatch = firstCard.dataset.value === secondCard.dataset.value;
+  isMatch ? disableCards() : unflipCards();
 }
 
 function disableCards() {
-    firstCard.classList.add('matched');
-    secondCard.classList.add('matched');
-    resetBoard();
-    matchesFound++;
-    AudioManager.playCorrect();
-    
-    // Cek Kemenangan
-    if (matchesFound === totalPairs) {
-        setTimeout(gameWon, 500);
-    }
+  // Kunci kartu (tetap terbuka)
+  firstCard.classList.add("matched"); // Bisa Anda style di CSS jika mau
+  secondCard.classList.add("matched");
+
+  // Hapus event listener agar tidak bisa diklik lagi
+  firstCard.removeEventListener("click", flipCard);
+  secondCard.removeEventListener("click", flipCard);
+
+  resetBoard();
+  matchesFound++;
+  if (typeof AudioManager !== "undefined") AudioManager.playCorrect();
+
+  if (matchesFound === totalPairs) {
+    setTimeout(gameWon, 500);
+  }
 }
 
 function unflipCards() {
-    lockBoard = true;
-    setTimeout(() => {
-        AudioManager.playWrong();
-        firstCard.classList.add('hidden');
-        secondCard.classList.add('hidden');
-        resetBoard();
-    }, 1000);
+  lockBoard = true;
+  setTimeout(() => {
+    // Tutup Kembali: Tambah class tertutup
+    firstCard.classList.add("card-closed");
+    secondCard.classList.add("card-closed");
+
+    if (typeof AudioManager !== "undefined") AudioManager.playWrong();
+    resetBoard();
+  }, 1000);
 }
 
 function resetBoard() {
-    [hasFlippedCard, lockBoard] = [false, false];
-    [firstCard, secondCard] = [null, null];
+  [hasFlippedCard, lockBoard] = [false, false];
+  [firstCard, secondCard] = [null, null];
 }
 
-// --- GAME SELESAI (SIMPAN KE DATABASE) ---
+// 5. Game Selesai
 function gameWon() {
-    // Hitung Skor (Maks 100, berkurang jika banyak langkah)
-    const baseScore = 100;
-    // Penalti langkah: (Langkah - Jumlah Pasangan) * 2
-    // Jadi kalau main sempurna (langkah == jumlah pasangan), skor 100.
-    let penalty = Math.max(0, (moves - totalPairs) * 2);
-    let finalScore = Math.max(10, baseScore - penalty);
+  const baseScore = 100;
+  let penalty = Math.max(0, (moves - totalPairs) * 2);
+  let finalScore = Math.max(10, baseScore - penalty);
 
-    finalScoreEl.innerText = finalScore;
-    winScreen.style.display = 'flex';
-    AudioManager.playWin();
+  if (finalScoreEl) finalScoreEl.innerText = finalScore;
+  if (winScreen) winScreen.style.display = "flex";
 
-    console.log(`📡 Mengirim skor Memory: ${finalScore}`);
+  if (typeof AudioManager !== "undefined") AudioManager.playWin();
 
-    // KIRIM KE SERVER
-    socket.emit('simpanSkor', {
-        nama: playerName,
-        skor: finalScore,
-        game: 'memory'
-    });
+  socket.emit("simpanSkor", {
+    nama: playerName,
+    skor: finalScore,
+    game: "memory",
+  });
 }
-
-
-// --- FITUR AUTO-RECONNECT (PASTE DI PALING BAWAH) ---
-
-// 1. Fungsi Membuat Tampilan Layar Gelap (Overlay)
-function createOfflineUI() {
-    if (document.getElementById('connection-overlay')) return; 
-
-    const overlay = document.createElement('div');
-    overlay.id = 'connection-overlay';
-    overlay.innerHTML = `
-        <div class="wifi-icon">📡</div>
-        <div class="conn-text">KONEKSI TERPUTUS</div>
-        <div class="conn-sub">Sedang mencoba menghubungkan kembali...</div>
-    `;
-    document.body.appendChild(overlay);
-}
-
-createOfflineUI();
-
-// 2. Logika Saat Koneksi Putus & Nyambung Lagi
-let isReconnecting = false;
-
-socket.on('disconnect', (reason) => {
-    console.log("⚠️ Koneksi putus:", reason);
-    isReconnecting = true;
-    
-    const overlay = document.getElementById('connection-overlay');
-    if(overlay) overlay.style.display = 'flex';
-
-    if (typeof gameActive !== 'undefined') gameActive = false; 
-});
-
-socket.on('connect', () => {
-    if (isReconnecting) {
-        console.log("✅ Terhubung kembali!");
-        isReconnecting = false;
-
-        const overlay = document.getElementById('connection-overlay');
-        if(overlay) overlay.style.display = 'none';
-
-        // Resume Game Math
-        if (typeof gameActive !== 'undefined') {
-            gameActive = true;
-            // Math Battle tidak butuh requestAnimationFrame, cukup set gameActive true
-        }
-        
-        // Khusus PvP: Mungkin perlu kirim ulang status 'ready' (opsional)
-    }
-});
