@@ -48,7 +48,21 @@ document.querySelectorAll(".btn-level").forEach((btn) => {
 
 // 🔥 [BARU] LISTENER PENJELASAN AI
 socket.on("penjelasanTutor", (data) => {
-  if (tutorText) tutorText.innerText = data.penjelasan;
+  const textEl = document.getElementById("tutor-text");
+  if (!textEl) return;
+
+  //1.ambil teks
+  const content = data.penjelasan || data.teks;
+
+  //2.pake innerHTML agar tag <b> terbaca
+  textEl.innerHTML = content;
+
+  //3.animasi fade-in lewat css biar keren
+  textEl.style.opacity = 0;
+  textEl.style.transition = "opacity 0.5s ease-in";
+  setTimeout(() => {
+    textEl.style.opacity = 1;
+  }, 50);
 });
 
 // 🔥 [BARU] FUNGSI TUTUP TUTOR

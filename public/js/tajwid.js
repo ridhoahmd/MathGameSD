@@ -44,21 +44,23 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// 🔥 [BARU] LISTENER PENJELASAN AI
+//  penjelasan AI atau Guru videa
 socket.on("penjelasanTutor", (data) => {
-  if (tutorText) {
-    tutorText.innerHTML = "";
-    let i = 0;
-    const txt = data.penjelasan;
-    function typeWriter() {
-      if (i < txt.length) {
-        tutorText.innerHTML += txt.charAt(i);
-        i++;
-        setTimeout(typeWriter, 15);
-      }
-    }
-    typeWriter();
-  }
+  const textEl = document.getElementById("tutor-text");
+  if (!textEl) return;
+
+  //1.ambil teks
+  const content = data.penjelasan || data.teks;
+
+  //2.render HTML
+  textEl.innerHTML = content;
+
+  //3.animasi fade-in lewat css agar keren
+  textEl.style.opacity = 0;
+  textEl.style.transition = "opacity 0.5s ease-in";
+  setTimeout(() => {
+    textEl.style.opacity = 1;
+  }, 50);
 });
 
 // 🔥 [BARU] FUNGSI TUTUP TUTOR

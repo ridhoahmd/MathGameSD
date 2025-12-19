@@ -305,25 +305,22 @@ function endGame() {
 // ==========================================
 // LOGIKA AI TUTOR (RECEIVE & HANDLE)
 // ==========================================
-
-// 1. Menerima Penjelasan dari Server
 socket.on("penjelasanTutor", (data) => {
   const textEl = document.getElementById("tutor-text");
   if (!textEl) return;
 
-  // Efek Mengetik (Typewriter Effect)
-  const text = data.teks;
-  textEl.innerHTML = ""; // Kosongkan dulu
-  let i = 0;
+  //1. ambil teks
+  const content = data.penjelasan || data.teks;
 
-  function typeWriter() {
-    if (i < text.length) {
-      textEl.innerHTML += text.charAt(i);
-      i++;
-      setTimeout(typeWriter, 15); // Kecepatan ketik (makin kecil makin cepat)
-    }
-  }
-  typeWriter(); // Mulai mengetik
+  //2. render HTML
+  textEl.innerHTML = content;
+
+  //3.anima fade-in biar keren
+  textEl.style.opacity = 0;
+  textEl.style.transition = "opacity 0.5s ease-in";
+  setTimeout(() => {
+    textEl.style.opacity = 1;
+  }, 50);
 });
 
 // 2. Fungsi Tombol "SAYA PAHAM"

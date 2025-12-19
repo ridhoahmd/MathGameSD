@@ -287,22 +287,23 @@ function endGame() {
   });
 }
 
-// --- 🔥 PENERIMA PESAN TUTOR (YANG TADI HILANG) 🔥 ---
+// PENERIMA PESAN TUTOR 
 socket.on("penjelasanTutor", (data) => {
   const textEl = document.getElementById("tutor-text");
   if (!textEl) return;
 
-  const text = data.teks;
-  textEl.innerHTML = "";
-  let i = 0;
-  function typeWriter() {
-    if (i < text.length) {
-      textEl.innerHTML += text.charAt(i);
-      i++;
-      setTimeout(typeWriter, 15);
-    }
-  }
-  typeWriter();
+  //1.ambil teks
+  const content = data.penjelasan || data.teks;
+
+  //2.render HTML 
+  textEl.innerHTML = content;
+
+  //3.animasi fade-in biar keren banget
+  textEl.style.opacity = 0;
+  textEl.style.transition = "opacity 0.5s ease-in";
+  setTimeout(() => {
+    textEl.style.opacity = 1;
+  }, 50);
 });
 
 // Fungsi Tutup Modal Tutor

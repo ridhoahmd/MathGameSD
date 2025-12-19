@@ -659,7 +659,7 @@ io.on("connection", (socket) => {
             (val.skor_labirin || 0) +
             (val.skor_zuma || 0) +
             (val.skor_piano || 0) +
-            (val.skor_tajwid || 0); // 🔥 TAJWID DITAMBAHKAN DI SINI
+            (val.skor_tajwid || 0);
 
           leaderboard.push({
             nama: val.nama || "User",
@@ -736,26 +736,36 @@ io.on("connection", (socket) => {
       if (gameType === "tajwid") {
         prompt = `Seorang anak SD salah menebak hukum tajwid.
           Soal: "${cleanSoal}". Jawaban Anak: "${cleanJawabUser}". Jawaban Benar: "${cleanJawabBenar}". 
-          Jelaskan max 2 kalimat kenapa salah dan apa ciri hukum yang benar. Gunakan bahasa ceria.`;
+          Jelaskan max 2 kalimat kenapa salah dan apa ciri hukum yang benar. Gunakan bahasa ceria.
+          PENTING: Gunakan tag HTML <b>...<b> (bukan markdown) untuk menebalkan nama hukum tajwid atau ciri utamanya agar mudah dibaca.
+          Contoh: "Itu adalah <b>Idgham Bighunnah</b> karena ada Nun Sukun bertemu Ya."
+          `;
       } else if (gameType === "labirin") {
         prompt = `Siswa salah jawab kuis pengetahuan umum: "${cleanSoal}".
           Jawabannya: "${cleanJawabUser}". Yang benar: "${cleanJawabBenar}".
-          Berikan "jembatan keledai" (cara hafal) atau fakta unik super singkat (max 15 kata) agar dia ingat.`;
+          Berikan "jembatan keledai" (cara hafal) atau fakta unik super singkat (max 15 kata) agar dia ingat.
+          PENTING: Gunakan tag HTML <b>...</b> pada kata kunci utama agar mata siswa langsung tertuju kesana.
+          `;
       } else {
-        // STRATEGI LAMA (Nabi & Ayat)
-        if (
-          typeof PROMPT_STRATEGIES !== "undefined" &&
-          PROMPT_STRATEGIES.tutor
-        ) {
-          prompt = PROMPT_STRATEGIES.tutor(
-            cleanSoal,
-            cleanJawabUser,
-            cleanJawabBenar,
-            gameType
-          );
-        } else {
-          prompt = `Siswa salah jawab soal "${cleanSoal}". Benarnya "${cleanJawabBenar}". Beri semangat singkat.`;
-        }
+        // ============================================================
+        // UPDATE KHUSUS GAME LAMA (Nabi & Ayat) - FORCE BOLD TAG
+        // ============================================================
+
+        prompt = `Kamu adalah Guru Muslim yang bijak dan seru. 
+          Siswa sedang bermain game edukasi Islam (${gameType}) tapi salah menjawab.
+          
+          Data:
+          - Soal: "${cleanSoal}"
+          - Jawaban Siswa (Salah): "${cleanJawabUser}"
+          - Jawaban Benar: "${cleanJawabBenar}"
+          
+          Instruksi:
+          1. Berikan semangat singkat ("Jangan sedih...", "Ayo coba lagi...").
+          2. Jelaskan kenapa jawaban benar itu tepat (Maksimal 2 kalimat).
+          3. 🔥 WAJIB: Gunakan tag HTML <b>...</b> untuk menebalkan kata kunci jawaban benar.
+          
+          Contoh Output:
+          "Jangan menyerah! Jawaban yang tepat adalah <b>Nabi Yunus</b>, karena beliau yang ditelan ikan paus."`;
       }
 
       // 4. REQUEST AI

@@ -702,3 +702,11 @@ body.theme-crimson .portal-title {
     transform: scale(0.9);
   }
 }
+
+
+
+.tutor-text b {
+  color: #940008; /* Warna Pink Neon atau Emas (#ffd700) */
+  font-weight: 700;
+  text-shadow: 0 0 5px rgba(255, 0, 204, 0.3);
+}
