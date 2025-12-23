@@ -8,13 +8,10 @@
     <meta
       http-equiv="Content-Security-Policy"
       content="
-        default-src 'self' https: http: data: blob: 'unsafe-inline' 'unsafe-eval';
-        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.gstatic.com https://cdnjs.cloudflare.com;
-        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-        font-src 'self' https://fonts.gstatic.com;
-        img-src 'self' data: https://api.dicebear.com https://cdn-icons-png.flaticon.com;
+        default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval';
         connect-src * 'unsafe-inline';
-    "
+        img-src 'self' data: https: blob:;
+      "
     />
 
     <link
@@ -25,7 +22,8 @@
     <link rel="stylesheet" href="css/style.css?v=final" />
     <link rel="stylesheet" href="css/piano.css?v=final" />
   </head>
-  <body>
+
+  <body oncontextmenu="return false;">
     <a href="/" class="btn-back">⬅ Menu</a>
 
     <div class="hud">
@@ -47,39 +45,97 @@
     </div>
 
     <div class="piano-container">
-      <div class="key" data-val="1" onclick="playNote(1)">1</div>
-      <div class="key" data-val="2" onclick="playNote(2)">2</div>
-      <div class="key" data-val="3" onclick="playNote(3)">3</div>
-      <div class="key" data-val="4" onclick="playNote(4)">4</div>
-      <div class="key" data-val="5" onclick="playNote(5)">5</div>
-      <div class="key" data-val="6" onclick="playNote(6)">6</div>
-      <div class="key" data-val="7" onclick="playNote(7)">7</div>
-      <div class="key" data-val="8" onclick="playNote(8)">8</div>
-      <div class="key" data-val="9" onclick="playNote(9)">9</div>
-      <div class="key" data-val="0" onclick="playNote(0)">0</div>
+      <div
+        class="key"
+        data-val="1"
+        ontouchstart="event.preventDefault(); playNote(1)"
+        onclick="playNote(1)"
+      >
+        1
+      </div>
+      <div
+        class="key"
+        data-val="2"
+        ontouchstart="event.preventDefault(); playNote(2)"
+        onclick="playNote(2)"
+      >
+        2
+      </div>
+      <div
+        class="key"
+        data-val="3"
+        ontouchstart="event.preventDefault(); playNote(3)"
+        onclick="playNote(3)"
+      >
+        3
+      </div>
+      <div
+        class="key"
+        data-val="4"
+        ontouchstart="event.preventDefault(); playNote(4)"
+        onclick="playNote(4)"
+      >
+        4
+      </div>
+      <div
+        class="key"
+        data-val="5"
+        ontouchstart="event.preventDefault(); playNote(5)"
+        onclick="playNote(5)"
+      >
+        5
+      </div>
+      <div
+        class="key"
+        data-val="6"
+        ontouchstart="event.preventDefault(); playNote(6)"
+        onclick="playNote(6)"
+      >
+        6
+      </div>
+      <div
+        class="key"
+        data-val="7"
+        ontouchstart="event.preventDefault(); playNote(7)"
+        onclick="playNote(7)"
+      >
+        7
+      </div>
+      <div
+        class="key"
+        data-val="8"
+        ontouchstart="event.preventDefault(); playNote(8)"
+        onclick="playNote(8)"
+      >
+        8
+      </div>
+      <div
+        class="key"
+        data-val="9"
+        ontouchstart="event.preventDefault(); playNote(9)"
+        onclick="playNote(9)"
+      >
+        9
+      </div>
+      <div
+        class="key"
+        data-val="0"
+        ontouchstart="event.preventDefault(); playNote(0)"
+        onclick="playNote(0)"
+      >
+        0
+      </div>
     </div>
 
     <div class="modal" id="game-over-modal">
       <div class="modal-content">
-        <h1 style="color: #ff4757">WAKTU HABIS!</h1>
-        <p style="color: #aaa">Skor Akhir:</p>
-        <h2
-          style="font-size: 3rem; margin: 10px 0; color: #ffeb3b"
-          id="final-score"
-        >
-          0
-        </h2>
+        <h1 class="modal-title">WAKTU HABIS!</h1>
+        <p class="modal-label">Skor Akhir:</p>
+        <h2 class="modal-score" id="final-score">0</h2>
+
         <button onclick="location.reload()" class="btn-start">MAIN LAGI</button>
-        <button
-          onclick="window.location.href='/'"
-          style="
-            background: transparent;
-            border: 1px solid #555;
-            color: #ccc;
-            margin-top: 10px;
-            padding: 10px;
-          "
-        >
+
+        <button onclick="window.location.href='/'" class="btn-secondary">
           KEMBALI
         </button>
       </div>

@@ -1,4 +1,17 @@
 /* CSS TEMA GALAXY */
+
+/* Mencegah Zoom & Scroll Browser (Pengganti meta tag) */
+body {
+  touch-action: none; /* KUNCI UTAMA: Matikan gestur browser */
+  overscroll-behavior: none; /* Mencegah efek pantul di iOS */
+}
+
+/* Pastikan area piano juga aman */
+.piano-container {
+  touch-action: none;
+}
+
+
 body {
   margin: 0;
   padding: 0;
@@ -150,4 +163,51 @@ body {
   box-shadow: 0 0 30px #00f2ff;
 }
 
+/* ========================================= */
+/* GAME OVER MODAL STYLES (Moved from HTML)  */
+/* ========================================= */
 
+.modal-title {
+  color: #ff4757;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.modal-label {
+  color: #aaa;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.modal-score {
+  font-size: 3rem;
+  margin: 10px 0;
+  color: #ffeb3b; /* Warna Kuning Emas */
+  text-shadow: 0 0 15px rgba(255, 235, 59, 0.4);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid #555;
+  color: #ccc;
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 50px; /* Biar senada dengan tombol lain */
+  cursor: pointer;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  width: 100%; /* Agar tombol memenuhi lebar modal */
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  border-color: #fff;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.02);
+}
+
+.btn-secondary:active {
+  transform: scale(0.98);
+}

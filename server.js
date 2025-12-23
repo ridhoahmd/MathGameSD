@@ -2,43 +2,127 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
-
-// --- MULAI TAMBAHAN KEAMANAN (RATE LIMITER) ---
-const rateLimit = require("express-rate-limit");
-
-// ==========================================
-// [BARU] KONFIGURASI AI (MANUAL SWITCH)
-// ==========================================
-const OpenAI = require("openai");
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// GANTI MANUAL DI SINI: 'gpt-5-nano' ATAU 'glm'
-const CURRENT_AI_MODEL = "glm";
-
-// Konfigurasi Limiter (Dilonggarkan untuk Development)
-const aiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // Durasi jendela waktu: 15 menit
-  max: 100, // SAYA UBAH JADI 100 (Biar kamu puas testing tanpa kena blokir)
-  message: {
-    error: "Terlalu banyak permintaan AI. Santai dulu, coba lagi nanti.",
-  },
-  standardHeaders: true, // Mengirim info limit di header respons
-  legacyHeaders: false, // Nonaktifkan header lama
-});
-
-// Terapkan limiter HANYA ke jalur AI
-// (Pastikan endpoint ini sesuai dengan yang kamu pakai di fungsi AI nanti)
-app.use("/api/ask-ai", aiLimiter);
-app.use("/api/generate-quiz", aiLimiter);
-// --- SELESAI TAMBAHAN KEAMANAN ---
-
-const io = require("socket.io")(http, {
-  cors: {
-    origin: "*", // Tips: Ganti '*' dengan domain production nanti untuk keamanan ekstra
-    methods: ["GET", "POST"],
-  },
-});
 const path = require("path");
+const rateLimit = require("express-rate-limit"); // Limiter untuk HTTP
+
+// ==========================================
+// 1. KONFIGURASI KEAMANAN & UTILITAS
+// ==========================================
+
+// A. Limiter untuk API HTTP (Browser URL)
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: "Terlalu banyak request API HTTP." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/ask-ai", apiLimiter);
+
+// B. Limiter Manual untuk SOCKET.IO (PENTING: Mencegah Spam Tombol Game)
+const socketRateLimits = new Map();
+
+function isSocketRateLimited(socketId) {
+  const now = Date.now();
+  const lastRequest = socketRateLimits.get(socketId) || 0;
+  const LIMIT_DURATION = 5000; // Batas 1 request per 5 detik
+
+  if (now - lastRequest < LIMIT_DURATION) {
+    return true; // Kena limit (Spam detected)
+  }
+
+  socketRateLimits.set(socketId, now);
+  return false; // Aman
+}
+
+// C. Utilitas Pembersih Data
+function sanitizeKey(key) {
+  return key ? key.replace(/[.#$/\[\]]/g, "_") : "unknown";
+}
+
+function extractJSON(text) {
+  try {
+    const jsonMatch = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    if (jsonMatch) {
+      let cleanText = jsonMatch[0]
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .replace(/\/\/.*$/gm, "")
+        .replace(/\n/g, " ");
+      return JSON.parse(cleanText);
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function fisherYatesShuffle(array) {
+  if (!Array.isArray(array)) return array;
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// ==========================================
+// 2. KONFIGURASI AI (GLM-4 FOKUS)
+// ==========================================
+// const OpenAI = require("openai");
+// const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// ^ SAYA MATIKAN SEMENTARA AGAR TIDAK CRASH JIKA API KEY OPENAI KOSONG
+
+const CURRENT_AI_MODEL = "glm"; // Fokus ke GLM
+
+async function askAI(promptText) {
+  console.log(`🧠 AI Request (Model: ${CURRENT_AI_MODEL})`);
+
+  // Logika GLM-4 (ZhipuAI)
+  const apiKey = process.env.ZHIPU_API_KEY;
+  if (!apiKey) throw new Error("ZHIPU_API_KEY Missing");
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000); // Timeout 60 detik
+
+  try {
+    const response = await fetch(
+      "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "glm-4-flash",
+          messages: [
+            {
+              role: "system",
+              content:
+                "Kamu adalah server game edukasi. Output HANYA JSON mentah.",
+            },
+            { role: "user", content: promptText },
+          ],
+          temperature: 0.7,
+        }),
+        signal: controller.signal,
+      }
+    );
+
+    clearTimeout(timeout);
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.choices[0].message.content;
+  } catch (err) {
+    clearTimeout(timeout);
+    throw err;
+  }
+}
+
+// ==========================================
+// 3. KONFIGURASI FIREBASE & SOCKET
+// ==========================================
 const { initializeApp } = require("firebase/app");
 const {
   getDatabase,
@@ -48,9 +132,6 @@ const {
   runTransaction,
 } = require("firebase/database");
 
-// ==========================================
-// 1. KONFIGURASI DATABASE
-// ==========================================
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
   authDomain: "mathgamesd.firebaseapp.com",
@@ -65,13 +146,18 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const database = getDatabase(firebaseApp);
 
-console.log("✅ Server: System Online (GLM-4 + Firebase + Multiplayer Ready)");
+const io = require("socket.io")(http, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
 
 // ==========================================
-// 2. STRATEGI PROMPT AI (MODULAR & ANTI-ERROR)
+// 4. STRATEGI PROMPT (LOGIKA SOAL)
 // ==========================================
 const PROMPT_STRATEGIES = {
-  // 1. MATH BATTLE (Optimized: Constraint Tipe Data & Pembagian)
+  // 1. Tarung Matematika
   math: (level, tema) => {
     let range, op, constraint;
     if (level === "mudah") {
@@ -101,7 +187,7 @@ const PROMPT_STRATEGIES = {
     2. Keluarkan HANYA JSON mentah. Jangan pakai markdown \`\`\`.`;
   },
 
-  // 2. JEJAK NABI (Optimized: Content Integrity & Format Safety)
+  // 2. Jejak nabi
   nabi: (level) => {
     let topik;
     if (level === "mudah") {
@@ -132,7 +218,7 @@ const PROMPT_STRATEGIES = {
     4. HANYA JSON mentah.`;
   },
 
-  // 3. SAMBUNG AYAT ( Transliterasi Indonesia )
+  // 3. Sambung ayat
   ayat: (level) => {
     let scope, outputInstruction;
     // Tetap gunakan 3 soal untuk level mudah agar cepat & tidak timeout
@@ -176,7 +262,7 @@ const PROMPT_STRATEGIES = {
     5. HANYA JSON mentah.`;
   },
 
-  // 4. KASIR CILIK (Optimized: Logika Uang Masuk Akal)
+  // 4. Kasir cilik
   kasir: (level) => {
     let range, note;
     if (level === "mudah") {
@@ -202,7 +288,7 @@ const PROMPT_STRATEGIES = {
     4. HANYA JSON mentah.`;
   },
 
-  // 5. MEMORY LAB (Optimized: Kejelasan Pasangan)
+  // 5. Lab memori
   memory: (level, tema) => {
     const pairs = level === "mudah" ? 6 : level === "sedang" ? 8 : 10; // Sedikit dikurangi agar tidak terlalu penuh di HP
 
@@ -222,7 +308,7 @@ const PROMPT_STRATEGIES = {
     ATURAN: HANYA JSON mentah.`;
   },
 
-  // 6. LABIRIN ILMU (Optimized: Single Word Answer)
+  // 6. Labirin Ilmu
   labirin: (level) => {
     let size = level === "mudah" ? 10 : level === "sedang" ? 15 : 20;
     let count = level === "mudah" ? 3 : level === "sedang" ? 5 : 7;
@@ -244,7 +330,7 @@ const PROMPT_STRATEGIES = {
     3. HANYA JSON mentah.`;
   },
 
-  // 7. ZUMA SPACE (No Change - Sudah OK)
+  // 7. Tembak angka (zuma)
   zuma: (level, tema) => {
     let speed =
       level === "mudah" ? "lambat" : level === "sedang" ? "sedang" : "cepat";
@@ -252,31 +338,55 @@ const PROMPT_STRATEGIES = {
     Output JSON Object MURNI (Tanpa Markdown): {"deskripsi":"Misi Galaksi...","palet_warna":["#F00","#0F0","#00F"],"speed":"${speed}"}`;
   },
 
-  // 8. PIANO SPEED (No Change - Sudah OK)
+  // 8. Matematika piano
   piano: (level) => {
     const len = level === "mudah" ? 3 : level === "sedang" ? 6 : 9;
     return `Urutan nada piano acak ${len} digit (angka 1-7).
     Output JSON Object MURNI (Tanpa Markdown): {"sequence":[1,3,5,2,4]}`;
   },
 
-  // 9. AI TUTOR (Optimized: Persona Guru)
+  // 9. AI TUTOR (Logika Prompt Spesifik Anda)
   tutor: (soal, jawabUser, jawabBenar, kategori) => {
-    return `Kamu adalah Guru yang ramah, lucu, dan suportif untuk anak SD.
-    Siswa baru saja SALAH menjawab soal ${kategori}.
-    
-    Data:
-    - Soal: "${soal}"
-    - Jawaban Siswa: "${jawabUser}"
-    - Jawaban Benar: "${jawabBenar}"
-    
-    Tugas:
-    1. Koreksi kesalahan siswa dengan lembut.
-    2. Berikan 1 fakta menarik atau "jembatan keledai" (cara hafal) agar siswa ingat jawaban yang benar.
-    3. Maksimal 2-3 kalimat pendek.
-    4. Output LANGSUNG teks (Plain Text), jangan JSON.`;
+    // A. Prompt Khusus Tajwid
+    if (kategori === "tajwid") {
+      return `Seorang anak SD salah menebak hukum tajwid.
+          Soal: "${soal}". Jawaban Anak: "${jawabUser}". Jawaban Benar: "${jawabBenar}". 
+          Jelaskan max 2 kalimat kenapa salah dan apa ciri hukum yang benar. Gunakan bahasa ceria.
+          PENTING: Gunakan tag HTML <b>...<b> (bukan markdown) untuk menebalkan nama hukum tajwid atau ciri utamanya agar mudah dibaca.
+          Contoh: "Itu adalah <b>Idgham Bighunnah</b> karena ada Nun Sukun bertemu Ya."
+          `;
+    }
+
+    // B. Prompt Khusus Labirin
+    else if (kategori === "labirin") {
+      return `Siswa salah jawab kuis pengetahuan umum: "${soal}".
+          Jawabannya: "${jawabUser}". Yang benar: "${jawabBenar}".
+          Berikan "jembatan keledai" (cara hafal) atau fakta unik super singkat (max 15 kata) agar dia ingat.
+          PENTING: Gunakan tag HTML <b>...</b> pada kata kunci utama agar mata siswa langsung tertuju kesana.
+          `;
+    }
+
+    // C. Prompt Umum (Nabi, Ayat, dll) - Force Bold Tag
+    else {
+      return `Kamu adalah Guru Muslim yang bijak dan seru. 
+          Siswa sedang bermain game edukasi Islam (${kategori}) tapi salah menjawab.
+          
+          Data:
+          - Soal: "${soal}"
+          - Jawaban Siswa (Salah): "${jawabUser}"
+          - Jawaban Benar: "${jawabBenar}"
+          
+          Instruksi:
+          1. Berikan semangat singkat ("Jangan sedih...", "Ayo coba lagi...").
+          2. Jelaskan kenapa jawaban benar itu tepat (Maksimal 2 kalimat).
+          3. 🔥  WAJIB: Gunakan tag HTML <b>...</b> untuk menebalkan kata kunci jawaban benar.
+          
+          Contoh Output:
+          "Jangan menyerah! Jawaban yang tepat adalah <b>Nabi Yunus</b>, karena beliau yang ditelan ikan paus."`;
+    }
   },
 
-  // 10. PILAH HUKUM (TAJWID SORTER - FIXED LEVELS)
+  // 10. Pilah hukum
   tajwid: (level) => {
     let pair;
 
@@ -322,14 +432,9 @@ const PROMPT_STRATEGIES = {
   },
 };
 
-// ==========================================
-// 3. HELPER FUNCTIONS (UTILITIES)
-// ==========================================
-
-// Data Darurat jika AI Offline
 function getFallbackData(kategori) {
   const fallbacks = {
-    math: { soal: "10 + 10 = ?", jawaban: 20 },
+    math: [{ soal: "10 + 10 = ?", jawaban: 20 }],
     nabi: [
       { tanya: "Nabi terakhir?", opsi: ["Isa", "Muhammad"], jawab: "Muhammad" },
     ],
@@ -355,230 +460,152 @@ function getFallbackData(kategori) {
     labirin: { maze_size: 10, soal_list: [{ tanya: "1+1", jawab: "2" }] },
     zuma: { deskripsi: "Mode Offline", palet_warna: ["#f00"], speed: "sedang" },
     piano: { sequence: [1, 2, 3, 4, 5] },
+    tajwid: {
+      kategori_kiri: "Izhar",
+      kategori_kanan: "Ikhfa",
+      data: [{ teks: "nun", hukum: "kiri" }],
+    },
   };
-  return fallbacks[kategori] || { error: "Data tidak tersedia" };
-}
-
-// Pembersih JSON (Regex Kuat)
-function extractJSON(text) {
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-    if (jsonMatch) {
-      let cleanText = jsonMatch[0]
-        .replace(/```json/g, "")
-        .replace(/```/g, "")
-        .replace(/\/\/.*$/gm, "") // Hapus komentar JS
-        .replace(/\n/g, " "); // Hapus newline
-      return JSON.parse(cleanText);
-    }
-    return null;
-  } catch (e) {
-    console.error("JSON Parse Error:", e.message);
-    return null;
-  }
-}
-
-// [BARU] FUNGSI UTAMA PENGENDALI AI
-async function askAI(promptText) {
-  console.log(`🧠 Mode AI Aktif: ${CURRENT_AI_MODEL.toUpperCase()}`);
-
-  if (CURRENT_AI_MODEL === "gpt-5-nano") {
-    // --- JALUR 1: OPENAI (GPT-5-NANO) ---
-    try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-5-nano", // Pastikan model ini tersedia di akunmu
-        messages: [
-          // System prompt agar output bersih (hemat token & processing)
-          {
-            role: "system",
-            content:
-              "Kamu adalah server game edukasi. Output HANYA JSON mentah tanpa markdown.",
-          },
-          { role: "user", content: promptText },
-        ],
-        temperature: 0.7,
-      });
-      return completion.choices[0].message.content;
-    } catch (e) {
-      console.error("❌ Error OpenAI:", e.message);
-      throw new Error("Gagal mengambil data dari OpenAI");
-    }
-  } else {
-    // --- JALUR 2: GLM (ZHIPU) ---
-    // Langsung panggil fungsi lama kamu
-    return await tanyaGLM(promptText);
-  }
-}
-
-// Fetch AI dengan Timeout & AbortController
-async function tanyaGLM(promptText) {
-  const apiKey = process.env.ZHIPU_API_KEY;
-  if (!apiKey) throw new Error("ZHIPU_API_KEY Missing");
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 60000); // Max 60 detik
-
-  try {
-    const response = await fetch(
-      "https://open.bigmodel.cn/api/paas/v4/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "glm-4-flash",
-          messages: [{ role: "user", content: promptText }],
-          temperature: 0.7,
-        }),
-        signal: controller.signal,
-      }
-    );
-
-    clearTimeout(timeout);
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
-    return data.choices[0].message.content;
-  } catch (err) {
-    clearTimeout(timeout);
-    throw err;
-  }
-}
-
-function sanitizeKey(key) {
-  return key ? key.replace(/[.#$/\[\]]/g, "_") : "unknown";
-}
-
-function fisherYatesShuffle(array) {
-  if (!Array.isArray(array)) return array;
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
+  return fallbacks[kategori] || [];
 }
 
 // ==========================================
-// 4. MIDDLEWARE & STATIC
+// 5. LOGIKA UTAMA SERVER (SOCKET.IO)
 // ==========================================
-app.use((req, res, next) => {
-  res.set("Cache-Control", "no-store");
-  next();
-});
-app.use(express.static(path.join(__dirname, "public")));
 
-// ==========================================
-// 5. SOCKET.IO LOGIC UTAMA
-// ==========================================
 io.on("connection", (socket) => {
   console.log(`✅ User CONNECTED: ${socket.id}`);
 
-  // --- A. PERMINTAAN SOAL (VERSI DEBUG & FIX) ---
+  // --- A. PERMINTAAN SOAL (METODE HYBRID: GUDANG + AI) ---
   socket.on("mintaSoalAI", async (reqData) => {
+    // 1. KEAMANAN: Cek Rate Limit (Anti Spam)
+    if (isSocketRateLimited(socket.id)) {
+      console.warn(`⚠️ SPAM BLOCKED: ${socket.id}`);
+      socket.emit("soalDariAI", {
+        kategori: reqData?.kategori,
+        data: getFallbackData(reqData?.kategori),
+        error: "Terlalu cepat! Tunggu 5 detik.",
+      });
+      return;
+    }
+
     const { kategori, tingkat, kodeAkses } = reqData || {};
     const level = tingkat || "sedang";
-
     if (!kategori) return;
 
     try {
-      // 1. Cek Mode Manual (Ujian Khusus)
+      // 2. CEK MODE UJIAN MANUAL (Prioritas Tertinggi - Soal dari Guru)
       if (kodeAkses) {
         const manualPath = `content_manual/${kategori}/${kodeAkses.toUpperCase()}/${level}`;
         const manualSnapshot = await get(ref(database, manualPath));
         if (manualSnapshot.exists()) {
           console.log(`🔑 Akses Ujian: ${kodeAkses}`);
           let dataManual = Object.values(manualSnapshot.val());
-
-          if (kategori === "labirin") {
-            const mazeSize =
-              level === "mudah" ? 10 : level === "sedang" ? 15 : 20;
-            dataManual = { maze_size: mazeSize, soal_list: dataManual };
-          }
+          // Khusus Labirin perlu format objek
+          if (kategori === "labirin")
+            dataManual = { maze_size: 15, soal_list: dataManual };
           socket.emit("soalDariAI", { kategori, data: dataManual });
           return;
         }
       }
 
-      // 2. Cek Cache Database (GANTI KE V7 BIAR FRESH)
-      const cacheKey = `cache_soal_v7/${kategori}_${level}`;
-      const cacheSnapshot = await get(ref(database, cacheKey));
+      // ============================================================
+      // 3. CEK GUDANG SOAL (DATABASE) - INI LOGIKA BARUNYA!
+      // ============================================================
       let finalData = null;
+      const gudangKey = `gudang_soal/${kategori}/${level}`;
+      const gudangSnapshot = await get(ref(database, gudangKey));
 
-      if (cacheSnapshot.exists()) {
-        console.log(`⚡ Cache Hit: ${kategori} (${level})`);
-        finalData = cacheSnapshot.val();
-      } else {
-        // 3. Generate AI Baru
-        console.log(`🤖 AI Generating: ${kategori} (${level})...`);
+      if (gudangSnapshot.exists()) {
+        console.log(
+          `🏭 GUDANG HIT: Mengambil ${kategori} (${level}) dari Database`
+        );
+        const allSoal = gudangSnapshot.val(); // Ambil semua data di level ini
 
-        let prompt = null;
-        const tema = ["Antariksa", "Hutan", "Laut", "Robot", "Dino"].sort(
-          () => 0.5 - Math.random()
-        )[0];
-
-        if (PROMPT_STRATEGIES[kategori]) {
-          prompt = PROMPT_STRATEGIES[kategori](level, tema);
-        }
-
-        if (prompt) {
-          const rawText = await askAI(prompt);
-          let parsedData = extractJSON(rawText);
-
-          // 🔥 FIX OTOMATIS: Jika data terbungkus object {data: [...]}, ambil isinya 🔥
+        if (Array.isArray(allSoal)) {
+          // KELOMPOK 1: Game Math & Kasir (Ambil 1 soal tunggal acak)
+          // KELOMPOK 2: Game Config (Zuma, Piano, Labirin, Tajwid) (Ambil 1 config utuh)
           if (
-            parsedData &&
-            !Array.isArray(parsedData) &&
-            typeof parsedData === "object"
+            ["math", "kasir", "zuma", "piano", "labirin", "tajwid"].includes(
+              kategori
+            )
           ) {
-            const keys = Object.keys(parsedData);
-            // Cek jika cuma ada 1 kunci (misal "soal" atau "data") yang isinya array
-            if (keys.length === 1 && Array.isArray(parsedData[keys[0]])) {
-              console.log(
-                `📦 UNWRAP: Membuka bungkus JSON dari key '${keys[0]}'`
-              );
-              parsedData = parsedData[keys[0]];
-            }
+            finalData = allSoal[Math.floor(Math.random() * allSoal.length)];
           }
+          // KELOMPOK 3: Game Quiz (Nabi, Ayat, Memory) (Ambil 10 soal acak)
+          else {
+            let shuffled = fisherYatesShuffle([...allSoal]);
+            finalData = shuffled.slice(0, 10);
 
-          finalData = parsedData;
-
-          if (finalData) {
-            await set(ref(database, cacheKey), finalData);
+            // Khusus Nabi/Ayat: Acak juga urutan opsi jawaban (A,B,C,D)
+            if (finalData[0].opsi) {
+              finalData = finalData.map((s) => ({
+                ...s,
+                opsi: fisherYatesShuffle(s.opsi),
+              }));
+            }
           }
         }
       }
 
-      // 4. Kirim Data ke Klien
-      if (finalData) {
-        // A. Logika Math & Kasir (Ambil 1 soal acak)
-        if (["math", "kasir"].includes(kategori) && Array.isArray(finalData)) {
-          finalData = finalData[Math.floor(Math.random() * finalData.length)];
+      // ============================================================
+      // 4. JIKA GUDANG KOSONG -> BARU MINTA AI (FALLBACK / KODE LAMA)
+      // ============================================================
+      if (!finalData) {
+        // Cek Cache Lama (v7) dulu biar hemat
+        const cacheKey = `cache_soal_v7/${kategori}_${level}`;
+        const cacheSnapshot = await get(ref(database, cacheKey));
+
+        if (cacheSnapshot.exists()) {
+          console.log(`⚡ CACHE HIT (Lama): ${kategori}`);
+          finalData = cacheSnapshot.val();
+        } else {
+          // Benar-benar kosong, panggil AI bekerja
+          console.log(`🤖 AI WORKING: Membuat soal baru untuk ${kategori}...`);
+
+          const tema = ["Antariksa", "Hutan", "Laut", "Robot"].sort(
+            () => 0.5 - Math.random()
+          )[0];
+          let prompt = `Buat soal ${kategori} untuk SD level ${level}. JSON Valid.`;
+
+          // Menggunakan strategi prompt Anda yang canggih
+          if (PROMPT_STRATEGIES[kategori])
+            prompt = PROMPT_STRATEGIES[kategori](level, tema);
+
+          const rawText = await askAI(prompt);
+          let parsedData = extractJSON(rawText);
+
+          // Bersihkan data jika terbungkus {data: ...}
+          if (parsedData && !Array.isArray(parsedData) && parsedData.data)
+            parsedData = parsedData.data;
+
+          finalData = parsedData;
+
+          // Simpan hasil kerja AI ke Cache Lama (Bukan ke Gudang, agar Gudang tetap bersih/manual)
+          if (finalData) await set(ref(database, cacheKey), finalData);
         }
-        // B. Logika Nabi, Ayat, Memory (Acak Soal & Opsi)
-        else if (
-          ["nabi", "ayat", "memory"].includes(kategori) &&
-          Array.isArray(finalData)
-        ) {
-          let shuffledQuestions = fisherYatesShuffle([...finalData]).slice(
-            0,
-            10
-          );
-          finalData = shuffledQuestions.map((soal) => {
-            let newSoal = { ...soal };
-            if (newSoal.opsi && Array.isArray(newSoal.opsi)) {
-              newSoal.opsi = fisherYatesShuffle(newSoal.opsi);
-            }
-            return newSoal;
-          });
+      }
+
+      // 5. KIRIM DATA KE PEMAIN
+      if (finalData) {
+        // Safety check terakhir: Jika data dari AI berupa array panjang, potong sesuai kebutuhan game
+        if (Array.isArray(finalData) && !gudangSnapshot.exists()) {
+          if (["math", "kasir"].includes(kategori)) {
+            finalData = finalData[Math.floor(Math.random() * finalData.length)];
+          } else if (
+            !["zuma", "piano", "labirin", "tajwid"].includes(kategori)
+          ) {
+            finalData = fisherYatesShuffle([...finalData]).slice(0, 10);
+          }
         }
 
         socket.emit("soalDariAI", { kategori, data: finalData });
       } else {
-        throw new Error("Data hasil AI null/rusak/kosong");
+        throw new Error("Gagal mendapatkan data (Gudang & AI kosong)");
       }
     } catch (e) {
       console.error(`❌ Error (${kategori}):`, e.message);
+      // Fallback Darurat agar game tidak stuck loading
       socket.emit("soalDariAI", {
         kategori,
         data: getFallbackData(kategori),
@@ -587,18 +614,17 @@ io.on("connection", (socket) => {
     }
   });
 
-  // --- B. PENYIMPANAN SKOR (DENGAN VALIDASI) ---
+  // --- B. SIMPAN SKOR (ANTI-CHEAT) ---
   socket.on("simpanSkor", async (data) => {
-    // 1. Validasi Input
     if (!data || !data.nama || !data.game) return;
 
     let skor = parseInt(data.skor);
 
-    // Cek Cheat Dasar
+    // [SECURITY] Validasi Skor Wajar
     if (isNaN(skor) || skor < 0) return;
     if (skor > 10000) {
-      console.warn(`🚨 CHEAT DETECTED: User ${data.nama} skor ${skor}`);
-      skor = 0; // Batalkan skor
+      console.warn(`🚨 CHEAT DETECTED: ${data.nama} skor ${skor}`);
+      return; // Jangan simpan
     }
 
     const safeName = sanitizeKey(data.nama.substring(0, 30));
@@ -610,47 +636,33 @@ io.on("connection", (socket) => {
       await runTransaction(userRef, (userData) => {
         if (!userData) {
           return {
-            nama: safeName, // Gunakan nama yang sudah disanitasi
+            nama: safeName,
             [`skor_${data.game}`]: skor,
             videa_coin: koin,
             last_played: now.toISOString(),
             role: "siswa",
           };
         }
-        // Akumulasi Skor
         userData[`skor_${data.game}`] =
           (userData[`skor_${data.game}`] || 0) + skor;
-        // Akumulasi Koin
         userData.videa_coin = (userData.videa_coin || 0) + koin;
         userData.last_played = now.toISOString();
         return userData;
       });
-
-      console.log(`💾 Skor Tersimpan: ${safeName} | ${data.game} (+${skor})`);
     } catch (e) {
       console.error("DB Error:", e.message);
     }
   });
 
-  // --- [BAGIAN BARU] C. LOGIKA LEADERBOARD ---
+  // --- C. LEADERBOARD ---
   socket.on("mintaLeaderboard", async () => {
     try {
-      // 1. Ambil referensi ke root 'leaderboard'
-      // Sesuai kode simpanSkor Anda, data ada di: "leaderboard/" + safeName
-      const leaderboardRef = ref(database, "leaderboard");
-      const snapshot = await get(leaderboardRef);
-
+      const snapshot = await get(ref(database, "leaderboard"));
       if (snapshot.exists()) {
         const data = snapshot.val();
-        const leaderboard = [];
-
-        // 2. Loop semua user untuk menghitung Total Skor
-        Object.keys(data).forEach((key) => {
+        const leaderboard = Object.keys(data).map((key) => {
           const val = data[key];
-
-          // 3. RUMUS PENJUMLAHAN TOTAL (Termasuk Tajwid)
-          // Pastikan semua game dijumlahkan di sini
-          const totalSkor =
+          const total =
             (val.skor_math || 0) +
             (val.skor_nabi || 0) +
             (val.skor_ayat || 0) +
@@ -660,206 +672,131 @@ io.on("connection", (socket) => {
             (val.skor_zuma || 0) +
             (val.skor_piano || 0) +
             (val.skor_tajwid || 0);
-
-          leaderboard.push({
-            nama: val.nama || "User",
-            skor: totalSkor,
+          return {
+            nama: val.nama,
+            skor: total,
             koin: val.videa_coin || 0,
             role: val.role || "siswa",
-            // Opsional: Kirim rincian jika ingin ditampilkan di frontend
-            rincian: {
-              tajwid: val.skor_tajwid || 0,
-            },
-          });
+          };
         });
-
-        // 4. Urutkan dari Skor Tertinggi ke Terendah
         leaderboard.sort((a, b) => b.skor - a.skor);
-
-        // 5. Kirim Top 10 ke Client
         socket.emit("updateLeaderboard", leaderboard.slice(0, 10));
       } else {
-        // Jika database kosong
         socket.emit("updateLeaderboard", []);
       }
     } catch (err) {
-      console.error("❌ Error ambil leaderboard:", err.message);
       socket.emit("updateLeaderboard", []);
     }
   });
 
-  // --- D. GLOBAL CHAT ---
+  // --- D. CHAT GLOBAL ---
   socket.on("chatMessage", (msg) => {
     if (!msg.pesan || !msg.pesan.trim()) return;
-
-    // Filter Kata Kasar Sederhana
-    const badWords = ["anjing", "babi", "bodoh", "kasar"]; // tambahin sesuai kebutuhan bocil
-    let cleanPesan = msg.pesan.substring(0, 100);
-    badWords.forEach((word) => {
-      const regex = new RegExp(word, "gi");
-      cleanPesan = cleanPesan.replace(regex, "***");
-    });
-
+    const cleanPesan = msg.pesan
+      .substring(0, 100)
+      .replace(/(anjing|babi|bodoh|kasar)/gi, "***");
     io.emit("chatMessage", {
       nama: sanitizeKey(msg.nama).substring(0, 15),
       pesan: cleanPesan,
       waktu: new Date().toLocaleTimeString("id-ID", {
         hour: "2-digit",
         minute: "2-digit",
-        timeZone: "Asia/Jakarta",
       }),
     });
   });
 
-  // --- E. FITUR AI TUTOR (UNIVERSAL - SUDAH DIPERBAIKI) ---
+  // --- E. AI TUTOR (VERSI FINAL - BERSIH & PINTAR) ---
   socket.on("mintaPenjelasan", async (data) => {
-    // 1. NORMALISASI VARIABLE (Penyelamat Game Lama & Baru)
-    // Server akan mencari 'jawabanBenar', kalau tidak ada, cari 'jawabBenar', dst.
+    // 1. Normalisasi Data
     const cleanSoal = data.soal || "";
     const cleanJawabBenar = data.jawabanBenar || data.jawabBenar;
     const cleanJawabUser = data.jawabanUser || data.jawabUser;
-    const gameType = data.game || data.kategori || "Umum"; // Nabi/Ayat pakai 'kategori', Tajwid/Labirin pakai 'game'
+    const gameType = data.game || data.kategori || "Umum";
 
-    // 2. VALIDASI KUAT
-    // Jika data penting tidak ada, stop agar tidak error
-    if (!cleanSoal || !cleanJawabBenar) {
-      console.error("❌ Data Tutor Tidak Lengkap:", data);
-      return;
-    }
+    // 2. Validasi
+    if (!cleanSoal || !cleanJawabBenar) return;
 
     try {
-      console.log(`👨‍🏫 Tutor dipanggil di game: ${gameType}`);
+      console.log(`👨‍🏫 Tutor dipanggil: ${gameType}`);
 
-      let prompt = "";
-
-      // 3. STRATEGI PROMPT SPESIFIK
-      if (gameType === "tajwid") {
-        prompt = `Seorang anak SD salah menebak hukum tajwid.
-          Soal: "${cleanSoal}". Jawaban Anak: "${cleanJawabUser}". Jawaban Benar: "${cleanJawabBenar}". 
-          Jelaskan max 2 kalimat kenapa salah dan apa ciri hukum yang benar. Gunakan bahasa ceria.
-          PENTING: Gunakan tag HTML <b>...<b> (bukan markdown) untuk menebalkan nama hukum tajwid atau ciri utamanya agar mudah dibaca.
-          Contoh: "Itu adalah <b>Idgham Bighunnah</b> karena ada Nun Sukun bertemu Ya."
-          `;
-      } else if (gameType === "labirin") {
-        prompt = `Siswa salah jawab kuis pengetahuan umum: "${cleanSoal}".
-          Jawabannya: "${cleanJawabUser}". Yang benar: "${cleanJawabBenar}".
-          Berikan "jembatan keledai" (cara hafal) atau fakta unik super singkat (max 15 kata) agar dia ingat.
-          PENTING: Gunakan tag HTML <b>...</b> pada kata kunci utama agar mata siswa langsung tertuju kesana.
-          `;
+      // 3. Panggil Strategi Pintar (Dari kode di atas)
+      // Ini akan otomatis memilih prompt Tajwid/Labirin/Umum sesuai keinginan Anda
+      let prompt;
+      if (PROMPT_STRATEGIES.tutor) {
+        prompt = PROMPT_STRATEGIES.tutor(
+          cleanSoal,
+          cleanJawabUser,
+          cleanJawabBenar,
+          gameType
+        );
       } else {
-        // ============================================================
-        // UPDATE KHUSUS GAME LAMA (Nabi & Ayat) - FORCE BOLD TAG
-        // ============================================================
-
-        prompt = `Kamu adalah Guru Muslim yang bijak dan seru. 
-          Siswa sedang bermain game edukasi Islam (${gameType}) tapi salah menjawab.
-          
-          Data:
-          - Soal: "${cleanSoal}"
-          - Jawaban Siswa (Salah): "${cleanJawabUser}"
-          - Jawaban Benar: "${cleanJawabBenar}"
-          
-          Instruksi:
-          1. Berikan semangat singkat ("Jangan sedih...", "Ayo coba lagi...").
-          2. Jelaskan kenapa jawaban benar itu tepat (Maksimal 2 kalimat).
-          3. 🔥 WAJIB: Gunakan tag HTML <b>...</b> untuk menebalkan kata kunci jawaban benar.
-          
-          Contoh Output:
-          "Jangan menyerah! Jawaban yang tepat adalah <b>Nabi Yunus</b>, karena beliau yang ditelan ikan paus."`;
+        // Fallback darurat
+        prompt = `Jelaskan kenapa jawaban ${cleanJawabBenar} benar untuk soal ${cleanSoal}.`;
       }
 
-      // 4. REQUEST AI
+      // 4. Request AI
       const penjelasanAI = await askAI(prompt);
 
-      // 5. KIRIM DATA HYBRID (Agar semua Client mengerti)
+      // 5. Kirim Balikan
       socket.emit("penjelasanTutor", {
-        teks: penjelasanAI, // Dibaca oleh Nabi.js & Ayat.js
-        penjelasan: penjelasanAI, // Dibaca oleh Tajwid.js & Labirin.js
+        teks: penjelasanAI,
+        penjelasan: penjelasanAI,
       });
     } catch (e) {
       console.error("❌ Tutor Error:", e.message);
-      const pesanError = `Jawaban yang benar adalah: ${cleanJawabBenar}. Tetap semangat ya!`;
-
-      socket.emit("penjelasanTutor", {
-        teks: pesanError,
-        penjelasan: pesanError,
-      });
+      const fallback = `Jawaban yang benar: ${cleanJawabBenar}. Tetap semangat!`;
+      socket.emit("penjelasanTutor", { teks: fallback, penjelasan: fallback });
     }
   });
 
-  // 🔥 [BARU] F. LOGIKA MULTIPLAYER / ROOM (ZUMA & MATH) 🔥
-  // -----------------------------------------------------------------
-
-  // 1. Join Room (Umum & Zuma)
+  // --- F. LOGIKA ROOM & DUEL (FIXED BUG) ---
   socket.on("joinRoom", (data) => {
     if (!data.room) return;
     socket.join(data.room);
-    console.log(`👥 ${data.username} masuk room: ${data.room}`);
-
-    // Beritahu orang lain di room
     socket.to(data.room).emit("playerJoined", data.username);
   });
 
-  // 2. Lapor Skor Real-time (Untuk update UI lawan di Zuma)
   socket.on("laporSkor", (data) => {
-    // Data = { skor: 100, room: "kodeRoom" }
-    if (data.room) {
-      socket.to(data.room).emit("updateSkorLawan", data.skor);
-    }
+    // Untuk Zuma
+    if (data.room) socket.to(data.room).emit("updateSkorLawan", data.skor);
   });
 
-  // 3. Join Math Duel (Khusus Math Battle)
+  // [BUG FIX] Math Duel: Cek penuh DULU baru join
   socket.on("joinMathDuel", async (data) => {
-    // Data = { room, nama, tingkat }
     const room = data.room;
-    socket.join(room);
+    const roomInstance = io.sockets.adapter.rooms.get(room);
+    const playerCount = roomInstance ? roomInstance.size : 0;
 
-    // Hitung jumlah pemain di room
-    const players = await io.in(room).allSockets(); // Set of socket IDs
-    const playerCount = players.size;
-
-    if (playerCount === 1) {
-      socket.emit("waitingForOpponent", "Menunggu pemain kedua...");
-    } else if (playerCount === 2) {
-      // Jika sudah 2 orang, mulai game!
-      // Minta soal ke AI dulu (sekali saja utk berdua)
-      const level = data.tingkat || "mudah";
-      // Pakai cache key yang sama agar cepat
-      const cacheKey = `cache_soal_v6/math_${level}`;
-
-      // (Kita pakai logika cache simple disini, ambil existing logic)
-      // Agar cepat, kita trigger event mintaSoalAI manual atau ambil cache
-      let soalDuel = getFallbackData("math"); // Default kalau AI gagal
-
-      try {
-        // Coba ambil dari cache DB
-        const cacheSnapshot = await get(ref(database, cacheKey));
-        if (cacheSnapshot.exists()) {
-          const rawData = cacheSnapshot.val();
-          if (Array.isArray(rawData)) {
-            // Ambil 10 soal acak untuk duel
-            soalDuel = fisherYatesShuffle([...rawData])
-              .slice(0, 10)
-              .map((s) => ({ q: s.soal, a: s.jawaban }));
-          }
-        }
-      } catch (e) {
-        console.log("Duel Cache Error, use fallback");
-      }
-
-      // Kirim sinyal MULAI ke semua di room
-      io.in(room).emit("startDuel", { soal: soalDuel });
-    } else {
+    if (playerCount >= 2) {
       socket.emit("waitingForOpponent", "Room Penuh (Max 2).");
+      return;
+    }
+
+    socket.join(room); // Aman untuk join sekarang
+
+    if (playerCount === 0) {
+      socket.emit("waitingForOpponent", "Menunggu pemain kedua...");
+    } else {
+      // Pemain kedua masuk -> START GAME
+      let soalDuel = getFallbackData("math");
+      // (Opsional: Tambahkan logika ambil cache soal disini jika perlu)
+      io.in(room).emit("startDuel", { soal: soalDuel });
     }
   });
 
-  // 4. Update Skor Duel (Math Battle)
   socket.on("updateScoreDuel", (data) => {
-    // Data = { room, score }
     socket.to(data.room).emit("opponentScoreUpdate", data.score);
   });
 });
+
+// ==========================================
+// 6. SERVER START
+// ==========================================
+app.use((req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
+app.use(express.static(path.join(__dirname, "public")));
 
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, () =>

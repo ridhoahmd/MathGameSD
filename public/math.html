@@ -32,16 +32,14 @@
     <div class="container">
       <div id="login-screen">
         <h1>MATH BATTLE</h1>
-        <p style="color: #aaa; margin-bottom: 30px">
-          Masuk ke arena pertempuran!
-        </p>
+        <p class="login-subtitle">Masuk ke arena pertempuran!</p>
 
         <input
           type="text"
           id="username"
           placeholder="Nama Petarung"
           readonly
-          style="background: #333; color: #ccc; cursor: not-allowed"
+          class="input-readonly"
         />
         <input
           type="text"
@@ -70,32 +68,13 @@
           </div>
         </div>
 
-        <div
-          id="status-display"
-          style="color: #00f2ff; margin-bottom: 10px; font-weight: bold"
-        ></div>
+        <div id="status-display" class="status-text"></div>
 
-        <div
-          style="
-            background: #444;
-            height: 8px;
-            width: 100%;
-            margin-top: 5px;
-            border-radius: 5px;
-            overflow: hidden;
-          "
-        >
-          <div
-            id="progress-bar"
-            style="
-              background: #00f2ff;
-              height: 100%;
-              width: 0%;
-              transition: 0.3s;
-            "
-          ></div>
+        <div class="progress-container">
+          <div id="progress-bar" class="progress-fill"></div>
         </div>
-        <p style="font-size: 0.8rem; color: #aaa; margin-top: 5px">
+
+        <p class="target-text">
           Target: <span id="q-current">0</span> / <span id="q-total">∞</span>
         </p>
 
@@ -104,7 +83,7 @@
         <input type="number" id="answer-input" placeholder="Ketik Jawaban..." />
         <button onclick="checkAnswer()">TEMBAK JAWABAN 🔥</button>
 
-        <hr style="border-color: rgba(255, 255, 255, 0.1); margin: 20px 0" />
+        <hr class="separator" />
 
         <button onclick="downloadSertifikat()" class="btn-finish">
           🏆 SELESAI & SIMPAN SKOR
@@ -114,51 +93,18 @@
 
     <div id="game-over-screen">
       <div class="go-content">
-        <h1 style="color: #ff4757; margin: 0">GAME OVER</h1>
-        <p style="color: #aaa">Skor Akhir Kamu</p>
-        <div
-          style="
-            font-size: 3rem;
-            font-weight: bold;
-            color: #ffeb3b;
-            margin: 20px 0;
-          "
-        >
+        <h1 class="go-title">GAME OVER</h1>
+        <p class="go-label">Skor Akhir Kamu</p>
+
+        <div class="go-score">
           <span id="final-score">0</span>
         </div>
-        <button
-          onclick="location.reload()"
-          style="
-            padding: 12px 30px;
-            width: 100%;
-            border: none;
-            border-radius: 50px;
-            font-weight: bold;
-            font-size: 1rem;
-            cursor: pointer;
-            text-transform: uppercase;
-            background: linear-gradient(45deg, #00f2ff, #0099ff);
-            color: #000;
-            margin-bottom: 10px;
-          "
-        >
+
+        <button onclick="location.reload()" class="btn-restart">
           MAIN LAGI
         </button>
-        <button
-          onclick="window.location.href='/'"
-          style="
-            padding: 12px 30px;
-            width: 100%;
-            border: none;
-            border-radius: 50px;
-            font-weight: bold;
-            font-size: 1rem;
-            cursor: pointer;
-            text-transform: uppercase;
-            background: #444;
-            color: #ccc;
-          "
-        >
+
+        <button onclick="window.location.href='/'" class="btn-home">
           KEMBALI KE MENU
         </button>
       </div>

@@ -49,8 +49,8 @@ body {
   margin: 20px auto;
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
   border: 1px solid rgba(0, 242, 255, 0.2);
-  -webkit-backdrop-filter: blur(15px);
-  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
 /* 4. TYPOGRAPHY */
@@ -224,4 +224,117 @@ button:hover {
   box-shadow: 0 0 50px rgba(255, 71, 87, 0.4);
   width: 90%;
   max-width: 400px;
+}
+
+/* ========================================= */
+/* TAMBAHAN DARI INLINE HTML (Pembersihan)   */
+/* ========================================= */
+
+/* Login Screen Styles */
+.login-subtitle {
+  color: #aaa;
+  margin-bottom: 30px;
+}
+
+.input-readonly {
+  background: #333 !important;
+  color: #ccc !important;
+  cursor: not-allowed;
+}
+
+/* Status Display (Menunggu Lawan, dll) */
+.status-text {
+  color: #00f2ff;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+/* Progress Bar Container */
+.progress-container {
+  background: #444;
+  height: 8px;
+  width: 100%;
+  margin-top: 5px;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+/* Progress Bar Fill */
+.progress-fill {
+  background: #00f2ff;
+  height: 100%;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+/* Target Text (Target: 0/10) */
+.target-text {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-top: 5px;
+}
+
+/* Separator Line */
+.separator {
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 20px 0;
+}
+
+/* Game Over Styles */
+.go-title {
+  color: #ff4757;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.go-label {
+  color: #aaa;
+  margin: 5px 0 0 0;
+}
+
+.go-score {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #ffeb3b;
+  margin: 20px 0;
+  text-shadow: 0 0 20px rgba(255, 235, 59, 0.3);
+}
+
+.btn-restart {
+  padding: 12px 30px;
+  width: 100%;
+  border: none;
+  border-radius: 50px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  background: linear-gradient(45deg, #00f2ff, #0099ff);
+  color: #000;
+  margin-bottom: 10px;
+  transition: transform 0.2s;
+}
+
+.btn-restart:hover {
+  transform: scale(1.05);
+}
+
+.btn-home {
+  padding: 12px 30px;
+  width: 100%;
+  border: none;
+  border-radius: 50px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  background: #444;
+  color: #ccc;
+  transition: background 0.2s;
+}
+
+.btn-home:hover {
+  background: #555;
+  color: #fff;
 }

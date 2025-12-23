@@ -236,3 +236,44 @@ input:focus {
   box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
 }
 
+/* ========================================= */
+/* TAMBAHAN DARI INLINE HTML (Pembersihan)   */
+/* ========================================= */
+
+/* Input Username yang Readonly/Disabled */
+.input-readonly {
+  background: #333 !important; /* Gunakan !important jika tertimpa style global */
+  color: #aaa !important;
+  cursor: not-allowed;
+}
+
+/* Menyembunyikan HUD saat awal */
+#game-hud {
+  display: none;
+  /* Style lainnya untuk HUD sudah ada di zuma.css asli atau style.css */
+}
+
+/* Judul Game Over */
+.game-over-title {
+  color: #ff4757;
+  margin: 0 0 10px;
+  font-family: "Orbitron", sans-serif;
+  text-transform: uppercase;
+}
+
+/* Label Kecil "SKOR AKHIR" */
+.score-label {
+  color: #aaa;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Angka Skor Akhir Besar */
+.final-score-text {
+  color: #ffeb3b;
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 0;
+  font-family: "Orbitron", sans-serif;
+  text-shadow: 0 0 15px rgba(255, 235, 59, 0.5);
+}

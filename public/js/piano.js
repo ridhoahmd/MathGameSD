@@ -1,4 +1,4 @@
-// public/piano.js - VERSI TIME ATTACK (60 DETIK)
+// public/js/piano.js - FIXED (NO DOUBLE LISTENER)
 
 const socket = io();
 const scoreEl = document.getElementById("score");
@@ -12,36 +12,45 @@ let gameActive = false;
 let timerInterval;
 let currentSequence = [];
 let playerSequence = [];
-let level = "mudah"; // Default
+let level = "mudah";
 let playerName = localStorage.getItem("playerName") || "Guest";
 
-// --- AUDIO ---
+// --- AUDIO CONTEXT ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const notes = {
-  1: 261.63,
-  2: 293.66,
-  3: 329.63,
-  4: 349.23,
-  5: 392.0,
-  6: 440.0,
-  7: 493.88,
-  8: 523.25,
-  9: 587.33,
-  0: 220.0,
+  1: 261.63, // C4
+  2: 293.66, // D4
+  3: 329.63, // E4
+  4: 349.23, // F4
+  5: 392.0, // G4
+  6: 440.0, // A4
+  7: 493.88, // B4
+  8: 523.25, // C5
+  9: 587.33, // D5
+  0: 220.0, // A3 (Opsional)
 };
 
 function playTone(num) {
   if (audioCtx.state === "suspended") audioCtx.resume();
+
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(notes[num], audioCtx.currentTime);
-  gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.3);
+
+  osc.type = "sine"; // Gelombang halus (seperti piano elektronik simpel)
+  // Pastikan num dikonversi ke integer agar kunci object terbaca
+  const freq = notes[parseInt(num)];
+
+  if (freq) {
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.5);
+  }
 }
 
 // --- PILIH LEVEL ---
@@ -55,16 +64,22 @@ document.querySelectorAll(".btn-level").forEach((btn) => {
   });
 });
 
-// --- MULAI GAME (DARI TOMBOL) ---
-function startGameSession() {
-  controlsArea.style.display = "none"; // Sembunyikan tombol mulai
+// --- MULAI GAME ---
+window.startGameSession = function () {
+  // PENTING: Resume AudioContext saat user klik tombol mulai (Aturan Browser Modern)
+  if (audioCtx.state === "suspended") audioCtx.resume();
+
+  controlsArea.style.display = "none";
   score = 0;
   timeLeft = 60;
   scoreEl.innerText = score;
   timerEl.innerText = timeLeft;
   gameActive = true;
 
-  // Mulai Timer
+  // Reset Timer Lama jika ada
+  if (timerInterval) clearInterval(timerInterval);
+
+  // Mulai Timer Baru
   timerInterval = setInterval(() => {
     timeLeft--;
     timerEl.innerText = timeLeft;
@@ -74,25 +89,36 @@ function startGameSession() {
   }, 1000);
 
   requestNewSequence();
-}
+};
 
 function requestNewSequence() {
   if (!gameActive) return;
   questionBox.innerText = "⏳ AI Membuat Nada...";
   disableInput(true);
+
+  // Minta soal ke server
   socket.emit("mintaSoalAI", { kategori: "piano", tingkat: level });
 }
 
-// --- TERIMA SOAL AI ---
+// --- TERIMA SOAL AI (HANYA SATU LISTENER - FIXED) ---
 socket.on("soalDariAI", async (data) => {
-  if (data.kategori === "piano" && gameActive) {
-    const info = data.data;
-    currentSequence = info.sequence || [1, 2, 3];
-    playerSequence = [];
+  // Validasi: Pastikan data untuk piano dan game sedang aktif
+  if (data && data.kategori === "piano" && gameActive) {
+    // 🔥 VAKSIN DATA (Handling Array vs Object)
+    let info = data.data;
+    if (Array.isArray(info)) {
+      info = info[0]; // Ambil elemen pertama jika server kirim array
+    }
 
-    questionBox.innerText = "👁️ HAFALKAN!";
+    // Pastikan sequence ada, jika tidak fallback ke [1,2,3]
+    currentSequence = info.sequence || [1, 2, 3];
+    playerSequence = []; // Reset jawaban pemain
+
+    // Fase 1: Hafalkan
+    questionBox.innerText = "👁️ DENGAR & HAFALKAN!";
     await playSequence(currentSequence);
 
+    // Fase 2: Mainkan
     if (gameActive) {
       questionBox.innerText = "🎹 ULANGI SEKARANG!";
       disableInput(false);
@@ -100,26 +126,33 @@ socket.on("soalDariAI", async (data) => {
   }
 });
 
-// --- MAINKAN NADA OTOMATIS ---
+// --- MAINKAN URUTAN NADA ---
 async function playSequence(seq) {
+  // Jeda sedikit sebelum mulai
+  await sleep(500);
+
   for (let num of seq) {
     if (!gameActive) break;
     await highlightKey(num);
-    await sleep(300); // Kecepatan urutan
+    await sleep(400); // Jeda antar nada
   }
 }
 
 function highlightKey(num) {
   return new Promise((resolve) => {
+    // Cari elemen tombol piano berdasarkan data-val
     const keyElement = document.querySelector(`.key[data-val="${num}"]`);
+
     if (keyElement) {
-      keyElement.classList.add("active");
-      playTone(num);
+      keyElement.classList.add("active"); // Efek visual tekan
+      playTone(num); // Suara
     }
+
+    // Lama tombol "ditekan" oleh AI
     setTimeout(() => {
       if (keyElement) keyElement.classList.remove("active");
       resolve();
-    }, 400);
+    }, 300);
   });
 }
 
@@ -132,59 +165,75 @@ function disableInput(disabled) {
   keys.forEach((k) => (k.style.pointerEvents = disabled ? "none" : "auto"));
 }
 
-// --- INPUT PEMAIN ---
-function playNote(num) {
+// --- INPUT PEMAIN (Dipanggil dari HTML onclick/ontouch) ---
+window.playNote = function (num) {
   if (!gameActive) return;
 
+  // 1. Mainkan Suara & Efek Visual
   playTone(num);
   const keyEl = document.querySelector(`.key[data-val="${num}"]`);
-  keyEl.classList.add("active");
-  setTimeout(() => keyEl.classList.remove("active"), 100);
+  if (keyEl) {
+    keyEl.classList.add("active");
+    setTimeout(() => keyEl.classList.remove("active"), 150);
+  }
 
-  playerSequence.push(num);
+  // 2. Simpan Jawaban
+  // Pastikan tipe data sama (integer)
+  playerSequence.push(parseInt(num));
+
   checkInput();
-}
+};
 
 function checkInput() {
   const idx = playerSequence.length - 1;
 
-  // 1. Cek per tombol
+  // 1. Cek Real-time (Salah satu nada salah = GAGAL LANGSUNG)
   if (playerSequence[idx] !== currentSequence[idx]) {
-    // SALAH!
-    flashScreen("#550000"); // Merah
+    flashScreen("#550000"); // Merah Gelap
     questionBox.innerText = "❌ SALAH! Ganti Soal...";
-    setTimeout(requestNewSequence, 1000); // Langsung ganti soal, jangan game over
+
+    // Penalti waktu (Opsional, hapus jika terlalu sadis)
+    // timeLeft -= 2;
+
+    // Minta soal baru setelah jeda
+    setTimeout(requestNewSequence, 1000);
     return;
   }
 
-  // 2. Cek selesai
+  // 2. Cek Jika Urutan Selesai & Benar Semua
   if (playerSequence.length === currentSequence.length) {
-    // BENAR!
-    score += 10;
+    score += 10 * currentSequence.length; // Skor tergantung panjang nada
     scoreEl.innerText = score;
-    flashScreen("#003300"); // Hijau
-    questionBox.innerText = "✅ BENAR! +10 Poin";
-    setTimeout(requestNewSequence, 500);
+
+    flashScreen("#003300"); // Hijau Gelap
+    questionBox.innerText = "✅ HEBAT! +Poin";
+
+    try {
+      AudioManager.playCorrect();
+    } catch (e) {} // Jika ada sfx tambahan
+
+    setTimeout(requestNewSequence, 800);
   }
 }
 
 function flashScreen(color) {
   document.body.style.backgroundColor = color;
   setTimeout(() => {
-    document.body.style.backgroundColor = "#1e1e2e";
+    document.body.style.backgroundColor = "#1e1e2e"; // Kembali ke warna asal
   }, 200);
 }
 
-// --- GAME OVER (WAKTU HABIS) ---
+// --- GAME OVER ---
 function endGame() {
   gameActive = false;
   clearInterval(timerInterval);
 
   document.getElementById("final-score").innerText = score;
-  document.getElementById("game-over-modal").style.display = "flex";
 
-  // SIMPAN SKOR KE DATABASE
-  console.log(`🎹 Waktu Habis! Mengirim skor: ${score}`);
+  const modal = document.getElementById("game-over-modal");
+  if (modal) modal.style.display = "flex";
+
+  console.log(`🎹 Waktu Habis! Skor: ${score}`);
   socket.emit("simpanSkor", {
     nama: playerName,
     skor: score,
@@ -192,52 +241,28 @@ function endGame() {
   });
 }
 
-// --- FITUR AUTO-RECONNECT (PASTE DI PALING BAWAH) ---
-
-// 1. Fungsi Membuat Tampilan Layar Gelap (Overlay)
+// --- FITUR AUTO-RECONNECT ---
 function createOfflineUI() {
   if (document.getElementById("connection-overlay")) return;
-
   const overlay = document.createElement("div");
   overlay.id = "connection-overlay";
-  overlay.innerHTML = `
-        <div class="wifi-icon">📡</div>
-        <div class="conn-text">KONEKSI TERPUTUS</div>
-        <div class="conn-sub">Sedang mencoba menghubungkan kembali...</div>
-    `;
+  overlay.innerHTML = `<div class="wifi-icon">📡</div><div class="conn-text">KONEKSI TERPUTUS</div>`;
   document.body.appendChild(overlay);
 }
-
 createOfflineUI();
 
-// 2. Logika Saat Koneksi Putus & Nyambung Lagi
 let isReconnecting = false;
-
-socket.on("disconnect", (reason) => {
-  console.log("⚠️ Koneksi putus:", reason);
+socket.on("disconnect", () => {
   isReconnecting = true;
-
   const overlay = document.getElementById("connection-overlay");
   if (overlay) overlay.style.display = "flex";
-
-  if (typeof gameActive !== "undefined") gameActive = false;
+  gameActive = false;
 });
 
-socket.on("soalDariAI", async (data) => {
-  if (data.kategori === "piano" && gameActive) {
-    // 🔥 VAKSIN DATA
-    let info = data.data;
-    if (Array.isArray(info)) info = info[0]; // Ambil isi
-
-    currentSequence = info.sequence || [1, 2, 3];
-    playerSequence = [];
-
-    questionBox.innerText = "👁️ HAFALKAN!";
-    await playSequence(currentSequence);
-
-    if (gameActive) {
-      questionBox.innerText = "🎹 ULANGI SEKARANG!";
-      disableInput(false);
-    }
+socket.on("connect", () => {
+  if (isReconnecting) {
+    isReconnecting = false;
+    const overlay = document.getElementById("connection-overlay");
+    if (overlay) overlay.style.display = "none";
   }
 });

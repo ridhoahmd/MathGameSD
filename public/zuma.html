@@ -32,16 +32,16 @@
       <div id="ui-layer">
         <div id="login-screen" class="login-box">
           <h2>ZUMA SPACE</h2>
+
           <input
             type="text"
             id="username"
             placeholder="Nama Pilot"
             readonly
-            style="background: #333; color: #aaa; cursor: not-allowed"
+            class="input-readonly"
           />
           <input type="text" id="room-code" placeholder="Kode Misi (Room)" />
 
-          <!-- UI PEMILIHAN KESULITAN -->
           <div class="difficulty-selector">
             <button class="btn-difficulty active" data-level="mudah">
               Mudah
@@ -60,7 +60,7 @@
           </div>
         </div>
 
-        <div id="game-hud" style="display: none">
+        <div id="game-hud">
           <div class="score-box score-left">
             KAMU: <span id="score">0</span>
           </div>
@@ -74,27 +74,14 @@
         </div>
 
         <div id="game-over-screen">
-          <h1
-            style="
-              color: #ff4757;
-              margin: 0 0 10px;
-              font-family: 'Orbitron', sans-serif;
-            "
-          >
-            GAME OVER
-          </h1>
-          <p style="color: #aaa; font-size: 0.9rem">SKOR AKHIR</p>
-          <p
-            style="
-              color: #ffeb3b;
-              font-size: 2.5rem;
-              font-weight: bold;
-              margin: 0;
-              font-family: 'Orbitron', sans-serif;
-            "
-          >
+          <h1 class="game-over-title">GAME OVER</h1>
+
+          <p class="score-label">SKOR AKHIR</p>
+
+          <p class="final-score-text">
             <span id="final-score">0</span>
           </p>
+
           <button class="btn-start" onclick="location.reload()">
             MAIN LAGI
           </button>
