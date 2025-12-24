@@ -1,4 +1,4 @@
-// public/zuma.js - VERSI FINAL (FIXED INPUT HANDLER)
+// public/zuma.js - VERSI FINAL (LOGIKA ARRAY LEVELING + DEBUGGING)
 
 const socket = io(); // Koneksi ke Server
 const sfxTembak = new Audio("/explosion.mp3");
@@ -9,13 +9,29 @@ const scoreEl = document.getElementById("score");
 const finalScoreEl = document.getElementById("final-score");
 const gameOverScreen = document.getElementById("game-over-screen");
 
+// --- GAME STATE GLOBAL ---
 let score = 0;
 let gameActive = false;
 let myName = "";
 let myRoom = "";
-let spawnRate = 4000;
 let lastSpawnTime = 0;
-let levelData = {}; // Data level dari AI
+let levelData = {}; // Data config dari AI/Server
+
+// --- VARIABEL LEVELING & WIN CONDITION ---
+let currentLevelNumber = 1;
+let maxEnemies = 20; // Target musuh per level
+let spawnedEnemies = 0; // Musuh yang sudah keluar
+let pathPoints = []; // Array koordinat jalur (Dinamis)
+
+// --- SETUP CANVAS RESPONSIF ---
+function resizeCanvas() {
+  const width = Math.min(window.innerWidth * 0.95, 800);
+  const height = width * 0.75; // Rasio 4:3
+  canvas.width = width;
+  canvas.height = height;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas(); // Init awal
 
 // --- LOGIKA KESULITAN ---
 let selectedDifficulty = "mudah";
@@ -33,16 +49,14 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// --- OBJEK GAME ---
-const pathPoints = [
-  { x: 50, y: 50 },
-  { x: 750, y: 50 },
-  { x: 750, y: 500 },
-  { x: 50, y: 500 },
-  { x: 50, y: 300 },
-  { x: 400, y: 300 },
-];
-const player = { x: 400, y: 550, angle: 0, currentAmmo: 0, color: "#ff9800" };
+// --- OBJEK PLAYER ---
+const player = {
+  x: canvas.width / 2,
+  y: canvas.height * 0.9,
+  angle: 0,
+  currentAmmo: 0,
+  color: "#ff9800",
+};
 let bullets = [];
 let enemies = [];
 
@@ -63,7 +77,103 @@ function getNextAmmo() {
   return randomInt(2, 10);
 }
 
-// --- CLASS ---
+// ==========================================
+// 1. PATH GENERATOR ENGINE (FIXED: STEPS VARIABLE)
+// ==========================================
+function generatePath(pola) {
+    console.log("🛣️ Mencoba generate pola:", pola); 
+    
+    let points = [];
+    const w = canvas.width;
+    const h = canvas.height;
+    
+    // 🔥 INI YANG HILANG SEBELUMNYA 🔥
+    const steps = 300; // Resolusi jalur (Wajib ada disini)
+    // --------------------------------
+
+    // Safety Check
+    if (w === 0 || h === 0) {
+        console.error("❌ Canvas size 0!");
+        return [];
+    }
+
+    // Handle Pola Acak (Agar tidak lari ke default terus)
+    if (pola === "acak") {
+        const daftar = ["spiral", "kotak", "lingkaran", "huruf_u", "huruf_s", "garis_lurus"];
+        pola = daftar[Math.floor(Math.random() * daftar.length)];
+        console.log(`🎲 Pola 'acak' menjadi: ${pola}`);
+    }
+
+    switch (pola) {
+        case "garis_lurus":
+            for (let i = 0; i <= steps; i++) {
+                points.push({ x: (i / steps) * w, y: h * 0.2 + (i / steps) * (h * 0.6) });
+            }
+            break;
+
+        case "lingkaran":
+        case "oval":
+            const cx = w / 2, cy = h / 2;
+            const radius = h * 0.35;
+            for (let i = 0; i <= steps; i++) {
+                const angle = (i / steps) * Math.PI * 2;
+                points.push({
+                    x: cx + Math.cos(angle) * radius,
+                    y: cy + Math.sin(angle) * radius
+                });
+            }
+            break;
+
+        case "kotak":
+            const pad = 50;
+            for(let i=0; i<steps/4; i++) points.push({x: pad + (i/(steps/4))*(w-2*pad), y: pad});
+            for(let i=0; i<steps/4; i++) points.push({x: w-pad, y: pad + (i/(steps/4))*(h-2*pad)});
+            for(let i=0; i<steps/4; i++) points.push({x: w-pad - (i/(steps/4))*(w-2*pad), y: h-pad});
+            for(let i=0; i<steps/4; i++) points.push({x: pad, y: h-pad - (i/(steps/4))*(h-2*pad)});
+            break;
+
+        case "huruf_u":
+        case "balikan":
+            for (let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                if(t < 0.33) points.push({ x: w*0.15, y: t * 3 * h * 0.8 }); 
+                else if (t < 0.66) points.push({ x: w*0.15 + (t-0.33)*3 * w*0.7, y: h*0.8 }); 
+                else points.push({ x: w*0.85, y: h*0.8 - (t-0.66)*3 * h * 0.8 }); 
+            }
+            break;
+
+        case "huruf_s":
+        case "gelombang":
+        case "ular":
+            for (let i = 0; i <= steps; i++) {
+                const x = (i / steps) * w;
+                const y = (h / 3) + Math.sin((i / steps) * Math.PI * 4) * (h * 0.2);
+                points.push({ x: x, y: y });
+            }
+            break;
+
+        case "spiral":
+        default: 
+            if (pola !== "spiral") console.warn(`⚠️ Pola '${pola}' fallback ke Spiral.`);
+            const centerX = w / 2;
+            const centerY = h / 2;
+            for (let i = 0; i <= steps; i++) {
+                const angle = 0.1 * i;
+                const r = 10 + 1.8 * i; 
+                if (r < w/2) {
+                    points.push({
+                        x: centerX + r * Math.cos(angle),
+                        y: centerY + r * Math.sin(angle)
+                    });
+                }
+            }
+            points.reverse(); 
+            break;
+    }
+    return points;
+}
+
+// --- CLASS BULLET & ENEMY ---
 class Bullet {
   constructor(x, y, angle, value) {
     this.x = x;
@@ -71,7 +181,7 @@ class Bullet {
     this.vx = Math.cos(angle) * 12;
     this.vy = Math.sin(angle) * 12;
     this.value = value;
-    this.radius = 20;
+    this.radius = 15;
     this.active = true;
   }
   update() {
@@ -90,40 +200,42 @@ class Bullet {
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fillStyle = "#ffeb3b";
     ctx.fill();
-    ctx.lineWidth = 2;
     ctx.strokeStyle = "#333";
     ctx.stroke();
     ctx.fillStyle = "black";
-    ctx.font = "bold 18px Arial";
+    ctx.font = "bold 14px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(this.value, this.x, this.y);
-    ctx.closePath();
   }
 }
 
 class Enemy {
   constructor() {
     this.pathIndex = 0;
-    this.x = pathPoints[0].x;
-    this.y = pathPoints[0].y;
-    this.speed =
+    this.x = pathPoints.length > 0 ? pathPoints[0].x : 0;
+    this.y = pathPoints.length > 0 ? pathPoints[0].y : 0;
+
+    // Kecepatan adaptif
+    let baseSpeed =
       levelData.speed === "cepat"
-        ? 0.8
+        ? 1.5
         : levelData.speed === "lambat"
-        ? 0.3
-        : 0.5;
-    this.radius = 35;
+        ? 0.5
+        : 1.0;
+    this.speed = baseSpeed;
+
+    this.radius = 25;
     const problem = createMathProblem();
     this.text = problem.text;
     this.value = problem.value;
     this.active = true;
     this.color = levelData.palet_warna
-      ? levelData.palet_warna[randomInt(0, 3)]
+      ? levelData.palet_warna[randomInt(0, levelData.palet_warna.length - 1)]
       : "#e91e63";
   }
   update() {
-    const target = pathPoints[this.pathIndex + 1];
+    const target = pathPoints[Math.floor(this.pathIndex + 1)];
     if (!target) {
       endGame();
       return;
@@ -131,8 +243,10 @@ class Enemy {
     const dx = target.x - this.x;
     const dy = target.y - this.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    if (distance < this.speed) this.pathIndex++;
-    else {
+
+    if (distance < this.speed) {
+      this.pathIndex += this.speed;
+    } else {
       this.x += (dx / distance) * this.speed;
       this.y += (dy / distance) * this.speed;
     }
@@ -142,104 +256,179 @@ class Enemy {
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fillStyle = this.color;
     ctx.fill();
-    ctx.lineWidth = 3;
     ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = "white";
-    ctx.font = "bold 22px Arial";
+    ctx.font = "bold 16px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(this.text, this.x, this.y);
-    ctx.closePath();
   }
 }
 
-// --- GAME FLOW ---
-// --- GANTI FUNGSI startGameMultiplayer DENGAN INI ---
+// ==========================================
+// 2. GAME FLOW (UPDATE A: HANDLING ARRAY)
+// ==========================================
 
 function startGameMultiplayer() {
   const nameInput = document.getElementById("username").value;
   const roomInput = document.getElementById("room-code").value;
 
-  // 1. Validasi: Hanya Nama yang wajib diisi
   if (nameInput.trim() === "") {
     alert("Silakan isi Nama Pilot dulu!");
     return;
   }
 
   myName = nameInput;
-
-  // 2. Logika Room Otomatis (Single vs Multiplayer)
   if (roomInput.trim() === "") {
-    // Jika Room KOSONG -> Mode Single Player
-    // Kita buat nama room acak agar main sendirian (isolasi)
     myRoom = "solo_" + myName + "_" + Math.floor(Math.random() * 10000);
-    console.log("Masuk Mode Single Player di room: " + myRoom);
   } else {
-    // Jika Room DIISI -> Mode Multiplayer (bisa ketemu teman)
     myRoom = roomInput;
   }
 
-  // Lanjut ke proses koneksi server (kode asli)
   socket.emit("joinRoom", { username: myName, room: myRoom });
 
-  // Tampilkan loading screen sementara
-  document.getElementById("login-screen").innerHTML =
-    "<h2 style='color:white;'>🛸 Meminta Misi ke AI...</h2>";
-
-  // Minta soal ke AI sesuai tingkat kesulitan
-  socket.emit("mintaSoalAI", { kategori: "zuma", tingkat: selectedDifficulty });
+  currentLevelNumber = 1;
+  requestLevelData();
 }
 
-socket.on("soalDariAI", (data) => {
-  if (data.kategori === "zuma") {
-    // 🔥 VAKSIN DATA
-    let info = data.data;
-    if (Array.isArray(info)) info = info[0]; // Ambil isi
+function requestLevelData() {
+  document.getElementById(
+    "login-screen"
+  ).innerHTML = `<h2 style='color:white;'>🛸 Memuat Level ${currentLevelNumber}...</h2>`;
 
-    levelData = info;
+  // Minta soal ke server
+  socket.emit("mintaSoalAI", {
+    kategori: "zuma",
+    tingkat: selectedDifficulty,
+  });
+}
+
+// 🔥 INI BAGIAN UTAMA PERBAIKANNYA 🔥
+socket.on("soalDariAI", (data) => {
+  console.log("📦 PAKET DITERIMA:", data); // Debug Log
+
+  if (data.kategori === "zuma") {
+    let info = data.data;
+
+    // Cek apakah data berupa Array (Banyak Level)
+    if (Array.isArray(info)) {
+      console.log(
+        `✅ Data Array terdeteksi. Mengambil Level ${currentLevelNumber}`
+      );
+
+      // Ambil index level yang sesuai (dikurangi 1 karena array mulai dari 0)
+      let index = currentLevelNumber - 1;
+
+      // Safety: Jika level melebihi jumlah data, loop kembali
+      if (index >= info.length) index = index % info.length;
+
+      levelData = info[index];
+    } else {
+      console.warn("⚠️ Data Object Tunggal terdeteksi (Fallback Mode).");
+      levelData = info;
+    }
+
+    console.log("⚙️ CONFIG LEVEL AKTIF:", levelData);
+
+    // Setup UI
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("game-hud").style.display = "block";
-
     const bgColors = levelData.palet_warna || ["#000", "#333"];
     document.getElementById(
       "game-container"
     ).style.background = `linear-gradient(135deg, ${bgColors[0]}, ${bgColors[1]})`;
 
-    alert(`MISI BARU: ${levelData.deskripsi}`);
+    // GENERATE JALUR
+    pathPoints = generatePath(levelData.pola || "spiral");
+
+    // Debug Jalur
+    if (pathPoints.length === 0)
+      console.error("❌ ERROR: Path kosong! Cek fungsi generatePath.");
+
+    // Reset Player
+    player.x = canvas.width / 2;
+    player.y = canvas.height * 0.9;
+
+    alert(`LEVEL ${currentLevelNumber}: ${levelData.deskripsi || "Mulai!"}`);
     initGameEngine();
   }
 });
 
 function initGameEngine() {
-  score = 0;
+  score = 0; 
   bullets = [];
   enemies = [];
   scoreEl.innerText = score;
+  
+  // Win Condition
+  spawnedEnemies = 0;
+  maxEnemies = 15 + (currentLevelNumber * 5); 
+  
   player.currentAmmo = randomInt(2, 10);
-  player.color = levelData.palet_warna[0];
+  // Safety check warna
+  player.color = (levelData.palet_warna && levelData.palet_warna.length > 0) 
+                 ? levelData.palet_warna[0] 
+                 : "#ff9800";
+  
   gameActive = true;
+
+  // 🔥 PERBAIKAN UTAMA: KURANGI WAKTU AGAR LANGSUNG SPAWN
+  // Kita set waktu terakhir spawn ke "Masa Lalu" (misal 5 detik lalu)
+  // Jadi saat update() jalan pertama kali, selisihnya sudah > spawnRate
+  lastSpawnTime = Date.now() - 5000; 
+  
   requestAnimationFrame(update);
 }
 
+// ==========================================
+// 3. UPDATE LOOP (UPDATE B: DEBUGGING SPAWN)
+// ==========================================
 function update(timestamp) {
   if (!gameActive) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  ctx.beginPath();
-  ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
-  for (let i = 1; i < pathPoints.length; i++)
-    ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
-  ctx.strokeStyle = "rgba(255,255,255,0.1)";
-  ctx.lineWidth = 10;
-  ctx.setLineDash([20, 20]);
-  ctx.stroke();
-  ctx.setLineDash([]);
+  // --- 🔥 FIX WAKTU: Gunakan Date.now() agar sinkron dengan initGameEngine ---
+  const now = Date.now(); 
+  // --------------------------------------------------------------------------
 
-  let currentSpawnRate = levelData.speed === "cepat" ? 2500 : 4000;
-  if (timestamp - lastSpawnTime > currentSpawnRate) {
-    enemies.push(new Enemy());
-    lastSpawnTime = timestamp;
+  // Gambar Jalur
+  if (pathPoints.length > 0) {
+    ctx.beginPath();
+    ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+    for (let i = 1; i < pathPoints.length; i++)
+      ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+    ctx.strokeStyle = "rgba(255,255,255,0.15)";
+    ctx.lineWidth = 40;
+    ctx.lineCap = "round";
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255,255,255,0.3)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = "red";
+    ctx.fillText("ERROR: PATH TIDAK DITEMUKAN", 50, 50);
+  }
+
+  // LOGIKA SPAWN + DEBUG
+  // LOGIKA SPAWN + DEBUG
+  let currentSpawnRate = levelData.speed === "cepat" ? 2000 : 3500;
+  
+  // Karena kita sudah manipulasi lastSpawnTime di init, ini harusnya TRUE sekarang
+  if (now - lastSpawnTime > currentSpawnRate && spawnedEnemies < maxEnemies) {
+    
+    // Validasi Path sebelum spawn
+    if (pathPoints && pathPoints.length > 0) {
+        console.log(`🚀 SPAWNING ENEMY NO. ${spawnedEnemies + 1}`); // Log Munculnya Musuh
+        
+        enemies.push(new Enemy());
+        spawnedEnemies++; 
+        lastSpawnTime = now;
+    } else {
+        console.error("❌ Gagal Spawn: PathPoints kosong atau undefined!");
+    }
+    
     if (enemies.length === 1) player.currentAmmo = enemies[0].value;
   }
 
@@ -248,6 +437,7 @@ function update(timestamp) {
     e.update();
     e.draw();
   });
+
   bullets = bullets.filter((b) => b.active);
   bullets.forEach((b) => {
     b.update();
@@ -255,7 +445,17 @@ function update(timestamp) {
   });
 
   checkCollisions();
+  drawPlayer();
 
+  if (spawnedEnemies >= maxEnemies && enemies.length === 0) {
+    levelComplete();
+    return;
+  }
+
+  requestAnimationFrame(update);
+}
+
+function drawPlayer() {
   ctx.save();
   ctx.translate(player.x, player.y);
   ctx.rotate(player.angle);
@@ -263,14 +463,14 @@ function update(timestamp) {
   ctx.beginPath();
   ctx.arc(0, 0, 40, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillRect(0, -15, 70, 30);
+  ctx.fillRect(0, -15, 60, 30);
   ctx.rotate(-player.angle);
   ctx.fillStyle = "white";
   ctx.font = "bold 28px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
   ctx.fillText(player.currentAmmo, 0, 0);
   ctx.restore();
-
-  requestAnimationFrame(update);
 }
 
 function checkCollisions() {
@@ -280,7 +480,8 @@ function checkCollisions() {
       const dist = Math.sqrt(
         (bullet.x - enemy.x) ** 2 + (bullet.y - enemy.y) ** 2
       );
-      if (dist < bullet.radius + enemy.radius + 30) {
+
+      if (dist < bullet.radius + enemy.radius + 10) {
         bullet.active = false;
         if (bullet.value === enemy.value) {
           enemy.active = false;
@@ -295,9 +496,18 @@ function checkCollisions() {
   });
 }
 
-socket.on("updateSkorLawan", (skorLawan) => {
-  document.getElementById("opponent-score").innerText = skorLawan;
-});
+function levelComplete() {
+  gameActive = false;
+  AudioManager.playWin();
+
+  setTimeout(() => {
+    alert(
+      `🎉 LEVEL ${currentLevelNumber} SELESAI!\nSiap lanjut ke level berikutnya?`
+    );
+    currentLevelNumber++;
+    requestLevelData();
+  }, 500);
+}
 
 function endGame() {
   if (!gameActive) return;
@@ -308,149 +518,94 @@ function endGame() {
   AudioManager.playWin();
 }
 
-// --- INPUT HANDLER (DENGAN SKALA OTOMATIS) ---
+socket.on("updateSkorLawan", (skorLawan) => {
+  document.getElementById("opponent-score").innerText = skorLawan;
+});
 
-// 1. Fungsi Helper: Menghitung Posisi Mouse/Touch Akurat
+// ==========================================
+// 4. INPUT HANDLER & RECONNECT
+// ==========================================
+
 function getMousePos(canvas, evt) {
-  const rect = canvas.getBoundingClientRect(); // Ukuran visual kanvas di layar HP
-
-  // Hitung Rasio (Penting agar tidak meleset saat layar mengecil)
+  const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
-
-  // Deteksi apakah ini Sentuhan (Touch) atau Mouse
   const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
   const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
-
-  // Kembalikan koordinat yang sudah dikalikan rasio
   return {
     x: (clientX - rect.left) * scaleX,
     y: (clientY - rect.top) * scaleY,
   };
 }
 
-// 2. Gerakkan Bidikan (Mouse Move)
 canvas.addEventListener("mousemove", (e) => {
   if (!gameActive) return;
-
   const pos = getMousePos(canvas, e);
-  // Hitung sudut berdasarkan posisi yang sudah dikoreksi
   player.angle = Math.atan2(pos.y - player.y, pos.x - player.x);
 });
 
-// 3. Tembak (Mouse Click)
 canvas.addEventListener("mousedown", (e) => {
-  if (!gameActive) return;
+  handleInput(e);
+});
 
-  // Update sudut sekali lagi saat klik (biar presisi)
+canvas.addEventListener(
+  "touchstart",
+  (e) => {
+    e.preventDefault();
+    handleInput(e);
+  },
+  { passive: false }
+);
+
+function handleInput(e) {
+  if (!gameActive) return;
   const pos = getMousePos(canvas, e);
   player.angle = Math.atan2(pos.y - player.y, pos.x - player.x);
 
   try {
-    AudioManager.playTone(600, 0, 0.1);
+    if (typeof AudioManager !== "undefined") AudioManager.playTone(600, 0, 0.1);
+    sfxTembak.currentTime = 0;
+    sfxTembak.play();
   } catch (err) {}
 
-  // Tembak Peluru
   bullets.push(
     new Bullet(player.x, player.y, player.angle, player.currentAmmo)
   );
   setTimeout(() => {
     player.currentAmmo = getNextAmmo();
   }, 100);
-});
-
-// 4. Tembak & Bidik (Layar Sentuh HP)
-canvas.addEventListener(
-  "touchstart",
-  (e) => {
-    if (!gameActive) return;
-    e.preventDefault(); // Mencegah layar scroll saat main
-
-    try {
-      sfxTembak.currentTime = 0;
-      sfxTembak.play();
-    } catch (err) {}
-
-    // Gunakan fungsi helper yang sama
-    const pos = getMousePos(canvas, e);
-    player.angle = Math.atan2(pos.y - player.y, pos.x - player.x);
-
-    // Tembak Peluru
-    bullets.push(
-      new Bullet(player.x, player.y, player.angle, player.currentAmmo)
-    );
-    setTimeout(() => {
-      player.currentAmmo = getNextAmmo();
-    }, 100);
-  },
-  { passive: false }
-);
-
-// ==========================================
-// FITUR AUTO-RECONNECT (VERSI FINAL - ANTI ZOMBIE START)
-// ==========================================
-
-// 1. Fungsi Membuat Tampilan Layar Gelap (Overlay)
-function createOfflineUI() {
-  if (document.getElementById("connection-overlay")) return;
-
-  const overlay = document.createElement("div");
-  overlay.id = "connection-overlay";
-  overlay.innerHTML = `
-        <div class="wifi-icon">📡</div>
-        <div class="conn-text">KONEKSI TERPUTUS</div>
-        <div class="conn-sub">Sedang mencoba menghubungkan kembali...</div>
-    `;
-  document.body.appendChild(overlay);
 }
 
-// Panggil agar elemen siap
+function createOfflineUI() {
+  if (document.getElementById("connection-overlay")) return;
+  const overlay = document.createElement("div");
+  overlay.id = "connection-overlay";
+  overlay.innerHTML = `<div class="wifi-icon">📡</div><div class="conn-text">KONEKSI TERPUTUS</div><div class="conn-sub">Mencoba menghubungkan kembali...</div>`;
+  document.body.appendChild(overlay);
+}
 createOfflineUI();
 
-// 2. Variabel Status Koneksi
 let isReconnecting = false;
-let wasPlaying = false; // 🔥 INI VARIABEL BARU: Mengingat status main
+let wasPlaying = false;
 
-// 3. Saat Koneksi Putus
 socket.on("disconnect", (reason) => {
   console.log("⚠️ Koneksi putus:", reason);
   isReconnecting = true;
-
-  // 🔥 LOGIKA PENTING: Simpan status, apakah tadi sedang main?
-  // Jika gameActive true, berarti user sedang main.
-  // Jika gameActive false, berarti user cuma di menu login.
   wasPlaying = gameActive;
-
-  // Tampilkan Layar Gelap
   const overlay = document.getElementById("connection-overlay");
   if (overlay) overlay.style.display = "flex";
-
-  // Matikan game sementara
   if (typeof gameActive !== "undefined") gameActive = false;
 });
 
-// 4. Saat Terhubung Kembali
 socket.on("connect", () => {
   if (isReconnecting) {
     console.log("✅ Terhubung kembali!");
     isReconnecting = false;
-
-    // Sembunyikan Layar Gelap
     const overlay = document.getElementById("connection-overlay");
     if (overlay) overlay.style.display = "none";
-
-    // 🔥 LOGIKA PENTING: Hanya lanjutkan game JIKA tadi memang sedang main
     if (wasPlaying) {
-      console.log("▶️ Melanjutkan Game...");
       gameActive = true;
-
-      // Jalankan ulang animasi loop
-      if (typeof update === "function") {
-        requestAnimationFrame(update);
-      }
-    } else {
-      console.log("⏸️ User tadi di menu, jadi game tetap diam.");
-      // Game tetap diam (gameActive false), user tetap di menu login
+      requestAnimationFrame(update);
     }
   }
 });

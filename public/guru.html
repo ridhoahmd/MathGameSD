@@ -153,24 +153,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
-    <script>
-      // --- CONFIG FIREBASE ---
-      const firebaseConfig = {
-        apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
-        authDomain: "mathgamesd.firebaseapp.com",
-        databaseURL:
-          "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "mathgamesd",
-        storageBucket: "mathgamesd.firebasestorage.app",
-        messagingSenderId: "595640141584",
-        appId: "1:595640141584:web:d02523bc844e52550f4795",
-      };
-      try {
-        firebase.initializeApp(firebaseConfig);
-      } catch (e) {}
-      const auth = firebase.auth();
-      const database = firebase.database();
+    <script src="js/config.js"></script>
 
+    <script>
       let currentUserRole = "siswa";
       let currentUserName = "";
 

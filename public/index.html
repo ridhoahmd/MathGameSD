@@ -228,23 +228,11 @@
 
     <script src="js/audio.js"></script>
 
+    <script src="js/config.js"></script>
+
     <script>
       const socket = io();
-      const firebaseConfig = {
-        apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
-        authDomain: "mathgamesd.firebaseapp.com",
-        databaseURL:
-          "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "mathgamesd",
-        storageBucket: "mathgamesd.firebasestorage.app",
-        messagingSenderId: "595640141584",
-        appId: "1:595640141584:web:d02523bc844e52550f4795",
-      };
-      try {
-        firebase.initializeApp(firebaseConfig);
-      } catch (e) {}
-      const auth = firebase.auth();
-      const database = firebase.database();
+
       const provider = new firebase.auth.GoogleAuthProvider();
       let currentUser = null;
 
@@ -392,25 +380,46 @@
       }
 
       function loginGoogle() {
-        const KODE_RAHASIA = "GURU2025";
+        // AMBIL INPUT KODE (Tanpa password hardcoded lagi)
         const inputKode = document
           .getElementById("input-kode-guru")
           .value.trim();
 
         auth
           .signInWithPopup(provider)
-          .then((result) => {
+          .then(async (result) => {
+            // <--- PENTING: Ada kata 'async' di sini
             const originalName = result.user.displayName;
-
             const safeName = sanitizeName(originalName);
-
-            // Simpan nama yang aman (contoh: Mr_Aan) ke LocalStorage
             localStorage.setItem("playerName", safeName);
 
             let roleBaru = "siswa";
-            if (inputKode === KODE_RAHASIA) roleBaru = "guru";
 
-            // Cek database menggunakan nama yang aman
+            // --- 🔒 LOGIKA BARU: VERIFIKASI KE SERVER ---
+            if (inputKode) {
+              try {
+                // Kirim kode ke server untuk dicek
+                const response = await fetch("/api/login-guru", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ kode: inputKode }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                  roleBaru = "guru";
+                } else {
+                  alert("Kode Guru salah! Anda masuk sebagai Siswa.");
+                }
+              } catch (err) {
+                console.error("Gagal verifikasi guru:", err);
+                alert("Gagal menghubungi server. Masuk sebagai Siswa.");
+              }
+            }
+            // ---------------------------------------------
+
+            // Update Database Firebase (Logika lama tetap dipakai)
             database
               .ref("leaderboard/" + safeName)
               .once("value")
@@ -418,18 +427,18 @@
                 const data = snapshot.val();
                 const currentRole = data ? data.role : null;
 
-                // Update data user (Simpan nama asli agar tampilan tetap bagus)
+                // Hanya update role jika dia belum jadi admin/guru, atau jika dia baru saja login sukses sebagai guru
                 if (
                   currentRole !== "admin" &&
                   (currentRole !== "guru" || roleBaru === "guru")
                 ) {
                   database.ref("leaderboard/" + safeName).update({
-                    nama: originalName, // Nama asli untuk display
+                    nama: originalName, // Simpan nama asli agar bagus di UI
                     role: roleBaru,
                   });
                 }
 
-                // Refresh halaman agar perubahan terlihat
+                // Refresh halaman agar menu Guru muncul
                 location.reload();
               });
           })

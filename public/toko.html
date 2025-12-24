@@ -47,24 +47,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    <script>
-      // CONFIG SAMA SEPERTI SEBELUMNYA
-      const firebaseConfig = {
-        apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
-        authDomain: "mathgamesd.firebaseapp.com",
-        databaseURL:
-          "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "mathgamesd",
-        storageBucket: "mathgamesd.firebasestorage.app",
-        messagingSenderId: "595640141584",
-        appId: "1:595640141584:web:d02523bc844e52550f4795",
-      };
-      try {
-        firebase.initializeApp(firebaseConfig);
-      } catch (e) {}
-      const auth = firebase.auth();
-      const database = firebase.database();
+    <script src="js/config.js"></script>
 
+    <script>
       // DAFTAR ITEM TOKO
       const shopItems = [
         { id: "default", name: "Standar", price: 0, class: "frame-default" },

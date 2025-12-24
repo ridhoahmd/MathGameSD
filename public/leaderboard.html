@@ -31,26 +31,11 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    <script>
-      const firebaseConfig = {
-        apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
-        authDomain: "mathgamesd.firebaseapp.com",
-        // 👇 URL DATABASE ASLI ANDA
-        databaseURL:
-          "https://mathgamesd-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "mathgamesd",
-        storageBucket: "mathgamesd.firebasestorage.app",
-        messagingSenderId: "595640141584",
-        appId: "1:595640141584:web:d02523bc844e52550f4795",
-      };
+    <script src="js/config.js"></script>
 
-      try {
-        firebase.initializeApp(firebaseConfig);
-      } catch (e) {}
-      const database = firebase.database();
+    <script>
       const rankList = document.getElementById("rank-list");
 
-      // ... (Kode Firebase Config di atas tetap sama) ...
 
       database.ref("leaderboard").once("value", (snapshot) => {
         const data = snapshot.val();

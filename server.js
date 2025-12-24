@@ -5,6 +5,8 @@ const http = require("http").createServer(app);
 const path = require("path");
 const rateLimit = require("express-rate-limit"); // Limiter untuk HTTP
 
+app.use(express.json()); // Agar server bisa baca password dari login
+
 // ==========================================
 // 1. KONFIGURASI KEAMANAN & UTILITAS
 // ==========================================
@@ -510,7 +512,7 @@ io.on("connection", (socket) => {
       }
 
       // ============================================================
-      // 3. CEK GUDANG SOAL (DATABASE) - INI LOGIKA BARUNYA!
+      // 3. CEK GUDANG SOAL (DATABASE) - PERBAIKAN LOGIKA DISINI!
       // ============================================================
       let finalData = null;
       const gudangKey = `gudang_soal/${kategori}/${level}`;
@@ -523,13 +525,16 @@ io.on("connection", (socket) => {
         const allSoal = gudangSnapshot.val(); // Ambil semua data di level ini
 
         if (Array.isArray(allSoal)) {
-          // KELOMPOK 1: Game Math & Kasir (Ambil 1 soal tunggal acak)
-          // KELOMPOK 2: Game Config (Zuma, Piano, Labirin, Tajwid) (Ambil 1 config utuh)
-          if (
-            ["math", "kasir", "zuma", "piano", "labirin", "tajwid"].includes(
-              kategori
-            )
-          ) {
+          // KELOMPOK 1: Math & Kasir (Ambil 1 soal tunggal acak)
+          if (["math", "kasir"].includes(kategori)) {
+            finalData = allSoal[Math.floor(Math.random() * allSoal.length)];
+          }
+          // KELOMPOK SPESIAL: ZUMA (Kirim SEMUA data agar Client bisa atur Level 1-50)
+          else if (kategori === "zuma") {
+            finalData = allSoal; // Kirim Array utuh
+          }
+          // KELOMPOK 2: Game Config Lain (Tetap Acak 1 config)
+          else if (["piano", "labirin", "tajwid"].includes(kategori)) {
             finalData = allSoal[Math.floor(Math.random() * allSoal.length)];
           }
           // KELOMPOK 3: Game Quiz (Nabi, Ayat, Memory) (Ambil 10 soal acak)
@@ -787,6 +792,23 @@ io.on("connection", (socket) => {
   socket.on("updateScoreDuel", (data) => {
     socket.to(data.room).emit("opponentScoreUpdate", data.score);
   });
+});
+
+// ==========================================
+// 🔥 TAMBAHAN: ENDPOINT LOGIN GURU
+// ==========================================
+app.post("/api/login-guru", (req, res) => {
+  const { kode } = req.body;
+  
+  // Ambil password dari .env (Pastikan di Railway ada variable GURU_PASSWORD)
+  // Jika tidak ada di env, default-nya GURU2025
+  const passwordBenar = process.env.GURU_PASSWORD || "GURU2025"; 
+
+  if (kode === passwordBenar) {
+    return res.json({ success: true, role: "guru" });
+  } else {
+    return res.status(401).json({ success: false, message: "Kode Salah" });
+  }
 });
 
 // ==========================================
