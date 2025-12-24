@@ -347,44 +347,77 @@ const PROMPT_STRATEGIES = {
     Output JSON Object MURNI (Tanpa Markdown): {"sequence":[1,3,5,2,4]}`;
   },
 
-  // 9. AI TUTOR (Logika Prompt Spesifik Anda)
+  // 9. AI TUTOR (VERSI FINAL: FIX LAYOUT & LOGIKA)
   tutor: (soal, jawabUser, jawabBenar, kategori) => {
-    // A. Prompt Khusus Tajwid
+    // --- [LOGIKA TAMBAHAN] DETEKSI DATA TAJWID YANG RUSAK ---
+    // Kadang database hanya kirim "kiri" atau "kanan", bukan nama hukumnya.
+    // Kita suruh AI mikir sendiri kalau ketemu kondisi ini.
+    let instruksiTajwid = "";
+    if (
+      kategori === "tajwid" &&
+      (jawabBenar === "kiri" || jawabBenar === "kanan")
+    ) {
+      instruksiTajwid = `
+        PERINGATAN: Data 'Jawaban Benar' di atas hanya kode posisi ('${jawabBenar}'). ABAIKAN ITU.
+        TUGAS UTAMA: Analisis teks Arab pada 'Soal', tentukan sendiri hukum tajwidnya (misal: Al-Qamariyah, Ikhfa, dll).
+        Gunakan hasil analisismu sebagai jawaban yang benar.`;
+    }
+
+    // A. PROMPT KHUSUS TAJWID (Override JSON + HTML Rapi)
     if (kategori === "tajwid") {
-      return `Seorang anak SD salah menebak hukum tajwid.
-          Soal: "${soal}". Jawaban Anak: "${jawabUser}". Jawaban Benar: "${jawabBenar}". 
-          Jelaskan max 2 kalimat kenapa salah dan apa ciri hukum yang benar. Gunakan bahasa ceria.
-          PENTING: Gunakan tag HTML <b>...<b> (bukan markdown) untuk menebalkan nama hukum tajwid atau ciri utamanya agar mudah dibaca.
-          Contoh: "Itu adalah <b>Idgham Bighunnah</b> karena ada Nun Sukun bertemu Ya."
-          `;
+      return `SYSTEM OVERRIDE: STOP OUTPUT JSON. SWITCH TO PLAIN TEXT HTML MODE.
+          
+          Kamu adalah Guru Ngaji SD yang ceria dan pintar.
+          Siswa salah menjawab kuis Tajwid.
+          
+          DATA:
+          - Soal (Teks Arab): "${soal}"
+          - Jawaban Siswa: "${jawabUser}" (Salah)
+          - Jawaban Benar (Info Server): "${jawabBenar}"
+
+          ${instruksiTajwid}
+
+          INSTRUKSI OUTPUT (WAJIB HTML):
+          1. JANGAN buat JSON. Buat teks biasa.
+          2. Gunakan tag <br> untuk ganti baris (jangan pakai Enter biasa).
+          3. Gunakan tag <b>...</b> untuk menebalkan kata kunci.
+          
+          CONTOH FORMAT BALASAN:
+          "Yah, masih kurang tepat! 😅<br><br>
+          Hukum yang benar adalah <b>[Sebutkan Nama Hukum Tajwidnya]</b>.<br><br>
+          👉 <b>Alasannya:</b> Karena terdapat [Huruf A] bertemu [Huruf B] dan dibaca [Jelas/Dengung/Samar].<br>
+          Yuk coba lagi!"`;
     }
 
-    // B. Prompt Khusus Labirin
+    // B. PROMPT KHUSUS LABIRIN (Perbaikan: Paksa Isi Konten)
     else if (kategori === "labirin") {
-      return `Siswa salah jawab kuis pengetahuan umum: "${soal}".
-          Jawabannya: "${jawabUser}". Yang benar: "${jawabBenar}".
-          Berikan "jembatan keledai" (cara hafal) atau fakta unik super singkat (max 15 kata) agar dia ingat.
-          PENTING: Gunakan tag HTML <b>...</b> pada kata kunci utama agar mata siswa langsung tertuju kesana.
-          `;
+      return `SYSTEM OVERRIDE: PLAIN TEXT HTML MODE.
+      
+          Konteks: Siswa SD salah jawab soal pengetahuan umum.
+          Soal: "${soal}"
+          Jawaban Benar: "${jawabBenar}"
+          
+          TUGASMU:
+          1. Cari satu fakta unik atau "jembatan keledai" (cara hafal) singkat tentang "${jawabBenar}".
+          2. Masukkan fakta itu ke dalam format HTML di bawah ini.
+          
+          FORMAT OUTPUT (Ganti tulisan [ISI_DISINI] dengan fakta yang kamu temukan):
+          "Ups, belum tepat! 🤔<br><br>
+          Jawabannya adalah <b>${jawabBenar}</b>.<br><br>
+          💡 <b>Ingat ya:</b> [ISI_DISINI]"`;
     }
 
-    // C. Prompt Umum (Nabi, Ayat, dll) - Force Bold Tag
+    // C. PROMPT UMUM (Nabi, Ayat, Math, dll)
     else {
-      return `Kamu adalah Guru Muslim yang bijak dan seru. 
-          Siswa sedang bermain game edukasi Islam (${kategori}) tapi salah menjawab.
+      return `SYSTEM OVERRIDE: STOP OUTPUT JSON. SWITCH TO PLAIN TEXT HTML MODE.
+      
+          Kamu Guru SD yang ramah. Siswa salah jawab game ${kategori}.
+          Soal: "${soal}" | Jawaban Benar: "${jawabBenar}".
           
-          Data:
-          - Soal: "${soal}"
-          - Jawaban Siswa (Salah): "${jawabUser}"
-          - Jawaban Benar: "${jawabBenar}"
-          
-          Instruksi:
-          1. Berikan semangat singkat ("Jangan sedih...", "Ayo coba lagi...").
-          2. Jelaskan kenapa jawaban benar itu tepat (Maksimal 2 kalimat).
-          3. 🔥  WAJIB: Gunakan tag HTML <b>...</b> untuk menebalkan kata kunci jawaban benar.
-          
-          Contoh Output:
-          "Jangan menyerah! Jawaban yang tepat adalah <b>Nabi Yunus</b>, karena beliau yang ditelan ikan paus."`;
+          Berikan respon format HTML rapi (TANPA JSON):
+          "Tetap semangat! 💪<br><br>
+          Jawaban yang tepat itu <b>${jawabBenar}</b>.<br>
+          [Jelaskan alasannya dalam 1 kalimat pendek yang mudah dimengerti anak SD]."`;
     }
   },
 
@@ -799,10 +832,10 @@ io.on("connection", (socket) => {
 // ==========================================
 app.post("/api/login-guru", (req, res) => {
   const { kode } = req.body;
-  
+
   // Ambil password dari .env (Pastikan di Railway ada variable GURU_PASSWORD)
   // Jika tidak ada di env, default-nya GURU2025
-  const passwordBenar = process.env.GURU_PASSWORD || "GURU2025"; 
+  const passwordBenar = process.env.GURU_PASSWORD || "GURU2025";
 
   if (kode === passwordBenar) {
     return res.json({ success: true, role: "guru" });
@@ -814,11 +847,29 @@ app.post("/api/login-guru", (req, res) => {
 // ==========================================
 // 6. SERVER START
 // ==========================================
+
+// A. STATIC FILES (Cache Diizinkan)
+// Ini ditaruh PALING ATAS di blok ini.
+// Jika browser minta gambar/mp3, server langsung kasih & izinkan simpan di memory HP (Cache)
+app.use(
+  express.static(path.join(__dirname, "public"), {
+    maxAge: "1d", // Simpan di HP selama 1 hari (agar hemat kuota & loading cepat)
+    etag: false, // Matikan validasi ribet, percaya saja pada cache waktu
+  })
+);
+
+// B. API & DATA DINAMIS (Cache Dilarang)
+// Jika request BUKAN gambar/file statis (artinya request data skor/login),
+// kode akan lanjut ke sini dan dipaksa untuk TIDAK MENYIMPAN data (agar skor selalu update)
 app.use((req, res, next) => {
-  res.set("Cache-Control", "no-store");
+  res.set(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
+  res.set("Pragma", "no-cache");
+  res.set("Expires", "0");
   next();
 });
-app.use(express.static(path.join(__dirname, "public")));
 
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, () =>
