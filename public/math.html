@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Math Battle SD</title>
+
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self' https: http: data: blob: 'unsafe-inline' 'unsafe-eval';
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.gstatic.com https://cdnjs.cloudflare.com;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' data: https://api.dicebear.com https://cdn-icons-png.flaticon.com;
+        connect-src * 'unsafe-inline';
+    "
+    />
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="css/style.css?v=final" />
+    <link rel="stylesheet" href="css/math.css?v=final" />
+  </head>
+  <body>
+    <a href="/" class="btn-back">⬅ MENU</a>
+
+    <div class="container">
+      <div id="login-screen">
+        <h1>MATH BATTLE</h1>
+        <p class="login-subtitle">Masuk ke arena pertempuran!</p>
+
+        <input
+          type="text"
+          id="username"
+          placeholder="Nama Petarung"
+          readonly
+          class="input-readonly"
+        />
+        <input
+          type="text"
+          id="room-code"
+          placeholder="Kode Arena (Kosongkan utk Latihan)"
+        />
+
+        <div class="difficulty-selector">
+          <button class="btn-difficulty active" data-level="mudah">
+            Mudah
+          </button>
+          <button class="btn-difficulty" data-level="sedang">Sedang</button>
+          <button class="btn-difficulty" data-level="sulit">Sulit</button>
+        </div>
+
+        <button onclick="startGame()">MULAI PERTEMPURAN 🚀</button>
+      </div>
+
+      <div id="game-screen" class="hidden">
+        <div class="score-box">
+          <div class="score-item">
+            KAMU<span id="score" class="score-val score-green">0</span>
+          </div>
+          <div class="score-item">
+            LAWAN<span id="opponent-score" class="score-val score-red">0</span>
+          </div>
+        </div>
+
+        <div id="status-display" class="status-text"></div>
+
+        <div class="progress-container">
+          <div id="progress-bar" class="progress-fill"></div>
+        </div>
+
+        <p class="target-text">
+          Target: <span id="q-current">0</span> / <span id="q-total">∞</span>
+        </p>
+
+        <h2 id="question-display">Loading...</h2>
+
+        <input type="number" id="answer-input" placeholder="Ketik Jawaban..." />
+        <button onclick="checkAnswer()">TEMBAK JAWABAN 🔥</button>
+
+        <hr class="separator" />
+
+        <button onclick="downloadSertifikat()" class="btn-finish">
+          🏆 SELESAI & SIMPAN SKOR
+        </button>
+      </div>
+    </div>
+
+    <div id="game-over-screen">
+      <div class="go-content">
+        <h1 class="go-title">GAME OVER</h1>
+        <p class="go-label">Skor Akhir Kamu</p>
+
+        <div class="go-score">
+          <span id="final-score">0</span>
+        </div>
+
+        <button onclick="location.reload()" class="btn-restart">
+          MAIN LAGI
+        </button>
+
+        <button onclick="window.location.href='/'" class="btn-home">
+          KEMBALI KE MENU
+        </button>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="js/audio.js?v=final"></script>
+    <script src="js/global.js"></script>
+    <script src="js/game.js?v=final"></script>
+  </body>
+</html>

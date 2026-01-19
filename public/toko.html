@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Toko Avatar - Videa Class</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="css/toko.css?v=final" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header-shop">
+        <a href="index.html" class="btn-back">⬅ Kembali</a>
+        <div class="coin-balance">
+          💰 <span id="user-coins">Checking...</span> Videa Coins
+        </div>
+      </div>
+
+      <h1>TOKO BINGKAI AVATAR</h1>
+
+      <p class="shop-desc">Tukarkan hasil belajarmu dengan gaya keren!</p>
+
+      <div class="shop-grid" id="shop-container">
+        <p class="loading-msg">Menghubungkan ke Server...</p>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="js/audio.js"></script>
+
+    <script src="js/toko.js"></script>
+  </body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Papan Peringkat Juara (SQL)</title>
+
+    <link rel="stylesheet" href="css/leaderboard.css?v=final" />
+  </head>
+  <body>
+    <div class="leaderboard-container">
+      <a href="/" class="back-btn">⬅ Kembali ke Menu</a>
+      <h1>🏆 TOP GLOBAL RANKING (SQL) 🏆</h1>
+
+      <table class="rank-table">
+        <thead>
+          <tr>
+            <th width="10%">#</th>
+            <th>Pemain</th>
+            <th class="th-right">Total Skor</th>
+          </tr>
+        </thead>
+        <tbody id="rank-list">
+          <tr>
+            <td colspan="3" class="empty-msg">Menghubungi Server... 🔄</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+      const socket = io(); // Terhubung ke Server Node.js
+      const rankList = document.getElementById("rank-list");
+
+      // 1. Minta Data ke Server (Bukan ke Firebase lagi)
+      //console.log("📡 Meminta data leaderboard ke Server...");
+      socket.emit("mintaLeaderboard");
+
+      // 2. Terima Data dari Server (Data SQL)
+      socket.on("updateLeaderboard", (players) => {
+        //console.log("✅ Data diterima:", players);
+        rankList.innerHTML = "";
+
+        if (!players || players.length === 0) {
+          rankList.innerHTML =
+            "<tr><td colspan='3' class='empty-msg'>Belum ada data di SQL.</td></tr>";
+          return;
+        }
+
+        // 3. Tampilkan Data
+        players.forEach((player, index) => {
+          const rank = index + 1;
+          let rankClass = "rank-cell";
+          let icon = "#" + rank;
+
+          // Logika Juara 1, 2, 3
+          if (rank === 1) {
+            rankClass += " rank-1";
+            icon = "🥇";
+          } else if (rank === 2) {
+            rankClass += " rank-2";
+            icon = "🥈";
+          } else if (rank === 3) {
+            rankClass += " rank-3";
+            icon = "🥉";
+          }
+
+          // Generate HTML
+          const row = `
+            <tr class="row-highlight">
+                <td class="${rankClass}">${icon}</td>
+                <td>
+                    <div class="player-info">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${
+                          player.nama
+                        }" class="mini-avatar" alt="Avatar">
+                        <span class="player-name">
+                            ${player.nama} 
+                            <small style="color:#aaa; font-size:0.8em;">(Role: ${
+                              player.role || "siswa"
+                            })</small>
+                        </span>
+                    </div>
+                </td>
+                <td class="total-score">
+                    ${(player.skor || player.totalScore || 0).toLocaleString()}
+                    <br><small style="font-size:0.7em; color:#FFD700;">🪙 ${
+                      player.koin
+                    }</small>
+                </td>
+            </tr>
+          `;
+          rankList.innerHTML += row;
+        });
+      });
+    </script>
+  </body>
+</html>

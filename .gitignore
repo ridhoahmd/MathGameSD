@@ -1,0 +1,6 @@
+# Ignore environment variables file
+.env
+
+# Ignore dependencies folder
+node_modules
+/generated/prisma

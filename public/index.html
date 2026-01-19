@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portal Game Videa Class</title>
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="css/style.css?v=final" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  </head>
+  <body>
+    <header class="main-header">
+      <div class="logo-area">
+        <img src="/logo-videa.png" class="logo-img" alt="Logo" />
+        <span class="portal-title">PORTAL GAME EDUKASI VIDEA CLASS</span>
+      </div>
+
+      <div class="header-right">
+        <button
+          class="btn-theme-toggle"
+          onclick="cycleTheme()"
+          title="Ganti Tampilan"
+        >
+          🎨
+        </button>
+        <div class="role-badge" id="role-display">GUEST</div>
+      </div>
+    </header>
+
+    <div class="dashboard-container">
+      <aside class="sidebar">
+        <div class="avatar-container" id="avatar-box">
+          <img
+            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guest"
+            id="user-avatar"
+            class="avatar"
+            alt="Avatar"
+          />
+        </div>
+
+        <div class="profile-name" id="display-name">Silakan Login</div>
+        <div class="font-small text-gray mb-20" id="user-email">...</div>
+
+        <div class="stats-box">
+          <div class="font-small text-ccc">TOTAL SKOR</div>
+          <span class="stat-value" id="total-score">-</span>
+        </div>
+
+        <div class="menu-section">
+          <div class="font-sizeable text-bold text-white mb-10">MENU SISWA</div>
+
+          <a href="toko.html" class="link-wrapper">
+            <button class="btn-menu btn-shop">🛍️ TOKO KAMU</button>
+          </a>
+
+          <a href="leaderboard.html?v=sql" class="link-wrapper">
+            <button class="btn-menu btn-common">🏆 PERINGKAT</button>
+          </a>
+
+          <button class="btn-menu btn-common" onclick="toggleChat()">
+            💬 RUANG CHAT<span id="chat-notif">●</span>
+          </button>
+        </div>
+
+        <div class="menu-section hidden" id="guru-panel">
+          <div class="font-sizeable text-bold text-green mb-10">MENU GURU</div>
+          <a href="guru.html" class="link-wrapper">
+            <button class="btn-menu btn-guru">
+              📋 Panel Guru (Nilai & Role)
+            </button>
+          </a>
+        </div>
+
+        <div class="menu-section hidden" id="admin-panel">
+          <div class="font-sizeable text-bold text-red mb-10">ADMIN PANEL</div>
+
+          <a href="guru.html" class="link-wrapper">
+            <button class="btn-menu btn-admin">👥 Kelola Semua User</button>
+          </a>
+
+          <button class="btn-menu btn-admin" onclick="adminReset()">
+            ⚠️ Reset Sistem
+          </button>
+        </div>
+
+        <div class="sidebar-footer">
+          <div id="guru-input-area" class="hidden">
+            <input
+              type="password"
+              id="input-kode-guru"
+              placeholder="Kode Rahasia Guru"
+              class="input-guru"
+            />
+          </div>
+          <button onclick="loginGoogle()" class="btn-google" id="btn-login">
+            G Masuk Google
+          </button>
+          <p
+            id="text-guru"
+            class="font-tiny text-666 cursor-pointer underline mt-10"
+            onclick="toggleInputGuru()"
+          >
+            Apakah Anda Guru?
+          </p>
+          <button onclick="logout()" class="btn-logout hidden" id="btn-logout">
+            Keluar
+          </button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <h2 class="misi-title">PILIH GAME</h2>
+        <div class="grid-games">
+          <a href="#" onclick="masukGame('math.html')" class="game-card">
+            <div class="game-icon">🚀</div>
+            <div class="game-title">TARUNG MATEMATIKA</div>
+            <div class="game-desc">Duel matematika cepat antar galaksi!</div>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
+          <a href="#" onclick="masukGame('zuma.html')" class="game-card">
+            <div class="game-icon">☄️</div>
+            <div class="game-title">TEMBAK ANGKA</div>
+            <div class="game-desc">Hancurkan bola angka sebelum meledak!</div>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
+          <a href="#" onclick="masukGame('memory.html')" class="game-card">
+            <div class="game-icon">🧩</div>
+            <div class="game-title">LAB MEMORI</div>
+            <div class="game-desc">
+              Aktifkan sel otakmu dengan kartu memori.
+            </div>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
+
+          <a href="#" onclick="masukGame('piano.html')" class="game-card">
+            <div class="game-icon">🎹</div>
+            <div class="game-title">MATEMATIKA PIANO</div>
+            <div class="game-desc">Tekan tuts piano sesuai hasil hitungan.</div>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
+
+          <a href="#" onclick="masukGame('kasir.html')" class="game-card">
+            <div class="game-icon">🏪</div>
+            <div class="game-title">KASIR CILIK</div>
+            <div class="game-desc">Simulasi belanja & hitung kembalian.</div>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
+
+          <a href="#" onclick="masukGame('labirin.html')" class="game-card">
+            <div class="game-icon">🌀</div>
+            <div class="game-title">LABIRIN ILMU</div>
+            <div class="game-desc">Cari jalan keluar & jawab rintangan!</div>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
+
+          <a href="#" onclick="masukGame('nabi.html')" class="game-card">
+            <div class="game-icon">🕌</div>
+            <div class="game-title">JEJAK NABI</div>
+            <div class="game-desc">
+              Petualangan menelusuri kisah 25 Nabi & Rasul.
+            </div>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
+
+          <a href="#" onclick="masukGame('ayat.html')" class="game-card">
+            <div class="game-icon">📖</div>
+            <div class="game-title">SAMBUNG AYAT</div>
+            <div class="game-desc">
+              Lanjutkan potongan ayat Juz Amma (Juz 30).
+            </div>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
+
+          <a href="#" onclick="masukGame('tajwid.html')" class="game-card">
+            <div class="game-icon">⚖️</div>
+            <div class="game-title">PILAH HUKUM</div>
+            <div class="game-desc">Geser kata sesuai hukum tajwidnya!</div>
+            <div class="btn-play btn-start-math">MULAI</div>
+          </a>
+        </div>
+      </main>
+    </div>
+
+    <div id="chat-container">
+      <div class="chat-header" onclick="minimizeChat()">
+        <span>💬 Global Chat</span>
+        <div class="chat-controls">
+          <button
+            onclick="
+              event.stopPropagation();
+              minimizeChat();
+            "
+          >
+            _
+          </button>
+          <button
+            onclick="
+              event.stopPropagation();
+              toggleChat();
+            "
+          >
+            ✖
+          </button>
+        </div>
+      </div>
+      <div class="chat-messages" id="chat-box">
+        <div class="chat-welcome">Selamat datang di Chat Global!</div>
+      </div>
+      <div class="chat-input-area">
+        <input
+          type="text"
+          id="chat-input"
+          class="chat-input"
+          placeholder="Tulis pesan..."
+          onkeypress="handleEnter(event)"
+        />
+        <button class="chat-send" onclick="kirimPesan()">➤</button>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/dashboard.js"></script>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((reg) => console.log("SW Terdaftar 📡"))
+            .catch((err) => console.log("SW Gagal:", err));
+        });
+      }
+    </script>
+  </body>
+</html>
