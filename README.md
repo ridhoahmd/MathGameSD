@@ -57,17 +57,9 @@ Terintegrasi dengan **Firebase Realtime Database** untuk menyimpan skor, koin, d
 * **Frontend:** HTML5, CSS3 (Modern Neon Style), Vanilla JavaScript.
 * **Backend:** Node.js, Express.js.
 * **Komunikasi:** Socket.IO (WebSocket).
-* **Database:** Firebase Realtime Database.
+* **Database:** Firebase Realtime Database, postgre .
 * **AI Engine:** OpenAI API / Zhipu AI (GLM-4).
 * **Keamanan:** Helmet.js (CSP), Express Rate Limit.
 
 ---
 
-## ⚙️ Cara Instalasi & Menjalankan
-
-Ikuti langkah ini untuk menjalankan proyek di komputer lokal:
-
-### 1. Clone Repository
-```bash
-git clone [https://github.com/username-anda/mathgamesd.git](https://github.com/username-anda/mathgamesd.git)
-cd mathgamesd

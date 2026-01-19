@@ -275,7 +275,4 @@ function cycleTheme() {
   // Terapkan ke Layar
   body.className = ""; // Reset
   if (nextTheme !== "default") body.classList.add("theme-" + nextTheme);
-
-  // Opsional: Jika mau simpan pilihan tema sementara di sesi ini
-  // socket.emit("pakaiItem", ...) <-- Ini logika Toko, biarkan di toko.js saja
 }
