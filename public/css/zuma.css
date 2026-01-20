@@ -8,7 +8,7 @@ body {
   background: radial-gradient(circle at top right, #2b1055, #7597de);
   background-color: #1e1e2e;
   width: 100vw;
-  height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   display: flex;
   justify-content: center;

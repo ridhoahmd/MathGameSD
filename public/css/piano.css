@@ -19,7 +19,7 @@ body {
   background: radial-gradient(circle at top right, #2b1055, #7597de);
   background-color: #1e1e2e;
   color: white;
-  height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;

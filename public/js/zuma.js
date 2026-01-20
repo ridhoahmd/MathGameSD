@@ -474,6 +474,10 @@ function generatePath(pola) {
 }
 
 function endGame() {
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+  }
   gameActive = false;
   if (animationId) cancelAnimationFrame(animationId);
   if (gameOverScreen) gameOverScreen.style.display = "flex";
@@ -502,7 +506,7 @@ window.handleInput = function (e) {
   player.angle = Math.atan2(y - player.y, x - player.x);
 
   bullets.push(
-    new Bullet(player.x, player.y, player.angle, player.currentAmmo)
+    new Bullet(player.x, player.y, player.angle, player.currentAmmo),
   );
   try {
     sfxTembak.currentTime = 0;
@@ -517,7 +521,7 @@ canvas.addEventListener(
     e.preventDefault();
     window.handleInput(e);
   },
-  { passive: false }
+  { passive: false },
 );
 canvas.addEventListener("mousemove", (e) => {
   if (!gameActive) return;

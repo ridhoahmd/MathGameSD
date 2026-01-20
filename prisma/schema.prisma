@@ -1,5 +1,3 @@
-// FILE: prisma/schema.prisma (FINAL VERSION)
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,74 +7,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// === 1. TABEL USER (DATA SISWA) ===
 model User {
   id            Int      @id @default(autoincrement())
-  
-  // [PENTING] KTP Digital dari Firebase (Google Login)
-  // Kita jadikan @unique agar 1 akun Google = 1 User di SQL
-  firebaseUid   String?  @unique 
-  
+  firebaseUid   String?  @unique
   username      String   @unique
-  role          String   @default("siswa") // siswa, guru, admin
-
-  // Ekonomi & Gamification
+  role          String   @default("siswa")
   coins         Int      @default(0)
   totalScore    Int      @default(0)
   photoURL      String?
-
-  // Inventory & Customization (Disimpan sebagai JSON Array)
-  // Contoh isi: ["default", "frame_gold", "theme_forest"]
-  inventory     Json     @default("[\"default\"]") 
-  
+  inventory     Json     @default("[\"default\"]")
   activeTheme   String   @default("default")
   equippedFrame String   @default("default")
-  
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-   
-  // Relasi ke tabel lain
   scores        Score[]
 }
 
-// === 2. TABEL GAME (DAFTAR PERMAINAN) ===
 model Game {
-  id          Int      @id @default(autoincrement())
-  slug        String   @unique // ID panggil (contoh: 'math', 'zuma', 'nabi')
+  id          Int     @id @default(autoincrement())
+  slug        String  @unique
   title       String
   description String?
-  
   scores      Score[]
 }
 
-// === 3. TABEL SCORE (RIWAYAT NILAI DETIL) ===
 model Score {
-  id        Int      @id @default(autoincrement())
-  score     Int
-  playedAt  DateTime @default(now())
-  
-  // Siapa yang main?
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  
-  // Main game apa?
-  gameId    Int
-  game      Game     @relation(fields: [gameId], references: [id])
+  id       Int      @id @default(autoincrement())
+  score    Int
+  playedAt DateTime @default(now())
+  userId   Int
+  gameId   Int
+  game     Game     @relation(fields: [gameId], references: [id])
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// === 4. TABEL BANK SOAL (PENGGANTI FIREBASE) ===
 model GameQuestion {
   id        Int      @id @default(autoincrement())
-  
-  category  String   // math, nabi, tajwid, zuma, dll
-  level     String   // mudah, sedang, sulit
-  
-  // Isi soal disimpan fleksibel dalam JSON
-  content   Json     
-  
+  category  String
+  level     String
+  content   Json
   createdAt DateTime @default(now())
 
-  // ✅ TAMBAHAN BARU: INDEXING
-  // Ini membuat query "WHERE category=... AND level=..." jadi instan!
   @@index([category, level])
 }

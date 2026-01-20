@@ -5,7 +5,7 @@ body {
   font-family: "Poppins", sans-serif;
   background: radial-gradient(circle at center, #1e3c72, #2a5298);
   color: white;
-  height: 100vh;
+  min-height: 100dvh;
   width: 100vw;
   overflow: hidden; /* Kunci scroll */
   display: flex;

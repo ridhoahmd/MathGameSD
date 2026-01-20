@@ -20,7 +20,7 @@ body {
   /* Mengunci layar agar tidak bisa di-scroll */
   overflow: hidden;
   width: 100vw;
-  height: 100vh;
+  min-height: 100dvh;
 
   /* Flexbox untuk menengahkan Canvas Game di tengah layar */
   display: flex;
