@@ -83,9 +83,9 @@ socket.on("soalDariAI", (response) => {
 
     // 🔥 TAMBAHAN PENTING:
     ui.startScreen.classList.remove("active");
-    ui.startScreen.classList.add("hidden"); // Sembunyikan start
+    ui.startScreen.classList.add("hidden"); 
 
-    ui.gameScreen.classList.remove("hidden"); // Buang class hidden!
+    ui.gameScreen.classList.remove("hidden"); 
     ui.gameScreen.classList.add("active");
 
     // Kembalikan tombol start ke kondisi semula
@@ -161,8 +161,8 @@ function checkAnswer(isTimeOut = false) {
   if (!isTimeOut && userAnswer === correctAnswer) {
     // JIKA BENAR
     ui.feedback.innerText = "LUNAS! TRANSAKSI BERHASIL.";
-    ui.feedback.classList.remove("wrong"); // Hapus class merah
-    ui.feedback.classList.add("correct"); // Tambah class hijau
+    ui.feedback.classList.remove("wrong");
+    ui.feedback.classList.add("correct"); 
     ui.screenText.innerText = "SUKSES";
 
     try {

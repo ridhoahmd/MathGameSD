@@ -1,5 +1,3 @@
-// public/js/toko.js - FINAL FIXED VERSION
-
 const socket = io();
 const username = localStorage.getItem("playerName");
 
@@ -15,12 +13,11 @@ const shopItems = [
 // 1. MINTA DATA SAAT LOAD
 document.addEventListener("DOMContentLoaded", () => {
   if (!username) {
-    // Ganti alert biasa dengan SweetAlert jika library sudah load, atau fallback ke alert
     if (typeof Swal !== "undefined") {
       Swal.fire(
         "Login Diperlukan",
         "Silakan login terlebih dahulu.",
-        "warning"
+        "warning",
       ).then(() => (window.location.href = "index.html"));
     } else {
       alert("Silakan login dulu!");
@@ -150,7 +147,7 @@ socket.on("transaksiSukses", (data) => {
     background: "#1e1e2e",
     color: "#fff",
   });
-  // Update inventory otomatis terjadi karena server mengirim updateProfil/Inventory
+
   socket.emit("mintaInventory", username);
 });
 
@@ -177,6 +174,5 @@ socket.on("itemTerpasang", (data) => {
     toast: true,
     position: "top-end",
   });
-  // Refresh data agar tombol berubah jadi "SEDANG DIPAKAI"
   socket.emit("mintaInventory", username);
 });

@@ -82,12 +82,10 @@ self.addEventListener('activate', event => {
 
 // 3. FETCH: Strategi "Stale-While-Revalidate" (Pakai Cache dulu, lalu update di background)
 self.addEventListener('fetch', event => {
-    // [BARU] ABAIKAN REQUEST DARI CHROME EXTENSION
     if (!event.request.url.startsWith('http')) {
-        return; // Jangan cache file extension, data:uri, dll
+        return;
     }
 
-    // Abaikan request ke API/Socket/Admin agar data selalu fresh
     if (event.request.url.includes('/api/') || 
         event.request.url.includes('socket.io') ||
         event.request.url.includes('firebase')) {
@@ -96,9 +94,7 @@ self.addEventListener('fetch', event => {
 
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
-            // A. Jika ada di cache, kembalikan segera (Super Cepat)
             const fetchPromise = fetch(event.request).then(networkResponse => {
-                // Update cache dengan versi terbaru dari server
                 if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
                     const responseClone = networkResponse.clone();
                     caches.open(CACHE_NAME).then(cache => {
@@ -107,10 +103,9 @@ self.addEventListener('fetch', event => {
                 }
                 return networkResponse;
             }).catch(() => {
-                // Jika offline total & fetch gagal, tidak apa-apa karena sudah return cachedResponse
             });
 
-            return cachedResponse || fetchPromise; // Fallback ke network jika cache kosong
+            return cachedResponse || fetchPromise; 
         })
     );
 });

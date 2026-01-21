@@ -1,7 +1,4 @@
-// public/js/global.js - CORE SYSTEM
-
 // 1. INISIALISASI SOCKET GLOBAL
-// Kita taruh di 'window' agar bisa diakses oleh semua file game lain
 window.socket = io();
 
 // 2. IDENTITAS PEMAIN GLOBAL

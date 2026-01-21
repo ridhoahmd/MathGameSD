@@ -187,7 +187,6 @@ function getFallbackData(kategori) {
 io.on("connection", (socket) => {
   console.log(`✅ User CONNECTED: ${socket.id}`);
 
-  // [BARU] TAHAP 2: Listener Mulai Game (Untuk Catat Waktu)
   socket.on("mulaiGame", (kategori) => {
     socket.activeGameSession = {
       game: kategori,
@@ -217,7 +216,7 @@ io.on("connection", (socket) => {
       else if (levelRequest.toLowerCase() === "sulit") levelAlt = "Hard";
 
       // 2. QUERY DATABASE (Ambil Banyak Baris Sekaligus)
-      // Kita set limit 200 agar bisa menampung variasi soal yang banyak
+
       let questions = await prisma.gameQuestion.findMany({
         where: {
           AND: [
@@ -233,7 +232,7 @@ io.on("connection", (socket) => {
         take: 200,
       });
 
-      // [FIX ZUMA] Logika Darurat jika level spesifik kosong
+      // Logika Darurat jika level spesifik kosong
       if ((!questions || questions.length === 0) && kategori === "zuma") {
         console.log(
           "⚠️ Level Zuma spesifik nihil, mengambil level acak dari DB...",
@@ -249,7 +248,7 @@ io.on("connection", (socket) => {
         let rawContent = questions.map((q) => q.content);
 
         // --- KELOMPOK 1: CONFIG GAME (Zuma, Labirin, Piano) ---
-        // Ambil 1 Baris Config secara acak
+
         if (["zuma", "labirin", "piano"].includes(kategori)) {
           const randomIndex = Math.floor(Math.random() * rawContent.length);
           finalData = rawContent[randomIndex];
@@ -259,21 +258,16 @@ io.on("connection", (socket) => {
         }
 
         // --- KELOMPOK 2: GAME TAJWID (SMART GROUPING) ---
-        // Gabungkan soal tapi JAGA KONSISTENSI TOPIK (Izhar vs Ikhfa, dll)
         else if (kategori === "tajwid") {
-          // A. Pilih satu baris acak sebagai "Acuan Topik"
           const refRow =
             rawContent[Math.floor(Math.random() * rawContent.length)];
 
-          // B. Cari baris lain yang TOPIKNYA SAMA dengan acuan
-          // (Agar label Kiri/Kanan di layar sesuai dengan semua soal)
           const matchingRows = rawContent.filter(
             (row) =>
               row.kategori_kiri === refRow.kategori_kiri &&
               row.kategori_kanan === refRow.kategori_kanan,
           );
 
-          // C. Gabungkan semua soal dari baris yang cocok
           let poolSoal = [];
           matchingRows.forEach((row) => {
             if (row.data && Array.isArray(row.data)) {
@@ -285,10 +279,8 @@ io.on("connection", (socket) => {
             `📊 Tajwid: Topik terpilih "${refRow.kategori_kiri}", terkumpul ${poolSoal.length} soal.`,
           );
 
-          // D. Ambil 10 Soal Acak
           poolSoal = poolSoal.sort(() => Math.random() - 0.5).slice(0, 10);
 
-          // E. Rakit Ulang Format untuk Client
           finalData = {
             kategori_kiri: refRow.kategori_kiri,
             kategori_kanan: refRow.kategori_kanan,
@@ -393,11 +385,11 @@ io.on("connection", (socket) => {
       await prisma.score.create({
         data: {
           score: skor,
-          // FIX: Gunakan 'connect' untuk Game (WAJIB dipasangkan dengan connect User)
+
           game: {
             connect: { id: gameDb.id },
           },
-          // FIX: Gunakan 'connect' untuk User
+
           user: {
             connect: { id: updatedUser.id },
           },
@@ -461,7 +453,7 @@ io.on("connection", (socket) => {
 
     // Normalisasi input
     if (typeof data === "string") {
-      username = data.trim(); // Hapus spasi tidak sengaja
+      username = data.trim();
     } else if (typeof data === "object") {
       username = data.nama.trim();
       fotoGoogle = data.foto;
@@ -470,11 +462,9 @@ io.on("connection", (socket) => {
     // Validasi sederhana
     if (!username) return;
 
-    // [BARU] Simpan identitas di memori socket server
-    // Ini membuat server "ingat" siapa koneksi ini sebenarnya
     socket.activeUser = {
       username: username,
-      role: "siswa", // Default dulu, nanti diupdate dari DB
+      role: "siswa",
     };
 
     console.log(`👤 Request Profil: ${username}`);
@@ -660,7 +650,7 @@ io.on("connection", (socket) => {
         `👮 Role Update: ${targetUser} sekarang adalah ${newRole} (oleh ${socket.activeUser.username})`,
       );
 
-      io.emit("refreshDataGuru"); // Refresh tabel semua guru
+      io.emit("refreshDataGuru");
     } catch (err) {
       console.error("❌ Gagal update role:", err.message);
       socket.emit("errorUpdate", "Gagal mengupdate database.");
@@ -671,13 +661,11 @@ io.on("connection", (socket) => {
   socket.on("adminResetSystem", async (data) => {
     const passwordInput = typeof data === "object" ? data.password : "";
 
-    // Verifikasi Password Admin (Dari .env)
     if (passwordInput !== process.env.GURU_PASSWORD) {
       console.warn(`⚠️ Percobaan Reset Ilegal dari ${socket.id}`);
       return;
     }
 
-    // Jika password benar, baru eksekusi
     try {
       await prisma.score.deleteMany({});
       await prisma.user.updateMany({

@@ -1,6 +1,3 @@
-// ==========================================
-// KISAH NABI - RESTORE AI TUTOR & SESSION
-// ==========================================
 const screens = {
   start: document.getElementById("start-screen"),
   game: document.getElementById("game-screen"),
@@ -56,9 +53,9 @@ function startGame() {
   }
   if (typeof AudioManager !== "undefined") AudioManager.init();
 
-  // [FIX] REFRESH SESSION
+  // REFRESH SESSION
   if (window.socket) {
-    window.socket.emit("mintaDataProfil", playerName); // <-- PENTING
+    window.socket.emit("mintaDataProfil", playerName);
     window.socket.emit("mulaiGame", "nabi");
     window.socket.emit("mintaSoalAI", {
       kategori: "nabi",
@@ -188,7 +185,7 @@ function checkAnswer(selectedRaw, correctRaw, btnElement) {
         b.style.background = "#2ecc71";
     });
 
-    // [FIX] PANGGIL AI TUTOR JIKA SALAH
+    // PANGGIL AI TUTOR JIKA SALAH
     panggilTutor(
       document.getElementById("question-text").innerText,
       selectedRaw,
@@ -197,7 +194,7 @@ function checkAnswer(selectedRaw, correctRaw, btnElement) {
   }
 }
 
-// [FIX] LOGIKA TUTOR
+// LOGIKA TUTOR
 function panggilTutor(soal, jawabUser, jawabBenar) {
   if (tutorUsageCount >= MAX_TUTOR_USAGE) {
     setTimeout(() => {
@@ -254,7 +251,7 @@ function endGame() {
     AudioManager.playWin();
   } catch (e) {}
   if (window.socket) {
-    window.socket.emit("mintaDataProfil", playerName); // <-- Refresh session lagi
+    window.socket.emit("mintaDataProfil", playerName);
     window.socket.emit("simpanSkor", {
       nama: playerName,
       skor: score,

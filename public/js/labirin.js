@@ -63,7 +63,6 @@ socket.on("penjelasanTutor", (data) => {
 // 🔥 [BARU] FUNGSI TUTUP TUTOR
 window.tutupTutorLabirin = function () {
   if (tutorOverlay) tutorOverlay.style.display = "none";
-  // Opsional: Buka kembali modal kuis agar user bisa jawab ulang
   const modal = document.getElementById("quiz-modal");
   if (modal) modal.style.display = "flex";
 };
@@ -103,7 +102,6 @@ socket.on("soalDariAI", (response) => {
   document.getElementById("loading-screen").style.display = "none";
 
   if (response && response.kategori === "labirin") {
-    // 🔥 VAKSIN DATA
     let info = response.data;
     if (Array.isArray(info)) info = info[0];
 

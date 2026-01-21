@@ -1,6 +1,5 @@
-// public/js/config.js - VERSI FINAL (HANYA AUTH)
 
-// Konfigurasi Firebase (Tetap dipakai untuk Login Google)
+// Konfigurasi Firebase 
 const firebaseConfig = {
   apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
   authDomain: "mathgamesd.firebaseapp.com",

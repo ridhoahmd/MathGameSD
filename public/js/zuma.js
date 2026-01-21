@@ -1,12 +1,9 @@
-// ==========================================
-// ZUMA SPACE - ULTIMATE (PATH FIX + PVP + NO ZERO)
-// ==========================================
 const sfxTembak = new Audio("/explosion.mp3");
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const scoreEl = document.getElementById("score");
 const finalScoreEl = document.getElementById("final-score");
-const opponentScoreEl = document.getElementById("opponent-score"); // Untuk PvP
+const opponentScoreEl = document.getElementById("opponent-score");
 const gameOverScreen = document.getElementById("game-over-screen");
 const targetEl = document.getElementById("target-count");
 
@@ -104,13 +101,12 @@ function requestLevelData() {
 
 // --- 2. HANDLER DATA SERVER ---
 if (window.socket) {
-  // Terima Data Level
   window.socket.on("soalDariAI", (data) => {
     if (data.kategori === "zuma") {
       console.log("✅ Config Zuma Diterima:", data.data);
 
       let info = data.data;
-      // Smart Handling (Array vs Object)
+
       if (Array.isArray(info) && info.length > 0) {
         let index = (currentLevelNumber - 1) % info.length;
         levelData = info[index];
@@ -190,13 +186,12 @@ function update() {
       // Update Target Counter
       if (targetEl) {
         targetEl.innerText = `${spawnedEnemies}/${maxEnemies}`;
-        targetEl.parentElement.classList.remove("target-update"); // Reset anim
-        void targetEl.parentElement.offsetWidth; // Trigger reflow
-        targetEl.parentElement.classList.add("target-update"); // Start anim
+        targetEl.parentElement.classList.remove("target-update");
+        void targetEl.parentElement.offsetWidth;
+        targetEl.parentElement.classList.add("target-update");
       }
 
       lastSpawnTime = now;
-      // Ambil nilai musuh pertama untuk peluru pertama biar adil
       if (enemies.length === 1) player.currentAmmo = enemies[0].value;
     }
   }
@@ -339,7 +334,6 @@ function checkCollisions() {
       if (dist < b.radius + e.radius) {
         b.active = false;
 
-        // JIKA WARNA/ANGKA COCOK
         if (b.value === e.value) {
           e.active = false;
           score += 10;
@@ -356,26 +350,20 @@ function checkCollisions() {
             AudioManager.playCorrect();
           } catch (e) {}
 
-          // --- PERBAIKAN: SMART RELOAD (Agar peluru selalu ada pasangannya) ---
           const activeEnemies = enemies.filter((en) => en.active);
 
           if (activeEnemies.length > 0) {
-            // 80% Peluang dapat peluru yang BISA ditembakkan ke musuh yang ada
             if (Math.random() < 0.8) {
               const randomEnemy =
                 activeEnemies[Math.floor(Math.random() * activeEnemies.length)];
               player.currentAmmo = randomEnemy.value;
             } else {
-              // 20% Random (untuk tantangan)
               player.currentAmmo = Math.floor(Math.random() * 9) + 1;
             }
           } else {
-            // Jika musuh habis, reload random
             player.currentAmmo = Math.floor(Math.random() * 9) + 1;
           }
-          // -------------------------------------------------------------------
         } else {
-          // Jika salah tembak, tidak ada penalti (opsional)
         }
       }
     });

@@ -1,7 +1,3 @@
-// ==========================================
-// AYAT.JS - FINAL (DENGAN FIX TUTOR DISPLAY)
-// ==========================================
-
 // --- 1. SETUP UI ---
 const ui = {
   // Game Elements

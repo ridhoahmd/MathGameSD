@@ -81,7 +81,7 @@ socket.on("soalDariAI", (response) => {
     }).filter(item => item && item.a && item.b);
 
     // Limit Soal sesuai Difficulty
-    let maxPairs = 6; // Mudah (Default)
+    let maxPairs = 6;
     if (selectedDifficulty === "sedang") maxPairs = 8;
     if (selectedDifficulty === "sulit") maxPairs = 12;
 
