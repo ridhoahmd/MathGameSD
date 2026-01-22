@@ -261,6 +261,10 @@ input:focus {
 
 /* 4. GAME OVER SCREEN   */
 
+/* ========================================= */
+/* FIX GAME OVER (Ganti blok #game-over-screen yang lama dengan ini) */
+/* ========================================= */
+
 #game-over-screen {
   position: absolute;
   top: 50%;
@@ -272,17 +276,26 @@ input:focus {
   border: 2px solid #ff4757;
   border-radius: 20px;
   color: white;
-  display: none;
-  z-index: 100;
+  
+  /* --- PERBAIKAN UTAMA --- */
+  display: none;        /* Default sembunyi */
+  flex-direction: column; /* SUSUN KE BAWAH (Agar tidak berantakan ke samping) */
+  align-items: center;    /* Rata tengah */
+  justify-content: center;
+  gap: 15px;              /* Jarak antar elemen agar tidak nempel */
+  /* ----------------------- */
+
+  z-index: 200; /* Naikkan ke 200 agar menutupi HUD/Tombol Keluar */
   pointer-events: auto;
   width: 80%;
   max-width: 300px;
   box-shadow: 0 0 50px rgba(255, 71, 87, 0.4);
 }
 
+/* Pastikan tombol di dalam Game Over lebarnya pas */
 #game-over-screen button {
   width: 100%;
-  margin-top: 15px;
+  margin-top: 0; /* Margin diatur oleh gap di atas */
   padding: 12px;
   cursor: pointer;
   border-radius: 50px;
