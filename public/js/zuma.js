@@ -118,7 +118,13 @@ if (window.socket) {
 
       // UI Switch
       document.getElementById("login-screen").style.display = "none";
-      document.getElementById("game-hud").style.display = "block";
+
+      // [PERBAIKAN] Ubah 'block' jadi 'flex' agar layout tombol rapi & muncul
+      const hud = document.getElementById("game-hud");
+      if (hud) {
+        hud.style.display = "flex";
+        hud.style.zIndex = "9999"; // Paksa tampil paling atas
+      }
 
       // Generate Path
       pathPoints = generatePath(levelData.pola || "spiral");
@@ -485,17 +491,16 @@ function endGame() {
 window.handleInput = function (e) {
   if (!gameActive) return;
   const rect = canvas.getBoundingClientRect();
-  // Support Touch & Mouse
   const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
   const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
 
   const x = clientX - rect.left;
   const y = clientY - rect.top;
   player.angle = Math.atan2(y - player.y, x - player.x);
-
   bullets.push(
     new Bullet(player.x, player.y, player.angle, player.currentAmmo),
   );
+
   try {
     sfxTembak.currentTime = 0;
     sfxTembak.play();
