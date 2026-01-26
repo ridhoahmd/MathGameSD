@@ -20,7 +20,7 @@ module.exports = (socket, io) => {
             role: "siswa",
         };
 
-        console.log(`👤 Request Profil: ${username}`);
+
 
         try {
             if (fotoGoogle) {
@@ -53,9 +53,7 @@ module.exports = (socket, io) => {
             }
 
             socket.activeUser.role = user.role;
-            console.log(
-                `🔒 Session Terdaftar: ${socket.activeUser.username} sebagai ${socket.activeUser.role}`,
-            );
+
 
             const finalFoto =
                 user.photoURL ||
@@ -127,7 +125,7 @@ module.exports = (socket, io) => {
                 },
             });
 
-            console.log(`💾 SAVE SUKSES: ${safeName} (+${skor} pts)`);
+
 
             // Notify teachers if needed (Global Emit can be handled via io)
             if (io) io.emit("refreshDataGuru");
@@ -204,9 +202,7 @@ module.exports = (socket, io) => {
                 data: { role: newRole },
             });
 
-            console.log(
-                `👮 Role Update: ${targetUser} sekarang adalah ${newRole} (oleh ${socket.activeUser.username})`,
-            );
+
 
             if (io) io.emit("refreshDataGuru");
         } catch (err) {

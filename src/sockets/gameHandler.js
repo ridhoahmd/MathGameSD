@@ -61,17 +61,14 @@ module.exports = (socket, io) => {
             game: kategori,
             startTime: Date.now(),
         };
-        console.log(
-            `⏱️ Timer Start: ${socket.activeUser ? socket.activeUser.username : "Guest"
-            } main ${kategori}`,
-        );
+
     });
 
     socket.on("mintaSoalAI", async (reqData) => {
         const { kategori, tingkat } = reqData || {};
         const levelRequest = tingkat || "sedang";
 
-        console.log(`📩 REQUEST: ${kategori} (${levelRequest})`);
+
 
         let finalData = [];
 
@@ -100,7 +97,7 @@ module.exports = (socket, io) => {
 
             // Logika Darurat jika level spesifik kosong
             if ((!questions || questions.length === 0) && kategori === "zuma") {
-                console.log("⚠️ Level Zuma spesifik nihil, mengambil level acak dari DB...");
+
                 questions = await prisma.gameQuestion.findMany({
                     where: { category: { equals: "zuma", mode: "insensitive" } },
                     take: 50,
@@ -115,7 +112,7 @@ module.exports = (socket, io) => {
                 if (["zuma", "labirin", "piano"].includes(kategori)) {
                     const randomIndex = Math.floor(Math.random() * rawContent.length);
                     finalData = rawContent[randomIndex];
-                    console.log(`✅ ${kategori}: Mengirim Config Level`);
+
                 }
                 // --- KELOMPOK 2: GAME TAJWID (SMART GROUPING) ---
                 else if (kategori === "tajwid") {
@@ -175,7 +172,7 @@ module.exports = (socket, io) => {
             (Array.isArray(finalData) && finalData.length === 0) ||
             (kategori === "tajwid" && !finalData.data)
         ) {
-            console.log(`⚠️ Menggunakan FALLBACK DATA untuk ${kategori}`);
+
             finalData = getFallbackData(kategori);
             if (kategori === "tajwid" && !finalData.data)
                 finalData = getFallbackData("tajwid");
@@ -194,7 +191,7 @@ module.exports = (socket, io) => {
         if (!cleanSoal || !cleanJawabBenar) return;
 
         try {
-            console.log(`👨‍🏫 Tutor dipanggil: ${gameType}`);
+
             let prompt;
             if (PROMPT_STRATEGIES && PROMPT_STRATEGIES.tutor) {
                 prompt = PROMPT_STRATEGIES.tutor(

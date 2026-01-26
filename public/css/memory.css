@@ -281,3 +281,17 @@ body {
   display: none; /* Sembunyikan layar game saat awal load */
   width: 100%;   /* Pastikan lebar penuh mengikuti container */
 }
+
+@media (max-width: 480px) {
+  .game-container {
+    width: 98%;
+    padding: 10px;
+  }
+  .game-board {
+    gap: 5px;
+    width: 100%;
+  }
+  .card {
+    border-radius: 5px;
+  }
+}

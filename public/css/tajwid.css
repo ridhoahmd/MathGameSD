@@ -14,6 +14,22 @@ body {
   justify-content: center;
 }
 
+@media (max-width: 480px) {
+  .game-wrapper {
+    width: 95%;
+    height: 90vh;
+  }
+  .flashcard {
+    width: 200px;
+    height: 200px;
+    font-size: 2.5rem;
+  }
+  .bucket-icon {
+    font-size: 1.2rem;
+  }
+}
+
+
 /* CONTAINER TENGAH */
 .game-wrapper {
   width: 90%;

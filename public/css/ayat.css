@@ -61,9 +61,21 @@ body {
   border-radius: 20px;
   padding: 25px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   text-align: center;
   position: relative;
   overflow-y: auto;
+}
+
+@media (max-width: 480px) {
+  .game-container {
+    width: 95%;
+    padding: 15px;
+    max-height: 90vh;
+  }
+  .title-islamic {
+    font-size: 1.8rem;
+  }
 }
 
 /* HEADER */

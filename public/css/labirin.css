@@ -89,6 +89,8 @@ canvas {
   border-radius: 10px;
   box-shadow: 0 0 50px rgba(0, 242, 255, 0.15);
   z-index: 10; /* Layer paling bawah */
+  max-width: 95vw;
+  height: auto;
 }
 
 /* --- 3. MODAL QUIZ (RINTANGAN) --- */

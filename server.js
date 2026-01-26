@@ -3,6 +3,7 @@ const express = require("express");
 const http = require("http");
 const path = require("path");
 const helmet = require("helmet");
+const compression = require("compression");
 
 // Modules
 const initSocket = require("./src/sockets/socketManager");
@@ -14,6 +15,7 @@ const app = express();
 const server = http.createServer(app);
 
 // 1. MIDDLEWARES
+app.use(compression());
 app.use(
   helmet({
     contentSecurityPolicy: false,

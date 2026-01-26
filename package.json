@@ -22,6 +22,7 @@
   "type": "commonjs",
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "compression": "^1.8.1",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "express-rate-limit": "^8.2.1",

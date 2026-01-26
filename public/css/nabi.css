@@ -340,9 +340,17 @@ body {
 @media (max-width: 480px) {
   .game-container {
     width: 95%;
+    padding: 15px;
   }
   .btn-start {
     width: 100%;
+  }
+  .options-grid {
+    gap: 8px;
+  }
+  .btn-option {
+    font-size: 0.9rem;
+    padding: 10px;
   }
 }
 

@@ -3,7 +3,6 @@ require("dotenv").config();
 const CURRENT_AI_MODEL = "glm";
 
 async function askAI(promptText) {
-    console.log(`🧠 AI Request (Model: ${CURRENT_AI_MODEL})`);
 
     const apiKey = process.env.ZHIPU_API_KEY;
     if (!apiKey) {

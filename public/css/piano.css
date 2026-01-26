@@ -228,6 +228,26 @@ body {
   transform: scale(1.02);
 }
 
-.btn-secondary:active {
-  transform: scale(0.98);
+
+
+
+@media (max-width: 480px) {
+  .piano-container {
+    width: 98%;
+    padding: 2px;
+  }
+  .key {
+    height: 120px;
+    font-size: 0.8rem;
+  }
+  .btn-level {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    margin: 2px;
+  }
+  .hud {
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
 }

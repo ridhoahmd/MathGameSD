@@ -18,9 +18,7 @@ module.exports = (socket, io) => {
             return socket.emit("transaksiGagal", "Item tidak valid/dijual.");
         }
 
-        console.log(
-            `🛒 ${username} mau beli ${itemId} seharga ${hargaAsli} (Server Price)`,
-        );
+
 
         try {
             const user = await prisma.user.findUnique({
@@ -55,9 +53,7 @@ module.exports = (socket, io) => {
                 },
             });
 
-            console.log(
-                `✅ Transaksi Sukses: ${username} sisa koin ${updatedUser.coins}`,
-            );
+
 
             socket.emit("transaksiSukses", {
                 itemId: itemId,
@@ -82,7 +78,7 @@ module.exports = (socket, io) => {
 
     socket.on("pakaiItem", async (data) => {
         const { username, tipe, itemId } = data;
-        console.log(`👕 ${username} ganti ${tipe} ke ${itemId}`);
+
         try {
             if (tipe === "theme") {
                 await prisma.user.update({

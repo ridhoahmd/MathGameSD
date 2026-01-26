@@ -67,6 +67,29 @@ canvas {
   pointer-events: none; 
 }
 
+@media (max-width: 600px) {
+  #game-hud {
+    flex-wrap: wrap;
+    padding: 10px;
+  }
+  .score-box {
+    font-size: 0.7rem;
+    padding: 5px 10px;
+    margin-bottom: 5px;
+  }
+  .target-box {
+    position: static;
+    transform: none;
+    order: 3;
+    width: 100%;
+    margin-top: 5px;
+  }
+  .btn-exit {
+    padding: 5px 10px;
+    font-size: 0.7rem;
+  }
+}
+
 /* Aktifkan pointer hanya untuk tombol & skor */
 #game-hud > * {
   pointer-events: auto;
