@@ -1,19 +1,24 @@
-/* 1. GLOBAL STYLE */
-body {
-  font-family: "Poppins", sans-serif;
-  margin: 0;
-  padding: 0;
-  background: radial-gradient(circle at top right, #2b1055, #7597de);
-  background-color: #1e1e2e;
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  overflow: auto;
+/* MATH GAME SPECIFIC STYLES */
+
+/* CONTAINER KACA */
+.container {
+  background: var(--bg-overlay);
+  padding: 30px;
+  border-radius: 20px;
+  text-align: center;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: 80px auto 20px;
+  /* Jarak dari atas agar tidak tertutup header jika ada */
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--border-neon);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
-/* 2. TOMBOL KEMBALI */
+/* TOMBOL KEMBALI */
 .btn-back {
   position: fixed;
   top: 20px;
@@ -22,51 +27,28 @@ body {
   padding: 10px 20px;
   background: rgba(255, 255, 255, 0.1);
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border-light);
   border-radius: 30px;
   font-weight: bold;
-  cursor: pointer;
   text-decoration: none;
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
   transition: 0.3s;
 }
+
 .btn-back:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: scale(1.05);
 }
 
-/* 3. CONTAINER KACA */
-.container {
-  background: rgba(30, 30, 46, 0.85);
-  padding: 30px;
-  border-radius: 20px;
-  text-align: center;
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-  margin: 20px auto;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
-  border: 1px solid rgba(0, 242, 255, 0.2);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-}
-
-/* 4. TYPOGRAPHY */
+/* TYPOGRAPHY */
 h1 {
-  font-family: "Orbitron", sans-serif;
-  color: #00f2ff;
-  margin-top: 0;
-  text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+  text-shadow: 0 0 10px var(--shadow-neon);
   font-size: 1.8rem;
 }
 
-/* 5. INPUT FIELD */
+/* INPUT FIELD */
 input {
   padding: 15px;
   width: 100%;
-  box-sizing: border-box;
   border-radius: 10px;
   border: 2px solid #444;
   background: #222;
@@ -74,49 +56,46 @@ input {
   font-size: 1.2rem;
   text-align: center;
   margin-bottom: 15px;
-  outline: none;
   transition: 0.3s;
 }
+
 input:focus {
-  border-color: #00f2ff;
-  box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
-}
-input:disabled {
-  background: #111;
-  color: #555;
-  border-color: #333;
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 10px var(--border-neon);
 }
 
-/* 6. TOMBOL UTAMA */
-button {
+/* TOMBOL UTAMA */
+.btn-action {
   padding: 12px 30px;
   width: 100%;
-  background: linear-gradient(45deg, #00f2ff, #0099ff);
-  border: none;
+  background: var(--grad-btn-blue);
   border-radius: 50px;
   font-weight: bold;
   font-size: 1rem;
-  cursor: pointer;
-  color: #000;
   text-transform: uppercase;
   letter-spacing: 1px;
   transition: 0.3s;
+  color: #000;
   margin-top: 10px;
 }
-button:hover {
+
+.btn-action:hover {
   transform: scale(1.05);
   box-shadow: 0 0 20px rgba(0, 242, 255, 0.6);
 }
 
-/* 7. TAMPILAN SOAL */
+.btn-finish {
+  background: var(--grad-btn-orange);
+  color: white;
+}
+
+/* TAMPILAN SOAL */
 #question-display {
   font-size: clamp(1.2rem, 4vw, 2.5rem);
   font-weight: bold;
   margin: 20px 0;
   line-height: 1.4;
-  color: #fff;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-  word-wrap: break-word;
 }
 
 /* SKOR BOX */
@@ -128,48 +107,23 @@ button:hover {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
 }
-.score-item {
-  font-size: 0.9rem;
-  color: #aaa;
-}
+
 .score-val {
   display: block;
   font-size: 1.5rem;
   font-weight: bold;
   margin-top: 5px;
 }
+
 .score-green {
-  color: #38ef7d;
+  color: var(--neon-green);
 }
+
 .score-red {
-  color: #ff4757;
+  color: var(--neon-red);
 }
 
-.btn-finish {
-  background: linear-gradient(45deg, #ff9800, #ff5722);
-  color: white;
-}
-
-/* UTILS */
-.hidden {
-  display: none !important;
-}
-.block {
-  display: block !important;
-}
-
-.container::-webkit-scrollbar {
-  width: 8px;
-}
-.container::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-}
-.container::-webkit-scrollbar-thumb {
-  background: #444;
-  border-radius: 4px;
-}
-
-/* --- CSS TOMBOL KESULITAN --- */
+/* TOMBOL KESULITAN */
 .difficulty-selector {
   display: flex;
   justify-content: center;
@@ -177,83 +131,60 @@ button:hover {
   margin: 15px 0;
   flex-wrap: wrap;
 }
+
 .btn-difficulty {
   padding: 8px 12px;
   font-size: 0.9rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border-light);
   background: rgba(255, 255, 255, 0.1);
   color: #ccc;
   border-radius: 20px;
-  cursor: pointer;
-  font-family: "Poppins", sans-serif;
   font-weight: 600;
   transition: all 0.3s ease;
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
 }
+
 .btn-difficulty:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: scale(1.05);
 }
+
 .btn-difficulty.active {
   background: rgba(0, 242, 255, 0.3);
-  color: #00f2ff;
-  border-color: #00f2ff;
-  box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+  color: var(--neon-cyan);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 10px var(--shadow-neon);
 }
 
-/* =========================================
-   GANTI BAGIAN PALING BAWAH FILE math.css
-   DENGAN KODE INI:
-   ========================================= */
-
-/* CONTAINER UTAMA (LAYAR HITAM) */
+/* GAME OVER SCREEN */
 #game-over-screen {
-  /* 1. Kunci posisi agar menutupi seluruh layar */
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh; /* Gunakan vh biasa dulu agar aman */
-
-  /* 2. TEKNIK TENGAH (FLEXBOX) - INI KUNCINYA */
-  display: none; /* Default sembunyi */
-  justify-content: center; /* Rata Kiri-Kanan */
-  align-items: center; /* Rata Atas-Bawah */
-
-  /* 3. Tampilan */
-  background: rgba(0, 0, 0, 0.9); /* Latar gelap transparan */
-  z-index: 9999; /* Pastikan di atas segalanya */
-
-  /* Reset padding lama yang bikin posisi salah */
-  padding-top: 0 !important;
-  text-align: left; /* Reset text align */
+  height: 100vh;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
 }
 
-/* KOTAK ISI (BOX) */
+#game-over-screen.active {
+  display: flex !important;
+}
+
 .go-content {
-  background: #1e1e2e;
+  background: var(--bg-dark);
   padding: 40px;
   border-radius: 20px;
-  text-align: center; /* Teks di dalam kotak rata tengah */
-
-  /* Border Neon */
-  border: 2px solid #ff4757;
+  text-align: center;
+  border: 2px solid var(--neon-red);
   box-shadow: 0 0 40px rgba(255, 71, 87, 0.5);
-
-  /* Ukuran Responsif */
   width: 90%;
   max-width: 400px;
-
-  /* Animasi Masuk */
   transform: scale(0.8);
   opacity: 0;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* KELAS AKTIF (Dipanggil Javascript) */
-#game-over-screen.active {
-  display: flex !important; /* Paksa Flex agar centering jalan */
+  transition: all 0.3s ease;
 }
 
 #game-over-screen.active .go-content {
@@ -261,91 +192,30 @@ button:hover {
   opacity: 1;
 }
 
-/* ========================================= */
-/* TAMBAHAN DARI INLINE HTML (Pembersihan)   */
-/* ========================================= */
-
-/* Login Screen Styles */
-.login-subtitle {
-  color: #aaa;
-  margin-bottom: 30px;
-}
-
-.input-readonly {
-  background: #333 !important;
-  color: #ccc !important;
-  cursor: not-allowed;
-}
-
-/* Status Display (Menunggu Lawan, dll) */
-.status-text {
-  color: #00f2ff;
-  margin-bottom: 10px;
-  font-weight: bold;
-}
-
-/* Progress Bar Container */
-.progress-container {
-  background: #444;
-  height: 8px;
-  width: 100%;
-  margin-top: 5px;
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-/* Progress Bar Fill */
-.progress-fill {
-  background: #00f2ff;
-  height: 100%;
-  width: 0%;
-  transition: width 0.3s ease;
-}
-
-/* Target Text (Target: 0/10) */
-.target-text {
-  font-size: 0.8rem;
-  color: #aaa;
-  margin-top: 5px;
-}
-
-/* Separator Line */
-.separator {
-  border: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  margin: 20px 0;
-}
-
-/* Game Over Styles */
 .go-title {
-  color: #ff4757;
-  margin: 0;
+  color: var(--neon-red);
   text-transform: uppercase;
-}
-
-.go-label {
-  color: #aaa;
-  margin: 5px 0 0 0;
+  margin: 0;
 }
 
 .go-score {
   font-size: 3rem;
   font-weight: bold;
-  color: #ffeb3b;
+  color: var(--neon-yellow);
   margin: 20px 0;
-  text-shadow: 0 0 20px rgba(255, 235, 59, 0.3);
 }
 
 .btn-restart {
+  /* btn-action styles duplicated manually below */
+  /* Pseudo-code concept, manually applied below */
   padding: 12px 30px;
   width: 100%;
-  border: none;
   border-radius: 50px;
   font-weight: bold;
   font-size: 1rem;
   cursor: pointer;
   text-transform: uppercase;
-  background: linear-gradient(45deg, #00f2ff, #0099ff);
+  background: var(--grad-btn-blue);
   color: #000;
   margin-bottom: 10px;
   transition: transform 0.2s;
@@ -358,7 +228,6 @@ button:hover {
 .btn-home {
   padding: 12px 30px;
   width: 100%;
-  border: none;
   border-radius: 50px;
   font-weight: bold;
   font-size: 1rem;
@@ -374,34 +243,19 @@ button:hover {
   color: #fff;
 }
 
-/* --- TAMBAHAN VISUAL FEEDBACK --- */
-@keyframes flashGreen {
-  0% {
-    background-color: #4caf50;
-  }
-  100% {
-    background-color: #1e1e2e;
-  }
-}
-@keyframes flashRed {
-  0% {
-    background-color: #f44336;
-  }
-  100% {
-    background-color: #1e1e2e;
-  }
+/* PROGRESS BAR */
+.progress-container {
+  background: #444;
+  height: 8px;
+  width: 100%;
+  margin-top: 5px;
+  border-radius: 5px;
+  overflow: hidden;
 }
 
-.correct-anim {
-  animation: flashGreen 0.5s ease-out;
-}
-.wrong-anim {
-  animation: flashRed 0.5s ease-out;
-}
-
-/* Agar input disable terlihat jelas */
-input:disabled {
-  background-color: #333;
-  color: #888;
-  cursor: not-allowed;
+.progress-fill {
+  background: var(--neon-cyan);
+  height: 100%;
+  width: 0%;
+  transition: width 0.3s ease;
 }

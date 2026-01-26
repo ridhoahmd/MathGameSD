@@ -1,0 +1,108 @@
+/* BASE STYLES & RESET */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-main);
+    margin: 0;
+    padding: 0;
+    background: var(--bg-dark);
+    /* Fallback */
+    background-image: var(--grad-main);
+    color: var(--text-main);
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background 0.5s ease, color 0.5s ease;
+}
+
+h1,
+h2,
+h3 {
+    font-family: var(--font-display);
+    color: var(--neon-cyan);
+    margin-top: 0;
+}
+
+button {
+    font-family: var(--font-main);
+    cursor: pointer;
+    border: none;
+    outline: none;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--neon-cyan);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #00c2cc;
+}
+
+/* UTILITY CLASSES */
+.hidden {
+    display: none !important;
+}
+
+.block {
+    display: block !important;
+}
+
+.flex {
+    display: flex;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.mt-10 {
+    margin-top: 10px;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}
+
+/* ANIMATIONS */
+@keyframes flashGreen {
+    0% {
+        background-color: var(--neon-green);
+    }
+
+    100% {
+        background-color: transparent;
+    }
+}
+
+@keyframes flashRed {
+    0% {
+        background-color: var(--neon-red);
+    }
+
+    100% {
+        background-color: transparent;
+    }
+}
+
+.correct-anim {
+    animation: flashGreen 0.5s ease-out;
+}
+
+.wrong-anim {
+    animation: flashRed 0.5s ease-out;
+}

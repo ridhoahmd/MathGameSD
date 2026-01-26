@@ -1,303 +1,134 @@
-// ==========================================
-// MATH BATTLE - ULTIMATE (DB FIX + PVP + UI)
-// ==========================================
-const questionEl = document.getElementById("question-display");
-const scoreEl = document.getElementById("score");
-const opponentScoreEl = document.getElementById("opponent-score"); // PvP Element
-const statusEl = document.getElementById("status-display"); // PvP Status
-const inputEl = document.getElementById("answer-input");
-const progressBar = document.getElementById("progress-bar");
-const currentQEl = document.getElementById("q-current");
-const totalQEl = document.getElementById("q-total");
-const finalScoreEl = document.getElementById("final-score");
-const gameOverScreen = document.getElementById("game-over-screen");
+import { GameEngine } from "./classes/GameEngine.js";
+import { UI } from "./utils/ui.js";
 
-let score = 0;
-let gameActive = false;
-let playerName = localStorage.getItem("playerName") || "Guest";
-let selectedDifficulty = "mudah";
-let currentQuestionIdx = 0;
-let questionList = [];
-let currentProblem = null;
+// Extends Generic Engine for Math Specific Logic
+class MathGame extends GameEngine {
+  constructor() {
+    super("math");
+    this.questionList = [];
+    this.currentIdx = 0;
+    this.currentProblem = null;
+    this.selectedDifficulty = "sedang";
+  }
 
-// Variabel PvP
-let isPvP = false;
-let myRoom = "";
+  init() {
+    this.bindEvents();
+  }
 
-// 1. SETUP AWAL
-document.addEventListener("DOMContentLoaded", () => {
-  const usernameInput = document.getElementById("username");
-  if (usernameInput) usernameInput.value = playerName;
-
-  // Listener Tombol Difficulty
-  const buttons = document.querySelectorAll(".btn-difficulty");
-  buttons.forEach((button) => {
-    button.addEventListener("click", () => {
-      buttons.forEach((btn) => btn.classList.remove("active"));
-      button.classList.add("active");
-      selectedDifficulty = button.dataset.level;
+  bindEvents() {
+    document.querySelectorAll(".btn-difficulty").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".btn-difficulty").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        this.selectedDifficulty = btn.dataset.level;
+      });
     });
-  });
 
-  // Listener Tombol ENTER (Agar cepat)
-  if (inputEl) {
-    inputEl.addEventListener("keypress", (e) => {
-      if (e.key === "Enter" && gameActive) {
-        checkAnswer();
-      }
-    });
-  }
-});
+    const startBtn = document.querySelector(".btn-start");
+    if (startBtn) {
+      startBtn.addEventListener("click", () => this.requestGame());
+    }
 
-// 2. FUNGSI START GAME (SINGLE PLAYER)
-function startGame() {
-  const nameInput = document.getElementById("username");
-  if (nameInput && nameInput.value.trim() !== "") {
-    playerName = nameInput.value;
-    localStorage.setItem("playerName", playerName);
+    const input = document.getElementById("answer-input");
+    if (input) {
+      input.addEventListener("keypress", (e) => {
+        if (e.key === "Enter" && this.gameActive) this.checkAnswer();
+      });
+    }
   }
 
-  isPvP = false; // Pastikan mode single
+  requestGame() {
+    if (!this.socket) {
+      alert("Socket belum terhubung!");
+      return;
+    }
 
-  // UI Loading
-  const btnStart = document.querySelector(".btn-start");
-  if (btnStart) {
-    btnStart.innerText = "⏳ Memanggil Guru Matematika...";
-    btnStart.disabled = true;
-  }
+    const startBtn = document.querySelector(".btn-start");
+    if (startBtn) {
+      startBtn.innerText = "⏳ Meminta Soal...";
+      startBtn.disabled = true;
+    }
 
-  // Request ke Server
-  if (window.socket) {
-    console.log(`📡 Request Math: ${selectedDifficulty}`);
-    window.socket.emit("mintaDataProfil", playerName);
-    window.socket.emit("mulaiGame", "math");
-    window.socket.emit("mintaSoalAI", {
+    this.socket.emit("mulaiGame", "math");
+    this.socket.emit("mintaSoalAI", {
       kategori: "math",
-      tingkat: selectedDifficulty,
-    });
-  } else {
-    alert("Koneksi Server Terputus!");
-    location.reload();
-  }
-}
-
-// 3. FUNGSI PVP (MULTIPLAYER) - DIKEMBALIKAN
-function masukModePvP(roomCode) {
-  const nameInput = document.getElementById("username");
-  if (!nameInput.value) {
-    alert("Isi nama dulu!");
-    return;
-  }
-
-  playerName = nameInput.value;
-  localStorage.setItem("playerName", playerName);
-
-  isPvP = true;
-  myRoom = roomCode;
-  score = 0;
-
-  // UI Pindah ke Game
-  document.getElementById("login-screen").classList.add("hidden");
-  document.getElementById("game-screen").classList.remove("hidden");
-
-  if (statusEl) statusEl.innerText = "⏳ Menunggu Lawan...";
-
-  // Join Room
-  if (window.socket) {
-    socket.emit("joinMathDuel", {
-      room: myRoom,
-      nama: playerName,
-      tingkat: selectedDifficulty,
+      tingkat: this.selectedDifficulty,
     });
   }
-}
 
-// 4. HANDLER SOCKET (DATA SERVER)
-if (window.socket) {
-  // --- MODE SINGLE PLAYER ---
-  window.socket.on("soalDariAI", (response) => {
-    if (isPvP) return; // Jangan ganggu kalo lagi PvP
+  // Called when socket receives data (We need to wire this up externally or here)
+  onDataReceived(data) {
+    let rawData = data.data || data;
+    if (Array.isArray(rawData)) this.questionList = rawData;
+    else if (rawData.data) this.questionList = rawData.data;
 
-    console.log("✅ Data Math Diterima:", response);
-
-    // Reset UI Tombol
-    const btnStart = document.querySelector(".btn-start");
-    if (btnStart) {
-      btnStart.innerText = "MULAI BATTLE";
-      btnStart.disabled = false;
+    if (!this.questionList.length) {
+      alert("Gagal memuat soal.");
+      return;
     }
 
-    // Parsing Data Cerdas
-    let rawData = response.data;
-    if (!rawData) return;
+    // Hide Login, Show Game
+    UI.showScreen("game-screen");
+    this.startGame();
+    this.currentIdx = 0;
+    UI.updateText("q-total", this.questionList.length);
+    this.showQuestion();
+  }
 
-    if (Array.isArray(rawData)) {
-      questionList = rawData;
-    } else if (rawData.data && Array.isArray(rawData.data)) {
-      questionList = rawData.data;
+  showQuestion() {
+    if (this.currentIdx >= this.questionList.length) {
+      this.endGame();
+      return;
+    }
+
+    this.currentProblem = this.questionList[this.currentIdx];
+    UI.updateText("q-current", this.currentIdx + 1);
+    UI.updateProgressBar("progress-bar", this.currentIdx, this.questionList.length);
+
+    let teks = this.currentProblem.soal || this.currentProblem.question || "Error";
+    if (typeof this.currentProblem === "string") teks = this.currentProblem;
+
+    UI.updateText("question-display", teks);
+
+    const input = document.getElementById("answer-input");
+    input.value = "";
+    input.focus();
+  }
+
+  checkAnswer() {
+    const input = document.getElementById("answer-input");
+    const val = input.value.trim();
+    const correct = String(this.currentProblem.jawaban || this.currentProblem.answer);
+
+    if (val.toLowerCase() === correct.toLowerCase()) {
+      this.addScore(10);
+      document.body.classList.add("correct-anim");
+      setTimeout(() => document.body.classList.remove("correct-anim"), 500);
     } else {
-      console.error("Format data Math salah:", rawData);
-      return;
+      this.playSound("wrong");
+      document.body.classList.add("wrong-anim");
+      setTimeout(() => document.body.classList.remove("wrong-anim"), 500);
+
+      // Visual feedback in placeholder
+      input.value = "";
+      input.placeholder = `Jawab: ${correct}`;
+      setTimeout(() => input.placeholder = "Ketik jawaban...", 1500);
     }
 
-    if (questionList.length === 0) {
-      alert("Soal kosong! Coba lagi.");
-      return;
+    this.currentIdx++;
+    setTimeout(() => this.showQuestion(), 300);
+  }
+}
+
+// SETUP INSTANCE
+const game = new MathGame();
+game.init();
+
+// WIRE SOCKET EVENTS
+if (window.socket) {
+  window.socket.on("soalDariAI", (data) => {
+    if (data.kategori === "math") {
+      game.onDataReceived(data);
     }
-
-    // Mulai Game
-    document.getElementById("login-screen").classList.add("hidden");
-    document.getElementById("game-screen").classList.remove("hidden");
-
-    score = 0;
-    currentQuestionIdx = 0;
-    gameActive = true;
-
-    scoreEl.innerText = score;
-    if (totalQEl) totalQEl.innerText = questionList.length;
-
-    tampilkanSoal();
   });
-
-  // --- MODE PVP ---
-  window.socket.on("startDuel", (data) => {
-    if (!isPvP) return;
-    console.log("⚔️ DUEL DIMULAI!", data);
-
-    if (statusEl) statusEl.innerText = "⚔️ DUEL DIMULAI!";
-    questionList = data.soal; // Soal dari server (sama utk kedua pemain)
-
-    currentQuestionIdx = 0;
-    score = 0;
-    gameActive = true;
-
-    if (totalQEl) totalQEl.innerText = questionList.length;
-    tampilkanSoal();
-  });
-
-  window.socket.on("updateOpponentScore", (skorLawan) => {
-    if (opponentScoreEl) opponentScoreEl.innerText = skorLawan;
-  });
-
-  window.socket.on("duelResult", (hasil) => {
-    gameActive = false;
-    alert(hasil.pesan); // "Kamu Menang!" atau "Kalah!"
-    location.reload();
-  });
-}
-
-// 5. LOGIKA GAMEPLAY
-function tampilkanSoal() {
-  if (currentQuestionIdx >= questionList.length) {
-    endGame();
-    return;
-  }
-
-  currentProblem = questionList[currentQuestionIdx];
-
-  // Update UI Progress
-  if (currentQEl) currentQEl.innerText = currentQuestionIdx + 1;
-
-  const progressPercent = (currentQuestionIdx / questionList.length) * 100;
-  if (progressBar) progressBar.style.width = `${progressPercent}%`;
-
-  // Handle teks soal (support object atau string)
-  let teksSoal = currentProblem.soal || currentProblem.question || "Error";
-  if (typeof currentProblem === "string") teksSoal = currentProblem;
-
-  questionEl.innerText = teksSoal;
-
-  inputEl.value = "";
-  inputEl.focus();
-}
-
-function checkAnswer() {
-  if (!gameActive || !currentProblem) return;
-
-  let jawabanUser = inputEl.value.trim();
-  let jawabanBenar = String(
-    currentProblem.jawaban || currentProblem.answer
-  ).trim();
-
-  if (jawabanUser.toLowerCase() === jawabanBenar.toLowerCase()) {
-    // --- BENAR ---
-    score += 10;
-    scoreEl.innerText = score;
-    try {
-      AudioManager.playCorrect();
-    } catch (e) {}
-
-    // Kirim skor jika PvP
-    if (isPvP && window.socket) {
-      window.socket.emit("updateDuelScore", { room: myRoom, skor: score });
-    }
-
-    // Efek Visual Hijau
-    document.body.classList.add("correct-anim");
-    setTimeout(() => document.body.classList.remove("correct-anim"), 500);
-  } else {
-    // --- SALAH ---
-    try {
-      AudioManager.playWrong();
-    } catch (e) {}
-
-    // Efek Visual Merah
-    document.body.classList.add("wrong-anim");
-    setTimeout(() => document.body.classList.remove("wrong-anim"), 500);
-
-    inputEl.value = "";
-    inputEl.placeholder = `Jawabannya: ${jawabanBenar}`;
-    setTimeout(() => (inputEl.placeholder = "Ketik Jawaban..."), 1500);
-  }
-
-  currentQuestionIdx++;
-  setTimeout(tampilkanSoal, 300);
-}
-
-// 6. GAME OVER & SERTIFIKAT
-function endGame() {
-  gameActive = false;
-  if (progressBar) progressBar.style.width = "100%";
-
-  // Jika PvP, tunggu hasil dari server (duelResult)
-  if (isPvP) {
-    if (statusEl) statusEl.innerText = "Menunggu hasil akhir...";
-    return;
-  }
-
-  // Mode Single Player
-  document.getElementById("game-screen").classList.add("hidden");
-  if (gameOverScreen) {
-    // 1. Set display flex dulu agar elemen ada di DOM
-    gameOverScreen.style.display = "flex";
-
-    // 2. Beri sedikit jeda (10ms) lalu tambahkan class 'active'
-    setTimeout(() => {
-      gameOverScreen.classList.add("active");
-    }, 10);
-  }
-
-  if (finalScoreEl) finalScoreEl.innerText = score;
-  try {
-    AudioManager.playWin();
-  } catch (e) {}
-
-  if (window.socket) {
-    console.log("💾 Simpan Skor Math:", score);
-    window.socket.emit("mintaDataProfil", playerName);
-    window.socket.emit("simpanSkor", {
-      nama: playerName,
-      skor: score,
-      game: "math",
-    });
-  }
-}
-
-// Fitur Download Sertifikat (Dikembalikan)
-function downloadSertifikat() {
-  alert(
-    "Fitur Download Sertifikat akan segera hadir! (Simulasi: 🏆 Sertifikat Tercetak)"
-  );
-  // Di sini nanti bisa tambahkan logika jsPDF atau html2canvas
-  // Untuk saat ini fungsinya memanggil endGame atau alert
 }

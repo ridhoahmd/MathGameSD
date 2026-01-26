@@ -1,0 +1,48 @@
+:root {
+  /* --- COLORS --- */
+  --bg-dark: #1e1e2e;
+  --bg-overlay: rgba(30, 30, 46, 0.85);
+  
+  /* NEON THEME (Default) */
+  --neon-cyan: #00f2ff;
+  --neon-blue: #0099ff;
+  --neon-green: #38ef7d;
+  --neon-pink: #ff00cc;
+  --neon-red: #ff4757;
+  --neon-yellow: #ffeb3b;
+
+  /* TEXT COLORS */
+  --text-main: #e0e0e0;
+  --text-white: #ffffff;
+  --text-muted: #aaaaaa;
+
+  /* BORDERS & SHADOWS */
+  --border-light: rgba(255, 255, 255, 0.1);
+  --border-neon: rgba(0, 242, 255, 0.2);
+  --shadow-neon: 0 0 10px rgba(0, 242, 255, 0.5);
+
+  /* GRADIENTS */
+  --grad-main: radial-gradient(circle at top right, #2b1055, #7597de);
+  --grad-btn-blue: linear-gradient(45deg, #00f2ff, #0099ff);
+  --grad-btn-orange: linear-gradient(45deg, #ff9800, #ff5722);
+  
+  /* FONTS */
+  --font-main: 'Poppins', sans-serif;
+  --font-display: 'Orbitron', sans-serif;
+}
+
+/* THEME: FOREST */
+body.theme-forest {
+  --bg-dark: #0f2027;
+  --grad-main: radial-gradient(circle at top right, #134e5e, #71b280);
+  --neon-cyan: #71b280;
+  --border-neon: #71b280;
+}
+
+/* THEME: OCEAN */
+body.theme-ocean {
+  --bg-dark: #2193b0;
+  --grad-main: radial-gradient(circle at top right, #2193b0, #6dd5ed);
+  --neon-cyan: #e0f7fa;
+  --border-neon: #fff;
+}
