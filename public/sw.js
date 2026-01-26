@@ -9,17 +9,17 @@ const urlsToCache = [
   '/explosion.mp3',
 
   // --- HTML Pages ---
-  '/guru.html',
-  '/kasir.html',
-  '/labirin.html',
-  '/leaderboard.html',
-  '/math.html',
-  '/memory.html',
-  '/nabi.html',
-  '/piano.html',
-  '/tajwid.html',
-  '/toko.html',
-  '/zuma.html',
+  '/html/guru.html',
+  '/html/kasir.html',
+  '/html/labirin.html',
+  '/html/leaderboard.html',
+  '/html/math.html',
+  '/html/memory.html',
+  '/html/nabi.html',
+  '/html/piano.html',
+  '/html/tajwid.html',
+  '/html/toko.html',
+  '/html/zuma.html',
 
   // --- CSS Styles ---
   '/css/style.css',
