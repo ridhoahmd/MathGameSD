@@ -25,12 +25,31 @@ const player = { x: 0, y: 0, angle: 0, currentAmmo: 1, color: "#ff9800" };
 
 // Resizer
 function resizeCanvas() {
-  const width = Math.min(window.innerWidth * 0.95, 800);
-  const height = width * 0.75;
-  canvas.width = width;
-  canvas.height = height;
-  player.x = width / 2;
-  player.y = height * 0.9;
+  // 1. Ambil dimensi layar
+  const winW = window.innerWidth;
+  const winH = window.innerHeight;
+
+  // 2. Tentukan batasan (Max width 800 desktop, tapi di HP full width)
+  let targetW = Math.min(winW, 800);
+  
+  // 3. Hitung tinggi ideal (Ratio 4:3 default)
+  let targetH = targetW * 0.75; 
+
+  // 4. Cek apakah tinggi melebihi layar? (Penting buat HP landscape / pendek)
+  // Kurangi 80px buat space UI (Score bar yang floating)
+  if (targetH > winH * 0.9) {
+      targetH = winH * 0.9;
+      // Recalculate width to maintain aspect ratio somewhat, or just crop?
+      // Better: Keep logic simple. Just fit height.
+      targetW = targetH / 0.75; 
+  }
+
+  canvas.width = targetW;
+  canvas.height = targetH;
+
+  // Update posisi player (selalu di bawah tengah)
+  player.x = targetW / 2;
+  player.y = targetH * 0.9; // 90% dari atas
 }
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
@@ -497,6 +516,14 @@ window.handleInput = function (e) {
   const x = clientX - rect.left;
   const y = clientY - rect.top;
   player.angle = Math.atan2(y - player.y, x - player.x);
+
+  // 🔥 FITUR BARU: Swap Ammo saat klik Player/Meriam
+  const dist = Math.sqrt((x - player.x) ** 2 + (y - player.y) ** 2);
+  if (dist < 60) { // Radius klik meriam agak besar biar gampang kena di HP
+      swapAmmo();
+      return;
+  }
+
   bullets.push(
     new Bullet(player.x, player.y, player.angle, player.currentAmmo),
   );
@@ -506,6 +533,43 @@ window.handleInput = function (e) {
     sfxTembak.play();
   } catch (e) {}
 };
+
+// 🔥 FUNGSI SWAP AMMO CERDAS
+function swapAmmo() {
+  // Animasi visual kecil (opsional, bisa getar atau ganti warna sebentar)
+  player.color = "#fff"; 
+  setTimeout(() => player.color = "#ff9800", 100);
+
+  // Cari musuh yang ada di layar
+  const activeEnemies = enemies.filter((e) => e.active);
+  
+  if (activeEnemies.length > 0) {
+      // 90% Dapat peluru yang berguna (sesuai musuh yang ada)
+      if (Math.random() < 0.9) {
+          const randomEnemy = activeEnemies[Math.floor(Math.random() * activeEnemies.length)];
+          // Pastikan ganti ke angka BEDA jika memungkinkan, biar gak dikira ngebug kalau angkanya sama terus
+          if (activeEnemies.length > 1 && randomEnemy.value === player.currentAmmo) {
+             const otherEnemies = activeEnemies.filter(e => e.value !== player.currentAmmo);
+             if (otherEnemies.length > 0) {
+                 const bestEnemy = otherEnemies[Math.floor(Math.random() * otherEnemies.length)];
+                 player.currentAmmo = bestEnemy.value;
+             } else {
+                 player.currentAmmo = randomEnemy.value; 
+             }
+          } else {
+             player.currentAmmo = randomEnemy.value;
+          }
+      } else {
+          // 10% Random total (biar ada tantangan dikit)
+          player.currentAmmo = Math.floor(Math.random() * 9) + 1;
+      }
+  } else {
+      // Jika musuh kosong, random aja
+  } else {
+      // Jika musuh kosong, random aja
+      player.currentAmmo = Math.floor(Math.random() * 9) + 1;
+  }
+}
 
 canvas.addEventListener("mousedown", window.handleInput);
 canvas.addEventListener(

@@ -69,24 +69,70 @@ canvas {
 
 @media (max-width: 600px) {
   #game-hud {
-    flex-wrap: wrap;
-    padding: 10px;
+    flex-wrap: nowrap; /* Jangan wrap agar tidak makan tempat vertikal */
+    padding: 5px;
+    align-items: flex-start;
+    justify-content: center;
+    pointer-events: none; /* Biar tembus pandang ke canvas */
   }
+
+  /* Make HUD items absolute to free up center space */
   .score-box {
-    font-size: 0.7rem;
-    padding: 5px 10px;
-    margin-bottom: 5px;
+    font-size: 0.65rem;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    position: absolute;
+    top: 10px;
   }
+
+  /* Score Kiri (Kamu) */
+  .score-left {
+    left: 10px;
+  }
+
+  /* Target (Tengah) - SEJAJAR DENGAN SKOR & EXIT */
   .target-box {
-    position: static;
-    transform: none;
-    order: 3;
-    width: 100%;
-    margin-top: 5px;
+    position: absolute;
+    top: 10px; /* Naik ke baris paling atas */
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: auto;
+    width: auto;
+    font-size: 0.65rem; /* Samakan dengan skor */
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    border: 1px solid rgba(255, 215, 0, 0.5); /* Gold transparan */
+    border-radius: 12px;
+    white-space: nowrap;
+    z-index: 200;
   }
+
+  /* Score Kanan (Lawan - Geser agak ke tengah dikit biar gak kena tombol keluar) */
+  .score-right {
+    display: none; /* Hide lawan di mobile jika sempit, atau kecilin */
+  }
+
+  /* Tombol Keluar: Floating Icon di Pojok Kanan Atas */
   .btn-exit {
-    padding: 5px 10px;
-    font-size: 0.7rem;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    z-index: 200;
+  }
+  
+  /* Sembunyikan text "KELUAR" di mobile, sisakan icon X */
+  .btn-exit span {
+    display: none;
   }
 }
 
