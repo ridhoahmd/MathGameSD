@@ -16,6 +16,7 @@ let moves = 0;
 let totalPairs = 0;
 let playerName = localStorage.getItem("playerName") || "Guest";
 let selectedDifficulty = "mudah";
+let isFlashing = false; // Flag untuk mencegah klik saat flash
 
 // 1. Listener Tombol Kesulitan
 document.addEventListener("DOMContentLoaded", () => {
@@ -43,7 +44,7 @@ function initGame() {
 
   // Pesan Loading
   board.innerHTML =
-    '<div style="grid-column: 1/-1; text-align: center; color: white;">🧠 Mengambil data...</div>';
+    '<div style="grid-column: 1/-1; text-align: center; color: white;">🧠 Mengambil data & Preload Assets...</div>';
 
   moves = 0;
   matchesFound = 0;
@@ -139,10 +140,15 @@ function setupBoard(cardsArray) {
     card.addEventListener("click", flipCard);
     board.appendChild(card);
   });
+
+  // --- FLASH START LOGIC ---
+  if (gameCards.length > 0) {
+    startFlashSequence();
+  }
 }
 
 function flipCard() {
-  if (lockBoard) return;
+  if (lockBoard || isFlashing) return; // Cegah klik saat flash
   if (this === firstCard) return;
 
   // Buka kartu (Hapus class card-closed agar 3D rotate bekerja)
@@ -219,4 +225,41 @@ function gameWon() {
     skor: finalScore,
     game: "memory",
   });
+}
+
+// 6. FUNGSI FLASH START (Addictive Feature)
+function startFlashSequence() {
+  isFlashing = true; // Kunci board
+  const allCards = document.querySelectorAll(".card");
+
+  // A. Buka Semua Kartu
+  allCards.forEach(card => card.classList.remove("card-closed"));
+
+  // B. Tampilkan Countdown di Header
+  const titleEl = document.querySelector("h1");
+  const originalTitle = titleEl.innerText;
+  let timeLeft = 3;
+
+  titleEl.innerText = `HAFALKAN! ${timeLeft}s`;
+  titleEl.style.color = "#ffeb3b";
+
+  const timer = setInterval(() => {
+    timeLeft--;
+    if (timeLeft > 0) {
+      titleEl.innerText = `HAFALKAN! ${timeLeft}s`;
+    } else {
+      clearInterval(timer);
+      
+      // C. Tutup Semua Kartu & Mulai Game
+      allCards.forEach(card => card.classList.add("card-closed"));
+      
+      titleEl.innerText = "MULAI!";
+      titleEl.style.color = "#00f2ff";
+      
+      setTimeout(() => {
+          titleEl.innerText = originalTitle;
+          isFlashing = false; // Buka kunci
+      }, 1000);
+    }
+  }, 1000);
 }
