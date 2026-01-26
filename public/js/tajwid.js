@@ -19,6 +19,10 @@ let queue = [];
 let currentItem = null;
 let score = 0;
 let playerName = localStorage.getItem("playerName") || "Guest";
+
+let namaKategoriKiri = "Kiri";
+let namaKategoriKanan = "Kanan";
+
 let selectedLevel = "mudah";
 let tutorUsageCount = 0;
 const MAX_TUTOR_USAGE = 3;
@@ -76,12 +80,12 @@ function startGame() {
   }
 }
 
-// --- 4. TERIMA DATA SERVER (FINAL VERSION) ---
+// --- 4. TERIMA DATA SERVER  ---
 if (window.socket) {
   window.socket.on("soalDariAI", (response) => {
     const btnStart = document.querySelector(".btn-start");
 
-    // 1. VALIDASI DATA (Punya Anda - Tetap Dipertahankan)
+    // 1. VALIDASI DATA 
     if (!response || !response.data) {
       if (btnStart) {
         btnStart.innerText = "❌ Gagal Muat";
@@ -92,29 +96,27 @@ if (window.socket) {
 
     let incomingData = response.data;
 
-    // 2. LOGIKA LABEL (Punya Saya - DITAMBAHKAN)
-    // Cek apakah data mengandung nama hukum tajwid?
+    // 2. LOGIKA LABEL
     if (incomingData.kategori_kiri && incomingData.kategori_kanan) {
-      // Update Teks Label di Layar HTML
+
+      namaKategoriKiri = incomingData.kategori_kiri;
+      namaKategoriKanan = incomingData.kategori_kanan;
+
+
       if (ui.lblLeft) {
-        ui.lblLeft.innerText = incomingData.kategori_kiri; // Ubah label Kiri
-        // Tambah style border biar cantik (opsional)
+        ui.lblLeft.innerText = incomingData.kategori_kiri;
         if (ui.lblLeft.parentElement)
           ui.lblLeft.parentElement.style.border = "2px solid #00f2ff";
       }
       if (ui.lblRight) {
-        ui.lblRight.innerText = incomingData.kategori_kanan; // Ubah label Kanan
+        ui.lblRight.innerText = incomingData.kategori_kanan;
         if (ui.lblRight.parentElement)
           ui.lblRight.parentElement.style.border = "2px solid #00f2ff";
       }
 
-      // Ambil array soalnya
       queue = incomingData.data;
-    }
-    // Fallback jika data cuma array biasa
-    else if (Array.isArray(incomingData)) {
+    } else if (Array.isArray(incomingData)) {
       queue = incomingData;
-      // Reset label ke default jika tidak ada info kategori
       if (ui.lblLeft) ui.lblLeft.innerText = "Kelompok Kiri";
       if (ui.lblRight) ui.lblRight.innerText = "Kelompok Kanan";
     } else {
@@ -199,16 +201,19 @@ function answer(side) {
 
     // 1. Efek Kedip Merah di Kartu
     if (cardElement) {
-      cardElement.classList.add("wrong-flash"); // Pastikan CSS .wrong-flash ada
+      cardElement.classList.add("wrong-flash"); 
       setTimeout(() => cardElement.classList.remove("wrong-flash"), 500);
     }
 
-    // 2. Animasi Overlay (Lama)
+    // 2. Animasi Overlay 
     showFeedback(false);
 
-    // 3. Panggil Tutor (Jeda sebentar biar efek visual terlihat)
+    // 3. Panggil Tutor 
     setTimeout(() => {
-      panggilTutor(currentItem.teks, side, currentItem.hukum);
+      let teksJawabanUser = (side === 'kiri') ? namaKategoriKiri : namaKategoriKanan;
+      let teksJawabanBenar = (currentItem.hukum === 'kiri') ? namaKategoriKiri : namaKategoriKanan;
+      panggilTutor(currentItem.teks, teksJawabanUser, teksJawabanBenar);
+      
     }, 600);
   }
 }
