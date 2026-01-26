@@ -565,8 +565,6 @@ function swapAmmo() {
       }
   } else {
       // Jika musuh kosong, random aja
-  } else {
-      // Jika musuh kosong, random aja
       player.currentAmmo = Math.floor(Math.random() * 9) + 1;
   }
 }
