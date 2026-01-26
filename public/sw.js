@@ -1,4 +1,4 @@
-const CACHE_NAME = 'videa-class-master-v5'; 
+const CACHE_NAME = 'videa-class-master-v6'; 
 
 const urlsToCache = [
   '/',

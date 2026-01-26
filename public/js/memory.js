@@ -142,7 +142,7 @@ function setupBoard(cardsArray) {
   });
 
   // --- FLASH START LOGIC ---
-  if (gameCards.length > 0) {
+  if (cardsArray.length > 0) {
     startFlashSequence();
   }
 }
