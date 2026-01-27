@@ -73,7 +73,9 @@ window.requestGame = function () {
     console.log("⏱️ Start Labirin");
     window.socket.emit("mulaiGame", "labirin");
   }
-  const btn = document.querySelector(".btn-start");
+    window.socket.emit("mulaiGame", "labirin");
+  }
+  const btn = document.querySelector(".btn-start-game"); // Updated Selector
   btn.innerText = "⏳ MENGHUBUNGI SERVER...";
   btn.disabled = true;
 
@@ -109,8 +111,19 @@ socket.on("soalDariAI", (response) => {
     rows = info.maze_size || 10;
     questions = info.soal_list || [];
 
-    const maxSize = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.6);
-    size = Math.floor(maxSize / cols);
+    // 🔥 SMART RESIZING LOGIC (FLEXBOX AWARE)
+    const mainArea = document.querySelector(".game-main");
+    const maxWidth = mainArea.clientWidth - 20; // Padding safety
+    const maxHeight = mainArea.clientHeight - 20;
+
+    // Hitung ukuran sel agar muat di area yang tersedia
+    const sizeByWidth = Math.floor(maxWidth / cols);
+    const sizeByHeight = Math.floor(maxHeight / rows);
+    size = Math.min(sizeByWidth, sizeByHeight);
+
+    // Pastikan size tidak terlalu kecil
+    if (size < 15) size = 15;
+
     canvas.width = cols * size;
     canvas.height = rows * size;
 
@@ -121,6 +134,28 @@ socket.on("soalDariAI", (response) => {
     alert(response.error || "Gagal memuat soal. Coba lagi.");
     location.reload();
   }
+});
+
+// 🔥 LISTENER RESIZE (Dynamic)
+window.addEventListener("resize", () => {
+  if (!gameActive) return;
+  const mainArea = document.querySelector(".game-main");
+  if (!mainArea) return;
+
+  const maxWidth = mainArea.clientWidth - 20;
+  const maxHeight = mainArea.clientHeight - 20;
+
+  const sizeByWidth = Math.floor(maxWidth / cols);
+  const sizeByHeight = Math.floor(maxHeight / rows);
+  size = Math.min(sizeByWidth, sizeByHeight);
+
+  if (size < 15) size = 15;
+
+  canvas.width = cols * size;
+  canvas.height = rows * size;
+
+  // Perlu redraw tapi tidak perlu regenerasi grid
+  draw();
 });
 
 // --- GENERATOR MAZE (FIXED STRUCTURE) ---

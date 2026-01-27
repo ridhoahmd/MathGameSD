@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
@@ -27,76 +27,104 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   </head>
   <body>
-    <div class="ui-top">
-      <a href="/" class="btn-back">⬅ Menu</a>
-      <div class="score-box">Skor: <span id="score">0</span></div>
+    <!-- CONTAINER UTAMA (FLEX COLUMN) -->
+    <div id="app-container">
+      <!-- HEADER: Tombol Back & Skor -->
+      <header class="game-header">
+        <a href="/" class="btn-back">⬅ MENU</a>
+        <h1 class="game-title-small">LABIRIN MATH</h1>
+        <div class="score-box">SKOR: <span id="score">0</span></div>
+      </header>
+
+      <!-- MAIN AREA: Canvas Game -->
+      <main class="game-main">
+        <canvas id="mazeCanvas"></canvas>
+      </main>
+
+      <!-- FOOTER: Controls (Akan muncul di mobile) -->
+      <footer class="game-controls">
+        <div class="d-pad">
+          <button class="btn-ctrl btn-up" onclick="movePlayer(0, -1)">▲</button>
+          <button class="btn-ctrl btn-left" onclick="movePlayer(-1, 0)">
+            ◀
+          </button>
+          <button class="btn-ctrl btn-down" onclick="movePlayer(0, 1)">
+            ▼
+          </button>
+          <button class="btn-ctrl btn-right" onclick="movePlayer(1, 0)">
+            ▶
+          </button>
+        </div>
+      </footer>
     </div>
 
-    <canvas id="mazeCanvas"></canvas>
+    <!-- OVERLAYS (MODALS) -->
 
-    <div class="controls">
-      <div class="spacer"></div>
-      <button class="btn-ctrl" onclick="movePlayer(0, -1)">▲</button>
-      <div class="spacer"></div>
+    <!-- 1. LOADING / START SCREEN -->
+    <div id="loading-screen" class="modal-overlay">
+      <div class="modal-content neon-box">
+        <h1 class="neon-title">LABIRIN ILMU</h1>
+        <p>Temukan jalan keluar sambil belajar!</p>
 
-      <button class="btn-ctrl" onclick="movePlayer(-1, 0)">◀</button>
-      <button class="btn-ctrl" onclick="movePlayer(0, 1)">▼</button>
-      <button class="btn-ctrl" onclick="movePlayer(1, 0)">▶</button>
-    </div>
+        <div class="input-group">
+          <input
+            type="text"
+            id="inputKodeKelas"
+            placeholder="Kode Kelas (Opsional)"
+            class="neon-input"
+          />
+        </div>
 
-    <div id="loading-screen">
-      <h1>LABIRIN ILMU</h1>
-      <p>Cari jalan keluar & jawab pertanyaan!</p>
+        <div class="difficulty-group">
+          <p>Pilih Tingkat Kesulitan:</p>
+          <div class="buttons-row">
+            <button class="btn-level active" data-level="mudah">MUDAH</button>
+            <button class="btn-level" data-level="sedang">SEDANG</button>
+            <button class="btn-level" data-level="sulit">SULIT</button>
+          </div>
+        </div>
 
-      <div class="input-wrapper">
-        <input
-          type="text"
-          id="inputKodeKelas"
-          placeholder="Masukkan Kode Kelas (Kosongkan jika Umum)"
-        />
-      </div>
-
-      <div class="difficulty-selector">
-        <button class="btn-level active" data-level="mudah">Mudah</button>
-        <button class="btn-level" data-level="sedang">Sedang</button>
-        <button class="btn-level" data-level="sulit">Sulit</button>
-      </div>
-
-      <button onclick="requestGame()" class="btn-start">MULAI MISI</button>
-    </div>
-
-    <div id="quiz-modal">
-      <div class="quiz-content">
-        <h2>RINTANGAN!</h2>
-        <p id="q-text">...</p>
-        <input
-          type="text"
-          id="q-input"
-          placeholder="Jawab disini..."
-          autocomplete="off"
-        />
-        <button onclick="checkQuiz()" class="btn-submit">BUKA PINTU</button>
-      </div>
-    </div>
-
-    <div id="tutor-overlay" class="tutor-overlay">
-      <div class="tutor-icon">🤖</div>
-      <div class="tutor-box">
-        <h2 class="tutor-title">Guru Videa Menjelaskan</h2>
-        <hr class="tutor-divider" />
-        <p id="tutor-text" class="tutor-text">
-          Mencari jawaban di database ilmu... 📡
-        </p>
-        <button onclick="tutupTutorLabirin()" class="btn-tutor-close">
-          LANJUTKAN MISI! ⚔️
+        <button onclick="requestGame()" class="btn-start-game">
+          🚀 MULAI MISI
         </button>
       </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="../js/audio.js?v=final"></script>
-    <script src="../js/global.js"></script>
-    <script src="../js/labirin.js?v=final"></script>
+    <!-- 2. QUIZ MODAL -->
+    <div id="quiz-modal" class="modal-overlay" style="display: none">
+      <div class="modal-content quiz-box">
+        <h2 id="quiz-title">🚧 RINTANGAN!</h2>
+        <p id="q-text" class="quiz-question">...</p>
+        <input
+          type="text"
+          id="q-input"
+          placeholder="Jawaban Anda..."
+          autocomplete="off"
+          class="quiz-input"
+        />
+        <button onclick="checkQuiz()" class="btn-submit-answer">JAWAB</button>
+      </div>
+    </div>
 
+    <!-- 3. AI TUTOR OVERLAY -->
+    <div id="tutor-overlay" class="tutor-overlay">
+      <div class="tutor-container">
+        <div class="tutor-icon">🤖</div>
+        <div class="tutor-content">
+          <h3 class="tutor-header">ANALISIS GURU VIDEA</h3>
+          <div id="tutor-text" class="tutor-body">
+            Sedang menghubungi satelit ilmu... 📡
+          </div>
+          <button onclick="tutupTutorLabirin()" class="btn-close-tutor">
+            LANJUTKAN
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="../js/audio.js?v=r3"></script>
+    <script src="../js/global.js"></script>
+    <script src="../js/labirin.js?v=r3"></script>
   </body>
 </html>
