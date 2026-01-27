@@ -1,5 +1,5 @@
 /* =========================================
-   LABIRIN.CSS - FIXED VERSION
+   LABIRIN.CSS - NEON CYBER EDITION 🚀
    ========================================= */
 
 /* RESET & DASAR */
@@ -12,276 +12,187 @@
 }
 
 body {
-  /* Background Galaksi */
-  background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+  /* Background: Cyber Grid Animation */
+  background-color: #050505;
+  background-image:
+    linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
   color: white;
-  font-family: "Poppins", sans-serif;
-
-  /* Mengunci layar agar tidak bisa di-scroll */
+  font-family: "Orbitron", sans-serif;
   overflow: hidden;
   width: 100vw;
   min-height: 100dvh;
-
-  /* Flexbox untuk menengahkan Canvas Game di tengah layar */
   display: flex;
   justify-content: center;
   align-items: center;
-
-  /* Penting agar elemen absolute/fixed patuh pada viewport */
-  position: relative;
 }
 
-/* --- 1. UI HEADER (MENU & SKOR) --- */
-.ui-top {
-  position: fixed;
+/* Vignette Effect */
+body::after {
+  content: "";
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  padding: 20px 30px;
+  height: 100%;
+  background: radial-gradient(circle, transparent 40%, #000 100%);
+  pointer-events: none;
+}
+
+/* --- 1. UI HEADER --- */
+.ui-top {
+  position: fixed;
+  top: 20px;
+  width: 90%;
+  max-width: 800px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  z-index: 20; /* Di atas canvas, tapi di bawah modal */
-  pointer-events: none; /* Klik tembus ke canvas */
+  z-index: 20;
+  pointer-events: none;
 }
 
-/* Aktifkan klik pada tombol & skor */
-.btn-back,
-.score-box {
-  pointer-events: auto;
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
-}
-
+/* Tombol Balik & Skor (Clickable) */
 .btn-back {
+  pointer-events: auto;
   text-decoration: none;
-  color: white;
-  background: rgba(255, 255, 255, 0.15);
-  padding: 10px 25px;
-  border-radius: 30px;
-  font-weight: bold;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  font-size: 0.9rem;
-  transition: 0.2s;
-}
-.btn-back:hover {
-  background: white;
-  color: #1b2735;
-}
-
-.score-box {
-  font-family: "Orbitron", sans-serif;
   color: #00f2ff;
-  font-size: 1.2rem;
-  font-weight: bold;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 10px 25px;
-  border-radius: 30px;
-  border: 1px solid #00f2ff;
-  box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
-}
-
-/* --- 2. CANVAS GAME --- */
-canvas {
-  display: block;
   background: rgba(0, 0, 0, 0.5);
-  border: 2px solid #333;
-  border-radius: 10px;
-  box-shadow: 0 0 50px rgba(0, 242, 255, 0.15);
-  z-index: 10; /* Layer paling bawah */
-  max-width: 95vw;
-  height: auto;
-}
-
-/* --- 3. MODAL QUIZ (RINTANGAN) --- */
-#quiz-modal {
-  display: none; /* Sembunyi default */
-
-  /* 🔥 PERBAIKAN: Paksa Fixed agar melayang di atas segalanya */
-  position: fixed !important;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-
-  background: rgba(0, 0, 0, 0.9);
-  z-index: 8000; /* Tinggi, di atas UI Header */
-
-  /* Flexbox untuk menengahkan KONTEN MODAL */
-  justify-content: center;
-  align-items: center;
-
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-}
-
-.quiz-content {
-  background: #1e1e2e;
-  padding: 40px;
-  border-radius: 20px;
-  border: 2px solid #ff00cc;
-  text-align: center;
-  width: 90%;
-  max-width: 450px;
-  box-shadow: 0 0 60px rgba(255, 0, 204, 0.3);
-  animation: popIn 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-@keyframes popIn {
-  from {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.quiz-content h2 {
-  margin: 0;
-  font-family: "Orbitron";
-  color: #ff00cc;
-}
-#q-text {
-  font-size: 1.1rem;
-  line-height: 1.5;
-  color: #eee;
-}
-
-#q-input {
-  padding: 15px;
-  width: 100%;
-  border-radius: 10px;
-  border: 2px solid #555;
-  background: #0b0b0b;
-  color: white;
-  text-align: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  outline: none;
-}
-#q-input:focus {
-  border-color: #ff00cc;
-}
-
-.btn-submit {
-  width: 100%;
-  padding: 15px;
-  background: #ff00cc;
-  color: white;
-  border: none;
-  border-radius: 30px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 1rem;
-}
-.btn-submit:hover {
-  background: #d600aa;
-}
-
-/* --- 4. LOADING SCREEN --- */
-#loading-screen {
-  /* 🔥 PERBAIKAN: Paksa Fixed & Z-Index Tertinggi kedua */
-  position: fixed !important;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-
-  background: #05050a;
-  z-index: 9000; /* Di atas Quiz Modal */
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-#loading-screen h1 {
-  font-family: "Orbitron";
-  color: #00f2ff;
-  font-size: 2.5rem;
-  text-shadow: 0 0 20px rgba(0, 242, 255, 0.6);
-  text-align: center;
-}
-.difficulty-selector {
-  display: flex;
-  gap: 15px;
-  margin: 30px 0;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.btn-level {
-  padding: 10px 30px;
-  background: transparent;
-  border: 1px solid #444;
-  color: #888;
-  border-radius: 30px;
-  cursor: pointer;
-  font-family: "Orbitron";
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid #00f2ff;
+  box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
+  font-size: 0.9rem;
+  letter-spacing: 1px;
   transition: 0.3s;
 }
-.btn-level.active,
-.btn-level:hover {
-  border-color: #00f2ff;
-  color: #000;
+.btn-back:hover {
   background: #00f2ff;
-  box-shadow: 0 0 15px #00f2ff;
-}
-.btn-start {
-  padding: 15px 60px;
-  border-radius: 50px;
-  border: none;
-  background: linear-gradient(90deg, #00f2ff, #0099ff);
-  color: white;
-  font-weight: bold;
-  font-size: 1.2rem;
-  cursor: pointer;
-  box-shadow: 0 0 25px rgba(0, 242, 255, 0.3);
+  color: #000;
+  box-shadow: 0 0 20px #00f2ff;
 }
 
-/* --- 5. CONTROLS HP --- */
+.score-box {
+  pointer-events: auto;
+  font-size: 1.5rem;
+  color: #ff00cc;
+  text-shadow: 0 0 10px #ff00cc;
+  font-weight: bold;
+}
+
+/* --- 2. CANVAS GAME (NEON BOARD) --- */
+canvas {
+  display: block;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #00f2ff;
+  border-radius: 15px;
+  box-shadow:
+    0 0 30px rgba(0, 242, 255, 0.15),
+    inset 0 0 50px rgba(0, 0, 0, 0.9);
+  z-index: 10;
+  max-width: 95vw;
+  /* Agar canvas tajam */
+  image-rendering: pixelated;
+}
+
+/* --- 3. CONTROLS HP (DIPERBESAR & NYAMAN) --- */
 .controls {
   position: fixed;
-  bottom: 30px;
+  bottom: 40px;
   left: 50%;
   transform: translateX(-50%);
-  display: none;
+  display: none; /* JS akan ubah jadi grid di mobile */
   z-index: 50;
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 15px;
+  border-radius: 30px;
+  backdrop-filter: blur(5px);
+  gap: 15px;
 }
+
 @media (max-width: 800px) {
   .controls {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
+    grid-template-rows: 1fr 1fr;
+    /* Layout: 
+       .  UP  .
+      LF  DN  RT 
+    */
   }
+
   .btn-ctrl {
-    width: 60px;
-    height: 60px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    color: white;
-    font-size: 1.5rem;
     display: flex;
     justify-content: center;
     align-items: center;
-    -webkit-backdrop-filter: blur(5px);
-    backdrop-filter: blur(5px);
+    width: 70px;
+    height: 70px;
+    background: rgba(30, 30, 30, 0.7);
+    border: 2px solid #555;
+    border-radius: 50%; /* Bulat sempurna */
+    color: white;
+    font-size: 1.8rem;
+    cursor: pointer;
+    transition: 0.1s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
+
+  /* Posisi Tombol */
+  .btn-up {
+    grid-column: 2;
+    grid-row: 1;
+    border-color: #00f2ff;
+    color: #00f2ff;
+  }
+  .btn-left {
+    grid-column: 1;
+    grid-row: 2;
+    border-color: #00f2ff;
+    color: #00f2ff;
+  }
+  .btn-down {
+    grid-column: 2;
+    grid-row: 2;
+    border-color: #00f2ff;
+    color: #00f2ff;
+  }
+  .btn-right {
+    grid-column: 3;
+    grid-row: 2;
+    border-color: #00f2ff;
+    color: #00f2ff;
+  }
+
+  /* Efek Tekan */
   .btn-ctrl:active {
     background: #00f2ff;
-    color: black;
-  }
-  .spacer {
-    visibility: hidden;
+    color: #000;
+    transform: scale(0.9);
+    box-shadow: 0 0 20px #00f2ff;
   }
 }
 
+/* Loading & Modal Styles tetap dipertahankan tapi dipoles sedikit */
+#loading-screen {
+  background: radial-gradient(circle, #0a0a0a 0%, #000 100%);
+}
+.btn-level {
+  border-color: #333;
+  color: #666;
+}
+.btn-level.active {
+  border-color: #ff00cc;
+  background: #ff00cc;
+  color: white;
+  box-shadow: 0 0 20px #ff00cc;
+}
+.btn-start {
+  background: linear-gradient(90deg, #00f2ff, #0099ff);
+  box-shadow: 0 0 30px rgba(0, 242, 255, 0.4);
+}
 /* ========================================= */
 /* AI TUTOR MODAL STYLES (Global)            */
 /* ========================================= */
@@ -381,7 +292,6 @@ canvas {
   }
 }
 
-
 /* --- PERBAIKAN: STYLE INPUT KODE KELAS --- */
 .input-wrapper {
   margin-bottom: 20px;
@@ -404,15 +314,13 @@ canvas {
   box-shadow: 0 0 10px #00f2ff;
 }
 
-
-
 #tutor-overlay {
   display: none;
 }
 
 .bucket {
-  display: flex;             
-  flex-direction: column;    
-  align-items: center;       
-  flex: 1;                   
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
 }

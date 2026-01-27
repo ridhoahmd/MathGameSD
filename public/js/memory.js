@@ -65,21 +65,32 @@ socket.on("soalDariAI", (response) => {
     // Parser Cerdas
     if (!Array.isArray(rawData)) {
       if (rawData && rawData.data) rawData = rawData.data;
-      else if (rawData && typeof rawData === 'object') rawData = Object.values(rawData);
+      else if (rawData && typeof rawData === "object")
+        rawData = Object.values(rawData);
     }
 
-    let cleanPairs = rawData.map(item => {
-        if (typeof item === 'string') {
-            try { return JSON.parse(item); } catch (e) { return null; }
+    let cleanPairs = rawData
+      .map((item) => {
+        if (typeof item === "string") {
+          try {
+            return JSON.parse(item);
+          } catch (e) {
+            return null;
+          }
         }
         if (item.content) {
-             if (typeof item.content === 'string') {
-                try { return JSON.parse(item.content); } catch (e) { return null; }
+          if (typeof item.content === "string") {
+            try {
+              return JSON.parse(item.content);
+            } catch (e) {
+              return null;
             }
-            return item.content;
+          }
+          return item.content;
         }
         return item;
-    }).filter(item => item && item.a && item.b);
+      })
+      .filter((item) => item && item.a && item.b);
 
     // Limit Soal sesuai Difficulty
     let maxPairs = 6;
@@ -87,8 +98,8 @@ socket.on("soalDariAI", (response) => {
     if (selectedDifficulty === "sulit") maxPairs = 12;
 
     if (cleanPairs.length > maxPairs) {
-        cleanPairs.sort(() => 0.5 - Math.random());
-        cleanPairs = cleanPairs.slice(0, maxPairs);
+      cleanPairs.sort(() => 0.5 - Math.random());
+      cleanPairs = cleanPairs.slice(0, maxPairs);
     }
 
     if (cleanPairs.length === 0) {
@@ -112,12 +123,19 @@ function setupBoard(cardsArray) {
   board.innerHTML = "";
 
   // Set Grid Columns via JS
-  if (selectedDifficulty === 'mudah') { // 12 kartu
-      board.style.gridTemplateColumns = "repeat(3, 1fr)";
-  } else if (selectedDifficulty === 'sedang') { // 16 kartu
-      board.style.gridTemplateColumns = "repeat(4, 1fr)";
-  } else if (selectedDifficulty === 'sulit') { // 24 kartu
-      board.style.gridTemplateColumns = "repeat(6, 1fr)";
+  // Set Grid Columns & Width via JS (Agar Ukuran Kartu Konsisten)
+  if (selectedDifficulty === "mudah") {
+    // 12 kartu (3x4)
+    board.style.gridTemplateColumns = "repeat(3, 1fr)";
+    board.style.maxWidth = "260px"; // Batasi lebar agar kartu kecil (seperti sulit)
+  } else if (selectedDifficulty === "sedang") {
+    // 16 kartu (4x4)
+    board.style.gridTemplateColumns = "repeat(4, 1fr)";
+    board.style.maxWidth = "340px"; // Batasi lebar
+  } else if (selectedDifficulty === "sulit") {
+    // 24 kartu (6x4)
+    board.style.gridTemplateColumns = "repeat(6, 1fr)";
+    board.style.maxWidth = "480px"; // Full width
   }
 
   // Acak Kartu
@@ -131,9 +149,9 @@ function setupBoard(cardsArray) {
     const front = document.createElement("div");
     front.classList.add("front");
     // Auto-resize font
-    if (item.content.length > 8) front.style.fontSize = "0.75rem"; 
+    if (item.content.length > 8) front.style.fontSize = "0.75rem";
     else front.style.fontSize = "1rem";
-    
+
     front.innerText = item.content;
 
     card.appendChild(front);
@@ -210,9 +228,9 @@ function gameWon() {
 
   // Sembunyikan Game, Munculkan Modal
   document.getElementById("game-screen").style.display = "none";
-  
+
   if (winScreen) {
-      winScreen.style.display = "flex"; // Flex agar center
+    winScreen.style.display = "flex"; // Flex agar center
   }
 
   // Reset Menu agar saat user kembali, menu sudah siap
@@ -233,7 +251,7 @@ function startFlashSequence() {
   const allCards = document.querySelectorAll(".card");
 
   // A. Buka Semua Kartu
-  allCards.forEach(card => card.classList.remove("card-closed"));
+  allCards.forEach((card) => card.classList.remove("card-closed"));
 
   // B. Tampilkan Countdown di Header
   const titleEl = document.querySelector("h1");
@@ -249,16 +267,16 @@ function startFlashSequence() {
       titleEl.innerText = `HAFALKAN! ${timeLeft}s`;
     } else {
       clearInterval(timer);
-      
+
       // C. Tutup Semua Kartu & Mulai Game
-      allCards.forEach(card => card.classList.add("card-closed"));
-      
+      allCards.forEach((card) => card.classList.add("card-closed"));
+
       titleEl.innerText = "MULAI!";
       titleEl.style.color = "#00f2ff";
-      
+
       setTimeout(() => {
-          titleEl.innerText = originalTitle;
-          isFlashing = false; // Buka kunci
+        titleEl.innerText = originalTitle;
+        isFlashing = false; // Buka kunci
       }, 1000);
     }
   }, 1000);

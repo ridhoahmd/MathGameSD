@@ -181,19 +181,113 @@ function initGameEngine() {
 }
 
 // --- 4. GAME LOOP ---
+// --- 3.5 PARTICLE SYSTEM (NEW) ---
+const particles = [];
+class Particle {
+  constructor(x, y, color) {
+    this.x = x;
+    this.y = y;
+    this.color = color;
+    const angle = Math.random() * Math.PI * 2;
+    const speed = Math.random() * 3 + 1;
+    this.vx = Math.cos(angle) * speed;
+    this.vy = Math.sin(angle) * speed;
+    this.life = 1.0; // Opacity
+    this.decay = Math.random() * 0.03 + 0.01;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.life -= this.decay;
+  }
+  draw() {
+    ctx.globalAlpha = this.life;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+  }
+}
+
+// --- HELPER: DRAW 3D MARBLE ---
+function draw3DMarble(x, y, radius, color, text) {
+  // 1. Base Shadow
+  ctx.beginPath();
+  ctx.arc(x + 2, y + 2, radius, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
+  ctx.fill();
+
+  // 2. Main Sphere (Radial Gradient for 3D)
+  const grad = ctx.createRadialGradient(
+    x - radius / 3,
+    y - radius / 3,
+    radius / 10,
+    x,
+    y,
+    radius,
+  );
+  grad.addColorStop(0, "#fff"); // Highlight
+  grad.addColorStop(0.3, color); // Body color
+  grad.addColorStop(1, "#000"); // Shadow edge
+
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // 3. Specular Reflection (Glass Effect)
+  ctx.beginPath();
+  ctx.ellipse(
+    x - radius / 3,
+    y - radius / 3,
+    radius / 2.5,
+    radius / 4,
+    Math.PI / 4,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fillStyle = "rgba(255,255,255,0.3)";
+  ctx.fill();
+
+  // 4. Text
+  if (text !== undefined) {
+    ctx.fillStyle = "white";
+    ctx.font = "bold " + radius * 0.8 + "px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = "black";
+    ctx.shadowBlur = 4;
+    ctx.fillText(text, x, y);
+    ctx.shadowBlur = 0;
+  }
+}
+
+// --- 4. GAME LOOP ---
 function update() {
   if (!gameActive) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Gambar Jalur
+  // GAMBAR JALUR (TRACK GROOVE EFFECT)
   if (pathPoints.length > 0) {
+    // Outer Glow / Border
     ctx.beginPath();
     ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
     for (let i = 1; i < pathPoints.length; i++)
       ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
-    ctx.strokeStyle = "rgba(255,255,255,0.2)";
-    ctx.lineWidth = 30;
+    ctx.strokeStyle = "rgba(0, 242, 255, 0.1)"; // Neon Blue low opacity
+    ctx.lineWidth = 40;
     ctx.lineCap = "round";
+    ctx.stroke();
+
+    // Inner Groove (Darker)
+    ctx.strokeStyle = "rgba(0,0,0,0.6)";
+    ctx.lineWidth = 32;
+    ctx.stroke();
+
+    // Center Line (Guide)
+    ctx.strokeStyle = "rgba(255,255,255,0.05)";
+    ctx.lineWidth = 2;
     ctx.stroke();
   }
 
@@ -205,10 +299,8 @@ function update() {
   if (now - lastSpawnTime > spawnRate && spawnedEnemies < maxEnemies) {
     if (pathPoints.length > 0) {
       enemies.push(new Enemy());
-
       spawnedEnemies++;
 
-      // Update Target Counter
       if (targetEl) {
         targetEl.innerText = `${spawnedEnemies}/${maxEnemies}`;
         targetEl.parentElement.classList.remove("target-update");
@@ -219,6 +311,13 @@ function update() {
       lastSpawnTime = now;
       if (enemies.length === 1) player.currentAmmo = enemies[0].value;
     }
+  }
+
+  // Update & Draw Particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].update();
+    particles[i].draw();
+    if (particles[i].life <= 0) particles.splice(i, 1);
   }
 
   // Update Entities
@@ -237,7 +336,7 @@ function update() {
   checkCollisions();
   drawPlayer();
 
-  // Cek Level Selesai (Menang)
+  // Cek Level Selesai
   if (spawnedEnemies >= maxEnemies && enemies.length === 0) {
     gameActive = false;
     setTimeout(() => {
@@ -269,7 +368,13 @@ class Enemy {
     this.value = a + b;
 
     // Warna
-    const palette = levelData.palet_warna || ["#F00", "#0F0", "#00F"];
+    const palette = levelData.palet_warna || [
+      "#ff0000",
+      "#00ff00",
+      "#0000ff",
+      "#ffff00",
+      "#f0f",
+    ];
     this.color = palette[Math.floor(Math.random() * palette.length)];
   }
   update() {
@@ -277,7 +382,7 @@ class Enemy {
     if (!target) {
       endGame();
       return;
-    } // Kalah
+    }
 
     const dx = target.x - this.x;
     const dy = target.y - this.y;
@@ -291,15 +396,7 @@ class Enemy {
     }
   }
   draw() {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    ctx.fillStyle = this.color;
-    ctx.fill();
-    ctx.fillStyle = "white";
-    ctx.font = "14px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(this.text, this.x, this.y);
+    draw3DMarble(this.x, this.y, this.radius, this.color, this.text);
   }
 }
 
@@ -307,11 +404,24 @@ class Bullet {
   constructor(x, y, angle, val) {
     this.x = x;
     this.y = y;
-    this.vx = Math.cos(angle) * 10;
-    this.vy = Math.sin(angle) * 10;
+    this.vx = Math.cos(angle) * 12; // Slightly faster
+    this.vy = Math.sin(angle) * 12;
     this.value = val;
     this.active = true;
     this.radius = 12;
+    // Tentukan warna berdasarkan value (agar konsisten)
+    const colors = [
+      "#f00",
+      "#0f0",
+      "#00f",
+      "#ff0",
+      "#0ff",
+      "#f0f",
+      "#f80",
+      "#8f0",
+      "#80f",
+    ];
+    this.color = colors[val % colors.length];
   }
   update() {
     this.x += this.vx;
@@ -325,12 +435,12 @@ class Bullet {
       this.active = false;
   }
   draw() {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    ctx.fillStyle = "yellow";
-    ctx.fill();
-    ctx.fillStyle = "black";
-    ctx.fillText(this.value, this.x, this.y);
+    draw3DMarble(this.x, this.y, this.radius, this.color, this.value);
+
+    // Trail effect
+    if (Math.random() < 0.5) {
+      particles.push(new Particle(this.x, this.y, this.color));
+    }
   }
 }
 
@@ -338,15 +448,58 @@ function drawPlayer() {
   ctx.save();
   ctx.translate(player.x, player.y);
   ctx.rotate(player.angle);
-  ctx.fillStyle = player.color;
+
+  // MECH TURRET DESIGN
+
+  // 1. Base Ring (Static) - Seharusnya tidak ikut rotasi, tapi karena translate ada di atas,
+  // kita gambar base ini sebelum rotate jika ingin static. Tapi turret base ikut muter oke juga.
+
+  // Barrel (Laras Meriam)
+  ctx.fillStyle = "#444";
+  ctx.fillRect(0, -12, 60, 24);
+
+  // Barrel Glow Strip
+  ctx.fillStyle = "#00f2ff";
+  ctx.fillRect(10, -4, 40, 8); // Neon strip
+
+  // Turret Body (Circle)
+  const grad = ctx.createRadialGradient(0, 0, 5, 0, 0, 35);
+  grad.addColorStop(0, "#555");
+  grad.addColorStop(1, "#222");
+
   ctx.beginPath();
-  ctx.arc(0, 0, 30, 0, Math.PI * 2);
+  ctx.arc(0, 0, 35, 0, Math.PI * 2);
+  ctx.fillStyle = grad;
   ctx.fill();
-  ctx.fillRect(0, -10, 50, 20);
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#00f2ff"; // Neon Border
+  ctx.stroke();
+
+  // Ammo Display (Center) - Render as marble inside turret
+  // Kita perlu rotate balik agar teks tidak miring
   ctx.rotate(-player.angle);
-  ctx.fillStyle = "white";
-  ctx.font = "20px Arial";
-  ctx.fillText(player.currentAmmo, 0, 0);
+
+  // Draw Ammo Marble in center
+  // Warna ammo berubah random/fixed? Kita buat dynamic
+  const colors = [
+    "#f00",
+    "#0f0",
+    "#00f",
+    "#ff0",
+    "#0ff",
+    "#f0f",
+    "#f80",
+    "#8f0",
+    "#80f",
+  ];
+  let ammoColor = colors[player.currentAmmo % colors.length];
+
+  // Efek Loading (Pulsing)
+  let pulse = (Date.now() / 200) % Math.PI;
+  let size = 15 + Math.sin(pulse) * 2;
+
+  draw3DMarble(0, 0, size, ammoColor, player.currentAmmo);
+
   ctx.restore();
 }
 
@@ -364,6 +517,11 @@ function checkCollisions() {
           score += 10;
           scoreEl.innerText = score;
 
+          // SPAWN PARTICLES (EXPLOSION)
+          for (let i = 0; i < 10; i++) {
+            particles.push(new Particle(e.x, e.y, e.color));
+          }
+
           if (window.socket) {
             window.socket.emit("updateDuelScore", {
               room: myRoom,
@@ -375,8 +533,8 @@ function checkCollisions() {
             AudioManager.playCorrect();
           } catch (e) {}
 
+          // Smart Ammo Swap Logic (Original)
           const activeEnemies = enemies.filter((en) => en.active);
-
           if (activeEnemies.length > 0) {
             if (Math.random() < 0.8) {
               const randomEnemy =
@@ -389,6 +547,7 @@ function checkCollisions() {
             player.currentAmmo = Math.floor(Math.random() * 9) + 1;
           }
         } else {
+          // Salah tembak? (Mungkin nanti tambah penalti)
         }
       }
     });

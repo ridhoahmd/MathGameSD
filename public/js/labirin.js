@@ -190,7 +190,7 @@ function setupMazeGrid() {
   });
 }
 
-// --- CLASS CELL ---
+// --- CLASS CELL (NEON RENDERER) ---
 class Cell {
   constructor(i, j) {
     this.i = i;
@@ -205,9 +205,12 @@ class Cell {
     let x = this.i * size;
     let y = this.j * size;
 
+    // EFECT GLOW NEON
     ctx.strokeStyle = "#00f2ff";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.lineCap = "round";
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = "#00f2ff";
 
     ctx.beginPath();
     if (this.walls[0]) {
@@ -228,9 +231,25 @@ class Cell {
     }
     ctx.stroke();
 
-    if (this.isQuestion && imgObstacle.complete) {
-      let p = size * 0.2;
-      ctx.drawImage(imgObstacle, x + p, y + p, size - 2 * p, size - 2 * p);
+    // Reset Shadow agar tidak berat
+    ctx.shadowBlur = 0;
+
+    // Render Soal (Ikon Bahaya)
+    if (this.isQuestion) {
+      ctx.fillStyle = "#ff00cc";
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = "#ff00cc";
+      ctx.beginPath();
+      ctx.arc(x + size / 2, y + size / 2, size / 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Tanda Seru
+      ctx.fillStyle = "white";
+      ctx.font = "bold " + size / 2 + "px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("!", x + size / 2, y + size / 2);
     }
   }
 
@@ -282,27 +301,58 @@ function removeWalls(a, b) {
 }
 
 // --- RENDER LOOP ---
+let pulse = 0;
 function draw() {
   if (!gameActive) return;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  // Draw Grid
   for (let i = 0; i < grid.length; i++) {
     grid[i].show();
   }
 
-  if (finishNode && imgFinish.complete) {
-    let fx = finishNode.i * size;
-    let fy = finishNode.j * size;
-    let p = size * 0.1;
-    ctx.drawImage(imgFinish, fx + p, fy + p, size - 2 * p, size - 2 * p);
+  // Draw Finish (Portal Berdenyut)
+  pulse += 0.1;
+  if (finishNode) {
+    let fx = finishNode.i * size + size / 2;
+    let fy = finishNode.j * size + size / 2;
+    let radius = size / 3 + Math.sin(pulse) * 3;
+
+    ctx.beginPath();
+    ctx.arc(fx, fy, radius, 0, Math.PI * 2);
+    ctx.fillStyle = "#00ff00";
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "#00ff00";
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Icon Flag Kecil di tengah
+    ctx.fillStyle = "black";
+    ctx.font = size / 2 + "px Arial";
+    ctx.fillText("🏁", fx, fy);
   }
 
-  if (current && imgPlayer.complete) {
-    let x = current.i * size;
-    let y = current.j * size;
-    let p = size * 0.15;
-    ctx.drawImage(imgPlayer, x + p, y + p, size - 2 * p, size - 2 * p);
+  // Draw Player (Glowing Orb)
+  if (current) {
+    let x = current.i * size + size / 2;
+    let y = current.j * size + size / 2;
+
+    // Core
+    ctx.beginPath();
+    ctx.arc(x, y, size / 3, 0, Math.PI * 2);
+    ctx.fillStyle = "white";
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "white";
+    ctx.fill();
+
+    // Outer Glow
+    ctx.beginPath();
+    ctx.arc(x, y, size / 2.5, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
   }
 
   requestAnimationFrame(draw);
