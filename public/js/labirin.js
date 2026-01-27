@@ -73,8 +73,7 @@ window.requestGame = function () {
     console.log("⏱️ Start Labirin");
     window.socket.emit("mulaiGame", "labirin");
   }
-    window.socket.emit("mulaiGame", "labirin");
-  }
+
   const btn = document.querySelector(".btn-start-game"); // Updated Selector
   btn.innerText = "⏳ MENGHUBUNGI SERVER...";
   btn.disabled = true;
@@ -97,6 +96,18 @@ window.requestGame = function () {
 
   console.log("Mengirim permintaan soal dengan Kode Akses:", kodeAkses);
   socket.emit("mintaSoalAI", requestData);
+
+  // FAILSAFE: Timeout 10 detik jika server sibuk
+  setTimeout(() => {
+    if (
+      !gameActive &&
+      document.getElementById("loading-screen").style.display !== "none"
+    ) {
+      btn.innerText = "🚀 MULAI MISI (RETRY)";
+      btn.disabled = false;
+      alert("Server sedang sibuk atau tidak merespons. Silakan coba lagi.");
+    }
+  }, 10000);
 };
 
 // --- TERIMA DATA DARI SERVER ---
@@ -122,7 +133,7 @@ socket.on("soalDariAI", (response) => {
     size = Math.min(sizeByWidth, sizeByHeight);
 
     // Pastikan size tidak terlalu kecil
-    if (size < 15) size = 15;
+    if (size < 8) size = 8;
 
     canvas.width = cols * size;
     canvas.height = rows * size;
@@ -149,7 +160,7 @@ window.addEventListener("resize", () => {
   const sizeByHeight = Math.floor(maxHeight / rows);
   size = Math.min(sizeByWidth, sizeByHeight);
 
-  if (size < 15) size = 15;
+  if (size < 8) size = 8;
 
   canvas.width = cols * size;
   canvas.height = rows * size;
@@ -549,8 +560,8 @@ function checkFinish() {
     document.querySelector("#quiz-modal h2").style.color = "#00f2ff";
     document.getElementById("q-text").innerText = `Skor Akhir: ${score}`;
     document.getElementById("q-input").style.display = "none";
-    document.querySelector(".btn-submit").innerText = "KEMBALI KE MENU";
-    document.querySelector(".btn-submit").onclick = function () {
+    document.querySelector(".btn-submit-answer").innerText = "KEMBALI KE MENU";
+    document.querySelector(".btn-submit-answer").onclick = function () {
       window.location.href = "/";
     };
   }

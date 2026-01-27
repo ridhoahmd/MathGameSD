@@ -1,6 +1,6 @@
 body {
-  touch-action: none; 
-  overscroll-behavior: none; 
+  touch-action: none;
+  overscroll-behavior: none;
 }
 
 /* Pastikan area piano juga aman */
@@ -8,8 +8,6 @@ body {
   touch-action: none;
 }
 
-
-body {
 /* =========================================
    PIANO.CSS - GLASS SYNTH EDITON 🎹
    ========================================= */
@@ -32,12 +30,15 @@ body {
 
 /* BACKGROUND EQUALIZER ANIMATION (CSS ONLY) */
 body::before {
-    content: "";
-    position: absolute;
-    top: 50%; left: 0; width: 100%; height: 2px;
-    background: linear-gradient(90deg, transparent, #00f2ff, transparent);
-    opacity: 0.3;
-    z-index: -1;
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00f2ff, transparent);
+  opacity: 0.3;
+  z-index: -1;
 }
 
 /* TOMBOL KEMBALI */
@@ -56,9 +57,9 @@ body::before {
   transition: 0.3s;
 }
 .btn-back:hover {
-    background: #ff4757;
-    color: white;
-    box-shadow: 0 0 15px #ff4757;
+  background: #ff4757;
+  color: white;
+  box-shadow: 0 0 15px #ff4757;
 }
 
 /* HUD (Kepala) */
@@ -106,7 +107,7 @@ body::before {
   max-width: 800px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 20px;
-  box-shadow: 
+  box-shadow:
     0 10px 50px rgba(0, 0, 0, 0.5),
     inset 0 0 20px rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(5px);
@@ -119,11 +120,15 @@ body::before {
 .key {
   flex: 1;
   height: 250px; /* Lebih tinggi */
-  
+
   /* Efek Kaca */
-  background: linear-gradient(to bottom, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.4) 100%);
-  border: 1px solid rgba(255,255,255,0.5);
-  border-bottom: 4px solid rgba(255,255,255,0.2);
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.4) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-bottom: 4px solid rgba(255, 255, 255, 0.2);
   border-radius: 0 0 15px 15px;
 
   cursor: pointer;
@@ -131,12 +136,12 @@ body::before {
   justify-content: center;
   align-items: flex-end;
   padding-bottom: 30px;
-  
+
   color: #333;
   font-weight: 900;
   font-size: 1.5rem;
-  text-shadow: 0 1px 0 rgba(255,255,255,0.5);
-  
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+
   transition: all 0.1s ease;
   touch-action: manipulation;
   user-select: none;
@@ -146,19 +151,23 @@ body::before {
 
 /* Efek Kilau di atas tuts */
 .key::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 50%;
-    background: linear-gradient(to bottom, rgba(255,255,255,0.8), transparent);
-    pointer-events: none;
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), transparent);
+  pointer-events: none;
 }
 
 /* ACTIVE STATE (Tekan) */
-.key:active, .key.active {
+.key:active,
+.key.active {
   background: #00f2ff; /* Warna Neon Cyan */
-  box-shadow: 
+  box-shadow:
     0 0 30px #00f2ff,
-    inset 0 0 20px rgba(255,255,255,0.5);
+    inset 0 0 20px rgba(255, 255, 255, 0.5);
   transform: scale(0.98) translateY(2px);
   border-color: #00f2ff;
   color: black;
@@ -167,21 +176,26 @@ body::before {
 
 /* ANIMASI NADA KELUAR (Visual Feedback) */
 .note-bubble {
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #00f2ff;
-    font-weight: bold;
-    font-size: 2rem;
-    animation: floatUp 1s ease-out forwards;
-    pointer-events: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #00f2ff;
+  font-weight: bold;
+  font-size: 2rem;
+  animation: floatUp 1s ease-out forwards;
+  pointer-events: none;
 }
 @keyframes floatUp {
-    0% { opacity: 1; transform: translate(-50%, 0); }
-    100% { opacity: 0; transform: translate(-50%, -100px); }
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -100px);
+  }
 }
-
 
 .key.hidden {
   display: none;
@@ -207,7 +221,8 @@ body::before {
   font-family: "Orbitron";
   transition: 0.3s;
 }
-.btn-level.active, .btn-level:hover {
+.btn-level.active,
+.btn-level:hover {
   background: #00f2ff;
   color: black;
   border-color: #00f2ff;
@@ -292,9 +307,6 @@ body::before {
   background: rgba(255, 255, 255, 0.1);
   transform: scale(1.02);
 }
-
-
-
 
 @media (max-width: 480px) {
   .piano-container {
