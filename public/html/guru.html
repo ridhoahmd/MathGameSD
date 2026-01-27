@@ -332,7 +332,7 @@
         });
       };
 
-      // Fungsi Filter/Search Tabel 
+      // Fungsi Filter/Search Tabel
       window.filterTable = function () {
         const input = document.getElementById("search");
         const filter = input.value.toUpperCase();
@@ -342,7 +342,7 @@
         // Loop semua baris tabel, sembunyikan yang tidak cocok
         for (let i = 1; i < tr.length; i++) {
           // Mulai i=1 karena 0 adalah Header
-          const td = tr[i].getElementsByTagName("td")[0]; 
+          const td = tr[i].getElementsByTagName("td")[0];
           if (td) {
             const txtValue = td.textContent || td.innerText;
             if (txtValue.toUpperCase().indexOf(filter) > -1) {
