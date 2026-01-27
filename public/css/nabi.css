@@ -1,11 +1,24 @@
 /* GLOBAL SETTINGS */
+/* GLOBAL SETTINGS */
 body {
   margin: 0;
   padding: 0;
   font-family: "Poppins", sans-serif;
-  /* Background Malam Gurun */
-  background: radial-gradient(circle at top, #203a43, #2c5364);
-  background-color: #0f2027;
+  /* THEME: DESERT NIGHT / MIDNIGHT JOURNEY */
+  background-color: var(--islamic-blue, #1a237e);
+  background-image:
+    radial-gradient(
+      ellipse at top,
+      #2c3e50 0%,
+      var(--islamic-blue) 60%,
+      #000 100%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.02) 0px,
+      transparent 1px,
+      transparent 40px
+    ); /* Starry/Vertical lines */
   color: #fff;
   min-height: 100dvh;
   width: 100vw;
@@ -13,7 +26,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow: hidden; /* Mencegah scroll pada body utama */
+  overflow: hidden;
 }
 
 /* TOP BAR */
@@ -72,21 +85,18 @@ body {
   background: rgba(15, 32, 39, 0.9);
   border: 2px solid #c0a062;
   border-radius: 20px;
-  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5),
+  box-shadow:
+    0 0 50px rgba(0, 0, 0, 0.5),
     inset 0 0 30px rgba(192, 160, 98, 0.1);
 
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 
- 
   overflow-y: auto;
 
-  
-   ;
   scrollbar-width: thin;
-  scrollbar-color: #ffd700 #203a43; 
+  scrollbar-color: #ffd700 #203a43;
 }
-
 
 /* 1. Ukuran Lebar Scrollbar */
 .game-container::-webkit-scrollbar {
@@ -104,7 +114,7 @@ body {
 .game-container::-webkit-scrollbar-thumb {
   background-color: #ffd700;
   border-radius: 10px;
-  border: 2px solid #203a43; 
+  border: 2px solid #203a43;
 }
 
 /* HEADER */
@@ -246,7 +256,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-bottom: 10px; 
+  padding-bottom: 10px;
 
   max-height: 45vh;
   overflow-y: auto;
@@ -263,15 +273,15 @@ body {
   text-align: left;
   transition: 0.2s;
   font-family: "Poppins", sans-serif;
-  line-height: 1.4; 
+  line-height: 1.4;
 
-  white-space: normal !important; 
-  word-wrap: break-word; 
-  min-height: 50px; 
-  height: auto; 
+  white-space: normal !important;
+  word-wrap: break-word;
+  min-height: 50px;
+  height: auto;
   display: flex;
-  align-items: center; 
-  line-height: 1.4; 
+  align-items: center;
+  line-height: 1.4;
   text-align: left;
 }
 .btn-option:hover {
@@ -354,10 +364,7 @@ body {
   }
 }
 
-
-
 /* AI TUTOR MODAL STYLES (New)               */
-
 
 .tutor-overlay {
   display: none; /* Default sembunyi */

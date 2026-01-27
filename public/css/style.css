@@ -276,15 +276,94 @@ body.theme-crimson .stat-value {
   font-size: 0.8rem;
 }
 
-/* WARNA BARU */
-.text-white {
-  color: white !important; /* Pastikan warna putih diterapkan */
+/* =========================================
+   ROYAL ISLAMIC THEME (Premium Assets)
+   ========================================= */
+:root {
+  --islamic-emerald: #0f5132;
+  --islamic-gold: #ffd700;
+  --islamic-cream: #fff8e1;
+  --islamic-blue: #1a237e;
+  --islamic-sand: #d4a017;
 }
-/* Warna lama Anda (biarkan ada, tapi jangan dipakai di HTML) */
-.text-666 {
-  color: #666;
+
+/* Pola Geometris Arabesque (CSS-Only) */
+.islamic-pattern {
+  position: relative;
+  background-color: var(--islamic-emerald);
+  /* Lapisan Pola */
+  background-image:
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 10%,
+      rgba(255, 215, 0, 0.1) 11%,
+      transparent 12%
+    ),
+    /* Lingkaran Emas Tipis */
+    repeating-linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.03) 0,
+        rgba(255, 255, 255, 0.03) 1px,
+        transparent 1px,
+        transparent 10px
+      ),
+    /* Garis Diagonal */
+    repeating-linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.03) 0,
+        rgba(255, 255, 255, 0.03) 1px,
+        transparent 1px,
+        transparent 10px
+      );
 }
-/* ... class warna lainnya ... */
+
+/* Pattern Overlay (Untuk div content) */
+.bg-overlay-pattern::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: conic-gradient(
+    from 0deg at 50% 50%,
+    transparent 45deg,
+    rgba(255, 215, 0, 0.05) 45deg,
+    rgba(255, 215, 0, 0.05) 135deg,
+    transparent 135deg,
+    transparent 225deg,
+    rgba(255, 215, 0, 0.05) 225deg,
+    rgba(255, 215, 0, 0.05) 315deg,
+    transparent 315deg
+  );
+  background-size: 40px 40px;
+  pointer-events: none;
+  opacity: 0.2;
+  border-radius: inherit;
+  z-index: 0;
+}
+
+/* Tombol Mewah (Emas) */
+.btn-royal-gold {
+  background: linear-gradient(135deg, #ffd700, #fdb931);
+  color: #1a1a1a;
+  border: 1px solid #fff;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+  font-family: "Cinzel", serif;
+  font-weight: bold;
+}
+.btn-royal-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+  background: linear-gradient(135deg, #fdb931, #ffd700);
+}
+
+/* Teks Judul Keren */
+.text-royal {
+  font-family: "Amiri", serif;
+  color: var(--islamic-gold);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
 
 /* HEADER */
 .main-header {

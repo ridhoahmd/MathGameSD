@@ -19,7 +19,7 @@
     </div>
 
     <div class="game-wrapper">
-      <div id="start-screen" class="panel active">
+      <div id="start-screen" class="panel active glass-panel">
         <div class="game-logo">⚖️</div>
         <h1 class="title">PILAH HUKUM</h1>
         <p class="desc">Geser kartu Arab ke keranjang hukum yang benar!</p>
@@ -64,11 +64,24 @@
         <div id="feedback-overlay"></div>
       </div>
 
-      <div id="result-screen" class="panel hidden">
-        <h2>WAKTU HABIS!</h2>
-        <div class="final-score-box">
-          <p>Total Skor</p>
-          <h1 id="final-score">0</h1>
+      <div id="result-screen" class="panel hidden glass-panel">
+        <h2
+          style="
+            font-family: &quot;Orbitron&quot;;
+            color: #00f2ff;
+            margin-bottom: 20px;
+          "
+        >
+          WAKTU HABIS!
+        </h2>
+        <div class="final-score-box" style="margin-bottom: 30px">
+          <p style="color: #aaa; margin: 0">Total Skor</p>
+          <h1
+            id="final-score"
+            style="font-size: 4rem; margin: 0; color: #ffd700"
+          >
+            0
+          </h1>
         </div>
         <div class="action-buttons">
           <button onclick="location.reload()" class="btn-retry">

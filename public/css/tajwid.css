@@ -1,13 +1,36 @@
 /* RESET & LAYOUT UTAMA */
+/* RESET & LAYOUT UTAMA */
 body {
   margin: 0;
   padding: 0;
   font-family: "Poppins", sans-serif;
-  background: radial-gradient(circle at center, #1e3c72, #2a5298);
-  color: white;
+  /* THEME: LIBRARY / MADRASAH */
+  background-color: var(
+    --islamic-emerald,
+    #0f5132
+  ); /* Fallback to dark green */
+  background-image:
+    radial-gradient(
+      circle at 10% 20%,
+      rgba(255, 215, 0, 0.1) 0%,
+      transparent 20%
+    ),
+    radial-gradient(
+      circle at 90% 80%,
+      rgba(255, 215, 0, 0.1) 0%,
+      transparent 20%
+    ),
+    repeating-linear-gradient(
+      45deg,
+      rgba(0, 0, 0, 0.1) 0px,
+      rgba(0, 0, 0, 0.1) 1px,
+      transparent 1px,
+      transparent 20px
+    );
+  color: #fff8e1; /* Cream Text */
   min-height: 100dvh;
   width: 100vw;
-  overflow: hidden; /* Kunci scroll */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -28,7 +51,6 @@ body {
     font-size: 1.2rem;
   }
 }
-
 
 /* CONTAINER TENGAH */
 .game-wrapper {
@@ -89,71 +111,135 @@ body {
   justify-content: space-evenly;
 }
 
+/* --- GLASS CONTAINER (NEW) --- */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  padding: 40px 30px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* START SCREEN */
 .game-logo {
-  font-size: 4rem;
-  margin-bottom: 10px;
-  animation: bounce 2s infinite;
+  font-size: 5rem;
+  margin-bottom: 15px;
+  filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.5));
+  animation: float 3s ease-in-out infinite;
 }
 .title {
-  font-size: 2rem;
+  font-family: "Orbitron", sans-serif;
+  font-size: 2.2rem;
   margin: 0;
-  color: #ffd700;
-  text-shadow: 0 0 10px #ffd700;
+  background: linear-gradient(to right, #ffd700, #ffecb3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
 .desc {
-  color: #ddd;
-  font-size: 0.9rem;
-  margin-bottom: 25px;
+  color: #e0e0e0;
+  font-size: 1rem;
+  margin: 10px 0 30px;
+  line-height: 1.5;
 }
 
 .difficulty-label {
-  margin-bottom: 10px;
-  font-weight: bold;
+  margin-bottom: 15px;
+  font-weight: 600;
   color: #00f2ff;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 0.9rem;
 }
 .difficulty-selector {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   justify-content: center;
-  margin-bottom: 30px;
+  margin-bottom: 35px;
 }
 .btn-diff {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid #fff;
-  color: white;
-  padding: 8px 15px;
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #aaa;
+  padding: 12px 20px;
+  border-radius: 16px;
   cursor: pointer;
-  transition: 0.3s;
+  transition: all 0.3s ease;
+  flex: 1;
+  font-weight: 500;
+}
+.btn-diff:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
 }
 .btn-diff.active {
-  background: #00f2ff;
+  background: linear-gradient(135deg, #00f2ff, #00c6ff);
   color: #000;
-  border-color: #00f2ff;
+  border: none;
   font-weight: bold;
+  box-shadow: 0 5px 15px rgba(0, 242, 255, 0.3);
+  transform: scale(1.05);
 }
 
 .btn-start,
 .btn-retry {
-  background: linear-gradient(45deg, #ffd700, #ffa500);
+  background: linear-gradient(135deg, #ffd700, #ffa500);
   border: none;
   color: #000;
-  padding: 15px 40px;
+  padding: 16px 50px;
   border-radius: 50px;
-  font-weight: bold;
-  font-size: 1.2rem;
+  font-weight: 800;
+  font-size: 1.1rem;
   cursor: pointer;
-  box-shadow: 0 5px 15px rgba(255, 165, 0, 0.4);
+  box-shadow: 0 10px 25px rgba(255, 165, 0, 0.3);
+  transition: all 0.3s ease;
+  letter-spacing: 1px;
+  width: 100%;
 }
+.btn-start:hover,
+.btn-retry:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 15px 30px rgba(255, 165, 0, 0.4);
+}
+.btn-start:active {
+  transform: scale(0.98);
+}
+
 .btn-home {
-  margin-top: 15px;
+  margin-top: 20px;
   background: transparent;
-  border: 1px solid #aaa;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   color: #ccc;
-  padding: 10px 20px;
-  border-radius: 20px;
+  padding: 12px 30px;
+  border-radius: 50px;
   cursor: pointer;
+  font-size: 0.9rem;
+  transition: 0.3s;
+  width: 100%;
+}
+.btn-home:hover {
+  border-color: #fff;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* --- GAMEPLAY AREA (INI YANG DIPERBAIKI) --- */
@@ -381,14 +467,32 @@ body {
   }
 }
 
-
 #tutor-overlay {
-  display: none; 
+  display: none;
 }
 
+@keyframes flashGreen {
+  0% {
+    background-color: #4caf50;
+  }
+  100% {
+    background-color: white;
+  }
+}
+@keyframes flashRed {
+  0% {
+    background-color: #f44336;
+  }
+  100% {
+    background-color: white;
+  }
+}
 
-@keyframes flashGreen { 0% { background-color: #4CAF50; } 100% { background-color: white; } }
-@keyframes flashRed { 0% { background-color: #F44336; } 100% { background-color: white; } }
-
-.correct-flash { animation: flashGreen 0.5s ease-out; color: white !important; }
-.wrong-flash { animation: flashRed 0.5s ease-out; color: white !important; }
+.correct-flash {
+  animation: flashGreen 0.5s ease-out;
+  color: white !important;
+}
+.wrong-flash {
+  animation: flashRed 0.5s ease-out;
+  color: white !important;
+}
