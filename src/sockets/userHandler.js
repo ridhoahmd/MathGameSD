@@ -33,26 +33,27 @@ module.exports = (socket, io) => {
         where: { username: username },
       });
 
-      // 🚨 PREVENT IMPERSONATION
+      // 🚨 PREVENT IMPERSONATION (SOFT CHECK)
+      // Jika user di DB adalah admin/guru, TAPI socket tidak punya token auth yang sesuai:
+      // JANGAN BLOKIR, tapi DOWNGRADE ke 'siswa' agar mereka tetap bisa main/lihat profil sendiri.
+      let effectiveRole = user ? user.role : "siswa";
+
       if (user && (user.role === "admin" || user.role === "guru")) {
         if (
           !socket.isAuth ||
           (socket.decoded && socket.decoded.role !== "guru")
         ) {
           console.warn(
-            `⚠️ Unauthorized access attempt to ${username} (Role: ${user.role}) by unauthenticated socket.`,
+            `⚠️ Unauthorized access to ADMIN account ${username}. Downgrading to SISWA for this session.`,
           );
-          socket.emit(
-            "errorAuth",
-            "Anda tidak memiliki izin mengakses akun ini.",
-          );
-          return;
+          // Paksa jadi siswa di sesi ini agar aman
+          effectiveRole = "siswa";
         }
       }
 
       socket.activeUser = {
         username: username,
-        role: user ? user.role : "siswa",
+        role: effectiveRole,
       };
 
       if (fotoGoogle) {

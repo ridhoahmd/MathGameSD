@@ -185,7 +185,36 @@ function sanitizeName(name) {
   return name.replace(/[.#$[\]]/g, "_");
 }
 
-function loginGoogle() {
+async function loginGoogle() {
+  const guruCodeInput = document.getElementById("input-kode-guru");
+  const guruCode = guruCodeInput ? guruCodeInput.value.trim() : "";
+  let adminToken = null;
+
+  // 1. Jika ada kode guru, verifikasi dulu ke server sebelum login Google
+  if (guruCode) {
+    try {
+      const res = await fetch("/api/login-guru", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: guruCode }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        adminToken = data.token; // Simpan token sementara
+        localStorage.setItem("guruToken", adminToken); // Persist
+      } else {
+        alert("Kode Guru Salah! Login dibatalkan.");
+        return;
+      }
+    } catch (err) {
+      console.error("Login Guru Error:", err);
+      alert("Gagal verifikasi kode guru.");
+      return;
+    }
+  }
+
+  // 2. Lanjut Login Google
   auth
     .signInWithPopup(provider)
     .then((result) => {
@@ -193,7 +222,8 @@ function loginGoogle() {
       const safeName = sanitizeName(originalName);
 
       localStorage.setItem("playerName", safeName);
-      // Panggil requestData lagi setelah login sukses
+
+      // Panggil requestData dengan token (jika ada)
       requestSQLData(safeName);
 
       document.getElementById("btn-login").classList.add("hidden");
@@ -201,7 +231,11 @@ function loginGoogle() {
       document.getElementById("guru-input-area").classList.add("hidden");
       document.getElementById("btn-logout").classList.remove("hidden");
 
-      alert(`Selamat datang, ${originalName}!`);
+      if (adminToken) {
+        alert(`Selamat datang MASTER ${originalName}! (Mode Admin Aktif)`);
+      } else {
+        alert(`Selamat datang, ${originalName}!`);
+      }
     })
     .catch((e) => alert("Login Gagal: " + e.message));
 }
