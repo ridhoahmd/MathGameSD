@@ -18,7 +18,9 @@ class MathGame extends GameEngine {
   bindEvents() {
     document.querySelectorAll(".btn-difficulty").forEach((btn) => {
       btn.addEventListener("click", () => {
-        document.querySelectorAll(".btn-difficulty").forEach((b) => b.classList.remove("active"));
+        document
+          .querySelectorAll(".btn-difficulty")
+          .forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
         this.selectedDifficulty = btn.dataset.level;
       });
@@ -83,9 +85,14 @@ class MathGame extends GameEngine {
 
     this.currentProblem = this.questionList[this.currentIdx];
     UI.updateText("q-current", this.currentIdx + 1);
-    UI.updateProgressBar("progress-bar", this.currentIdx, this.questionList.length);
+    UI.updateProgressBar(
+      "progress-bar",
+      this.currentIdx,
+      this.questionList.length,
+    );
 
-    let teks = this.currentProblem.soal || this.currentProblem.question || "Error";
+    let teks =
+      this.currentProblem.soal || this.currentProblem.question || "Error";
     if (typeof this.currentProblem === "string") teks = this.currentProblem;
 
     UI.updateText("question-display", teks);
@@ -98,13 +105,21 @@ class MathGame extends GameEngine {
   checkAnswer() {
     const input = document.getElementById("answer-input");
     const val = input.value.trim();
-    const correct = String(this.currentProblem.jawaban || this.currentProblem.answer);
+    const correct = String(
+      this.currentProblem.jawaban || this.currentProblem.answer,
+    );
 
     if (val.toLowerCase() === correct.toLowerCase()) {
-      this.addScore(10);
+      // COMBO LOGIC
+      let multiplier = 1;
+      if (typeof ComboManager !== "undefined")
+        multiplier = ComboManager.addStreak();
+
+      this.addScore(Math.round(10 * multiplier));
       document.body.classList.add("correct-anim");
       setTimeout(() => document.body.classList.remove("correct-anim"), 500);
     } else {
+      if (typeof ComboManager !== "undefined") ComboManager.reset();
       this.playSound("wrong");
       document.body.classList.add("wrong-anim");
       setTimeout(() => document.body.classList.remove("wrong-anim"), 500);
@@ -112,7 +127,7 @@ class MathGame extends GameEngine {
       // Visual feedback in placeholder
       input.value = "";
       input.placeholder = `Jawab: ${correct}`;
-      setTimeout(() => input.placeholder = "Ketik jawaban...", 1500);
+      setTimeout(() => (input.placeholder = "Ketik jawaban..."), 1500);
     }
 
     this.currentIdx++;

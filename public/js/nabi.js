@@ -165,7 +165,14 @@ function checkAnswer(selectedRaw, correctRaw, btnElement) {
     try {
       AudioManager.playCorrect();
     } catch (e) {}
-    score += 20 + Math.floor(timeLeft / 2);
+
+    // COMBO
+    let multiplier = 1;
+    if (typeof ComboManager !== "undefined")
+      multiplier = ComboManager.addStreak();
+
+    let basePoints = 20 + Math.floor(timeLeft / 2);
+    score += Math.round(basePoints * multiplier);
     if (ui.score) ui.score.innerText = score;
     setTimeout(() => {
       currentIndex++;
@@ -173,6 +180,7 @@ function checkAnswer(selectedRaw, correctRaw, btnElement) {
     }, 2000);
   } else {
     // SALAH
+    if (typeof ComboManager !== "undefined") ComboManager.reset();
     btnElement.classList.add("wrong");
     btnElement.style.background = "#e74c3c";
     try {

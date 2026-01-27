@@ -85,7 +85,7 @@ if (window.socket) {
   window.socket.on("soalDariAI", (response) => {
     const btnStart = document.querySelector(".btn-start");
 
-    // 1. VALIDASI DATA 
+    // 1. VALIDASI DATA
     if (!response || !response.data) {
       if (btnStart) {
         btnStart.innerText = "❌ Gagal Muat";
@@ -98,10 +98,8 @@ if (window.socket) {
 
     // 2. LOGIKA LABEL
     if (incomingData.kategori_kiri && incomingData.kategori_kanan) {
-
       namaKategoriKiri = incomingData.kategori_kiri;
       namaKategoriKanan = incomingData.kategori_kanan;
-
 
       if (ui.lblLeft) {
         ui.lblLeft.innerText = incomingData.kategori_kiri;
@@ -172,7 +170,13 @@ function answer(side) {
 
   if (isCorrect) {
     // --- JAWABAN BENAR ---
-    score += 10;
+
+    // COMBO
+    let multiplier = 1;
+    if (typeof ComboManager !== "undefined")
+      multiplier = ComboManager.addStreak();
+
+    score += Math.round(10 * multiplier);
     if (ui.score) ui.score.innerText = score;
 
     try {
@@ -195,25 +199,27 @@ function answer(side) {
     setTimeout(nextCard, 300);
   } else {
     // --- JAWABAN SALAH ---
+    if (typeof ComboManager !== "undefined") ComboManager.reset();
     try {
       AudioManager.playWrong();
     } catch (e) {}
 
     // 1. Efek Kedip Merah di Kartu
     if (cardElement) {
-      cardElement.classList.add("wrong-flash"); 
+      cardElement.classList.add("wrong-flash");
       setTimeout(() => cardElement.classList.remove("wrong-flash"), 500);
     }
 
-    // 2. Animasi Overlay 
+    // 2. Animasi Overlay
     showFeedback(false);
 
-    // 3. Panggil Tutor 
+    // 3. Panggil Tutor
     setTimeout(() => {
-      let teksJawabanUser = (side === 'kiri') ? namaKategoriKiri : namaKategoriKanan;
-      let teksJawabanBenar = (currentItem.hukum === 'kiri') ? namaKategoriKiri : namaKategoriKanan;
+      let teksJawabanUser =
+        side === "kiri" ? namaKategoriKiri : namaKategoriKanan;
+      let teksJawabanBenar =
+        currentItem.hukum === "kiri" ? namaKategoriKiri : namaKategoriKanan;
       panggilTutor(currentItem.teks, teksJawabanUser, teksJawabanBenar);
-      
     }, 600);
   }
 }

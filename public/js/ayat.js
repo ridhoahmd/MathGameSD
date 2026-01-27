@@ -130,7 +130,13 @@ function loadQuestion() {
 
       if (isCorrect) {
         btn.classList.add("correct");
-        score += 20;
+
+        // COMBO
+        let multiplier = 1;
+        if (typeof ComboManager !== "undefined")
+          multiplier = ComboManager.addStreak();
+
+        score += Math.round(20 * multiplier);
         if (ui.score) ui.score.innerText = score;
         try {
           AudioManager.playCorrect();
@@ -141,6 +147,7 @@ function loadQuestion() {
           loadQuestion();
         }, 2000);
       } else {
+        if (typeof ComboManager !== "undefined") ComboManager.reset();
         btn.classList.add("wrong");
         try {
           AudioManager.playWrong();

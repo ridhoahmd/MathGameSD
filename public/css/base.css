@@ -1,108 +1,122 @@
 /* BASE STYLES & RESET */
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: var(--font-main);
-    margin: 0;
-    padding: 0;
-    background: var(--bg-dark);
-    /* Fallback */
-    background-image: var(--grad-main);
-    color: var(--text-main);
-    min-height: 100vh;
-    overflow-x: hidden;
-    transition: background 0.5s ease, color 0.5s ease;
+  font-family: var(--font-main);
+  margin: 0;
+  padding: 0;
+  background: var(--grad-main);
+  background-size: var(--bg-size);
+  animation: gradientBG 15s ease infinite;
+  color: var(--text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition:
+    background 0.5s ease,
+    color 0.5s ease;
+}
+
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 h1,
 h2,
 h3 {
-    font-family: var(--font-display);
-    color: var(--neon-cyan);
-    margin-top: 0;
+  font-family: var(--font-display);
+  color: var(--neon-cyan);
+  margin-top: 0;
 }
 
 button {
-    font-family: var(--font-main);
-    cursor: pointer;
-    border: none;
-    outline: none;
+  font-family: var(--font-main);
+  cursor: pointer;
+  border: none;
+  outline: none;
 }
 
 /* SCROLLBAR */
 ::-webkit-scrollbar {
-    width: 10px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--bg-dark);
+  background: var(--bg-dark);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--neon-cyan);
-    border-radius: 5px;
+  background: var(--neon-cyan);
+  border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #00c2cc;
+  background: #00c2cc;
 }
 
 /* UTILITY CLASSES */
 .hidden {
-    display: none !important;
+  display: none !important;
 }
 
 .block {
-    display: block !important;
+  display: block !important;
 }
 
 .flex {
-    display: flex;
+  display: flex;
 }
 
 .text-center {
-    text-align: center;
+  text-align: center;
 }
 
 .w-full {
-    width: 100%;
+  width: 100%;
 }
 
 .mt-10 {
-    margin-top: 10px;
+  margin-top: 10px;
 }
 
 .mb-20 {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 /* ANIMATIONS */
 @keyframes flashGreen {
-    0% {
-        background-color: var(--neon-green);
-    }
+  0% {
+    background-color: var(--neon-green);
+  }
 
-    100% {
-        background-color: transparent;
-    }
+  100% {
+    background-color: transparent;
+  }
 }
 
 @keyframes flashRed {
-    0% {
-        background-color: var(--neon-red);
-    }
+  0% {
+    background-color: var(--neon-red);
+  }
 
-    100% {
-        background-color: transparent;
-    }
+  100% {
+    background-color: transparent;
+  }
 }
 
 .correct-anim {
-    animation: flashGreen 0.5s ease-out;
+  animation: flashGreen 0.5s ease-out;
 }
 
 .wrong-anim {
-    animation: flashRed 0.5s ease-out;
+  animation: flashRed 0.5s ease-out;
 }

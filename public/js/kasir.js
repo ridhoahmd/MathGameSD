@@ -83,9 +83,9 @@ socket.on("soalDariAI", (response) => {
 
     // 🔥 TAMBAHAN PENTING:
     ui.startScreen.classList.remove("active");
-    ui.startScreen.classList.add("hidden"); 
+    ui.startScreen.classList.add("hidden");
 
-    ui.gameScreen.classList.remove("hidden"); 
+    ui.gameScreen.classList.remove("hidden");
     ui.gameScreen.classList.add("active");
 
     // Kembalikan tombol start ke kondisi semula
@@ -123,6 +123,7 @@ function tampilkanSoal() {
   ui.feedback.innerText = "";
   ui.feedback.className = "feedback";
 
+  isProcessing = false; // Reset flag proses
   startTimer(30); // 30 Detik per transaksi
 }
 
@@ -145,8 +146,15 @@ function handleEnter(e) {
   if (e.key === "Enter") checkAnswer();
 }
 
+// Flag Anti-Spam
+let isProcessing = false;
+
 function checkAnswer(isTimeOut = false) {
+  // Cegah eksekusi ganda jika sedang memproses jawaban sebelumnya
+  if (isProcessing) return;
+
   clearInterval(timerInterval);
+  isProcessing = true;
 
   // 1. Ambil nilai mentah dari input box
   let rawValue = ui.inputAnswer.value;
@@ -162,7 +170,7 @@ function checkAnswer(isTimeOut = false) {
     // JIKA BENAR
     ui.feedback.innerText = "LUNAS! TRANSAKSI BERHASIL.";
     ui.feedback.classList.remove("wrong");
-    ui.feedback.classList.add("correct"); 
+    ui.feedback.classList.add("correct");
     ui.screenText.innerText = "SUKSES";
 
     try {

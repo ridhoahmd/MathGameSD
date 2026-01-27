@@ -31,17 +31,17 @@ function resizeCanvas() {
 
   // 2. Tentukan batasan (Max width 800 desktop, tapi di HP full width)
   let targetW = Math.min(winW, 800);
-  
+
   // 3. Hitung tinggi ideal (Ratio 4:3 default)
-  let targetH = targetW * 0.75; 
+  let targetH = targetW * 0.75;
 
   // 4. Cek apakah tinggi melebihi layar? (Penting buat HP landscape / pendek)
   // Kurangi 80px buat space UI (Score bar yang floating)
   if (targetH > winH * 0.9) {
-      targetH = winH * 0.9;
-      // Recalculate width to maintain aspect ratio somewhat, or just crop?
-      // Better: Keep logic simple. Just fit height.
-      targetW = targetH / 0.75; 
+    targetH = winH * 0.9;
+    // Recalculate width to maintain aspect ratio somewhat, or just crop?
+    // Better: Keep logic simple. Just fit height.
+    targetW = targetH / 0.75;
   }
 
   canvas.width = targetW;
@@ -519,9 +519,10 @@ window.handleInput = function (e) {
 
   // 🔥 FITUR BARU: Swap Ammo saat klik Player/Meriam
   const dist = Math.sqrt((x - player.x) ** 2 + (y - player.y) ** 2);
-  if (dist < 60) { // Radius klik meriam agak besar biar gampang kena di HP
-      swapAmmo();
-      return;
+  if (dist < 60) {
+    // Radius klik meriam agak besar biar gampang kena di HP
+    swapAmmo();
+    return;
   }
 
   bullets.push(
@@ -535,37 +536,41 @@ window.handleInput = function (e) {
 };
 
 // 🔥 FUNGSI SWAP AMMO CERDAS
+// 🔥 FUNGSI SWAP AMMO CERDAS (FIXED)
 function swapAmmo() {
-  // Animasi visual kecil (opsional, bisa getar atau ganti warna sebentar)
-  player.color = "#fff"; 
-  setTimeout(() => player.color = "#ff9800", 100);
+  // Animasi visual kecil
+  player.color = "#fff";
+  setTimeout(() => (player.color = "#ff9800"), 100);
 
-  // Cari musuh yang ada di layar
+  // Ambil semua musuh aktif
   const activeEnemies = enemies.filter((e) => e.active);
-  
-  if (activeEnemies.length > 0) {
-      // 90% Dapat peluru yang berguna (sesuai musuh yang ada)
-      if (Math.random() < 0.9) {
-          const randomEnemy = activeEnemies[Math.floor(Math.random() * activeEnemies.length)];
-          // Pastikan ganti ke angka BEDA jika memungkinkan, biar gak dikira ngebug kalau angkanya sama terus
-          if (activeEnemies.length > 1 && randomEnemy.value === player.currentAmmo) {
-             const otherEnemies = activeEnemies.filter(e => e.value !== player.currentAmmo);
-             if (otherEnemies.length > 0) {
-                 const bestEnemy = otherEnemies[Math.floor(Math.random() * otherEnemies.length)];
-                 player.currentAmmo = bestEnemy.value;
-             } else {
-                 player.currentAmmo = randomEnemy.value; 
-             }
-          } else {
-             player.currentAmmo = randomEnemy.value;
-          }
-      } else {
-          // 10% Random total (biar ada tantangan dikit)
-          player.currentAmmo = Math.floor(Math.random() * 9) + 1;
-      }
+
+  if (activeEnemies.length === 0) {
+    // Jika tidak ada musuh, random total 1-9
+    player.currentAmmo = Math.floor(Math.random() * 9) + 1;
+    return;
+  }
+
+  // Coba cari musuh yang nilainya BEDA dengan ammo sekarang
+  const differentEnemies = activeEnemies.filter(
+    (e) => e.value !== player.currentAmmo,
+  );
+
+  if (differentEnemies.length > 0) {
+    // Prioritas: Ganti ke ammo yang bisa nembak musuh lain
+    const target =
+      differentEnemies[Math.floor(Math.random() * differentEnemies.length)];
+    player.currentAmmo = target.value;
   } else {
-      // Jika musuh kosong, random aja
+    // Jika semua musuh nilainya SAMA dengan ammo kita sekarang,
+    // Kita tetap acak 20% kemungkinan dapat angka random biar gak stuck,
+    // tapi 80% tetap pertahankan angka yang berguna itu.
+    if (Math.random() < 0.2) {
       player.currentAmmo = Math.floor(Math.random() * 9) + 1;
+    } else {
+      // Tetap pakai nilai dari salah satu musuh (yang sama)
+      player.currentAmmo = activeEnemies[0].value;
+    }
   }
 }
 

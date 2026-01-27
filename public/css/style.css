@@ -541,18 +541,47 @@ button:active,
 }
 .game-card {
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 15px;
+  border-radius: 16px;
   padding: 30px 20px;
   text-align: center;
   text-decoration: none;
   border: 1px solid rgba(255, 255, 255, 0.1);
   display: block;
-  transition: 0.3s;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy effect */
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  position: relative;
+  overflow: hidden;
 }
+
+/* Shine Effect Element */
+.game-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: skewX(-25deg);
+  transition: 0.5s;
+}
+
+.game-card:hover::before {
+  left: 100%;
+}
+
 .game-card:hover {
-  transform: translateY(-10px);
-  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-10px) scale(1.02);
+  background: rgba(255, 255, 255, 0.15);
   border-color: #00f2ff;
+  box-shadow: 0 10px 40px rgba(0, 242, 255, 0.2);
 }
 
 .game-icon {
@@ -926,8 +955,6 @@ button:active,
   filter: brightness(90%); /* Sedikit menggelap */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-
-
 
 /* --- TAMBAHAN: INDIKATOR LOADING AI --- */
 .tutor-loading-box {

@@ -404,7 +404,6 @@ window.checkQuiz = function () {
       // Tutup modal quiz sementara biar overlay AI terlihat
       document.getElementById("quiz-modal").style.display = "none";
 
-      
       if (tutorOverlay) {
         // 1. Tampilkan Overlay
         tutorOverlay.style.display = "flex";
@@ -485,11 +484,19 @@ let touchStartX = 0;
 let touchStartY = 0;
 
 // 1. Saat jari MENYENTUH layar (Mulai)
+// 1. Saat jari MENYENTUH layar (Mulai)
 document.addEventListener(
   "touchstart",
   (e) => {
-    // PATCH: Cek jika yang disentuh adalah Tombol atau Input, JANGAN jalankan swipe karakter
-    if (e.target.tagName === "BUTTON" || e.target.tagName === "INPUT") return;
+    // PATCH: Cek lebih mendalam apakah yang disentuh adalah elemen interaktif
+    // Gunakan .closest() untuk menangani kasus user menyentuh icon di dalam button
+    if (
+      e.target.closest("button") ||
+      e.target.closest("input") ||
+      e.target.closest(".btn-ctrl")
+    ) {
+      return;
+    }
 
     touchStartX = e.changedTouches[0].screenX;
     touchStartY = e.changedTouches[0].screenY;

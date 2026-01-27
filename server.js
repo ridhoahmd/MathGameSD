@@ -1,3 +1,4 @@
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const express = require("express");
 const http = require("http");
@@ -22,13 +23,16 @@ app.use(
     crossOriginEmbedderPolicy: false,
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
     crossOriginResourcePolicy: { policy: "cross-origin" },
-  })
+  }),
 );
 app.use(express.json());
 
 // Cache Control
 app.use((req, res, next) => {
-  res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.set(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate",
+  );
   res.set("Pragma", "no-cache");
   res.set("Expires", "0");
   next();
@@ -40,8 +44,16 @@ initSocket(server);
 // 3. API ROUTES
 app.use("/api/ask-ai", apiLimiter);
 
-// Route: Login Guru
-app.post("/api/login-guru", (req, res) => {
+// Secret Key Validation
+const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key-change-this";
+if (!process.env.JWT_SECRET) {
+  console.warn(
+    "⚠️  WARNING: JWT_SECRET belum diset di .env! Menggunakan default tidak aman.",
+  );
+}
+
+// Route: Login Guru (Protected with Rate Limit)
+app.post("/api/login-guru", apiLimiter, (req, res) => {
   const { kode } = req.body;
   const passwordBenar = process.env.GURU_PASSWORD;
 
@@ -55,7 +67,11 @@ app.post("/api/login-guru", (req, res) => {
 
   const inputKode = kode ? String(kode).trim() : "";
   if (inputKode === passwordBenar) {
-    return res.json({ success: true, role: "guru" });
+    // Generate Token
+    const token = jwt.sign({ role: "guru", username: "admin" }, JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    return res.json({ success: true, role: "guru", token });
   } else {
     return res.status(401).json({ success: false, message: "Kode Salah" });
   }
