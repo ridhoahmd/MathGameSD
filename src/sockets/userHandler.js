@@ -27,35 +27,34 @@ module.exports = (socket, io) => {
       }
     }
 
-    // Cek DB dulu
-    let user = await prisma.user.findUnique({
-      where: { username: username },
-    });
-
-    // 🚨 PREVENT IMPERSONATION
-    // Jika user di DB adalah admin/guru, TAPI socket tidak punya token auth yang sesuai -> TOLAK/DOWNGRADE
-    if (user && (user.role === "admin" || user.role === "guru")) {
-      if (
-        !socket.isAuth ||
-        (socket.decoded && socket.decoded.role !== "guru")
-      ) {
-        console.warn(
-          `⚠️ Unauthorized access attempt to ${username} (Role: ${user.role}) by unauthenticated socket.`,
-        );
-        socket.emit(
-          "errorAuth",
-          "Anda tidak memiliki izin mengakses akun ini.",
-        );
-        return;
-      }
-    }
-
-    socket.activeUser = {
-      username: username,
-      role: user ? user.role : "siswa",
-    };
-
     try {
+      // Cek DB dulu
+      let user = await prisma.user.findUnique({
+        where: { username: username },
+      });
+
+      // 🚨 PREVENT IMPERSONATION
+      if (user && (user.role === "admin" || user.role === "guru")) {
+        if (
+          !socket.isAuth ||
+          (socket.decoded && socket.decoded.role !== "guru")
+        ) {
+          console.warn(
+            `⚠️ Unauthorized access attempt to ${username} (Role: ${user.role}) by unauthenticated socket.`,
+          );
+          socket.emit(
+            "errorAuth",
+            "Anda tidak memiliki izin mengakses akun ini.",
+          );
+          return;
+        }
+      }
+
+      socket.activeUser = {
+        username: username,
+        role: user ? user.role : "siswa",
+      };
+
       if (fotoGoogle) {
         await prisma.user.upsert({
           where: { username: username },
@@ -103,6 +102,7 @@ module.exports = (socket, io) => {
       });
     } catch (err) {
       console.error("❌ Gagal ambil profil SQL:", err.message);
+      socket.emit("errorProfil", "Gagal memuat profil. Coba refresh.");
     }
   });
 
@@ -165,6 +165,12 @@ module.exports = (socket, io) => {
             connect: { id: updatedUser.id },
           },
         },
+      });
+
+      // Confirm success to client so they can refresh
+      socket.emit("skorTersimpan", {
+        totalScore: updatedUser.totalScore,
+        koin: updatedUser.coins,
       });
 
       // Notify teachers if needed (Global Emit can be handled via io)
