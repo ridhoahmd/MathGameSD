@@ -36,38 +36,148 @@ body {
     color 0.5s ease;
 }
 
-/* TEMA: HUTAN (Forest) */
+/* TEMA: HUTAN (Adventure Forest) - UPGRADE */
 body.theme-forest {
-  background: radial-gradient(circle at top right, #134e5e, #71b280);
   background-color: #0f2027;
+  /* Pola Hutan Halus */
+  background-image:
+    linear-gradient(rgba(15, 32, 39, 0.9), rgba(32, 58, 67, 0.9)),
+    repeating-linear-gradient(
+      45deg,
+      rgba(113, 178, 128, 0.1) 0,
+      rgba(113, 178, 128, 0.1) 10px,
+      transparent 10px,
+      transparent 20px
+    );
   color: #f1f8e9;
+}
+body.theme-forest .dashboard-container {
+  border-color: #71b280;
+  box-shadow: 0 0 40px rgba(113, 178, 128, 0.2);
 }
 body.theme-forest .game-card {
   background: rgba(20, 50, 20, 0.6);
   border-color: #71b280;
+  box-shadow: 0 4px 15px rgba(113, 178, 128, 0.2);
 }
-body.theme-forest .sidebar {
-  border-right-color: #71b280;
+body.theme-forest .game-card:hover {
+  border-color: #a8ff78;
+  box-shadow: 0 10px 30px rgba(113, 178, 128, 0.4);
 }
 body.theme-forest .btn-menu {
   background: linear-gradient(90deg, #134e5e, #71b280);
+  border-left: 3px solid #a8ff78;
 }
 
-/* TEMA: LAUTAN (Ocean) */
+/* TEMA: LAUTAN (Deep Ocean) - UPGRADE */
 body.theme-ocean {
-  background: radial-gradient(circle at top right, #2193b0, #6dd5ed);
-  background-color: #2193b0;
+  background-color: #1a2980;
+  /* Efek Gelombang Laut */
+  background-image:
+    radial-gradient(circle at top right, #26d0ce, transparent),
+    radial-gradient(circle at bottom left, #1a2980, transparent),
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      rgba(255, 255, 255, 0.05) 0,
+      rgba(255, 255, 255, 0.05) 2px,
+      transparent 10px,
+      transparent 30px
+    );
   color: #e0f7fa;
 }
-body.theme-ocean .game-card {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: #fff;
+body.theme-ocean .dashboard-container {
+  border-color: #26d0ce;
+  box-shadow: 0 0 40px rgba(38, 208, 206, 0.3);
 }
-body.theme-ocean .sidebar {
-  border-right-color: #fff;
+body.theme-ocean .game-card {
+  background: rgba(0, 30, 60, 0.6);
+  border-color: #26d0ce;
+}
+body.theme-ocean .game-card:hover {
+  border-color: #fff;
+  background: rgba(0, 50, 100, 0.8);
+  box-shadow: 0 0 25px rgba(38, 208, 206, 0.5);
 }
 body.theme-ocean .btn-menu {
-  background: linear-gradient(90deg, #2193b0, #6dd5ed);
+  background: linear-gradient(90deg, #1a2980, #26d0ce);
+  border-left: 3px solid #fff;
+}
+
+/* TEMA: ROYAL ISLAMIC (NEW PREMIUM) */
+body.theme-royal {
+  background-color: var(--islamic-emerald);
+  /* Pola Geometris Arabesque Overlay */
+  background-image:
+    radial-gradient(
+      circle at 50% 10%,
+      rgba(255, 215, 0, 0.15) 0%,
+      transparent 40%
+    ),
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.03) 0,
+      rgba(255, 255, 255, 0.03) 1px,
+      transparent 1px,
+      transparent 15px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.03) 0,
+      rgba(255, 255, 255, 0.03) 1px,
+      transparent 1px,
+      transparent 15px
+    );
+  color: var(--islamic-cream);
+}
+body.theme-royal .main-header {
+  background: rgba(15, 81, 50, 0.95);
+  border-bottom: 2px solid var(--islamic-gold);
+}
+body.theme-royal .dashboard-container {
+  background: rgba(15, 81, 50, 0.8);
+  border: 1px solid var(--islamic-gold);
+  box-shadow: 0 0 50px rgba(255, 215, 0, 0.2);
+}
+body.theme-royal .sidebar {
+  border-right: 1px solid rgba(255, 215, 0, 0.3);
+  background: rgba(0, 0, 0, 0.2);
+}
+body.theme-royal .game-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+body.theme-royal .game-card:hover {
+  border-color: var(--islamic-gold);
+  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 215, 0, 0.1),
+    rgba(15, 81, 50, 0.8)
+  );
+}
+body.theme-royal h1,
+body.theme-royal h2,
+body.theme-royal .portal-title,
+body.theme-royal .stat-value {
+  color: var(--islamic-gold);
+  font-family: "Cinzel", serif;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+body.theme-royal .btn-menu {
+  background: linear-gradient(90deg, #145a32, #1e8449);
+  border: 1px solid var(--islamic-gold);
+  color: var(--islamic-gold);
+  font-family: "Cinzel", serif;
+}
+body.theme-royal .btn-menu:hover {
+  background: linear-gradient(90deg, var(--islamic-gold), #f1c40f);
+  color: #000;
+  border-color: #fff;
+}
+body.theme-royal .btn-play {
+  background: var(--islamic-gold);
+  color: #000;
+  font-weight: bold;
 }
 
 /* =========================================
@@ -211,6 +321,64 @@ body.theme-crimson .portal-title,
 body.theme-crimson .stat-value {
   color: #ff0000;
   text-shadow: 0 0 10px #ff0000;
+}
+
+/* TEMA: OBSIDIAN (Full Black Aesthetic) */
+body.theme-obsidian {
+  background-color: #050505; /* Hampir hitam sempurna */
+  background-image: radial-gradient(circle at 50% 50%, #111 0%, #000 70%);
+  color: #e0e0e0; /* Platinum Text */
+}
+body.theme-obsidian .main-header {
+  background: rgba(0, 0, 0, 0.9);
+  border-bottom: 1px solid #333;
+}
+body.theme-obsidian .dashboard-container {
+  background: #0a0a0a;
+  border: 1px solid #222;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 1);
+}
+body.theme-obsidian .sidebar {
+  background: #000;
+  border-right: 1px solid #222;
+}
+body.theme-obsidian .game-card {
+  background: #111;
+  border: 1px solid #333;
+  box-shadow: none; /* Flat minimalist */
+  transition: all 0.3s ease;
+}
+body.theme-obsidian .game-card:hover {
+  border-color: #fff; /* White accent on hover */
+  transform: translateY(-5px);
+  box-shadow: 0 5px 20px rgba(255, 255, 255, 0.1);
+  background: #161616;
+}
+body.theme-obsidian .game-title,
+body.theme-obsidian .portal-title {
+  color: #fff;
+  font-weight: 300; /* Tipis elegan */
+  letter-spacing: 2px;
+}
+body.theme-obsidian .btn-menu {
+  background: #111;
+  border: 1px solid #333;
+  color: #aaa;
+}
+body.theme-obsidian .btn-menu:hover {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+body.theme-obsidian ::-webkit-scrollbar-thumb {
+  background: #333;
+}
+body.theme-obsidian .stat-value {
+  color: #fff;
+}
+body.theme-obsidian .chat-header {
+  background: #111;
+  border-bottom: 1px solid #333;
 }
 
 /* --- END TEMA --- */

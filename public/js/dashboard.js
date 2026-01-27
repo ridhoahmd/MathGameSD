@@ -294,7 +294,15 @@ if ("serviceWorker" in navigator) {
 
 // --- 7. TEMA CYCLING (FITUR LAMA TETAP ADA) ---
 function cycleTheme() {
-  const themes = ["default", "forest", "ocean", "hacker", "crimson"];
+  const themes = [
+    "default",
+    "forest",
+    "ocean",
+    "hacker",
+    "crimson",
+    "royal",
+    "obsidian",
+  ];
   const body = document.body;
 
   let currentThemeIndex = 0;
@@ -302,6 +310,8 @@ function cycleTheme() {
   else if (body.classList.contains("theme-ocean")) currentThemeIndex = 2;
   else if (body.classList.contains("theme-hacker")) currentThemeIndex = 3;
   else if (body.classList.contains("theme-crimson")) currentThemeIndex = 4;
+  else if (body.classList.contains("theme-royal")) currentThemeIndex = 5;
+  else if (body.classList.contains("theme-obsidian")) currentThemeIndex = 6;
 
   let nextIndex = (currentThemeIndex + 1) % themes.length;
   let nextTheme = themes[nextIndex];
