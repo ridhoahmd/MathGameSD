@@ -181,65 +181,107 @@ body.theme-royal .btn-play {
 }
 
 /* =========================================
-   TEMA: HACKER (STEALTH & DEEP CODE)
+   TEMA: HACKER (STEALTH & DEEP CODE) - OPTIMIZED
    ========================================= */
 
 body.theme-hacker {
-  /* Background: Gradasi Hijau Sangat Gelap (Deep Void) */
-  background: radial-gradient(circle at top center, #001a00, #000500 90%);
-  background-color: #000200;
+  /* Background: Improved gradient with subtle scan lines */
+  background:
+    linear-gradient(
+      0deg,
+      rgba(0, 255, 65, 0.02) 0%,
+      transparent 3%,
+      transparent 97%,
+      rgba(0, 255, 65, 0.02) 100%
+    ),
+    radial-gradient(circle at top center, #001a00, #000300 90%);
+  background-color: #000100;
+  background-size:
+    100% 4px,
+    100% 100%;
+  animation: scanlines 8s linear infinite;
 
-  /* Font: Tetap Monospace agar terasa 'Tech', tapi warnanya nyaman */
-  font-family: "Consolas", "Monaco", "Lucida Console", monospace;
-  color: #ccebd5; /* Hijau pucat (hampir putih), nyaman dibaca */
+  /* Font: Monospace dengan improved readability */
+  font-family: "Consolas", "Monaco", "Courier New", monospace;
+  color: #d4f4dd; /* Hijau pucat lebih terang - better contrast */
 }
 
-/* HEADER: Kaca Gelap Kehijauan */
+@keyframes scanlines {
+  0% {
+    background-position:
+      0 0,
+      0 0;
+  }
+  100% {
+    background-position:
+      0 4px,
+      0 0;
+  }
+}
+
+/* HEADER: Terminal-style header */
 body.theme-hacker .main-header {
-  background: rgba(0, 15, 0, 0.95);
-  border-bottom: 1px solid rgba(0, 255, 65, 0.2); /* Garis hijau tipis */
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.9);
+  background: rgba(0, 20, 0, 0.98);
+  border-bottom: 2px solid rgba(0, 255, 65, 0.3);
+  box-shadow:
+    0 5px 20px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(0, 255, 65, 0.05);
+  backdrop-filter: blur(10px);
 }
 
 /* CONTAINER UTAMA */
 body.theme-hacker .dashboard-container {
-  background: rgba(0, 20, 0, 0.6); /* Hijau gelap transparan */
-  border: 1px solid rgba(0, 255, 65, 0.15);
-  box-shadow: 0 0 50px rgba(0, 0, 0, 1); /* Bayangan hitam pekat */
+  background: rgba(0, 25, 0, 0.7);
+  border: 1px solid rgba(0, 255, 65, 0.25);
+  box-shadow:
+    0 0 60px rgba(0, 0, 0, 0.9),
+    inset 0 0 100px rgba(0, 255, 65, 0.03);
 }
 
 /* SIDEBAR */
 body.theme-hacker .sidebar {
-  background: rgba(0, 10, 0, 0.4);
-  border-right: 1px solid rgba(0, 255, 65, 0.1);
+  background: rgba(0, 15, 0, 0.5);
+  border-right: 1px solid rgba(0, 255, 65, 0.2);
 }
 
-/* KARTU GAME: Blok Data Enkripsi */
+/* KARTU GAME: Terminal window style */
 body.theme-hacker .game-card {
-  background: linear-gradient(180deg, rgba(0, 30, 0, 0.8), rgba(0, 10, 0, 0.9));
-  border: 1px solid rgba(0, 255, 65, 0.15);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.6);
+  background: linear-gradient(
+    145deg,
+    rgba(0, 35, 0, 0.9),
+    rgba(0, 15, 0, 0.95)
+  );
+  border: 1px solid rgba(0, 255, 65, 0.25);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(0, 255, 65, 0.1);
   position: relative;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Hover: Aksen Hijau Terminal */
+/* Hover: Matrix effect activation */
 body.theme-hacker .game-card:hover {
   transform: translateY(-5px);
-  border-color: #00ff41; /* Hijau Matrix menyala hanya saat disentuh */
-  box-shadow: 0 0 15px rgba(0, 255, 65, 0.1);
-  background: rgba(0, 40, 0, 0.9);
+  border-color: rgba(0, 255, 65, 0.6);
+  box-shadow:
+    0 8px 25px rgba(0, 255, 65, 0.15),
+    0 0 35px rgba(0, 255, 65, 0.08),
+    inset 0 1px 0 rgba(0, 255, 65, 0.2);
+  background: linear-gradient(145deg, rgba(0, 45, 0, 0.95), rgba(0, 25, 0, 1));
 }
 
-/* TYPOGRAPHY: Identitas Hacker */
+/* TYPOGRAPHY: Terminal text */
 body.theme-hacker h1,
 body.theme-hacker h2,
 body.theme-hacker .portal-title,
 body.theme-hacker .stat-value {
-  color: #00ff41; /* Hijau Matrix Ikonik */
-  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8); /* Shadow tajam, bukan glow kabur */
-  letter-spacing: 1px;
+  color: #00ff41;
+  text-shadow:
+    0 0 10px rgba(0, 255, 65, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.8);
+  letter-spacing: 1.5px;
   text-transform: uppercase;
+  font-weight: 600;
 }
 
 /* TOMBOL MENU: Command Prompt Style */
@@ -276,109 +318,213 @@ body.theme-hacker ::-webkit-scrollbar-thumb {
   background: #004d00; /* Hijau Tua */
 }
 
-/* TEMA: CRIMSON (Dark Red) */
+/* TEMA: CRIMSON (Dark Red) - OPTIMIZED */
 body.theme-crimson {
-  background: #000000;
-  color: #ffcccc;
+  background: radial-gradient(circle at top right, #1a0000, #000000 70%);
+  background-color: #000000;
+  color: #ffd4d4; /* Softer pink-white for better readability */
 }
+
 body.theme-crimson .main-header {
-  background: rgba(20, 0, 0, 0.9);
-  border-bottom: 1px solid #ff0000;
+  background: rgba(25, 0, 0, 0.95);
+  border-bottom: 2px solid rgba(255, 0, 0, 0.4);
+  box-shadow:
+    0 5px 20px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(255, 0, 0, 0.1);
 }
+
 body.theme-crimson .sidebar {
-  border-right: 1px solid #ff0000;
-  background: rgba(20, 0, 0, 0.5);
+  border-right: 1px solid rgba(255, 0, 0, 0.3);
+  background: rgba(25, 0, 0, 0.6);
 }
+
 body.theme-crimson .dashboard-container {
-  border: 1px solid #ff0000;
-  box-shadow: 0 0 30px rgba(255, 0, 0, 0.3);
+  background: rgba(20, 0, 0, 0.7);
+  border: 1px solid rgba(255, 0, 0, 0.35);
+  box-shadow:
+    0 0 40px rgba(0, 0, 0, 0.9),
+    0 0 80px rgba(255, 0, 0, 0.15);
 }
+
 body.theme-crimson .game-card {
-  background: rgba(30, 0, 0, 0.8);
-  border: 1px solid #ff0000;
-  box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.2);
+  background: linear-gradient(
+    145deg,
+    rgba(35, 0, 0, 0.9),
+    rgba(20, 0, 0, 0.95)
+  );
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.8),
+    inset 0 0 15px rgba(255, 0, 0, 0.08);
 }
+
 body.theme-crimson .game-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 0 20px #ff0000;
+  border-color: rgba(255, 50, 50, 0.7);
+  box-shadow:
+    0 8px 25px rgba(255, 0, 0, 0.25),
+    0 0 40px rgba(255, 0, 0, 0.15),
+    inset 0 0 20px rgba(255, 0, 0, 0.1);
+  background: linear-gradient(145deg, rgba(45, 0, 0, 0.95), rgba(30, 0, 0, 1));
 }
+
 body.theme-crimson .btn-menu {
-  background: linear-gradient(90deg, #330000, #800000);
-  border: 1px solid #ff4d4d;
-  color: white;
+  background: linear-gradient(90deg, #400000, #600000);
+  border: 1px solid rgba(255, 80, 80, 0.4);
+  color: #ffb3b3;
 }
-body.theme-crimson .stat-value,
-body.theme-crimson h2 {
-  color: #ff0000;
-  text-shadow: 0 0 10px #ff0000;
+
+body.theme-crimson .btn-menu:hover {
+  background: linear-gradient(90deg, #600000, #800000);
+  border-color: rgba(255, 100, 100, 0.7);
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.2);
 }
-body.theme-crimson .portal-title {
-  color: #ff0000;
-}
+
 body.theme-crimson h1,
 body.theme-crimson h2,
 body.theme-crimson .portal-title,
 body.theme-crimson .stat-value {
-  color: #ff0000;
-  text-shadow: 0 0 10px #ff0000;
+  color: #ff3333;
+  text-shadow:
+    0 0 15px rgba(255, 0, 0, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.8);
+  font-weight: 600;
 }
 
-/* TEMA: OBSIDIAN (Full Black Aesthetic) */
+/* TEMA: OBSIDIAN (Full Black Aesthetic) - PREMIUM */
 body.theme-obsidian {
-  background-color: #050505; /* Hampir hitam sempurna */
-  background-image: radial-gradient(circle at 50% 50%, #111 0%, #000 70%);
-  color: #e0e0e0; /* Platinum Text */
+  background: #000000; /* Pure black */
+  background-image:
+    radial-gradient(
+      circle at 20% 80%,
+      rgba(255, 255, 255, 0.02) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 20%,
+      rgba(255, 255, 255, 0.015) 0%,
+      transparent 50%
+    );
+  color: #f5f5f5; /* Very light gray - excellent contrast */
 }
+
 body.theme-obsidian .main-header {
-  background: rgba(0, 0, 0, 0.9);
-  border-bottom: 1px solid #333;
+  background: rgba(0, 0, 0, 0.98);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
 }
+
 body.theme-obsidian .dashboard-container {
-  background: #0a0a0a;
-  border: 1px solid #222;
-  box-shadow: 0 0 60px rgba(0, 0, 0, 1);
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 0 1px rgba(255, 255, 255, 0.1),
+    0 8px 40px rgba(0, 0, 0, 0.8);
 }
+
 body.theme-obsidian .sidebar {
-  background: #000;
-  border-right: 1px solid #222;
+  background: rgba(0, 0, 0, 0.5);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
+
 body.theme-obsidian .game-card {
-  background: #111;
-  border: 1px solid #333;
-  box-shadow: none; /* Flat minimalist */
+  background: linear-gradient(145deg, #0a0a0a, #000000);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.theme-obsidian .game-card:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-5px);
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: linear-gradient(145deg, #121212, #050505);
+}
+
+body.theme-obsidian .game-title {
+  color: #ffffff;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+body.theme-obsidian .portal-title {
+  color: #ffffff;
+  font-weight: 400;
+  letter-spacing: 3px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+body.theme-obsidian .btn-menu {
+  background: linear-gradient(145deg, #0d0d0d, #000000);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #d0d0d0;
   transition: all 0.3s ease;
 }
-body.theme-obsidian .game-card:hover {
-  border-color: #fff; /* White accent on hover */
-  transform: translateY(-5px);
-  box-shadow: 0 5px 20px rgba(255, 255, 255, 0.1);
-  background: #161616;
-}
-body.theme-obsidian .game-title,
-body.theme-obsidian .portal-title {
-  color: #fff;
-  font-weight: 300; /* Tipis elegan */
-  letter-spacing: 2px;
-}
-body.theme-obsidian .btn-menu {
-  background: #111;
-  border: 1px solid #333;
-  color: #aaa;
-}
+
 body.theme-obsidian .btn-menu:hover {
-  background: #fff;
-  color: #000;
-  border-color: #fff;
+  background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
+
+body.theme-obsidian .btn-play {
+  background: #000000;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+body.theme-obsidian .btn-play:hover {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #000000;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
 body.theme-obsidian ::-webkit-scrollbar-thumb {
-  background: #333;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
 }
+
+body.theme-obsidian ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+body.theme-obsidian ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+
 body.theme-obsidian .stat-value {
-  color: #fff;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+  font-weight: 500;
 }
+
+body.theme-obsidian h1,
+body.theme-obsidian h2 {
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+  font-weight: 400;
+}
+
 body.theme-obsidian .chat-header {
-  background: #111;
-  border-bottom: 1px solid #333;
+  background: #000000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.theme-obsidian .stats-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* --- END TEMA --- */

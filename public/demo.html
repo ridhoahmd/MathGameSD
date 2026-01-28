@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UI/UX Enhancement Demo - MathGameSD</title>
+
+    <!-- Import all new CSS -->
+    <link rel="stylesheet" href="css/design-tokens.css" />
+    <link rel="stylesheet" href="css/loading.css" />
+    <link rel="stylesheet" href="css/micro-interactions.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: var(--space-xl);
+        color: white;
+      }
+
+      .demo-container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .demo-header {
+        text-align: center;
+        margin-bottom: var(--space-3xl);
+      }
+
+      .demo-header h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        margin-bottom: var(--space-md);
+      }
+
+      .demo-section {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: var(--radius-xl);
+        padding: var(--space-xl);
+        margin-bottom: var(--space-xl);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .demo-section h2 {
+        margin-bottom: var(--space-lg);
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: var(--space-sm);
+      }
+
+      .demo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--space-lg);
+        margin-top: var(--space-lg);
+      }
+
+      .demo-button {
+        background: linear-gradient(135deg, #00f2ff, #00ff88);
+        color: #000;
+        border: none;
+        padding: var(--space-md) var(--space-xl);
+        border-radius: var(--radius-lg);
+        font-weight: 600;
+        cursor: pointer;
+        font-size: var(--font-md);
+        transition: all var(--duration-normal) var(--ease-smooth);
+      }
+
+      .demo-button:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-xl);
+      }
+
+      .score-display {
+        font-size: 3rem;
+        font-weight: 700;
+        text-align: center;
+        margin: var(--space-xl) 0;
+        color: #00f2ff;
+      }
+
+      .features-list {
+        list-style: none;
+        padding: var(--space-md);
+      }
+
+      .features-list li {
+        padding: var(--space-sm);
+        margin-bottom: var(--space-sm);
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-md);
+        animation: fadeInUp var(--duration-normal) var(--ease-smooth) backwards;
+      }
+
+      .features-list li:nth-child(1) {
+        animation-delay: 0s;
+      }
+      .features-list li:nth-child(2) {
+        animation-delay: 0.1s;
+      }
+      .features-list li:nth-child(3) {
+        animation-delay: 0.2s;
+      }
+      .features-list li:nth-child(4) {
+        animation-delay: 0.3s;
+      }
+      .features-list li:nth-child(5) {
+        animation-delay: 0.4s;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-container">
+      <div class="demo-header animate-fadeInDown">
+        <h1>🎨 UI/UX Enhancement Demo</h1>
+        <p>Test all new features implemented in MathGameSD</p>
+      </div>
+
+      <!-- Loading System Demo -->
+      <div class="demo-section">
+        <h2>1. Loading System</h2>
+        <div class="demo-grid">
+          <button class="demo-button ripple" onclick="testLoading()">
+            Show Loading Overlay
+          </button>
+          <button class="demo-button ripple" onclick="testProgress()">
+            Show Progress Bar
+          </button>
+          <button class="demo-button ripple" onclick="testSkeleton()">
+            Show Skeleton
+          </button>
+          <button class="demo-button ripple" onclick="testButtonLoading(this)">
+            Button Loading State
+          </button>
+        </div>
+
+        <div id="skeleton-demo" style="margin-top: var(--space-lg)"></div>
+        <div id="progress-demo" style="margin-top: var(--space-lg)"></div>
+      </div>
+
+      <!-- Micro-interactions Demo -->
+      <div class="demo-section">
+        <h2>2. Micro-interactions</h2>
+        <div class="demo-grid">
+          <button
+            class="demo-button ripple glow-on-hover"
+            onclick="AnimationUtils.shake(this)"
+          >
+            Shake Animation
+          </button>
+          <button
+            class="demo-button ripple bounce-on-hover"
+            onclick="AnimationUtils.pulse(this, 'success')"
+          >
+            Success Pulse
+          </button>
+          <button
+            class="demo-button ripple"
+            onclick="AnimationUtils.pulse(this, 'error')"
+          >
+            Error Pulse
+          </button>
+          <button
+            class="demo-button ripple"
+            onclick="
+              this.classList.add('wobble');
+              setTimeout(() => this.classList.remove('wobble'), 500);
+            "
+          >
+            Wobble
+          </button>
+        </div>
+      </div>
+
+      <!-- Score Animation Demo -->
+      <div class="demo-section">
+        <h2>3. Score Animations</h2>
+        <div id="score" class="score-display">0</div>
+        <div class="demo-grid">
+          <button class="demo-button ripple" onclick="testScoreAnimation(100)">
+            +100 Points
+          </button>
+          <button class="demo-button ripple" onclick="testScoreAnimation(500)">
+            +500 Points
+          </button>
+          <button class="demo-button ripple" onclick="testScoreAnimation(1000)">
+            +1000 Points
+          </button>
+          <button class="demo-button ripple" onclick="resetScore()">
+            Reset Score
+          </button>
+        </div>
+      </div>
+
+      <!-- Confetti Demo -->
+      <div class="demo-section">
+        <h2>4. Confetti System</h2>
+        <div class="demo-grid">
+          <button
+            class="demo-button ripple glow-on-hover"
+            onclick="confetti.burst()"
+          >
+            🎉 Burst
+          </button>
+          <button
+            class="demo-button ripple glow-on-hover"
+            onclick="confetti.cannon()"
+          >
+            🎊 Cannon
+          </button>
+          <button
+            class="demo-button ripple glow-on-hover"
+            onclick="confetti.shower()"
+          >
+            ☄️ Shower
+          </button>
+          <button
+            class="demo-button ripple glow-on-hover"
+            onclick="confetti.victory()"
+          >
+            🏆 Victory
+          </button>
+        </div>
+      </div>
+
+      <!-- Gamification Demo -->
+      <div class="demo-section">
+        <h2>5. Gamification System</h2>
+        <div class="demo-grid">
+          <button
+            class="demo-button ripple"
+            onclick="Achievements.unlock('first_game')"
+          >
+            Unlock Achievement
+          </button>
+          <button class="demo-button ripple" onclick="testLevelUp()">
+            Test Level Up
+          </button>
+          <button class="demo-button ripple" onclick="showStreakInfo()">
+            Show Streak Info
+          </button>
+          <button class="demo-button ripple" onclick="showAchievementStats()">
+            Achievement Stats
+          </button>
+        </div>
+      </div>
+
+      <!-- Features Implemented -->
+      <div class="demo-section">
+        <h2>✨ Features Implemented</h2>
+        <ul class="features-list">
+          <li>✅ Design System with CSS Custom Properties</li>
+          <li>✅ Loading States (Spinners, Progress, Skeletons)</li>
+          <li>✅ Micro-interactions (Ripples, Animations)</li>
+          <li>✅ Custom Confetti Particle System</li>
+          <li>✅ Responsive Design (Mobile-First)</li>
+          <li>✅ Achievement System (20+ badges)</li>
+          <li>✅ Daily Streak Tracking</li>
+          <li>✅ XP & Leveling System</li>
+          <li>✅ Animation Utilities Library</li>
+          <li>✅ Touch-Friendly UI (44px+ targets)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Import all new JS -->
+    <script src="js/utils/animations.js"></script>
+    <script src="js/utils/loading.js"></script>
+    <script src="js/utils/confetti.js"></script>
+    <script src="js/gamification/achievements.js"></script>
+    <script src="js/gamification/streaks.js"></script>
+    <script src="js/gamification/leveling.js"></script>
+
+    <script>
+      let currentScore = 0;
+
+      function testLoading() {
+        LoadingUI.show("Loading amazing features...");
+        setTimeout(() => LoadingUI.hide(), 2000);
+      }
+
+      function testProgress() {
+        const container = document.getElementById("progress-demo");
+        container.innerHTML = "";
+
+        const progress = LoadingUI.createProgressBar(0);
+        container.appendChild(progress.element);
+
+        let value = 0;
+        const interval = setInterval(() => {
+          value += 10;
+          progress.update(value);
+
+          if (value >= 100) {
+            clearInterval(interval);
+            setTimeout(() => (container.innerHTML = ""), 1000);
+          }
+        }, 200);
+      }
+
+      function testSkeleton() {
+        const container = document.getElementById("skeleton-demo");
+        container.innerHTML = "";
+
+        for (let i = 0; i < 3; i++) {
+          const skeleton = LoadingUI.createSkeleton("text");
+          container.appendChild(skeleton);
+        }
+
+        setTimeout(() => {
+          container.innerHTML =
+            '<p style="padding: var(--space-md);">Content loaded! ✨</p>';
+          container.classList.add("animate-fadeIn");
+        }, 2000);
+      }
+
+      function testButtonLoading(btn) {
+        LoadingUI.buttonLoading(btn);
+        setTimeout(() => LoadingUI.buttonReady(btn), 2000);
+      }
+
+      function testScoreAnimation(points) {
+        const scoreEl = document.getElementById("score");
+        const oldScore = currentScore;
+        currentScore += points;
+
+        AnimationUtils.animateCounter(scoreEl, oldScore, currentScore, 1000);
+        AnimationUtils.addTempClass(scoreEl, "score-pop", 300);
+
+        if (currentScore >= 1000) {
+          confetti.victory();
+        } else if (currentScore >= 500) {
+          confetti.burst({ particleCount: 100 });
+        } else {
+          confetti.burst({ particleCount: 50 });
+        }
+      }
+
+      function resetScore() {
+        const scoreEl = document.getElementById("score");
+        AnimationUtils.animateCounter(scoreEl, currentScore, 0, 500);
+        currentScore = 0;
+      }
+
+      function testLevelUp() {
+        PlayerLevel.addXP(500);
+        PlayerLevel.updateXPDisplay();
+      }
+
+      function showStreakInfo() {
+        const streak = DailyStreak.getCurrentStreak();
+        const longest = DailyStreak.getLongestStreak();
+        alert(
+          `Current Streak: ${streak} days\nLongest Streak: ${longest} days`,
+        );
+      }
+
+      function showAchievementStats() {
+        const total = Achievements.getTotalCount();
+        const unlocked = Achievements.getUnlockedCount();
+        const points = Achievements.getTotalPoints();
+        alert(
+          `Achievements:\n${unlocked}/${total} unlocked\n${points} total XP earned`,
+        );
+      }
+    </script>
+  </body>
+</html>

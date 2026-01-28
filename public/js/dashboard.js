@@ -100,17 +100,22 @@ socket.on("updateProfil", (data) => {
     if (guruPanel) guruPanel.classList.remove("hidden");
   }
 
-  // C. UPDATE SKOR & KOIN
-  const scoreEl = document.getElementById("total-score");
-  if (scoreEl) scoreEl.innerText = (data.skor || 0).toLocaleString();
+  // C. UPDATE XP (Untuk Progress Bar)
+  const xpDisplay = document.getElementById("total-score");
+  if (xpDisplay) xpDisplay.innerText = data.xp || "0";
 
-  const coinEl = document.getElementById("coin-display");
-  if (coinEl) coinEl.innerText = (data.koin || 0).toLocaleString();
+  // D. TEMA (hanya apply jika user belum manual pilih tema)
+  const savedTheme = localStorage.getItem("selectedTheme");
 
-  // D. UPDATE TEMA (Inject Tema dari SQL)
-  if (data.theme && data.theme !== "default") {
-    document.body.className = ""; // Reset tema lama
+  // Jika user sudah pilih manual, skip server theme
+  if (!savedTheme && data.theme && data.theme !== "default") {
+    document.body.className = ""; // Reset classes
     document.body.classList.add("theme-" + data.theme);
+  }
+  // Jika ada saved theme, tetap gunakan itu (priority)
+  else if (savedTheme && savedTheme !== "default") {
+    document.body.className = "";
+    document.body.classList.add("theme-" + savedTheme);
   }
 });
 
@@ -292,7 +297,20 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-// --- 7. TEMA CYCLING (FITUR LAMA TETAP ADA) ---
+// --- 7. TEMA CYCLING (DIPERBAIKI - DENGAN PERSISTENCE) ---
+
+// Load saved theme on page load
+function loadSavedTheme() {
+  const savedTheme = localStorage.getItem("selectedTheme");
+  if (savedTheme && savedTheme !== "default") {
+    document.body.classList.add("theme-" + savedTheme);
+    console.log("✅ Theme restored:", savedTheme);
+  }
+}
+
+// Call on script load
+loadSavedTheme();
+
 function cycleTheme() {
   const themes = [
     "default",
@@ -318,5 +336,11 @@ function cycleTheme() {
 
   // Terapkan ke Layar
   body.className = ""; // Reset
-  if (nextTheme !== "default") body.classList.add("theme-" + nextTheme);
+  if (nextTheme !== "default") {
+    body.classList.add("theme-" + nextTheme);
+  }
+
+  // SAVE TO LOCALSTORAGE untuk persistence
+  localStorage.setItem("selectedTheme", nextTheme);
+  console.log("💾 Theme saved:", nextTheme);
 }

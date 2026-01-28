@@ -1,0 +1,407 @@
+/* ========================================
+   RESPONSIVE DESIGN
+   Mobile-First, Touch-Friendly, Fluid Typography
+   ======================================== */
+
+/* === FLUID TYPOGRAPHY === */
+html {
+  /* Base font size: 14px on mobile, scales to 16px on desktop */
+  font-size: clamp(14px, 1.5vw, 16px);
+}
+
+h1 {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  line-height: var(--leading-tight);
+}
+
+h2 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: var(--leading-tight);
+}
+
+h3 {
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  line-height: var(--leading-normal);
+}
+
+p {
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
+  line-height: var(--leading-normal);
+}
+
+/* === MOBILE-FIRST BASE STYLES === */
+
+/* Container - DON'T override dashboard-container from style.css */
+
+/* Sidebar - DON'T override, let style.css handle it */
+
+/* Main Content - ONLY adjust padding, don't change flex */
+.main-content {
+  padding: var(--space-md);
+}
+
+/* Grid Games */
+.grid-games {
+  display: grid;
+  grid-template-columns: 1fr; /* Single column on mobile */
+  gap: var(--space-md);
+}
+
+/* Game Cards */
+.game-card {
+  padding: var(--space-lg);
+  min-height: 120px;
+}
+
+.game-icon {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-sm);
+}
+
+.game-title {
+  font-size: var(--font-lg);
+  margin-bottom: var(--space-xs);
+}
+
+.game-desc {
+  font-size: var(--font-sm);
+}
+
+/* Buttons - Touch-Friendly */
+button,
+.btn,
+.btn-menu,
+.btn-play {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--font-md);
+  border-radius: var(--radius-md);
+}
+
+/* Header */
+.main-header {
+  padding: var(--space-sm);
+  gap: var(--space-sm);
+}
+
+.logo-area {
+  gap: var(--space-sm);
+}
+
+.portal-title {
+  font-size: var(--font-sm);
+}
+
+.logo-img {
+  width: 40px;
+  height: 40px;
+}
+
+/* Chat Container */
+#chat-container {
+  width: 100%;
+  max-width: 100%;
+  height: 60vh;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+#chat-container.minimized {
+  height: 50px;
+}
+
+/* === TABLET (640px+) === */
+@media (min-width: 640px) {
+  .grid-games {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .game-icon {
+    font-size: 3rem;
+  }
+
+  #chat-container {
+    width: 400px;
+    max-width: 400px;
+    height: 500px;
+    bottom: 20px;
+    right: 20px;
+    left: auto;
+    border-radius: var(--radius-lg);
+  }
+
+  .main-header {
+    padding: 10px 40px;
+  }
+
+  .logo-img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .portal-title {
+    font-size: 1.4rem;
+  }
+}
+
+/* === TABLET LANDSCAPE / SMALL LAPTOP (768px+) === */
+@media (min-width: 768px) {
+  /* DON'T override dashboard-container or sidebar - original CSS handles it well */
+
+  .grid-games {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+  }
+}
+
+/* === LAPTOP (1024px+) === */
+@media (min-width: 1024px) {
+  .grid-games {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-xl);
+  }
+
+  .game-card {
+    padding: var(--space-xl);
+  }
+}
+
+/* === DESKTOP (1280px+) === */
+@media (min-width: 1280px) {
+  .main-content {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .grid-games {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* === LARGE DESKTOP (1536px+) === */
+@media (min-width: 1536px) {
+  .grid-games {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* === MOBILE LANDSCAPE === */
+@media (max-height: 600px) and (orientation: landscape) {
+  /* Keep minimal adjustments only */
+  #chat-container {
+    height: 80vh;
+  }
+}
+
+/* === TOUCH DEVICE OPTIMIZATIONS === */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase touch targets */
+  button,
+  .btn,
+  a {
+    min-height: 48px;
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  /* Remove hover effects on touch devices */
+  button:hover,
+  .btn:hover,
+  .game-card:hover {
+    transform: none;
+  }
+
+  /* Add active/tap states instead */
+  button:active,
+  .btn:active,
+  .game-card:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+
+  /* Larger tap areas for small elements */
+  .close-btn,
+  .icon-btn {
+    padding: var(--space-md);
+  }
+}
+
+/* === PRINT STYLES === */
+@media print {
+  .sidebar,
+  .main-header,
+  #chat-container,
+  .btn,
+  button {
+    display: none !important;
+  }
+
+  .main-content {
+    width: 100%;
+    padding: 0;
+  }
+
+  * {
+    background: white !important;
+    color: black !important;
+  }
+}
+
+/* === HIGH DPI SCREENS === */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Sharper borders and shadows */
+  .game-card {
+    border-width: 0.5px;
+  }
+}
+
+/* === LEADERBOARD RESPONSIVE === */
+.leaderboard-table {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.leaderboard-table table {
+  width: 100%;
+  min-width: 600px;
+}
+
+@media (max-width: 767px) {
+  .leaderboard-table table {
+    font-size: var(--font-sm);
+  }
+
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  /* Hide less important columns on mobile */
+  .leaderboard-table .hide-on-small {
+    display: none;
+  }
+}
+
+/* === MODAL RESPONSIVE === */
+.modal {
+  width: 95vw;
+  max-width: 500px;
+  margin: auto;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .modal {
+    width: 600px;
+  }
+}
+
+/* === FORM INPUTS RESPONSIVE === */
+input[type="text"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+  min-height: var(--touch-target-min);
+  font-size: 16px; /* Prevents zoom on iOS */
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+}
+
+@media (min-width: 768px) {
+  input[type="text"],
+  input[type="password"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: var(--font-md);
+  }
+}
+
+/* === SAFE AREA INSETS (for notched devices) === */
+@supports (padding: env(safe-area-inset-top)) {
+  .main-header {
+    padding-top: max(var(--space-md), env(safe-area-inset-top));
+  }
+
+  .sidebar {
+    padding-left: max(var(--space-md), env(safe-area-inset-left));
+  }
+
+  #chat-container {
+    bottom: max(20px, env(safe-area-inset-bottom));
+    right: max(20px, env(safe-area-inset-right));
+  }
+}
+
+/* === GRID UTILITIES === */
+.grid-auto-fit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-lg);
+}
+
+.grid-auto-fill {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--space-lg);
+}
+
+/* === FLEX UTILITIES === */
+.flex-responsive {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+@media (min-width: 768px) {
+  .flex-responsive {
+    flex-direction: row;
+  }
+}
+
+/* === ASPECT RATIO (for images/video) === */
+.aspect-16-9 {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.aspect-4-3 {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.aspect-square {
+  aspect-ratio: 1;
+  overflow: hidden;
+}
+
+/* === SCROLLBAR STYLING === */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 242, 255, 0.3);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 242, 255, 0.5);
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 242, 255, 0.3) rgba(255, 255, 255, 0.05);
+}

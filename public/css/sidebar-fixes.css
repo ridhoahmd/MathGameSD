@@ -1,0 +1,64 @@
+/* ========================================
+   SIDEBAR HEIGHT SYNC ONLY
+   Sync sidebar height dengan grid-game container
+   TIDAK mengubah ukuran elemen apapun!
+   ======================================== */
+
+/* === SIDEBAR HEIGHT SYNCHRONIZATION === */
+
+/* Desktop/Laptop - Sidebar sync dengan grid games height */
+@media (min-width: 768px) {
+  .sidebar {
+    /* Allow scroll if content longer than available space */
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    /* Sync max-height dengan container, bukan viewport */
+    max-height: fit-content;
+
+    /* Smooth scrolling */
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Dashboard container grows to fit content naturally */
+  .dashboard-container {
+    min-height: fit-content;
+    height: auto;
+  }
+}
+
+/* Thin scrollbar untuk sidebar */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(0, 242, 255, 0.3);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 242, 255, 0.5);
+}
+
+/* Firefox scrollbar */
+.sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 242, 255, 0.3) rgba(255, 255, 255, 0.05);
+}
+
+/* Mobile - no height restriction */
+@media (max-width: 767px) {
+  .sidebar {
+    max-height: none;
+    overflow-y: visible;
+  }
+}
+
+/* THAT'S IT - No size changes, only height behavior! */
