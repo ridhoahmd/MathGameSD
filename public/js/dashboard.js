@@ -100,9 +100,9 @@ socket.on("updateProfil", (data) => {
     if (guruPanel) guruPanel.classList.remove("hidden");
   }
 
-  // C. UPDATE XP (Untuk Progress Bar)
+  // C. UPDATE TOTAL SCORE (Sinkron dengan Leaderboard)
   const xpDisplay = document.getElementById("total-score");
-  if (xpDisplay) xpDisplay.innerText = data.xp || "0";
+  if (xpDisplay) xpDisplay.innerText = data.skor || "0";
 
   // D. TEMA (hanya apply jika user belum manual pilih tema)
   const savedTheme = localStorage.getItem("selectedTheme");

@@ -22,6 +22,7 @@ let bullets = [];
 let enemies = [];
 let selectedDifficulty = "mudah";
 const player = { x: 0, y: 0, angle: 0, currentAmmo: 1, color: "#ff9800" };
+let isHoveringTurret = false; // Track hover state for visual feedback
 
 // Resizer
 function resizeCanvas() {
@@ -447,12 +448,30 @@ class Bullet {
 function drawPlayer() {
   ctx.save();
   ctx.translate(player.x, player.y);
+
+  // 🎯 VISUAL HINT: Pulsing Ring untuk indikasi "bisa di-klik"
+  const pulseTime = Date.now() / 800;
+  const pulseRadius = 50 + Math.sin(pulseTime) * 8;
+  const pulseOpacity = 0.3 + Math.sin(pulseTime) * 0.15;
+
+  ctx.beginPath();
+  ctx.arc(0, 0, pulseRadius, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(0, 242, 255, ${pulseOpacity})`;
+  ctx.lineWidth = isHoveringTurret ? 4 : 2;
+  ctx.stroke();
+
+  // Extra glow saat hover
+  if (isHoveringTurret) {
+    ctx.beginPath();
+    ctx.arc(0, 0, pulseRadius + 5, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(255, 255, 0, ${pulseOpacity * 0.5})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
   ctx.rotate(player.angle);
 
   // MECH TURRET DESIGN
-
-  // 1. Base Ring (Static) - Seharusnya tidak ikut rotasi, tapi karena translate ada di atas,
-  // kita gambar base ini sebelum rotate jika ingin static. Tapi turret base ikut muter oke juga.
 
   // Barrel (Laras Meriam)
   ctx.fillStyle = "#444";
@@ -472,7 +491,7 @@ function drawPlayer() {
   ctx.fillStyle = grad;
   ctx.fill();
   ctx.lineWidth = 3;
-  ctx.strokeStyle = "#00f2ff"; // Neon Border
+  ctx.strokeStyle = isHoveringTurret ? "#ffff00" : "#00f2ff"; // Yellow saat hover
   ctx.stroke();
 
   // Ammo Display (Center) - Render as marble inside turret
@@ -480,7 +499,6 @@ function drawPlayer() {
   ctx.rotate(-player.angle);
 
   // Draw Ammo Marble in center
-  // Warna ammo berubah random/fixed? Kita buat dynamic
   const colors = [
     "#f00",
     "#0f0",
@@ -499,6 +517,19 @@ function drawPlayer() {
   let size = 15 + Math.sin(pulse) * 2;
 
   draw3DMarble(0, 0, size, ammoColor, player.currentAmmo);
+
+  // 🎯 TOOLTIP TEXT saat hover atau permanen sebagai hint
+  if (isHoveringTurret || Date.now() % 4000 < 2000) {
+    ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+    ctx.font = "bold 11px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = "black";
+    ctx.shadowBlur = 3;
+    ctx.fillText("KLIK / SPACE", 0, 45);
+    ctx.fillText("TUKAR AMMO", 0, 58);
+    ctx.shadowBlur = 0;
+  }
 
   ctx.restore();
 }
@@ -694,9 +725,10 @@ window.handleInput = function (e) {
   } catch (e) {}
 };
 
-// 🔥 FUNGSI SWAP AMMO CERDAS
-// 🔥 FUNGSI SWAP AMMO CERDAS (FIXED)
+// 🔥 FUNGSI SWAP AMMO CERDAS (ENHANCED)
 function swapAmmo() {
+  const oldAmmo = player.currentAmmo;
+
   // Animasi visual kecil
   player.color = "#fff";
   setTimeout(() => (player.color = "#ff9800"), 100);
@@ -707,30 +739,62 @@ function swapAmmo() {
   if (activeEnemies.length === 0) {
     // Jika tidak ada musuh, random total 1-9
     player.currentAmmo = Math.floor(Math.random() * 9) + 1;
-    return;
-  }
-
-  // Coba cari musuh yang nilainya BEDA dengan ammo sekarang
-  const differentEnemies = activeEnemies.filter(
-    (e) => e.value !== player.currentAmmo,
-  );
-
-  if (differentEnemies.length > 0) {
-    // Prioritas: Ganti ke ammo yang bisa nembak musuh lain
-    const target =
-      differentEnemies[Math.floor(Math.random() * differentEnemies.length)];
-    player.currentAmmo = target.value;
   } else {
-    // Jika semua musuh nilainya SAMA dengan ammo kita sekarang,
-    // Kita tetap acak 20% kemungkinan dapat angka random biar gak stuck,
-    // tapi 80% tetap pertahankan angka yang berguna itu.
-    if (Math.random() < 0.2) {
-      player.currentAmmo = Math.floor(Math.random() * 9) + 1;
+    // Coba cari musuh yang nilainya BEDA dengan ammo sekarang
+    const differentEnemies = activeEnemies.filter(
+      (e) => e.value !== player.currentAmmo,
+    );
+
+    if (differentEnemies.length > 0) {
+      // Prioritas: Ganti ke ammo yang bisa nembak musuh lain
+      const target =
+        differentEnemies[Math.floor(Math.random() * differentEnemies.length)];
+      player.currentAmmo = target.value;
     } else {
-      // Tetap pakai nilai dari salah satu musuh (yang sama)
-      player.currentAmmo = activeEnemies[0].value;
+      // Jika semua musuh nilainya SAMA dengan ammo kita sekarang,
+      // Kita tetap acak 20% kemungkinan dapat angka random biar gak stuck,
+      // tapi 80% tetap pertahankan angka yang berguna itu.
+      if (Math.random() < 0.2) {
+        player.currentAmmo = Math.floor(Math.random() * 9) + 1;
+      } else {
+        // Tetap pakai nilai dari salah satu musuh (yang sama)
+        player.currentAmmo = activeEnemies[0].value;
+      }
     }
   }
+
+  // 🎨 VISUAL FEEDBACK: Particle burst saat swap
+  const colors = [
+    "#f00",
+    "#0f0",
+    "#00f",
+    "#ff0",
+    "#0ff",
+    "#f0f",
+    "#f80",
+    "#8f0",
+    "#80f",
+  ];
+  for (let i = 0; i < 8; i++) {
+    particles.push(
+      new Particle(
+        player.x,
+        player.y,
+        colors[player.currentAmmo % colors.length],
+      ),
+    );
+  }
+
+  // 🔊 SOUND EFFECT (gunakan audio yang ada)
+  try {
+    const swapSfx = new Audio("/explosion.mp3");
+    swapSfx.volume = 0.3;
+    swapSfx.playbackRate = 1.5; // Lebih cepat untuk swap
+    swapSfx.play();
+  } catch (e) {}
+
+  // 📊 DEBUG LOG
+  console.log(`🔄 Ammo Swapped: ${oldAmmo} → ${player.currentAmmo}`);
 }
 
 canvas.addEventListener("mousedown", window.handleInput);
@@ -748,4 +812,17 @@ canvas.addEventListener("mousemove", (e) => {
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
   player.angle = Math.atan2(y - player.y, x - player.x);
+
+  // 🎯 HOVER DETECTION untuk visual feedback
+  const dist = Math.sqrt((x - player.x) ** 2 + (y - player.y) ** 2);
+  isHoveringTurret = dist < 60;
+  canvas.style.cursor = isHoveringTurret ? "pointer" : "crosshair";
+});
+
+// ⌨️ KEYBOARD SHORTCUT: Spacebar untuk swap ammo
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space" && gameActive) {
+    e.preventDefault();
+    swapAmmo();
+  }
 });
