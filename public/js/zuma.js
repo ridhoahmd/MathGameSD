@@ -174,6 +174,9 @@ function initGameEngine() {
   // [FIX] Ammo Tidak Boleh 0
   player.currentAmmo = Math.floor(Math.random() * 9) + 1;
 
+  // 🔧 FIX: Reset canvas dan player position ke center saat level baru
+  resizeCanvas();
+
   gameActive = true;
   lastSpawnTime = Date.now() - 5000;
 

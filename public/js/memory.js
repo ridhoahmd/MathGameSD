@@ -43,8 +43,24 @@ function initGame() {
   document.getElementById("game-screen").style.display = "block";
 
   // Pesan Loading
-  board.innerHTML =
-    '<div style="grid-column: 1/-1; text-align: center; color: white;">🧠 Mengambil data & Preload Assets...</div>';
+  // 🔧 FIX: Better loading state with spinner
+  board.innerHTML = `
+    <div style="grid-column: 1/-1; text-align: center; color: white;">
+      <div style="margin: 20px 0;">
+        <div style="display: inline-block; border: 3px solid #00f2ff; border-top: 3px solid transparent; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
+      </div>
+      <p>🧠 Mengambil data & Preload Assets...</p>
+    </div>
+  `;
+
+  // Add spinner animation if not exists
+  if (!document.getElementById("memory-spinner-style")) {
+    const style = document.createElement("style");
+    style.id = "memory-spinner-style";
+    style.textContent =
+      "@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }";
+    document.head.appendChild(style);
+  }
 
   moves = 0;
   matchesFound = 0;
@@ -102,8 +118,15 @@ socket.on("soalDariAI", (response) => {
       cleanPairs = cleanPairs.slice(0, maxPairs);
     }
 
+    // 🔧 FIX: Better error handling
     if (cleanPairs.length === 0) {
-      board.innerHTML = '<p style="color:red;">Data kosong.</p>';
+      board.innerHTML =
+        '<p style="color:red;">❌ Gagal memuat soal. Silakan refresh halaman.</p>';
+      console.error("Memory game: No valid pairs received from server");
+      setTimeout(() => {
+        document.getElementById("start-screen").style.display = "block";
+        document.getElementById("game-screen").style.display = "none";
+      }, 2000);
       return;
     }
 
@@ -115,6 +138,23 @@ socket.on("soalDariAI", (response) => {
     });
 
     setupBoard(gameCards);
+  }
+});
+
+// 🔧 FIX: Add resize listener untuk responsive canvas
+window.addEventListener("resize", () => {
+  if (!board || board.children.length === 0) return;
+
+  // Recalculate grid layout on resize
+  if (selectedDifficulty === "mudah") {
+    board.style.gridTemplateColumns = "repeat(3, 1fr)";
+    board.style.maxWidth = "260px";
+  } else if (selectedDifficulty === "sedang") {
+    board.style.gridTemplateColumns = "repeat(4, 1fr)";
+    board.style.maxWidth = "340px";
+  } else if (selectedDifficulty === "sulit") {
+    board.style.gridTemplateColumns = "repeat(6, 1fr)";
+    board.style.maxWidth = "480px";
   }
 });
 
@@ -256,7 +296,11 @@ function startFlashSequence() {
   // B. Tampilkan Countdown di Header
   const titleEl = document.querySelector("h1");
   const originalTitle = titleEl.innerText;
+
+  // 🔧 FIX: Adjust flash time based on difficulty
   let timeLeft = 3;
+  if (selectedDifficulty === "sedang") timeLeft = 4;
+  if (selectedDifficulty === "sulit") timeLeft = 6;
 
   titleEl.innerText = `HAFALKAN! ${timeLeft}s`;
   titleEl.style.color = "#ffeb3b";

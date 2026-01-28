@@ -27,9 +27,9 @@ let selectedLevel = "mudah";
 let tutorUsageCount = 0;
 const MAX_TUTOR_USAGE = 3;
 
-// --- 2. LISTENER TOMBOL DIFFICULTY ---
+// --- 2. LISTENER TOMBOL DIFFICULTY --- 🔧 FIX: Standardized to .btn-difficulty
 document.addEventListener("DOMContentLoaded", () => {
-  const diffButtons = document.querySelectorAll(".btn-diff");
+  const diffButtons = document.querySelectorAll(".btn-difficulty");
   diffButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       diffButtons.forEach((b) => b.classList.remove("active"));
@@ -85,11 +85,19 @@ if (window.socket) {
   window.socket.on("soalDariAI", (response) => {
     const btnStart = document.querySelector(".btn-start");
 
-    // 1. VALIDASI DATA
+    // 1. VALIDASI DATA - 🔧 FIX: Better error handling
     if (!response || !response.data) {
+      console.error("Tajwid game: No data from server");
+      alert("Gagal memuat soal. Silakan coba lagi.");
+
       if (btnStart) {
-        btnStart.innerText = "❌ Gagal Muat";
+        btnStart.innerText = "MULAI GAME";
         btnStart.disabled = false;
+      }
+
+      if (ui.start && ui.start.classList.contains("hidden")) {
+        ui.start.classList.remove("hidden");
+        ui.start.classList.add("active");
       }
       return;
     }

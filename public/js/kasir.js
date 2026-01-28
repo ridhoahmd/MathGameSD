@@ -21,11 +21,11 @@ let timeLeft = 0;
 let timerInterval;
 let playerName = localStorage.getItem("playerName") || "Guest";
 
-// Setup Tombol Level
-document.querySelectorAll(".btn-diff").forEach((btn) => {
+// Setup Tombol Level - 🔧 FIX: Standardized to .btn-difficulty
+document.querySelectorAll(".btn-difficulty").forEach((btn) => {
   btn.addEventListener("click", () => {
     document
-      .querySelectorAll(".btn-diff")
+      .querySelectorAll(".btn-difficulty")
       .forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     currentLevel = btn.dataset.level;
@@ -71,6 +71,20 @@ function mintaSoalKeServer() {
 
 socket.on("soalDariAI", (response) => {
   if (response.kategori === "kasir") {
+    // 🔧 FIX: Better error handling
+    if (!response.data) {
+      console.error("Kasir game: No data received from server");
+      alert("Gagal memuat soal. Silakan coba lagi.");
+      const btn = document.querySelector(".btn-start");
+      if (btn) {
+        btn.innerText = "BUKA KASIR";
+        btn.disabled = false;
+      }
+      ui.startScreen.classList.remove("hidden");
+      ui.startScreen.classList.add("active");
+      return;
+    }
+
     // Jika server mengirim array, pakai langsung. Jika object, bungkus jadi array.
     const data = response.data;
     if (Array.isArray(data)) {
@@ -104,10 +118,19 @@ function formatRupiah(angka) {
 }
 
 function tampilkanSoal() {
+  // 🔧 FIX: Add exit option for endless mode
   // Cek apakah soal habis?
   if (currentIndex >= questions.length) {
-    // Jika habis, minta lagi ke server (Endless Mode)
-    mintaSoalKeServer();
+    // Tampilkan opsi: lanjut atau selesai
+    ui.storyText.innerText = "Transaksi selesai! Mau lanjut atau selesai?";
+    ui.screenText.innerText = "PILIHAN";
+    ui.displayTotal.innerText = "";
+    ui.displayPay.innerText = "";
+    ui.inputAnswer.style.display = "none";
+    ui.feedback.innerHTML = `
+      <button onclick="lanjutKasir()" style="margin: 5px; padding: 10px 20px; background: #00f2ff; border: none; border-radius: 5px; color: black; font-weight: bold; cursor: pointer;">LANJUT TRANSAKSI</button>
+      <button onclick="endGame()" style="margin: 5px; padding: 10px 20px; background: #ff6b6b; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer;">SELESAI & KELUAR</button>
+    `;
     return;
   }
 
@@ -205,6 +228,9 @@ function checkAnswer(isTimeOut = false) {
 }
 
 function endGame() {
+  // 🔧 FIX: Clear timer to prevent memory leak
+  clearInterval(timerInterval);
+
   // PATCH: Menggunakan variabel 'ui' yang benar, bukan 'screens'
   if (ui.gameScreen) {
     ui.gameScreen.classList.remove("active");
@@ -231,3 +257,9 @@ function endGame() {
     });
   }
 }
+
+// 🔧 FIX: Function untuk lanjut endless mode
+window.lanjutKasir = function () {
+  ui.inputAnswer.style.display = "block";
+  mintaSoalKeServer();
+};

@@ -31,11 +31,11 @@ const MAX_TUTOR_USAGE = 3;
 let currentLevel = "mudah";
 let playerName = localStorage.getItem("playerName") || "Guest";
 
-// --- 2. LISTENER LEVEL ---
-document.querySelectorAll(".btn-diff").forEach((btn) => {
+// --- 2. LISTENER LEVEL --- 🔧 FIX: Standardized to .btn-difficulty
+document.querySelectorAll(".btn-difficulty").forEach((btn) => {
   btn.addEventListener("click", () => {
     document
-      .querySelectorAll(".btn-diff")
+      .querySelectorAll(".btn-difficulty")
       .forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     currentLevel = btn.dataset.level;
@@ -72,9 +72,21 @@ function startGame() {
 // --- 4. TERIMA DATA ---
 if (window.socket) {
   window.socket.on("soalDariAI", (response) => {
-    if (!response.data || response.data.length === 0) {
-      alert("Gagal memuat soal. Refresh halaman.");
-      location.reload();
+    // 🔧 FIX: Better error handling
+    if (!response || !response.data || response.data.length === 0) {
+      console.error("Ayat game: Invalid data from server");
+      alert("Gagal memuat soal. Silakan coba lagi.");
+
+      const btnStart = document.querySelector(".btn-start");
+      if (btnStart) {
+        btnStart.innerText = "MULAI GAME";
+        btnStart.disabled = false;
+      }
+
+      if (ui.start && ui.start.classList.contains("hidden")) {
+        ui.start.classList.remove("hidden");
+        ui.start.classList.add("active");
+      }
       return;
     }
     questions = response.data;

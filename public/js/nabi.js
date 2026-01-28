@@ -31,11 +31,11 @@ let playerName = localStorage.getItem("playerName") || "Guest";
 let tutorUsageCount = 0;
 const MAX_TUTOR_USAGE = 3;
 
-// 1. SETUP TOMBOL
-document.querySelectorAll(".btn-diff").forEach((btn) => {
+// 1. SETUP TOMBOL - 🔧 FIX: Standardized to .btn-difficulty
+document.querySelectorAll(".btn-difficulty").forEach((btn) => {
   btn.addEventListener("click", () => {
     document
-      .querySelectorAll(".btn-diff")
+      .querySelectorAll(".btn-difficulty")
       .forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     currentLevel = btn.dataset.level;
@@ -77,8 +77,25 @@ function startGame() {
 if (window.socket) {
   socket.on("soalDariAI", (response) => {
     if (response.kategori === "nabi") {
+      // 🔧 FIX: Better error handling
+      if (!response.data || response.data.length === 0) {
+        console.error("Nabi game: No data from server");
+        alert("Gagal memuat soal. Silakan coba lagi.");
+
+        const btnStart = document.querySelector(".btn-start");
+        if (btnStart) {
+          btnStart.innerText = "MULAI GAME";
+          btnStart.disabled = false;
+        }
+
+        if (screens.start) {
+          screens.start.classList.remove("hidden");
+          screens.start.classList.add("active");
+        }
+        return;
+      }
+
       questions = response.data;
-      if (!questions || questions.length === 0) return;
 
       currentIndex = 0;
       score = 0;
@@ -250,6 +267,9 @@ window.tutupTutor = function () {
 };
 
 function endGame() {
+  // 🔧 FIX: Clear timer to prevent memory leak
+  clearInterval(timerInterval);
+
   screens.game.classList.remove("active");
   screens.game.classList.add("hidden");
   screens.result.classList.remove("hidden");

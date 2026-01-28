@@ -112,3 +112,20 @@ const AudioManager = {
     return this.isMuted;
   },
 };
+
+// 🔧 FIX: Safe wrapper functions untuk consistent error handling
+window.safePlaySound = function (soundType) {
+  try {
+    if (typeof AudioManager !== "undefined" && AudioManager[soundType]) {
+      AudioManager[soundType]();
+    }
+  } catch (e) {
+    console.warn(`Audio playback failed for ${soundType}:`, e.message);
+  }
+};
+
+// Convenience shortcuts
+window.safePlayClick = () => safePlaySound("playClick");
+window.safePlayCorrect = () => safePlaySound("playCorrect");
+window.safePlayWrong = () => safePlaySound("playWrong");
+window.safePlayWin = () => safePlaySound("playWin");

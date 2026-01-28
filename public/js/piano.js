@@ -30,6 +30,7 @@ const notes = {
 };
 
 function playTone(num) {
+  // 🔧 FIX: Resume audio context globally
   if (audioCtx.state === "suspended") audioCtx.resume();
 
   const osc = audioCtx.createOscillator();
@@ -51,11 +52,11 @@ function playTone(num) {
   }
 }
 
-// --- PILIH LEVEL ---
-document.querySelectorAll(".btn-level").forEach((btn) => {
+// --- PILIH LEVEL --- 🔧 FIX: Standardized to .btn-difficulty
+document.querySelectorAll(".btn-difficulty").forEach((btn) => {
   btn.addEventListener("click", () => {
     document
-      .querySelectorAll(".btn-level")
+      .querySelectorAll(".btn-difficulty")
       .forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     level = btn.dataset.level;
@@ -206,6 +207,8 @@ function flashScreen(color) {
 // --- GAME OVER ---
 function endGame() {
   gameActive = false;
+
+  // 🔧 FIX: Clear timer to prevent memory leak
   clearInterval(timerInterval);
 
   document.getElementById("final-score").innerText = score;

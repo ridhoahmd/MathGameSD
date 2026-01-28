@@ -30,11 +30,11 @@ imgFinish.src = "https://cdn-icons-png.flaticon.com/512/1501/1501597.png";
 const imgObstacle = new Image();
 imgObstacle.src = "https://cdn-icons-png.flaticon.com/512/9183/9183226.png";
 
-// --- SETUP LEVEL ---
-document.querySelectorAll(".btn-level").forEach((btn) => {
+// --- SETUP LEVEL --- 🔧 FIX: Standardized to .btn-difficulty
+document.querySelectorAll(".btn-difficulty").forEach((btn) => {
   btn.addEventListener("click", () => {
     document
-      .querySelectorAll(".btn-level")
+      .querySelectorAll(".btn-difficulty")
       .forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     level = btn.dataset.level;
@@ -147,9 +147,9 @@ socket.on("soalDariAI", (response) => {
   }
 });
 
-// 🔥 LISTENER RESIZE (Dynamic)
+// 🔥 LISTENER RESIZE (Dynamic) - FIXED
 window.addEventListener("resize", () => {
-  if (!gameActive) return;
+  if (!gameActive || !grid.length) return;
   const mainArea = document.querySelector(".game-main");
   if (!mainArea) return;
 
@@ -165,8 +165,10 @@ window.addEventListener("resize", () => {
   canvas.width = cols * size;
   canvas.height = rows * size;
 
-  // Perlu redraw tapi tidak perlu regenerasi grid
-  draw();
+  // 🔧 FIX: Redraw immediately after resize
+  if (gameActive) {
+    draw();
+  }
 });
 
 // --- GENERATOR MAZE (FIXED STRUCTURE) ---
@@ -575,7 +577,7 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft") movePlayer(-1, 0);
 });
 
-// layarr sentuh Variabel untuk menyimpan posisi awal jari
+// 🔧 FIX: Touch variables
 let touchStartX = 0;
 let touchStartY = 0;
 
@@ -584,14 +586,16 @@ let touchStartY = 0;
 document.addEventListener(
   "touchstart",
   (e) => {
-    // PATCH: Cek lebih mendalam apakah yang disentuh adalah elemen interaktif
+    // 🔧 FIX: Better button conflict prevention
     // Gunakan .closest() untuk menangani kasus user menyentuh icon di dalam button
     if (
       e.target.closest("button") ||
       e.target.closest("input") ||
-      e.target.closest(".btn-ctrl")
+      e.target.closest(".btn-ctrl") ||
+      e.target.closest(".btn-submit-answer")
     ) {
-      return;
+      e.stopPropagation(); // Prevent propagation
+      return false;
     }
 
     touchStartX = e.changedTouches[0].screenX;
