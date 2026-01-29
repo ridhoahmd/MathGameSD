@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
@@ -135,7 +135,7 @@
 
         <button onclick="location.reload()" class="btn-start">MAIN LAGI</button>
 
-        <button onclick="window.location.href='/'" class="btn-secondary">
+        <button onclick="window.location.href = '/'" class="btn-secondary">
           KEMBALI
         </button>
       </div>
@@ -143,6 +143,10 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="../js/global.js"></script>
+    <!-- Gamification Systems -->
+    <script src="../js/gamification/achievements.js"></script>
+    <script src="../js/gamification/streaks.js"></script>
+    <script src="../js/gamification/leveling.js"></script>
     <script src="../js/piano.js?v=final"></script>
   </body>
 </html>

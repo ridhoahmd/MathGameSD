@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
@@ -47,7 +47,10 @@
         <button onclick="location.reload()" class="btn-action btn-retry">
           MAIN LAGI
         </button>
-        <button onclick="window.location.href='/'" class="btn-action btn-home">
+        <button
+          onclick="window.location.href = '/'"
+          class="btn-action btn-home"
+        >
           KEMBALI KE BASE
         </button>
       </div>
@@ -56,6 +59,10 @@
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="../js/audio.js"></script>
     <script src="../js/global.js"></script>
+    <!-- Gamification Systems -->
+    <script src="../js/gamification/achievements.js"></script>
+    <script src="../js/gamification/streaks.js"></script>
+    <script src="../js/gamification/leveling.js"></script>
     <script src="../js/memory.js?v=fix"></script>
   </body>
 </html>

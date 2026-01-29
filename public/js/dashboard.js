@@ -117,6 +117,17 @@ socket.on("updateProfil", (data) => {
     document.body.className = "";
     document.body.classList.add("theme-" + savedTheme);
   }
+
+  // E. UPDATE LEVEL & STREAK DISPLAY (Gamification)
+  // 🔧 FIX: Ensure gamification displays are updated when profile loads
+  setTimeout(() => {
+    if (typeof PlayerLevel !== "undefined") {
+      PlayerLevel.updateXPDisplay();
+    }
+    if (typeof DailyStreak !== "undefined") {
+      DailyStreak.updateStreakDisplay();
+    }
+  }, 100);
 });
 
 // --- 4. CHAT LOGIC  ---
