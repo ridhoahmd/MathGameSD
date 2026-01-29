@@ -680,12 +680,13 @@ function generatePath(pola) {
 }
 
 function endGame() {
+  // 🔧 FIX: Removed duplicate cancelAnimationFrame call
   if (animationId) {
     cancelAnimationFrame(animationId);
     animationId = null;
   }
   gameActive = false;
-  if (animationId) cancelAnimationFrame(animationId);
+
   if (gameOverScreen) gameOverScreen.style.display = "flex";
   if (finalScoreEl) finalScoreEl.innerText = score;
 

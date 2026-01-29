@@ -201,7 +201,7 @@ async function loginGoogle() {
       const res = await fetch("/api/login-guru", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: guruCode }),
+        body: JSON.stringify({ kode: guruCode }),
       });
       const data = await res.json();
 

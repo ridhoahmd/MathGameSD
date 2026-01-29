@@ -87,8 +87,17 @@ export class GameEngine {
         game: this.gameSlug,
       });
 
+      // 🔧 FIX: Use single listener with timeout handling inside
+      let timeoutId = setTimeout(() => {
+        console.log("⏱️ Score save timeout - refreshing profile anyway");
+        this.socket.emit("mintaDataProfil", this.playerName);
+      }, 2000);
+
       // TUNGGU konfirmasi dari server baru refresh
       this.socket.once("skorTersimpan", (data) => {
+        // Clear timeout since we got response
+        clearTimeout(timeoutId);
+
         // Check achievements
         if (typeof Achievements !== "undefined") {
           Achievements.checkGameAchievements(this.gameSlug, this.score);
@@ -117,14 +126,6 @@ export class GameEngine {
 
         this.socket.emit("mintaDataProfil", this.playerName);
       });
-
-      // Fallback jika server tidak merespon (timeout manual)
-      let timeoutId = setTimeout(() => {
-        this.socket.emit("mintaDataProfil", this.playerName);
-      }, 2000);
-
-      // Clear timeout if response received
-      this.socket.once("skorTersimpan", () => clearTimeout(timeoutId));
     }
   }
 }

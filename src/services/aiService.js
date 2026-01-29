@@ -1,6 +1,49 @@
 require("dotenv").config();
 
 const CURRENT_AI_MODEL = "glm";
+const MAX_RETRIES = 3;
+const BASE_DELAY = 1000; // 1 second
+
+// 🔧 FIX: Helper function with retry logic
+async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`AI API Error: ${response.status} - ${errorText}`);
+      }
+
+      return response;
+    } catch (err) {
+      clearTimeout(timeout);
+
+      const isLastAttempt = attempt === retries;
+      const isRetryable =
+        err.name === "AbortError" || (err.message && err.message.includes("5")); // 5xx errors
+
+      if (isLastAttempt || !isRetryable) {
+        throw err;
+      }
+
+      // Exponential backoff: 1s, 2s, 4s
+      const delay = BASE_DELAY * Math.pow(2, attempt - 1);
+      console.log(
+        `⏳ AI request attempt ${attempt} failed, retrying in ${delay}ms...`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+}
 
 async function askAI(promptText) {
   const apiKey = process.env.ZHIPU_API_KEY;
@@ -9,11 +52,8 @@ async function askAI(promptText) {
     throw new Error("Misconfiguration: API Key Missing");
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
-
   try {
-    const response = await fetch(
+    const response = await fetchWithRetry(
       "https://open.bigmodel.cn/api/paas/v4/chat/completions",
       {
         method: "POST",
@@ -33,16 +73,8 @@ async function askAI(promptText) {
           ],
           temperature: 0.7,
         }),
-        signal: controller.signal,
       },
     );
-
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`AI API Error: ${response.status} - ${errorText}`);
-    }
 
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
@@ -51,9 +83,8 @@ async function askAI(promptText) {
       ? data.choices[0].message.content
       : "Maaf, AI sedang tidak dapat menjawab (Empty Response).";
   } catch (err) {
-    clearTimeout(timeout);
     if (err.name === "AbortError") {
-      throw new Error("AI Service Timeout (15s)");
+      throw new Error("AI Service Timeout (15s) - semua retry gagal");
     }
     throw err;
   }

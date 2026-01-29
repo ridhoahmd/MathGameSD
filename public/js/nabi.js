@@ -230,6 +230,9 @@ function panggilTutor(soal, jawabUser, jawabBenar) {
   }
   tutorUsageCount++;
 
+  // 🔧 FIX: Clear timer when tutor opens so it doesn't expire during explanation
+  clearInterval(timerInterval);
+
   if (ui.tutorOverlay) {
     ui.tutorOverlay.style.display = "flex";
     if (ui.tutorText) {

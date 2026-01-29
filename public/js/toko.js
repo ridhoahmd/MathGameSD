@@ -97,6 +97,18 @@ function renderShop(serverData) {
 
 // --- A. BELI ITEM ---
 window.buyItem = function (itemId, price) {
+  // 🔧 FIX: Check if Swal is available, use native confirm as fallback
+  if (typeof Swal === "undefined") {
+    if (confirm(`Yakin beli ${itemId} seharga ${price} koin?`)) {
+      socket.emit("beliItem", {
+        username: username,
+        itemId: itemId,
+        harga: parseInt(price),
+      });
+    }
+    return;
+  }
+
   Swal.fire({
     title: "Konfirmasi Pembelian",
     text: `Yakin beli ${itemId} seharga ${price} koin?`,

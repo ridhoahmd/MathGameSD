@@ -231,6 +231,9 @@ function endGame() {
   // 🔧 FIX: Clear timer to prevent memory leak
   clearInterval(timerInterval);
 
+  // 🔧 FIX: Reset processing flag so user can play again
+  isProcessing = false;
+
   // PATCH: Menggunakan variabel 'ui' yang benar, bukan 'screens'
   if (ui.gameScreen) {
     ui.gameScreen.classList.remove("active");

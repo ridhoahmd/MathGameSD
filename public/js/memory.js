@@ -260,6 +260,9 @@ function resetBoard() {
 
 // 5. GAME SELESAI
 function gameWon() {
+  // 🔧 FIX: Clear any active flash timer to prevent memory leak
+  isFlashing = false;
+
   const baseScore = 100;
   let penalty = Math.max(0, (moves - totalPairs) * 2);
   let finalScore = Math.max(10, baseScore - penalty);

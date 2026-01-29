@@ -139,11 +139,25 @@ class MathGame extends GameEngine {
 const game = new MathGame();
 game.init();
 
-// WIRE SOCKET EVENTS
-if (window.socket) {
-  window.socket.on("soalDariAI", (data) => {
-    if (data.kategori === "math") {
-      game.onDataReceived(data);
-    }
-  });
+// WIRE SOCKET EVENTS - 🔧 FIX: Handle socket initialization race condition
+function wireSocketEvents() {
+  if (window.socket) {
+    window.socket.on("soalDariAI", (data) => {
+      if (data.kategori === "math") {
+        game.onDataReceived(data);
+      }
+    });
+    console.log("✅ Math game socket listener registered");
+  } else {
+    // Retry after short delay if socket not ready
+    console.log("⏳ Waiting for socket connection...");
+    setTimeout(wireSocketEvents, 100);
+  }
+}
+
+// Ensure DOM is ready before wiring
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", wireSocketEvents);
+} else {
+  wireSocketEvents();
 }

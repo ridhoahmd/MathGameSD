@@ -23,7 +23,10 @@ module.exports = (socket, io) => {
       // Kecuali admin mau lihat profil orang lain?
       // Untuk sekarang asumsi: token guru = identity guru.
       if (socket.decoded.role === "guru" || socket.decoded.role === "admin") {
-        // Izinkan login dengan hak akses tinggi
+        // 🔧 FIX: Log authenticated high-privilege access
+        console.log(
+          `✅ Authenticated ${socket.decoded.role} accessing profile: ${username}`,
+        );
       }
     }
 
