@@ -1,27 +1,64 @@
 /**
  * Leveling & XP System
  * Track player progression and calculate levels
+ * NOW SYNCED WITH SERVER DATABASE (not localStorage)
  */
 
 class LevelingSystem {
   constructor() {
-    this.currentXP = this.loadXP();
-    this.currentLevel = this.calculateLevel(this.currentXP);
+    this.currentXP = 0;
+    this.currentLevel = 0;
+    this.isLoaded = false;
+
+    // Listen for profile updates from server
+    this.setupSocketListeners();
   }
 
   /**
-   * Load XP from localStorage
+   * Setup socket listeners for XP sync
    */
-  loadXP() {
-    const saved = localStorage.getItem("player_xp");
-    return saved ? parseInt(saved) : 0;
-  }
+  setupSocketListeners() {
+    if (window.socket) {
+      // Load XP/Level when profile is received
+      window.socket.on("updateProfil", (data) => {
+        if (data.xp !== undefined) {
+          const oldLevel = this.currentLevel;
+          this.currentXP = data.xp;
+          this.currentLevel = data.level || this.calculateLevel(data.xp);
+          this.isLoaded = true;
+          this.updateXPDisplay();
 
-  /**
-   * Save XP to localStorage
-   */
-  saveXP() {
-    localStorage.setItem("player_xp", this.currentXP.toString());
+          // Check for level up (if level increased since last known)
+          if (oldLevel > 0 && this.currentLevel > oldLevel) {
+            this.onLevelUp(oldLevel, this.currentLevel);
+          }
+        }
+      });
+
+      // Update XP when score is saved
+      window.socket.on("skorTersimpan", (data) => {
+        if (data.xp !== undefined) {
+          const oldLevel = this.currentLevel;
+          this.currentXP = data.xp;
+          this.currentLevel = data.level || this.calculateLevel(data.xp);
+          this.updateXPDisplay();
+
+          // Show XP gained notification
+          if (data.xpGained && typeof AnimationUtils !== "undefined") {
+            AnimationUtils.showTooltip(
+              document.body,
+              `+${data.xpGained} XP earned!`,
+              2000,
+            );
+          }
+
+          // Check for level up
+          if (this.currentLevel > oldLevel) {
+            this.onLevelUp(oldLevel, this.currentLevel);
+          }
+        }
+      });
+    }
   }
 
   /**
@@ -40,25 +77,8 @@ class LevelingSystem {
   }
 
   /**
-   * Add XP and check for level up
-   */
-  addXP(amount) {
-    const oldLevel = this.currentLevel;
-    this.currentXP += amount;
-    this.currentLevel = this.calculateLevel(this.currentXP);
-    this.saveXP();
-
-    if (this.currentLevel > oldLevel) {
-      this.onLevelUp(oldLevel, this.currentLevel);
-      return { leveledUp: true, newLevel: this.currentLevel };
-    }
-
-    return { leveledUp: false, newLevel: this.currentLevel };
-  }
-
-  /**
-   * Get XP from game score
-   * Different games give different XP rates
+   * Get XP from game score (for display purposes)
+   * Actual XP is calculated on server, this is just for preview
    */
   getXPFromScore(game, score) {
     const rates = {
@@ -237,6 +257,7 @@ class LevelingSystem {
     const xpInCurrentLevel = this.currentXP - currentLevelXP;
     const xpNeededForLevel = nextLevelXP - currentLevelXP;
 
+    if (xpNeededForLevel <= 0) return 0;
     return Math.round((xpInCurrentLevel / xpNeededForLevel) * 100);
   }
 
@@ -245,7 +266,7 @@ class LevelingSystem {
    */
   getXPToNextLevel() {
     const nextLevelXP = this.xpForLevel(this.currentLevel + 1);
-    return nextLevelXP - this.currentXP;
+    return Math.max(0, nextLevelXP - this.currentXP);
   }
 
   /**
@@ -374,7 +395,7 @@ class LevelingSystem {
 // Create global instance
 const PlayerLevel = new LevelingSystem();
 
-// Update display on load
+// Update display on load (will show 0 until profile is received from server)
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
     PlayerLevel.updateXPDisplay();

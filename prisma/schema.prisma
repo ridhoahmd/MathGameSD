@@ -14,6 +14,8 @@ model User {
   role          String   @default("siswa")
   coins         Int      @default(0)
   totalScore    Int      @default(0)
+  xp            Int      @default(0)
+  level         Int      @default(0)
   photoURL      String?
   inventory     Json     @default("[\"default\"]")
   activeTheme   String   @default("default")
@@ -22,6 +24,7 @@ model User {
   updatedAt     DateTime @updatedAt
   scores        Score[]
 }
+
 
 model Game {
   id          Int     @id @default(autoincrement())

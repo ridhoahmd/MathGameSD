@@ -106,22 +106,11 @@ export class GameEngine {
           }
         }
 
-        // Add XP
+        // XP is now handled by server via skorTersimpan event
+        // leveling.js listens to this event and auto-updates display
+        // Just update XP display to be sure
         if (typeof PlayerLevel !== "undefined") {
-          const xp = PlayerLevel.getXPFromScore(this.gameSlug, this.score);
-          const result = PlayerLevel.addXP(xp);
           PlayerLevel.updateXPDisplay();
-
-          if (!result.leveledUp) {
-            // Show XP gained toast if no level up
-            if (typeof AnimationUtils !== "undefined") {
-              AnimationUtils.showTooltip(
-                document.body,
-                `+${xp} XP earned!`,
-                2000,
-              );
-            }
-          }
         }
 
         this.socket.emit("mintaDataProfil", this.playerName);

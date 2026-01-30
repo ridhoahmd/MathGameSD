@@ -1,5 +1,29 @@
 const prisma = require("../config/prisma");
 
+// XP rate multipliers per game (same as frontend)
+const XP_RATES = {
+  math: 1.0,
+  zuma: 0.8,
+  labirin: 1.2,
+  memory: 1.1,
+  piano: 1.0,
+  kasir: 0.9,
+  nabi: 1.0,
+  ayat: 1.0,
+  tajwid: 1.1,
+};
+
+// Calculate XP from score
+function getXPFromScore(game, score) {
+  const rate = XP_RATES[game] || 1.0;
+  return Math.floor(score * rate);
+}
+
+// Calculate level from XP (formula: Level = floor(sqrt(XP / 100)))
+function calculateLevel(xp) {
+  return Math.floor(Math.sqrt(xp / 100));
+}
+
 module.exports = (socket, io) => {
   // D. DATA PROFIL
   socket.on("mintaDataProfil", async (data) => {
@@ -99,6 +123,8 @@ module.exports = (socket, io) => {
         nama: user.username,
         koin: user.coins,
         skor: user.totalScore || 0,
+        xp: user.xp || 0,
+        level: user.level || 0,
         role: user.role,
         foto: finalFoto,
         frame: user.equippedFrame || "default",
@@ -136,6 +162,7 @@ module.exports = (socket, io) => {
     const safeName = data.nama;
     const gameSlug = data.game;
     const koin = Math.floor(skor / 10);
+    const xpGained = getXPFromScore(gameSlug, skor);
 
     try {
       let gameDb = await prisma.game.findUnique({ where: { slug: gameSlug } });
@@ -145,17 +172,29 @@ module.exports = (socket, io) => {
         });
       }
 
+      // Calculate new XP and level
+      let existingUser = await prisma.user.findUnique({
+        where: { username: safeName },
+      });
+      const currentXP = existingUser ? existingUser.xp : 0;
+      const newTotalXP = currentXP + xpGained;
+      const newLevel = calculateLevel(newTotalXP);
+
       const updatedUser = await prisma.user.upsert({
         where: { username: safeName },
         update: {
           coins: { increment: koin },
           totalScore: { increment: skor },
+          xp: newTotalXP,
+          level: newLevel,
         },
         create: {
           username: safeName,
           role: "siswa",
           coins: koin,
           totalScore: skor,
+          xp: xpGained,
+          level: calculateLevel(xpGained),
         },
       });
 
@@ -175,6 +214,9 @@ module.exports = (socket, io) => {
       socket.emit("skorTersimpan", {
         totalScore: updatedUser.totalScore,
         koin: updatedUser.coins,
+        xp: updatedUser.xp,
+        level: updatedUser.level,
+        xpGained: xpGained,
       });
 
       // Notify teachers if needed (Global Emit can be handled via io)
