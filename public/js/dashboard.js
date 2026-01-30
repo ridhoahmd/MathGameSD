@@ -1,6 +1,7 @@
 // public/js/dashboard.js - VERSI FINAL (FITUR LENGKAP + SQL SECURE)
 
-const socket = io();
+// Use global socket from global.js (avoid duplicate connection)
+const socket = window.socket || io();
 
 // --- SETUP FIREBASE AUTH (TETAP DIPAKAI UNTUK LOGIN GOOGLE) ---
 const provider = new firebase.auth.GoogleAuthProvider();

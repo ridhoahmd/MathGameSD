@@ -16,49 +16,79 @@ class LevelingSystem {
 
   /**
    * Setup socket listeners for XP sync
+   * Waits for socket to be available with retries
    */
   setupSocketListeners() {
+    // Try to setup immediately if socket exists
     if (window.socket) {
-      // Load XP/Level when profile is received
-      window.socket.on("updateProfil", (data) => {
-        if (data.xp !== undefined) {
-          const oldLevel = this.currentLevel;
-          this.currentXP = data.xp;
-          this.currentLevel = data.level || this.calculateLevel(data.xp);
-          this.isLoaded = true;
-          this.updateXPDisplay();
-
-          // Check for level up (if level increased since last known)
-          if (oldLevel > 0 && this.currentLevel > oldLevel) {
-            this.onLevelUp(oldLevel, this.currentLevel);
-          }
-        }
-      });
-
-      // Update XP when score is saved
-      window.socket.on("skorTersimpan", (data) => {
-        if (data.xp !== undefined) {
-          const oldLevel = this.currentLevel;
-          this.currentXP = data.xp;
-          this.currentLevel = data.level || this.calculateLevel(data.xp);
-          this.updateXPDisplay();
-
-          // Show XP gained notification
-          if (data.xpGained && typeof AnimationUtils !== "undefined") {
-            AnimationUtils.showTooltip(
-              document.body,
-              `+${data.xpGained} XP earned!`,
-              2000,
-            );
-          }
-
-          // Check for level up
-          if (this.currentLevel > oldLevel) {
-            this.onLevelUp(oldLevel, this.currentLevel);
-          }
-        }
-      });
+      this._attachSocketListeners();
+      return;
     }
+
+    // Otherwise wait and retry (socket may be created later by dashboard.js)
+    let retries = 0;
+    const maxRetries = 20; // 2 seconds total
+    const checkInterval = setInterval(() => {
+      retries++;
+      if (window.socket) {
+        clearInterval(checkInterval);
+        this._attachSocketListeners();
+        console.log(
+          "✅ LevelingSystem: Socket connected after " + retries + " retries",
+        );
+      } else if (retries >= maxRetries) {
+        clearInterval(checkInterval);
+        console.warn("⚠️ LevelingSystem: Socket not found after retries");
+      }
+    }, 100);
+  }
+
+  /**
+   * Attach socket event listeners
+   */
+  _attachSocketListeners() {
+    if (this._listenersAttached) return; // Prevent duplicate listeners
+    this._listenersAttached = true;
+
+    // Load XP/Level when profile is received
+    window.socket.on("updateProfil", (data) => {
+      if (data.xp !== undefined) {
+        const oldLevel = this.currentLevel;
+        this.currentXP = data.xp;
+        this.currentLevel = data.level || this.calculateLevel(data.xp);
+        this.isLoaded = true;
+        this.updateXPDisplay();
+
+        // Check for level up (if level increased since last known)
+        if (oldLevel > 0 && this.currentLevel > oldLevel) {
+          this.onLevelUp(oldLevel, this.currentLevel);
+        }
+      }
+    });
+
+    // Update XP when score is saved
+    window.socket.on("skorTersimpan", (data) => {
+      if (data.xp !== undefined) {
+        const oldLevel = this.currentLevel;
+        this.currentXP = data.xp;
+        this.currentLevel = data.level || this.calculateLevel(data.xp);
+        this.updateXPDisplay();
+
+        // Show XP gained notification
+        if (data.xpGained && typeof AnimationUtils !== "undefined") {
+          AnimationUtils.showTooltip(
+            document.body,
+            `+${data.xpGained} XP earned!`,
+            2000,
+          );
+        }
+
+        // Check for level up
+        if (this.currentLevel > oldLevel) {
+          this.onLevelUp(oldLevel, this.currentLevel);
+        }
+      }
+    });
   }
 
   /**
