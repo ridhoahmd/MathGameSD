@@ -45,11 +45,12 @@ initSocket(server);
 app.use("/api/ask-ai", apiLimiter);
 
 // Secret Key Validation
-const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key-change-this";
-if (!process.env.JWT_SECRET) {
-  console.warn(
-    "⚠️  WARNING: JWT_SECRET belum diset di .env! Menggunakan default tidak aman.",
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error(
+    "❌ FATAL: JWT_SECRET belum diset di .env! Server menolak start.",
   );
+  process.exit(1);
 }
 
 // Route: Login Guru (Protected with Rate Limit)

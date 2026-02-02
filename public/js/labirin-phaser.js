@@ -169,6 +169,36 @@ if (socket) {
   });
 }
 
+// === DYNAMIC RESIZE ===
+let resizeTimeout;
+window.addEventListener("resize", () => {
+  if (!gameActive) return;
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    // Recalculate size
+    const info = { maze_size: cols }; // Re-use current cols
+    const isMobile = window.innerWidth <= 768;
+    const headerHeight = 70;
+    const footerHeight = isMobile ? 180 : 40;
+    const availableWidth = window.innerWidth - 40;
+    const availableHeight = window.innerHeight - headerHeight - footerHeight;
+
+    let newSize = Math.floor(
+      Math.min(availableWidth / cols, availableHeight / rows),
+    );
+    if (newSize < 25) newSize = 25;
+
+    // Determine if significant change
+    if (Math.abs(newSize - size) > 2) {
+      size = newSize;
+      config.width = cols * size;
+      config.height = rows * size;
+      // Restart Phaser game to apply new config
+      initPhaserGame();
+    }
+  }, 500);
+});
+
 // === PHASER INITIALIZATION ===
 function initPhaserGame() {
   if (game) {

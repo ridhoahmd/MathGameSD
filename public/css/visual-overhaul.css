@@ -1,0 +1,91 @@
+/* =========================================
+   VISUAL OVERHAUL - PREMIUM GLASSMORPHISM
+   ========================================= */
+
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  --neon-accent: #00f2ff;
+  --neon-glow: 0 0 10px #00f2ff, 0 0 20px #00f2ff;
+  --text-glow: 0 0 5px rgba(255, 255, 255, 0.8);
+}
+
+body {
+  background: radial-gradient(
+    circle at center,
+    #1a1a2e 0%,
+    #16213e 50%,
+    #0f3460 100%
+  );
+  font-family: "Poppins", sans-serif; /* Setup base font if not already */
+}
+
+/* Glassmorphism Cards */
+.card,
+.game-container,
+.modal-content,
+.hud-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 16px;
+}
+
+/* Typography Enhancements */
+h1,
+h2,
+h3 {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 1px;
+}
+
+/* Neon Buttons */
+button,
+.btn,
+.btn-primary {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+button:hover,
+.btn:hover {
+  box-shadow: var(--neon-glow);
+  transform: translateY(-2px);
+  border-color: var(--neon-accent);
+}
+
+/* Inputs */
+input[type="text"],
+input[type="number"] {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--glass-border);
+  color: white;
+  border-radius: 8px;
+  padding: 10px;
+  transition: border-color 0.3s;
+}
+
+input:focus {
+  border-color: var(--neon-accent);
+  outline: none;
+  box-shadow: 0 0 5px var(--neon-accent);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a1a;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--neon-accent);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00c8d4;
+}

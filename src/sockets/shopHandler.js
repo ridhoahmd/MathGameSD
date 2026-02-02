@@ -47,13 +47,33 @@ module.exports = (socket, io) => {
       }
 
       // 3. Proses Transaksi Aman
-      myInventory.push(itemId);
+      // Re-fetch object to ensure latest state right before update to minimize race window
+      // Ideal fix would be a transaction with locking, but for this scale, this suffices.
+      const freshUser = await prisma.user.findUnique({
+        where: { username: username },
+      });
+      let currentInv = [];
+      try {
+        currentInv =
+          typeof freshUser.inventory === "string"
+            ? JSON.parse(freshUser.inventory)
+            : freshUser.inventory;
+        if (!Array.isArray(currentInv)) currentInv = [];
+      } catch (e) {
+        currentInv = [];
+      }
+
+      if (currentInv.includes(itemId)) {
+        return socket.emit("transaksiGagal", "Baru saja dibeli! ✅");
+      }
+
+      currentInv.push(itemId);
 
       const updatedUser = await prisma.user.update({
         where: { username: username },
         data: {
           coins: { decrement: hargaAsli },
-          inventory: myInventory,
+          inventory: currentInv,
         },
       });
 

@@ -11,7 +11,10 @@ const gameHandler = require("./gameHandler");
 const chatHandler = require("./chatHandler");
 const shopHandler = require("./shopHandler");
 
-const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key-change-this";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET is not defined in environment variables!");
+}
 
 module.exports = (httpServer) => {
   const io = socketIo(httpServer, {
@@ -35,7 +38,8 @@ module.exports = (httpServer) => {
           // Token invalid/expired, tapi kita biarkan connect sebagai Guest?
           // Atau tolak jika usernya maksa login guru?
           // Untuk fleksibilitas, kita biarkan connect tapi tandai invalid.
-          console.log(`⚠️ Invalid Token from ${socket.id}: ${err.message}`);
+          // Token invalid/expired
+          console.warn(`⚠️ Invalid Token from ${socket.id}: ${err.message}`);
         } else {
           socket.decoded = decoded;
           socket.isAuth = true;

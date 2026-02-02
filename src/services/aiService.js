@@ -79,9 +79,28 @@ async function askAI(promptText) {
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
 
-    return data.choices && data.choices[0] && data.choices[0].message
-      ? data.choices[0].message.content
-      : "Maaf, AI sedang tidak dapat menjawab (Empty Response).";
+    let content =
+      data.choices && data.choices[0] && data.choices[0].message
+        ? data.choices[0].message.content
+        : null;
+
+    if (!content)
+      return "Maaf, AI sedang tidak dapat menjawab (Empty Response).";
+
+    // Sanitizer: If response contains markdown ```json ... ```, extract it
+    if (content.includes("```json")) {
+      const match = content.match(/```json([\s\S]*?)```/);
+      if (match && match[1]) {
+        content = match[1].trim();
+      }
+    } else if (content.includes("```")) {
+      const match = content.match(/```([\s\S]*?)```/);
+      if (match && match[1]) {
+        content = match[1].trim();
+      }
+    }
+
+    return content;
   } catch (err) {
     if (err.name === "AbortError") {
       throw new Error("AI Service Timeout (15s) - semua retry gagal");

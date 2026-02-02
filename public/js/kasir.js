@@ -127,9 +127,16 @@ function tampilkanSoal() {
     ui.displayTotal.innerText = "";
     ui.displayPay.innerText = "";
     ui.inputAnswer.style.display = "none";
+
+    // Clear previous feedback
+    ui.feedback.innerText = "";
+    ui.feedback.className = "feedback";
+
     ui.feedback.innerHTML = `
-      <button onclick="lanjutKasir()" style="margin: 5px; padding: 10px 20px; background: #00f2ff; border: none; border-radius: 5px; color: black; font-weight: bold; cursor: pointer;">LANJUT TRANSAKSI</button>
-      <button onclick="endGame()" style="margin: 5px; padding: 10px 20px; background: #ff6b6b; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer;">SELESAI & KELUAR</button>
+      <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+          <button onclick="lanjutKasir()" class="btn-primary" style="padding: 10px 20px;">LANJUT TRANSAKSI</button>
+          <button onclick="endGame()" class="btn-danger" style="background: #ff4757; color: white; padding: 10px 20px; border:none; border-radius:8px;">SELESAI</button>
+      </div>
     `;
     return;
   }
