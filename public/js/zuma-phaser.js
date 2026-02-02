@@ -45,7 +45,7 @@ const config = {
   },
   scale: {
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
+    autoCenter: Phaser.Scale.NO_CENTER,
   },
 };
 
@@ -159,6 +159,7 @@ if (socket) {
 
 // === PHASER INITIALIZATION ===
 function initPhaserGame() {
+  console.log("Initializing Phaser Game...");
   // Destroy existing game if any
   if (game) {
     game.destroy(true);
@@ -188,97 +189,116 @@ function preload() {
 
 // === PHASER CREATE ===
 function create() {
+  console.log("Create Function Started. OLD Game Active:", gameActive);
+  gameActive = true; // FORCE ACTIVE IMMEDIATE
   const scene = this;
 
-  // Create path graphics
-  pathGraphics = this.add.graphics();
+  try {
+    // Create path graphics
+    pathGraphics = this.add.graphics();
 
-  // Generate path based on level data
-  const pathPoints = generatePathPoints(
-    levelData.pola || "spiral",
-    config.width,
-    config.height,
-  );
-
-  // Draw path
-  drawPath(pathGraphics, pathPoints);
-
-  // Create path curve for marble following
-  pathCurve = new Phaser.Curves.Spline(pathPoints);
-
-  // Create marble group
-  marbles = this.physics.add.group();
-
-  // Create bullet group
-  bullets = this.physics.add.group();
-
-  // Create particle emitter
-  const particleGraphics = this.make.graphics({ x: 0, y: 0, add: false });
-  particleGraphics.fillStyle(0xffffff, 1);
-  particleGraphics.fillCircle(4, 4, 4);
-  particleGraphics.generateTexture("particle", 8, 8);
-
-  particles = this.add.particles(0, 0, "particle", {
-    speed: { min: 50, max: 150 },
-    scale: { start: 1, end: 0 },
-    lifespan: 500,
-    blendMode: "ADD",
-    emitting: false,
-  });
-
-  // Create turret
-  createTurret(scene);
-
-  // Input handling
-  this.input.on("pointermove", (pointer) => {
-    if (!gameActive) return;
-    const angle = Phaser.Math.Angle.Between(
-      turret.x,
-      turret.y,
-      pointer.x,
-      pointer.y,
+    // Generate path based on level data
+    const pathPoints = generatePathPoints(
+      levelData.pola || "spiral",
+      config.width,
+      config.height,
     );
-    turret.rotation = angle;
-    player.angle = angle;
-  });
 
-  this.input.on("pointerdown", (pointer) => {
-    if (!gameActive) return;
+    // Draw path
+    drawPath(pathGraphics, pathPoints);
 
-    // Check if clicking on turret (swap ammo)
-    const dist = Phaser.Math.Distance.Between(
-      pointer.x,
-      pointer.y,
-      turret.x,
-      turret.y,
-    );
-    if (dist < 50) {
+    // Create path curve for marble following
+    pathCurve = new Phaser.Curves.Spline(pathPoints);
+
+    // Create marble group
+    marbles = this.physics.add.group();
+
+    // Create bullet group
+    bullets = this.physics.add.group();
+
+    // Create particle emitter
+    const particleGraphics = this.make.graphics({ x: 0, y: 0, add: false });
+    particleGraphics.fillStyle(0xffffff, 1);
+    particleGraphics.fillCircle(4, 4, 4);
+    particleGraphics.generateTexture("particle", 8, 8);
+
+    particles = this.add.particles(0, 0, "particle", {
+      speed: { min: 50, max: 150 },
+      scale: { start: 1, end: 0 },
+      lifespan: 500,
+      blendMode: "ADD",
+      emitting: false,
+    });
+
+    // Pre-generate textures
+    generateGameTextures(scene);
+
+    // Create turret
+    createTurret(scene);
+
+    // Input handling
+    this.input.on("pointermove", (pointer) => {
+      if (!gameActive) return;
+      const angle = Phaser.Math.Angle.Between(
+        turret.x,
+        turret.y,
+        pointer.x,
+        pointer.y,
+      );
+      turret.rotation = angle;
+      player.angle = angle;
+    });
+
+    this.input.on("pointerdown", (pointer) => {
+      if (!gameActive) {
+        console.warn("Click ignored: Game Inactive");
+        return;
+      }
+
+      // Check if clicking on turret (swap ammo)
+      const dist = Phaser.Math.Distance.Between(
+        pointer.x,
+        pointer.y,
+        turret.x,
+        turret.y,
+      );
+      if (dist < 50) {
+        swapAmmo(scene);
+        return;
+      }
+
+      // Shoot
+      shootBullet(scene, pointer);
+    });
+
+    // Keyboard input
+    this.input.keyboard.on("keydown-SPACE", () => {
       swapAmmo(scene);
-      return;
-    }
+    });
 
-    // Shoot
-    shootBullet(scene, pointer);
-  });
+    // Collision detection
+    this.physics.add.overlap(bullets, marbles, handleCollision, null, this);
 
-  // Keyboard input
-  this.input.keyboard.on("keydown-SPACE", () => {
-    swapAmmo(scene);
-  });
+    // Store scene reference
+    this.gameScene = scene;
 
-  // Collision detection
-  this.physics.add.overlap(bullets, marbles, handleCollision, null, this);
+    // Start spawning
+    lastSpawnTime = Date.now();
 
-  // Store scene reference
-  this.gameScene = scene;
-
-  // Start spawning
-  lastSpawnTime = Date.now();
+    gameActive = true;
+    console.log("Create Function Finished. Game Active Forced to True.");
+  } catch (e) {
+    console.error("CRITICAL ERROR IN CREATE:", e);
+    // Try to recover
+    gameActive = true;
+  }
 }
 
 // === PHASER UPDATE ===
 function update() {
-  if (!gameActive) return;
+  if (!gameActive) {
+    return;
+  }
 
   const scene = this;
   const now = Date.now();
@@ -298,6 +318,7 @@ function update() {
 
     if (marble.pathProgress >= 1) {
       // Reached end - game over
+      console.warn("Marble reached end! Game Over.");
       endGame();
       return;
     }
@@ -327,7 +348,17 @@ function update() {
   });
 
   // Check level complete
-  if (spawnedEnemies >= maxEnemies && marbles.countActive() === 0) {
+  // Safeguarded condition
+  if (
+    spawnedEnemies > 0 &&
+    spawnedEnemies >= maxEnemies &&
+    marbles.countActive() === 0
+  ) {
+    console.warn("Level Complete Triggered!", {
+      spawnedEnemies,
+      maxEnemies,
+      active: marbles.countActive(),
+    });
     gameActive = false;
     setTimeout(() => {
       alert(`🎉 LEVEL ${currentLevelNumber} SELESAI!`);
@@ -491,7 +522,11 @@ function createTurret(scene) {
 }
 
 function spawnMarble(scene) {
-  if (!pathCurve) return;
+  console.log("Spawning marble...");
+  if (!pathCurve) {
+    console.error("Path curve missing!");
+    return;
+  }
 
   spawnedEnemies++;
   if (targetEl) {
@@ -518,27 +553,13 @@ function spawnMarble(scene) {
   const colorHex = palette[Math.floor(Math.random() * palette.length)];
   const color = Phaser.Display.Color.HexStringToColor(colorHex).color;
 
-  // Create marble graphics
-  const marbleGraphics = scene.make.graphics({ x: 0, y: 0, add: false });
-
-  // Shadow
-  marbleGraphics.fillStyle(0x000000, 0.5);
-  marbleGraphics.fillCircle(22, 22, 18);
-
-  // Main circle with gradient effect
-  marbleGraphics.fillStyle(color, 1);
-  marbleGraphics.fillCircle(20, 20, 18);
-
-  // Highlight
-  marbleGraphics.fillStyle(0xffffff, 0.3);
-  marbleGraphics.fillCircle(14, 14, 6);
-
-  marbleGraphics.generateTexture("marble_" + spawnedEnemies, 44, 44);
+  // Use pre-generated texture based on color
+  const textureKey = "marble_" + colorHex.replace("#", "");
 
   const marble = scene.physics.add.sprite(
     startPoint.x,
     startPoint.y,
-    "marble_" + spawnedEnemies,
+    textureKey,
   );
   marble.value = value;
   marble.pathProgress = 0;
@@ -562,6 +583,7 @@ function spawnMarble(scene) {
 }
 
 function shootBullet(scene, pointer) {
+  console.log("Shooting bullet...");
   const angle = Phaser.Math.Angle.Between(
     turret.x,
     turret.y,
@@ -583,14 +605,8 @@ function shootBullet(scene, pointer) {
   const colorHex = colors[player.currentAmmo % colors.length];
   const color = Phaser.Display.Color.HexStringToColor(colorHex).color;
 
-  // Create bullet texture
-  const bulletKey = "bullet_" + Date.now();
-  const bulletGraphics = scene.make.graphics({ x: 0, y: 0, add: false });
-  bulletGraphics.fillStyle(color, 1);
-  bulletGraphics.fillCircle(12, 12, 10);
-  bulletGraphics.fillStyle(0xffffff, 0.3);
-  bulletGraphics.fillCircle(8, 8, 4);
-  bulletGraphics.generateTexture(bulletKey, 24, 24);
+  // Use pre-generated bullet texture
+  const bulletKey = "bullet_" + colorHex.replace("#", "");
 
   const bullet = scene.physics.add.sprite(turret.x, turret.y, bulletKey);
   bullet.value = player.currentAmmo;
@@ -730,3 +746,46 @@ window.restartZuma = function () {
   currentLevelNumber = 1;
   requestLevelData();
 };
+
+function generateGameTextures(scene) {
+  // 1. Generate Bullet Textures (for each color)
+  const colors = [
+    "#f00",
+    "#0f0",
+    "#00f",
+    "#ff0",
+    "#0ff",
+    "#f0f",
+    "#f80",
+    "#8f0",
+    "#80f",
+  ];
+
+  colors.forEach((colorHex) => {
+    const color = Phaser.Display.Color.HexStringToColor(colorHex).color;
+
+    // Bullet
+    const bKey = "bullet_" + colorHex.replace("#", "");
+    if (!scene.textures.exists(bKey)) {
+      const bg = scene.make.graphics({ x: 0, y: 0, add: false });
+      bg.fillStyle(color, 1);
+      bg.fillCircle(12, 12, 10);
+      bg.fillStyle(0xffffff, 0.3);
+      bg.fillCircle(8, 8, 4);
+      bg.generateTexture(bKey, 24, 24);
+    }
+
+    // Marble
+    const mKey = "marble_" + colorHex.replace("#", "");
+    if (!scene.textures.exists(mKey)) {
+      const mg = scene.make.graphics({ x: 0, y: 0, add: false });
+      mg.fillStyle(0x000000, 0.5); // Shadow
+      mg.fillCircle(22, 22, 18);
+      mg.fillStyle(color, 1); // Main
+      mg.fillCircle(20, 20, 18);
+      mg.fillStyle(0xffffff, 0.3); // Highlight
+      mg.fillCircle(14, 14, 6);
+      mg.generateTexture(mKey, 44, 44);
+    }
+  });
+}
