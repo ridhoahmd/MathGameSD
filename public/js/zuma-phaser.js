@@ -194,7 +194,7 @@ function preload() {
 // === PHASER CREATE ===
 function create() {
   console.log("Create Function Started. OLD Game Active:", gameActive);
-  gameActive = true; // FORCE ACTIVE IMMEDIATE
+  // gameActive = true; // 🔧 FIX: Moved to end of function to prevent race condition
   const scene = this;
 
   try {
@@ -300,7 +300,8 @@ function create() {
 
 // === PHASER UPDATE ===
 function update() {
-  if (!gameActive) {
+  // 🔧 FIX: Safety Check to prevent crash if update runs before init
+  if (!gameActive || !marbles || !bullets) {
     return;
   }
 
@@ -665,16 +666,27 @@ function shootBullet(scene, pointer) {
   const colorHex = colors[player.currentAmmo % colors.length];
   const color = Phaser.Display.Color.HexStringToColor(colorHex).color;
 
-  // CHECK TEXTURE
-  const bulletKey = "bullet_" + colorHex.replace("#", "");
-  if (!scene.textures.exists(bulletKey)) {
-    console.warn(`⚠️ Texture Missing: ${bulletKey}. Generating fallback...`);
-    // Fallback generation logic could go here, or just use a default circle
-  }
-
-  const bullet = scene.physics.add.sprite(turret.x, turret.y, bulletKey);
-  bullet.setDepth(100); // 🔧 FIX: Ensure bullet is on top of path/background
+  // 🔧 FIX: Use Native Circle Shape instead of Texture (Bypassing texture gen issues)
+  const bullet = scene.add.circle(turret.x, turret.y, 12, color, 1);
+  bullet.setDepth(1000);
+  bullet.setVisible(true);
+  bullet.setActive(true);
   bullet.value = player.currentAmmo;
+
+  // Add Physics
+  scene.physics.add.existing(bullet);
+
+  // Add white glow border (stroke)
+  bullet.setStrokeStyle(2, 0xffffff);
+
+  console.log("🔥 BULLET SHAPE SPAWNED:", {
+    x: bullet.x,
+    y: bullet.y,
+    color: colorHex,
+    visible: bullet.visible,
+    depth: bullet.depth,
+    hasBody: !!bullet.body,
+  });
 
   // Update visual immediately after shooting
   if (ammoText) {
@@ -684,7 +696,8 @@ function shootBullet(scene, pointer) {
   updateTurretAmmoVisual(scene);
 
   const speed = 1000;
-  bullet.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
+  // Physics body velocity
+  bullet.body.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
 
   // Value text
   const valueText = scene.add
