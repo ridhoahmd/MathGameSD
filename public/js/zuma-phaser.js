@@ -142,6 +142,10 @@ if (socket) {
 
       // Hide login, show HUD
       if (loginScreen) loginScreen.style.display = "none";
+      if (gameOverScreen) {
+        gameOverScreen.classList.add("hidden");
+        gameOverScreen.style.display = "none";
+      }
       if (gameHud) {
         gameHud.style.display = "flex";
         gameHud.style.zIndex = "9999";
@@ -462,25 +466,45 @@ function createTurret(scene) {
   const x = config.width / 2;
   const y = config.height * 0.85;
 
-  // Turret base
+  // 1. Turret Base (Futuristic Platform)
   turretBase = scene.add.graphics();
-  turretBase.fillStyle(0x333333, 1);
-  turretBase.fillCircle(x, y, 40);
-  turretBase.lineStyle(3, 0x00f2ff, 1);
-  turretBase.strokeCircle(x, y, 40);
 
-  // Turret barrel (as a rectangle sprite)
+  // Outer Ring (Rotating glow)
+  turretBase.lineStyle(2, 0x00f2ff, 0.5);
+  turretBase.strokeCircle(x, y, 45);
+
+  // Main Body
+  turretBase.fillStyle(0x1a1a2e, 1);
+  turretBase.fillCircle(x, y, 38);
+  turretBase.lineStyle(4, 0x00f2ff, 1);
+  turretBase.strokeCircle(x, y, 38);
+
+  // Inner Detail
+  turretBase.fillStyle(0x000000, 0.5);
+  turretBase.fillCircle(x, y, 20);
+
+  // 2. Turret Barrel (Double Blaster)
   const barrelGraphics = scene.make.graphics({ x: 0, y: 0, add: false });
-  barrelGraphics.fillStyle(0x444444, 1);
-  barrelGraphics.fillRect(0, -12, 60, 24);
+
+  // Barrel Body
+  barrelGraphics.fillStyle(0x333333, 1);
+  barrelGraphics.fillRoundedRect(0, -15, 65, 30, 5);
+
+  // Neon Strips
   barrelGraphics.fillStyle(0x00f2ff, 1);
-  barrelGraphics.fillRect(10, -4, 40, 8);
-  barrelGraphics.generateTexture("barrel", 60, 24);
+  barrelGraphics.fillRect(10, -10, 45, 4);
+  barrelGraphics.fillRect(10, 6, 45, 4);
+
+  // Muzzle Flash Area
+  barrelGraphics.fillStyle(0xffffff, 0.8);
+  barrelGraphics.fillRect(60, -12, 4, 24);
+
+  barrelGraphics.generateTexture("barrel", 70, 30);
 
   turret = scene.add.sprite(x, y, "barrel");
-  turret.setOrigin(0, 0.5);
+  turret.setOrigin(0.1, 0.5); // Set pivot slightly back
 
-  // Ammo display
+  // Ammo display (Holo-projector style)
   const colors = [
     "#f00",
     "#0f0",
@@ -493,32 +517,64 @@ function createTurret(scene) {
     "#80f",
   ];
 
-  const ammoCircle = scene.add.graphics();
-  ammoCircle.fillStyle(
-    Phaser.Display.Color.HexStringToColor(
-      colors[player.currentAmmo % colors.length],
-    ).color,
-    1,
-  );
-  ammoCircle.fillCircle(x, y, 20);
+  /* 
+     We will create a dynamic sprite for the current ammo orb 
+     instead of a static circle, so it matches the 3D marbles 
+  */
 
+  // Initial Ammo Text
   ammoText = scene.add
     .text(x, y, player.currentAmmo.toString(), {
-      fontFamily: "Arial",
-      fontSize: "18px",
+      fontFamily: "Orbitron",
+      fontSize: "24px",
       fontStyle: "bold",
       color: "#fff",
+      shadow: { blur: 5, color: "#000000", fill: true },
     })
-    .setOrigin(0.5);
+    .setOrigin(0.5)
+    .setDepth(10);
 
-  // Pulsing animation
+  // Update ammo visual helper
+  updateTurretAmmoVisual(scene);
+
+  // Pulsing animation for the base
   scene.tweens.add({
     targets: turretBase,
+    scale: { from: 1, to: 1.05 },
     alpha: { from: 0.8, to: 1 },
-    duration: 800,
+    duration: 1000,
     yoyo: true,
     repeat: -1,
   });
+}
+
+// Helper to update the orb graphics in the center of turret
+function updateTurretAmmoVisual(scene) {
+  if (!turret.ammoOrb) {
+    turret.ammoOrb = scene.add
+      .sprite(turret.x, turret.y, "marble_ff0000")
+      .setDepth(9);
+  }
+
+  // Get current color key
+  const colors = [
+    "#f00",
+    "#0f0",
+    "#00f",
+    "#ff0",
+    "#0ff",
+    "#f0f",
+    "#f80",
+    "#8f0",
+    "#80f",
+  ];
+  const colorHex = colors[player.currentAmmo % colors.length];
+  const textureKey = "marble_" + colorHex.replace("#", "");
+
+  if (scene.textures.exists(textureKey)) {
+    turret.ammoOrb.setTexture(textureKey);
+    turret.ammoOrb.setScale(0.8); // Slightly smaller fits in turret
+  }
 }
 
 function spawnMarble(scene) {
@@ -611,16 +667,27 @@ function shootBullet(scene, pointer) {
   const bullet = scene.physics.add.sprite(turret.x, turret.y, bulletKey);
   bullet.value = player.currentAmmo;
 
-  const speed = 600;
+  // Update visual immediately after shooting (new random logic or reload)
+  // Note: Collision logic handles the actual reload, but we update text here
+  if (ammoText) {
+    ammoText.setText(player.currentAmmo.toString());
+  }
+
+  updateTurretAmmoVisual(scene);
+
+  const speed = 1000; // Faster bullets
   bullet.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
 
   // Value text
   const valueText = scene.add
     .text(turret.x, turret.y, player.currentAmmo.toString(), {
-      fontFamily: "Arial",
-      fontSize: "14px",
+      fontFamily: "Orbitron",
+      fontSize: "16px",
       fontStyle: "bold",
       color: "#fff",
+      stroke: "#000",
+      strokeThickness: 2,
+      shadow: { blur: 2, color: "#000000", fill: true },
     })
     .setOrigin(0.5);
 
@@ -688,6 +755,12 @@ function handleCollision(bullet, marble) {
     } else {
       player.currentAmmo = Math.floor(Math.random() * 9) + 1;
     }
+
+    // Update visuals
+    if (scene) {
+      updateTurretAmmoVisual(scene);
+      if (ammoText) ammoText.setText(player.currentAmmo.toString());
+    }
   }
 
   // Remove bullet
@@ -718,6 +791,14 @@ function swapAmmo(scene) {
     particles.explode(8);
   }
 
+  // Update orb visual
+  if (scene && turret && turret.ammoOrb) {
+    updateTurretAmmoVisual(scene);
+  }
+  if (ammoText) {
+    ammoText.setText(player.currentAmmo.toString());
+  }
+
   try {
     AudioManager.playCorrect();
   } catch (e) {}
@@ -725,8 +806,12 @@ function swapAmmo(scene) {
 
 function endGame() {
   gameActive = false;
+  console.log("Showing Game Over Screen");
 
-  if (gameOverScreen) gameOverScreen.style.display = "flex";
+  if (gameOverScreen) {
+    gameOverScreen.classList.remove("hidden");
+    gameOverScreen.style.display = "flex"; // Force it
+  }
   if (finalScoreEl) finalScoreEl.innerText = score;
 
   if (socket) {
@@ -741,7 +826,10 @@ function endGame() {
 
 // === RESTART FUNCTION ===
 window.restartZuma = function () {
-  if (gameOverScreen) gameOverScreen.style.display = "none";
+  if (gameOverScreen) {
+    gameOverScreen.classList.add("hidden");
+    gameOverScreen.style.display = "none";
+  }
   score = 0;
   currentLevelNumber = 1;
   requestLevelData();
@@ -764,28 +852,53 @@ function generateGameTextures(scene) {
   colors.forEach((colorHex) => {
     const color = Phaser.Display.Color.HexStringToColor(colorHex).color;
 
-    // Bullet
+    // 1. Bullet Texture (Glowing Orb)
     const bKey = "bullet_" + colorHex.replace("#", "");
     if (!scene.textures.exists(bKey)) {
       const bg = scene.make.graphics({ x: 0, y: 0, add: false });
+
+      // Outer Glow
+      bg.fillStyle(color, 0.4);
+      bg.fillCircle(12, 12, 12);
+
+      // Core
       bg.fillStyle(color, 1);
-      bg.fillCircle(12, 12, 10);
-      bg.fillStyle(0xffffff, 0.3);
-      bg.fillCircle(8, 8, 4);
+      bg.fillCircle(12, 12, 9);
+
+      // Shine
+      bg.fillStyle(0xffffff, 0.8);
+      bg.fillCircle(8, 8, 3);
+
       bg.generateTexture(bKey, 24, 24);
     }
 
-    // Marble
+    // 2. Marble Texture (3D Glossy Sphere)
     const mKey = "marble_" + colorHex.replace("#", "");
     if (!scene.textures.exists(mKey)) {
       const mg = scene.make.graphics({ x: 0, y: 0, add: false });
-      mg.fillStyle(0x000000, 0.5); // Shadow
-      mg.fillCircle(22, 22, 18);
-      mg.fillStyle(color, 1); // Main
-      mg.fillCircle(20, 20, 18);
-      mg.fillStyle(0xffffff, 0.3); // Highlight
-      mg.fillCircle(14, 14, 6);
-      mg.generateTexture(mKey, 44, 44);
+
+      // Drop Shadow (offset)
+      mg.fillStyle(0x000000, 0.4);
+      mg.fillCircle(24, 24, 20);
+
+      // Base Circle (Darker shade for 3D depth)
+      const darkerColor =
+        Phaser.Display.Color.IntegerToColor(color).darken(20).color;
+      mg.fillStyle(darkerColor, 1);
+      mg.fillCircle(22, 22, 20);
+
+      // Gradient Body (Fake gradient via circles)
+      mg.fillStyle(color, 1);
+      mg.fillCircle(22, 20, 18); // Shifted up slightly
+
+      // Specular Highlight (The "Glossy" look)
+      mg.fillStyle(0xffffff, 0.2); // Soft broad display
+      mg.fillEllipse(22, 12, 14, 8);
+
+      mg.fillStyle(0xffffff, 0.9); // Sharp specular
+      mg.fillCircle(22, 10, 3);
+
+      mg.generateTexture(mKey, 48, 48); // Slightly larger canvas for shadow
     }
   });
 }
