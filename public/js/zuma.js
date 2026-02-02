@@ -71,6 +71,19 @@ document.addEventListener("DOMContentLoaded", () => {
       selectedDifficulty = button.dataset.level;
     });
   });
+
+  // [FIX] Add Input Listener for Canvas Version
+  if (canvas) {
+    canvas.addEventListener("mousedown", window.handleInput);
+    canvas.addEventListener(
+      "touchstart",
+      (e) => {
+        e.preventDefault(); // Prevent scrolling
+        window.handleInput(e);
+      },
+      { passive: false },
+    );
+  }
 });
 
 // --- 1. KONEKSI SERVER & START ---

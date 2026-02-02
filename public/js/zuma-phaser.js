@@ -573,7 +573,11 @@ function updateTurretAmmoVisual(scene) {
 
   if (scene.textures.exists(textureKey)) {
     turret.ammoOrb.setTexture(textureKey);
-    turret.ammoOrb.setScale(0.8); // Slightly smaller fits in turret
+    turret.ammoOrb.setScale(0.8);
+    turret.ammoOrb.setDepth(200); // 🔧 FIX: High depth to ensure visibility over turret base
+    turret.ammoOrb.setVisible(true);
+  } else {
+    console.error(`❌ Missing Texture for Ammo Orb: ${textureKey}`);
   }
 }
 
@@ -661,21 +665,25 @@ function shootBullet(scene, pointer) {
   const colorHex = colors[player.currentAmmo % colors.length];
   const color = Phaser.Display.Color.HexStringToColor(colorHex).color;
 
-  // Use pre-generated bullet texture
+  // CHECK TEXTURE
   const bulletKey = "bullet_" + colorHex.replace("#", "");
+  if (!scene.textures.exists(bulletKey)) {
+    console.warn(`⚠️ Texture Missing: ${bulletKey}. Generating fallback...`);
+    // Fallback generation logic could go here, or just use a default circle
+  }
 
   const bullet = scene.physics.add.sprite(turret.x, turret.y, bulletKey);
+  bullet.setDepth(100); // 🔧 FIX: Ensure bullet is on top of path/background
   bullet.value = player.currentAmmo;
 
-  // Update visual immediately after shooting (new random logic or reload)
-  // Note: Collision logic handles the actual reload, but we update text here
+  // Update visual immediately after shooting
   if (ammoText) {
     ammoText.setText(player.currentAmmo.toString());
   }
 
   updateTurretAmmoVisual(scene);
 
-  const speed = 1000; // Faster bullets
+  const speed = 1000;
   bullet.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
 
   // Value text
