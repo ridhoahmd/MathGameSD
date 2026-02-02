@@ -3,38 +3,122 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Toko Avatar - Videa Class</title>
+    <title>Toko Kamu - Videa Class</title>
 
     <link
-      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600;700&family=Cinzel:wght@500;700&display=swap"
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="../css/toko.css?v=final" />
+    <link rel="stylesheet" href="../css/toko.css?v=premium2" />
   </head>
   <body>
+    <!-- Particle Background Canvas -->
+    <canvas id="particles-canvas"></canvas>
+
     <div class="container">
       <div class="header-shop">
-        <a href="/" class="btn-back">⬅ Kembali</a>
+        <a href="/" class="btn-back">⬅ Kembali ke Portal</a>
         <div class="coin-balance">
-          💰 <span id="user-coins">Checking...</span> Videa Coins
+          💰 <span id="user-coins">Loading...</span>
         </div>
       </div>
 
-      <h1>TOKO BINGKAI AVATAR</h1>
+      <h1>✨ TOKO KAMU ✨</h1>
 
       <p class="shop-desc">Tukarkan hasil belajarmu dengan gaya keren!</p>
 
+      <!-- Tab Navigation -->
+      <div class="shop-tabs" id="shop-tabs">
+        <!-- Tabs rendered by JS -->
+      </div>
+
       <div class="shop-grid" id="shop-container">
-        <p class="loading-msg">Menghubungkan ke Server...</p>
+        <p class="loading-msg">⏳ Menghubungkan ke Server...</p>
       </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script src="/socket.io/socket.io.js"></script>
-
     <script src="../js/audio.js"></script>
+
+    <!-- Theme Loader -->
+    <script>
+      // Load saved theme from localStorage (sync with dashboard)
+      (function loadTheme() {
+        const savedTheme = localStorage.getItem("selectedTheme");
+        if (savedTheme && savedTheme !== "default") {
+          document.body.classList.add("theme-" + savedTheme);
+        }
+      })();
+    </script>
+
+    <!-- Particle Background Effect -->
+    <script>
+      (function initParticles() {
+        const canvas = document.getElementById("particles-canvas");
+        if (!canvas) return;
+
+        const ctx = canvas.getContext("2d");
+        let particles = [];
+        const particleCount = 50;
+
+        function resize() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        }
+
+        function createParticle() {
+          return {
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 2 + 0.5,
+            speedX: (Math.random() - 0.5) * 0.5,
+            speedY: (Math.random() - 0.5) * 0.5,
+            opacity: Math.random() * 0.5 + 0.2,
+          };
+        }
+
+        function init() {
+          resize();
+          particles = [];
+          for (let i = 0; i < particleCount; i++) {
+            particles.push(createParticle());
+          }
+        }
+
+        function animate() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Get accent color from CSS variable
+          const style = getComputedStyle(document.body);
+          const accentRGB =
+            style.getPropertyValue("--shop-accent-rgb").trim() || "0, 242, 255";
+
+          particles.forEach((p) => {
+            p.x += p.speedX;
+            p.y += p.speedY;
+
+            // Wrap around edges
+            if (p.x < 0) p.x = canvas.width;
+            if (p.x > canvas.width) p.x = 0;
+            if (p.y < 0) p.y = canvas.height;
+            if (p.y > canvas.height) p.y = 0;
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${accentRGB}, ${p.opacity})`;
+            ctx.fill();
+          });
+
+          requestAnimationFrame(animate);
+        }
+
+        window.addEventListener("resize", resize);
+        init();
+        animate();
+      })();
+    </script>
 
     <script src="../js/toko.js"></script>
   </body>

@@ -129,6 +129,7 @@ module.exports = (socket, io) => {
         foto: finalFoto,
         frame: user.equippedFrame || "default",
         theme: user.activeTheme || "default",
+        badge: user.equippedBadge || null,
       });
     } catch (err) {
       console.error("❌ Gagal ambil profil SQL:", err.message);

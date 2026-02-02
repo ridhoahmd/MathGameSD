@@ -7,6 +7,18 @@ const socket = window.socket || io();
 const provider = new firebase.auth.GoogleAuthProvider();
 let currentUser = null;
 
+// --- BADGE INFO MAPPING ---
+const BADGE_INFO = {
+  badge_math: { name: "Ahli Matematika", emoji: "🎖️" },
+  badge_quran: { name: "Penghafal Quran", emoji: "📚" },
+  badge_speed: { name: "Si Kilat", emoji: "🚀" },
+  badge_vip: { name: "Mahkota VIP", emoji: "👑" },
+};
+
+function getBadgeInfo(badgeId) {
+  return BADGE_INFO[badgeId] || { name: badgeId, emoji: "🏆" };
+}
+
 // --- 1. LOGIKA GUEST & IDENTITAS ---
 if (!localStorage.getItem("playerName")) {
   const randomGuest = "Guest_" + Math.floor(Math.random() * 10000);
@@ -119,7 +131,22 @@ socket.on("updateProfil", (data) => {
     document.body.classList.add("theme-" + savedTheme);
   }
 
-  // E. UPDATE LEVEL & STREAK DISPLAY (Gamification)
+  // E. UPDATE BADGE DISPLAY
+  const badgeDisplay = document.getElementById("user-badge");
+  if (badgeDisplay) {
+    if (data.badge) {
+      const badgeInfo = getBadgeInfo(data.badge);
+      badgeDisplay.innerHTML = `
+        <span class="badge-emoji">${badgeInfo.emoji}</span>
+        <span class="badge-name">${badgeInfo.name}</span>
+      `;
+      badgeDisplay.classList.remove("hidden");
+    } else {
+      badgeDisplay.classList.add("hidden");
+    }
+  }
+
+  // F. UPDATE LEVEL & STREAK DISPLAY (Gamification)
   // 🔧 FIX: Ensure gamification displays are updated when profile loads
   setTimeout(() => {
     if (typeof PlayerLevel !== "undefined") {

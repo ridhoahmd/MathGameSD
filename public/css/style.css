@@ -838,6 +838,45 @@ body.theme-obsidian .stats-box {
   color: inherit;
 }
 
+/* BADGE DISPLAY IN SIDEBAR */
+.badge-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.15),
+    rgba(255, 165, 0, 0.1)
+  );
+  padding: 8px 15px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  box-shadow: 0 2px 10px rgba(255, 215, 0, 0.15);
+  animation: badge-glow 2s ease-in-out infinite alternate;
+}
+
+.badge-display .badge-emoji {
+  font-size: 1.2rem;
+}
+
+.badge-display .badge-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ffd700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes badge-glow {
+  from {
+    box-shadow: 0 2px 10px rgba(255, 215, 0, 0.15);
+  }
+  to {
+    box-shadow: 0 2px 15px rgba(255, 215, 0, 0.3);
+  }
+}
+
 .stats-box {
   background: rgba(255, 255, 255, 0.05);
   width: 100%;

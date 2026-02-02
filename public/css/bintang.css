@@ -1,0 +1,305 @@
+/* ============================================
+   TANGKAP BINTANG - GAME STYLING
+   REDESIGNED FOR CENTERED LAYOUT
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(180deg, #0a0a1a 0%, #1a1a3e 50%, #0f0f2a 100%);
+  min-height: 100vh;
+  overflow: hidden;
+  color: #fff;
+}
+
+/* ========== TOP BAR (CENTERED) ========== */
+.top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 15px 20px;
+}
+
+/* Back Button */
+.btn-back {
+  position: absolute;
+  left: 15px;
+  top: 15px;
+  text-decoration: none;
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(-3px);
+}
+
+/* ========== GAME HUD (CENTERED) ========== */
+#game-hud {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 5px;
+}
+
+.hud-item {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  padding: 8px 18px;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 80px;
+}
+
+.hud-label {
+  display: block;
+  font-size: 0.65rem;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.hud-value {
+  display: block;
+  font-family: "Orbitron", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffeb3b;
+  text-shadow: 0 0 10px rgba(255, 235, 59, 0.5);
+}
+
+/* ========== QUESTION CONTAINER ========== */
+#question-container {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 242, 255, 0.2),
+    rgba(138, 43, 226, 0.2)
+  );
+  backdrop-filter: blur(15px);
+  padding: 12px 35px;
+  border-radius: 20px;
+  border: 2px solid rgba(0, 242, 255, 0.4);
+  box-shadow: 0 5px 30px rgba(0, 242, 255, 0.2);
+}
+
+#question-text {
+  font-family: "Orbitron", sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 15px rgba(0, 242, 255, 0.5);
+}
+
+/* ========== GAME CONTAINER (TRUE CENTER) ========== */
+#game-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+}
+
+#game-container canvas {
+  border-radius: 15px;
+  box-shadow: 0 0 50px rgba(0, 242, 255, 0.2);
+}
+
+/* ========== MODAL ========== */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: linear-gradient(145deg, #1a1a3e, #0f0f2a);
+  padding: 45px 55px;
+  border-radius: 25px;
+  text-align: center;
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  box-shadow: 0 0 60px rgba(255, 215, 0, 0.2);
+  max-width: 90%;
+}
+
+.modal-content h1 {
+  font-family: "Orbitron", sans-serif;
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  color: #ffd700;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.modal-content p {
+  font-size: 1rem;
+  color: #aaa;
+  margin-bottom: 10px;
+}
+
+.final-score {
+  font-family: "Orbitron", sans-serif;
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #00f2ff;
+  text-shadow: 0 0 30px rgba(0, 242, 255, 0.5);
+  margin-bottom: 25px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-restart,
+.btn-home {
+  padding: 14px 28px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.btn-restart {
+  background: linear-gradient(135deg, #38ef7d, #11998e);
+  color: #004d40;
+}
+
+.btn-restart:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(56, 239, 125, 0.4);
+}
+
+.btn-home {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.btn-home:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(118, 75, 162, 0.4);
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .top-bar {
+    padding: 10px 15px;
+  }
+
+  .btn-back {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    left: 10px;
+    top: 10px;
+  }
+
+  #game-hud {
+    gap: 8px;
+    margin-top: 0;
+  }
+
+  .hud-item {
+    padding: 6px 12px;
+    min-width: 60px;
+  }
+
+  .hud-label {
+    font-size: 0.55rem;
+  }
+
+  .hud-value {
+    font-size: 0.85rem;
+  }
+
+  #question-container {
+    top: 55px;
+    padding: 10px 20px;
+  }
+
+  #question-text {
+    font-size: 1.1rem;
+  }
+
+  .modal-content {
+    padding: 25px 20px;
+  }
+
+  .modal-content h1 {
+    font-size: 1.3rem;
+  }
+
+  .final-score {
+    font-size: 2.5rem;
+  }
+
+  .btn-restart,
+  .btn-home {
+    padding: 12px 20px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  #game-hud {
+    gap: 5px;
+  }
+
+  .hud-item {
+    padding: 5px 10px;
+    min-width: 55px;
+  }
+
+  .hud-value {
+    font-size: 0.75rem;
+  }
+
+  #question-container {
+    padding: 8px 15px;
+  }
+
+  #question-text {
+    font-size: 0.95rem;
+  }
+}

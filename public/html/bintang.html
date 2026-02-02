@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>Tangkap Bintang - Videa Class</title>
+
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self' https: http: data: blob: 'unsafe-inline' 'unsafe-eval';
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' data: blob:;
+        connect-src * 'unsafe-inline';
+    "
+    />
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="../css/bintang.css?v=centered" />
+  </head>
+
+  <body>
+    <!-- Top Bar with Centered HUD -->
+    <div class="top-bar">
+      <a href="/" class="btn-back">⬅ MENU</a>
+
+      <div id="game-hud">
+        <div class="hud-item">
+          <span class="hud-label">SKOR</span>
+          <span class="hud-value" id="score-display">0</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">NYAWA</span>
+          <span class="hud-value" id="lives-display">❤️❤️❤️</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">WAKTU</span>
+          <span class="hud-value" id="time-display">60</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Math Question Display -->
+    <div id="question-container">
+      <span id="question-text">Bersiap...</span>
+    </div>
+
+    <!-- Phaser Game Container -->
+    <div id="game-container"></div>
+
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="modal hidden">
+      <div class="modal-content">
+        <h1>🌟 PERMAINAN SELESAI 🌟</h1>
+        <p>Skor Akhir Kamu:</p>
+        <div class="final-score" id="final-score">0</div>
+        <div class="modal-buttons">
+          <button onclick="location.reload()" class="btn-restart">
+            🔄 MAIN LAGI
+          </button>
+          <button onclick="window.location.href = '/'" class="btn-home">
+            🏠 KEMBALI
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="../js/audio.js"></script>
+    <script src="../js/bintang.js"></script>
+  </body>
+</html>

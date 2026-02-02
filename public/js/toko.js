@@ -1,14 +1,80 @@
 const socket = io();
 const username = localStorage.getItem("playerName");
 
-// --- DAFTAR ITEM ---
-const shopItems = [
-  { id: "default", name: "Standar", price: 0, class: "frame-default" },
-  { id: "neon", name: "Neon Cyber", price: 500, class: "frame-neon" },
-  { id: "gold", name: "Sultan Gold", price: 1500, class: "frame-gold" },
-  { id: "royal", name: "Royal Purple", price: 3000, class: "frame-royal" },
-  { id: "fire", name: "Api Membara", price: 5000, class: "frame-fire" },
+// --- DAFTAR ITEM FRAMES ---
+const frameItems = [
+  {
+    id: "default",
+    name: "Standar",
+    price: 0,
+    class: "frame-default",
+    type: "frame",
+  },
+  {
+    id: "neon",
+    name: "Neon Cyber",
+    price: 500,
+    class: "frame-neon",
+    type: "frame",
+  },
+  {
+    id: "gold",
+    name: "Sultan Gold",
+    price: 1500,
+    class: "frame-gold",
+    type: "frame",
+  },
+  {
+    id: "royal",
+    name: "Royal Purple",
+    price: 3000,
+    class: "frame-royal",
+    type: "frame",
+  },
+  {
+    id: "fire",
+    name: "Api Membara",
+    price: 5000,
+    class: "frame-fire",
+    type: "frame",
+  },
 ];
+
+// --- DAFTAR ITEM BADGES ---
+const badgeItems = [
+  {
+    id: "badge_math",
+    name: "Ahli Matematika",
+    price: 800,
+    emoji: "🎖️",
+    type: "badge",
+  },
+  {
+    id: "badge_quran",
+    name: "Penghafal Quran",
+    price: 1000,
+    emoji: "📚",
+    type: "badge",
+  },
+  {
+    id: "badge_speed",
+    name: "Si Kilat",
+    price: 1200,
+    emoji: "🚀",
+    type: "badge",
+  },
+  {
+    id: "badge_vip",
+    name: "Mahkota VIP",
+    price: 2500,
+    emoji: "👑",
+    type: "badge",
+  },
+];
+
+// Current active tab
+let activeTab = "frame";
+let serverData = null;
 
 // 1. MINTA DATA SAAT LOAD
 document.addEventListener("DOMContentLoaded", () => {
@@ -32,30 +98,62 @@ document.addEventListener("DOMContentLoaded", () => {
 // 2. TERIMA DATA DARI SERVER
 socket.on("dataInventory", (data) => {
   console.log("📦 Data Diterima:", data);
+  serverData = data;
 
   // A. Update Koin
   const coinEl = document.getElementById("user-coins");
   if (coinEl) coinEl.innerText = (data.koin || 0).toLocaleString();
 
-  // B. Render Ulang Toko
-  renderShop(data);
+  // B. Render Tabs and Shop
+  renderTabs();
+  renderShop();
 });
 
-// 3. FUNGSI RENDER TAMPILAN
-function renderShop(serverData) {
+// 3. RENDER TABS
+function renderTabs() {
+  const tabContainer = document.getElementById("shop-tabs");
+  if (!tabContainer) return;
+
+  tabContainer.innerHTML = `
+    <button class="tab-btn ${activeTab === "frame" ? "active" : ""}" onclick="switchTab('frame')">
+      🖼️ Bingkai Avatar
+    </button>
+    <button class="tab-btn ${activeTab === "badge" ? "active" : ""}" onclick="switchTab('badge')">
+      🏆 Lencana Profil
+    </button>
+  `;
+}
+
+// Switch tab function
+window.switchTab = function (tab) {
+  activeTab = tab;
+  renderTabs();
+  renderShop();
+};
+
+// 4. FUNGSI RENDER TAMPILAN
+function renderShop() {
   const container = document.getElementById("shop-container");
   const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
 
-  if (container) container.innerHTML = "";
+  if (!container || !serverData) return;
+  container.innerHTML = "";
 
-  shopItems.forEach((item) => {
+  const items = activeTab === "frame" ? frameItems : badgeItems;
+
+  items.forEach((item) => {
     // Cek inventory user dari data server
     const inventory = serverData.owned || ["default"];
-    const isOwned = inventory.includes(item.id);
+    const isOwned = inventory.includes(item.id) || item.id === "default";
 
-    // Cek apakah sedang dipakai (Frame atau Theme)
-    const isEquipped =
-      serverData.activeFrame === item.id || serverData.activeTheme === item.id;
+    // Cek apakah sedang dipakai (Frame atau Badge)
+    let isEquipped = false;
+    if (item.type === "frame") {
+      isEquipped = serverData.activeFrame === item.id;
+    } else if (item.type === "badge") {
+      isEquipped = serverData.activeBadge === item.id;
+    }
+
     const canAfford = serverData.koin >= item.price;
 
     let btnHtml = "";
@@ -64,40 +162,57 @@ function renderShop(serverData) {
     if (isEquipped) {
       btnHtml = `<button class="btn-equipped" disabled>SEDANG DIPAKAI</button>`;
     } else if (isOwned) {
-      // Tombol PAKAI memanggil equipItem
-      btnHtml = `<button class="btn-equip" onclick="equipItem('${item.id}')">PAKAI</button>`;
+      btnHtml = `<button class="btn-equip" onclick="equipItem('${item.id}', '${item.type}')">PAKAI</button>`;
     } else if (canAfford) {
-      // Tombol BELI memanggil buyItem
       btnHtml = `<button class="btn-buy" onclick="buyItem('${item.id}', ${item.price})">BELI (${item.price})</button>`;
     } else {
       const kurang = item.price - serverData.koin;
       btnHtml = `<button class="btn-poor" disabled>Kurang ${kurang}</button>`;
     }
 
-    // HTML CARD
-    const card = `
+    // HTML CARD - Different for frames vs badges
+    let cardHtml = "";
+    if (item.type === "frame") {
+      cardHtml = `
         <div class="shop-card">
-            <div class="preview-box ${item.class}">
-                <img src="${avatarUrl}" class="preview-img" alt="Preview">
-            </div>
-            <span class="item-name">${item.name}</span>
-            ${
-              !isOwned
-                ? `<span class="item-price">Harga: ${item.price}</span>`
-                : `<span class="item-price text-owned">SUDAH DIMILIKI</span>`
-            }
-            ${btnHtml}
+          <div class="preview-box ${item.class}">
+            <img src="${avatarUrl}" class="preview-img" alt="Preview">
+          </div>
+          <span class="item-name">${item.name}</span>
+          ${
+            !isOwned
+              ? `<span class="item-price">Harga: ${item.price}</span>`
+              : `<span class="item-price text-owned">SUDAH DIMILIKI</span>`
+          }
+          ${btnHtml}
         </div>
-    `;
-    if (container) container.innerHTML += card;
+      `;
+    } else {
+      // Badge card
+      cardHtml = `
+        <div class="shop-card badge-card">
+          <div class="badge-preview">
+            <span class="badge-emoji">${item.emoji}</span>
+          </div>
+          <span class="item-name">${item.name}</span>
+          ${
+            !isOwned
+              ? `<span class="item-price">Harga: ${item.price}</span>`
+              : `<span class="item-price text-owned">SUDAH DIMILIKI</span>`
+          }
+          ${btnHtml}
+        </div>
+      `;
+    }
+
+    container.innerHTML += cardHtml;
   });
 }
 
-// 4. GLOBAL FUNCTIONS (AKSI TOMBOL)
+// 5. GLOBAL FUNCTIONS (AKSI TOMBOL)
 
 // --- A. BELI ITEM ---
 window.buyItem = function (itemId, price) {
-  // 🔧 FIX: Check if Swal is available, use native confirm as fallback
   if (typeof Swal === "undefined") {
     if (confirm(`Yakin beli ${itemId} seharga ${price} koin?`)) {
       socket.emit("beliItem", {
@@ -130,13 +245,17 @@ window.buyItem = function (itemId, price) {
 };
 
 // --- B. PAKAI ITEM (EQUIP) ---
-window.equipItem = function (itemId) {
-  const frameList = ["default", "neon", "gold", "royal", "fire"];
-  let tipe = "theme";
+window.equipItem = function (itemId, itemType) {
+  let tipe = itemType || "frame";
 
-  // Deteksi apakah ini Frame atau Theme
-  if (itemId.includes("frame") || frameList.includes(itemId)) {
-    tipe = "frame";
+  // Auto-detect type if not provided
+  if (!itemType) {
+    if (itemId.startsWith("badge_")) {
+      tipe = "badge";
+    } else {
+      const frameList = ["default", "neon", "gold", "royal", "fire"];
+      tipe = frameList.includes(itemId) ? "frame" : "theme";
+    }
   }
 
   console.log(`Mengirim request pakai: ${itemId} sebagai [${tipe}]`);
@@ -148,7 +267,7 @@ window.equipItem = function (itemId) {
   });
 };
 
-// 5. RESPON SOCKET DARI SERVER
+// 6. RESPON SOCKET DARI SERVER
 
 socket.on("transaksiSukses", (data) => {
   Swal.fire({

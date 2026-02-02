@@ -1,11 +1,17 @@
 const prisma = require("../config/prisma");
 
 const ITEM_PRICES = {
+  // Frames
   neon: 500,
   gold: 1500,
   royal: 3000,
   fire: 5000,
   default: 0,
+  // Badges
+  badge_math: 800,
+  badge_quran: 1000,
+  badge_speed: 1200,
+  badge_vip: 2500,
 };
 
 module.exports = (socket, io) => {
@@ -114,6 +120,11 @@ module.exports = (socket, io) => {
           where: { username: username },
           data: { equippedFrame: itemId },
         });
+      } else if (tipe === "badge") {
+        await prisma.user.update({
+          where: { username: username },
+          data: { equippedBadge: itemId },
+        });
       }
       socket.emit("itemTerpasang", { tipe, itemId });
     } catch (err) {
@@ -129,6 +140,7 @@ module.exports = (socket, io) => {
         inventory: true,
         activeTheme: true,
         equippedFrame: true,
+        equippedBadge: true,
         coins: true,
       },
     });
@@ -138,6 +150,7 @@ module.exports = (socket, io) => {
         owned: user.inventory || [],
         activeTheme: user.activeTheme,
         activeFrame: user.equippedFrame,
+        activeBadge: user.equippedBadge,
         koin: user.coins,
       });
     }

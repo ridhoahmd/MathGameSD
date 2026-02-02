@@ -20,6 +20,7 @@ model User {
   inventory     Json     @default("[\"default\"]")
   activeTheme   String   @default("default")
   equippedFrame String   @default("default")
+  equippedBadge String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   scores        Score[]
