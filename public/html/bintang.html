@@ -30,6 +30,40 @@
   </head>
 
   <body>
+    <!-- Start Screen Overlay -->
+    <div id="start-screen" class="modal">
+      <div class="modal-content">
+        <h1>🌟 TANGKAP BINTANG</h1>
+        <p>Pilih Tingkat Kesulitan:</p>
+
+        <div class="difficulty-options">
+          <button
+            class="btn-diff"
+            data-level="mudah"
+            onclick="selectDifficulty('mudah')"
+          >
+            😃 MUDAH
+            <span class="diff-desc">Lambat, Penjumlahan</span>
+          </button>
+          <button
+            class="btn-diff"
+            data-level="sedang"
+            onclick="selectDifficulty('sedang')"
+          >
+            😐 SEDANG
+            <span class="diff-desc">Normal, Campuran (+ -)</span>
+          </button>
+          <button
+            class="btn-diff"
+            data-level="sulit"
+            onclick="selectDifficulty('sulit')"
+          >
+            🤯 SULIT
+            <span class="diff-desc">Cepat, Perkalian!</span>
+          </button>
+        </div>
+      </div>
+    </div>
     <!-- Top Bar with Centered HUD -->
     <div class="top-bar">
       <a href="/" class="btn-back">⬅ MENU</a>

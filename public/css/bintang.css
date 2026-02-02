@@ -157,6 +157,7 @@ body {
   border: 2px solid rgba(255, 215, 0, 0.3);
   box-shadow: 0 0 60px rgba(255, 215, 0, 0.2);
   max-width: 90%;
+  width: 500px;
 }
 
 .modal-content h1 {
@@ -170,7 +171,59 @@ body {
 .modal-content p {
   font-size: 1rem;
   color: #aaa;
-  margin-bottom: 10px;
+  margin-bottom: 25px;
+}
+
+/* Difficulty Buttons */
+.difficulty-options {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.btn-diff {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.1)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 15px;
+  border-radius: 12px;
+  cursor: pointer;
+  color: white;
+  text-align: left;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.btn-diff:hover {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 242, 255, 0.1),
+    rgba(0, 242, 255, 0.2)
+  );
+  border-color: rgba(0, 242, 255, 0.5);
+  transform: translateX(5px);
+}
+
+.btn-diff[data-level="mudah"]:hover {
+  border-color: #00ff00;
+}
+.btn-diff[data-level="sedang"]:hover {
+  border-color: #ffff00;
+}
+.btn-diff[data-level="sulit"]:hover {
+  border-color: #ff0000;
+}
+
+.diff-desc {
+  font-size: 0.8rem;
+  color: #aaa;
+  font-weight: normal;
 }
 
 .final-score {
