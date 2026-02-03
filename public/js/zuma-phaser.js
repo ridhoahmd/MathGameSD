@@ -45,7 +45,8 @@ class ZumaScene extends Phaser.Scene {
 
   // --- 1. INITIALIZATION ---
   init(data) {
-    this.score = 0;
+    // FIX: Score Accumulation (Use passed score or 0)
+    this.score = data.score || 0;
     this.spawnedCount = 0;
     this.isGameOver = false;
     this.levelData = data.levelData || {};
@@ -841,8 +842,8 @@ class ZumaScene extends Phaser.Scene {
   retryLevel() {
     // Hide UI
     document.getElementById("game-over-screen").style.display = "none";
-    // Restart scene with SAME level data
-    this.scene.restart({ levelData: this.levelData });
+    // Restart scene with SAME level data, pass accumulated score
+    this.scene.restart({ levelData: this.levelData, score: this.score });
   }
 
   advanceLevel() {
@@ -859,17 +860,15 @@ class ZumaScene extends Phaser.Scene {
       socket.emit("mintaSoalAI", {
         kategori: "zuma",
         tingkat: selectedDifficulty,
-        // Backend might not support 'level' param yet, but we simulates difficulty increase?
-        // If backend is stateless, we just request new generic data.
       });
 
       socket.once("soalDariAI", (data) => {
         console.log("Next Level Data:", data);
-        this.scene.restart({ levelData: data.data });
+        this.scene.restart({ levelData: data.data, score: this.score });
       });
     } else {
       // Offline Fallback
-      this.scene.restart({ levelData: this.levelData });
+      this.scene.restart({ levelData: this.levelData, score: this.score });
     }
   }
 
