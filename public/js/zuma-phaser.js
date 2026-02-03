@@ -51,11 +51,40 @@ class ZumaScene extends Phaser.Scene {
     this.levelData = data.levelData || {};
     this.difficulty = data.difficulty || "mudah";
 
-    // Setup Level Params
+    // Setup Level Params based on Difficulty (Global selectedDifficulty)
+    // Fallback to data.difficulty if provided, else use global
+    this.difficulty = data.difficulty || selectedDifficulty || "mudah";
+
+    let targetSpeed = 0.4;
+    let targetDelay = 1500;
+
+    switch (this.difficulty.toLowerCase()) {
+      case "mudah":
+        targetSpeed = 0.4; // Pelan banget (User Request)
+        targetDelay = 1500;
+        break;
+      case "sedang":
+        targetSpeed = 0.7; // Normal
+        targetDelay = 1200;
+        break;
+      case "sulit":
+        targetSpeed = 1.0; // Cepat
+        targetDelay = 1000;
+        break;
+      default:
+        targetSpeed = 0.4;
+        targetDelay = 1500;
+    }
+
+    // Override if Level Data says "cepat" (Legacy check)
     const isFast = (this.levelData.speed || "").toLowerCase() === "cepat";
-    this.gameSpeed = isFast ? 1.5 : 0.8;
-    // Jarak lebih rapat (Delay dikurangi drastis)
-    this.spawnDelay = isFast ? 1000 : 1200;
+    if (isFast) {
+      targetSpeed = 1.5;
+      targetDelay = 800;
+    }
+
+    this.gameSpeed = targetSpeed;
+    this.spawnDelay = targetDelay;
     this.maxEnemies = 15 + currentLevel * 5;
 
     // Player State
