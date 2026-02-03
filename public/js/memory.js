@@ -141,27 +141,40 @@ socket.on("soalDariAI", (response) => {
   }
 });
 
-let streak = 0;
-const MAX_STREAK = 5;
+// 🔧 FIX: Add resize listener untuk responsive canvas
+window.addEventListener("resize", () => {
+  if (!board || board.children.length === 0) return;
 
-// 🔧 FIX: Removed manual resize listener because CSS Grid handles it now!
+  // Recalculate grid layout on resize
+  if (selectedDifficulty === "mudah") {
+    board.style.gridTemplateColumns = "repeat(3, 1fr)";
+    board.style.maxWidth = "260px";
+  } else if (selectedDifficulty === "sedang") {
+    board.style.gridTemplateColumns = "repeat(4, 1fr)";
+    board.style.maxWidth = "340px";
+  } else if (selectedDifficulty === "sulit") {
+    board.style.gridTemplateColumns = "repeat(6, 1fr)";
+    board.style.maxWidth = "480px";
+  }
+});
 
-// 4. SETUP BOARD (Responsive Grid)
+// 4. SETUP BOARD (GRID MANUAL 3x4, 4x4, 6x4)
 function setupBoard(cardsArray) {
   board.innerHTML = "";
 
-  // Set Grid Columns Class based on Difficulty
-  // We use standard CSS Grid `repeat(N, 1fr)`
-  // CSS handles the width (100% of container)
+  // Set Grid Columns & Width via JS (Agar Ukuran Kartu Konsisten)
   if (selectedDifficulty === "mudah") {
+    // 12 kartu (3x4)
     board.style.gridTemplateColumns = "repeat(3, 1fr)";
+    board.style.maxWidth = "260px"; // Batasi lebar agar kartu kecil (seperti sulit)
   } else if (selectedDifficulty === "sedang") {
+    // 16 kartu (4x4)
     board.style.gridTemplateColumns = "repeat(4, 1fr)";
+    board.style.maxWidth = "340px"; // Batasi lebar
   } else if (selectedDifficulty === "sulit") {
-    board.style.gridTemplateColumns = "repeat(5, 1fr)"; // 5 cols for 20-25 cards fit better
-    // Or 6 if we really have 24 cards
-    if (cardsArray.length >= 24)
-      board.style.gridTemplateColumns = "repeat(6, 1fr)";
+    // 24 kartu (6x4)
+    board.style.gridTemplateColumns = "repeat(6, 1fr)";
+    board.style.maxWidth = "480px"; // Full width
   }
 
   // Acak Kartu
@@ -169,12 +182,14 @@ function setupBoard(cardsArray) {
 
   cardsArray.forEach((item) => {
     const card = document.createElement("div");
-    card.classList.add("card", "card-closed");
+    card.classList.add("card", "card-closed"); // Default tertutup
     card.dataset.value = item.value;
 
     const front = document.createElement("div");
     front.classList.add("front");
-    // Front text auto-size handled by CSS clamp()
+    // Auto-resize font
+    if (item.content.length > 8) front.style.fontSize = "0.75rem";
+    else front.style.fontSize = "1rem";
 
     front.innerText = item.content;
 
@@ -183,18 +198,17 @@ function setupBoard(cardsArray) {
     board.appendChild(card);
   });
 
-  // Reset Streak UI
-  updateStreak(false, true);
-
+  // --- FLASH START LOGIC ---
   if (cardsArray.length > 0) {
     startFlashSequence();
   }
 }
 
 function flipCard() {
-  if (lockBoard || isFlashing) return;
+  if (lockBoard || isFlashing) return; // Cegah klik saat flash
   if (this === firstCard) return;
 
+  // Buka kartu (Hapus class card-closed agar 3D rotate bekerja)
   this.classList.remove("card-closed");
 
   if (typeof AudioManager !== "undefined") AudioManager.playClick();
@@ -213,79 +227,7 @@ function flipCard() {
 
 function checkForMatch() {
   let isMatch = firstCard.dataset.value === secondCard.dataset.value;
-
-  if (isMatch) {
-    disableCards();
-    updateStreak(true);
-    // Spawn Particles at center of second card (or both)
-    const rect = secondCard.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    spawnParticles(centerX, centerY);
-  } else {
-    unflipCards();
-    updateStreak(false);
-  }
-}
-
-// --- NEW FEATURE: STREAK SYSTEM ---
-function updateStreak(isSuccess, reset = false) {
-  if (reset) streak = 0;
-  else if (isSuccess) streak = Math.min(streak + 1, MAX_STREAK);
-  else streak = 0;
-
-  const bar = document.getElementById("streak-bar");
-  const text = document.getElementById("streak-text");
-
-  if (bar) {
-    const pct = (streak / MAX_STREAK) * 100;
-    bar.style.width = `${pct}%`;
-
-    if (streak >= MAX_STREAK) {
-      bar.classList.add("full"); // Hyper Mode Visual
-    } else {
-      bar.classList.remove("full");
-    }
-  }
-
-  if (text) text.innerText = `Streak: ${streak}x`;
-}
-
-// --- NEW FEATURE: PARTICLES ---
-function spawnParticles(x, y) {
-  const colors = [
-    "#ff0000",
-    "#00ff00",
-    "#0000ff",
-    "#ffff00",
-    "#ff00ff",
-    "#00ffff",
-  ];
-
-  for (let i = 0; i < 20; i++) {
-    const p = document.createElement("div");
-    p.classList.add("particle");
-    document.body.appendChild(p);
-
-    // Random Color
-    p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-
-    // Set fixed position relative to viewport (since game is centered)
-    p.style.left = `${x}px`;
-    p.style.top = `${y}px`;
-
-    // Random direction
-    const angle = Math.random() * Math.PI * 2;
-    const velocity = Math.random() * 100 + 50; // Distance
-    const tx = Math.cos(angle) * velocity;
-    const ty = Math.sin(angle) * velocity;
-
-    p.style.setProperty("--tx", `${tx}px`);
-    p.style.setProperty("--ty", `${ty}px`);
-
-    // Self cleanup
-    setTimeout(() => p.remove(), 600);
-  }
+  isMatch ? disableCards() : unflipCards();
 }
 
 function disableCards() {
