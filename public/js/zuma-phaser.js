@@ -435,14 +435,31 @@ class ZumaScene extends Phaser.Scene {
   }
 
   // 2. PATH SISTEM
+  // 2. PATH SISTEM
   createPath(pola) {
     this.pathGraphics = this.add.graphics();
     let points = [];
     const w = 800,
       h = 600;
 
-    // Pola Spiral
-    if (pola.includes("spiral")) {
+    // Determine Pattern Based on Level if 'auto' or unspecified
+    // Logic:
+    // Levels 1-2: Sine (ZigZag)
+    // Levels 3-4: Circle
+    // Levels 5-6: Spiral
+    // Levels 7+: Infinity
+    let finalPola = pola;
+
+    // Logic Override based on Current Level (Simple Progression)
+    if (currentLevel <= 2) finalPola = "sine";
+    else if (currentLevel <= 4) finalPola = "circle";
+    else if (currentLevel <= 6) finalPola = "spiral";
+    else finalPola = "infinity";
+
+    console.log(`Generating Path: ${finalPola} for Level ${currentLevel}`);
+
+    if (finalPola === "spiral") {
+      // SPIRAL (Classic)
       for (let i = 0; i <= 300; i++) {
         let angle = 0.1 * i;
         let r = 20 + 2 * i;
@@ -455,12 +472,48 @@ class ZumaScene extends Phaser.Scene {
         );
       }
       points.reverse(); // Masuk dari luar ke dalam
+    } else if (finalPola === "sine") {
+      // SINE WAVE (ZigZag horizontal)
+      const segmentCount = 40;
+      for (let i = 0; i <= segmentCount; i++) {
+        const progress = i / segmentCount;
+        const px = 50 + progress * (w - 100); // 50 to 750
+        // 3 Gelombang penuh
+        const py = h / 2 + Math.sin(progress * Math.PI * 4) * 150;
+        points.push(new Phaser.Math.Vector2(px, py));
+      }
+    } else if (finalPola === "circle") {
+      // CIRCLE / OVAL
+      const radiusX = 300;
+      const radiusY = 200;
+      for (let i = 0; i <= 60; i++) {
+        const angle = (i / 60) * Math.PI * 2;
+        // Start from Top (-PI/2) and go clockwise or counter
+        const px = w / 2 + Math.cos(angle - Math.PI / 2) * radiusX;
+        const py = h / 2 + Math.sin(angle - Math.PI / 2) * radiusY;
+        points.push(new Phaser.Math.Vector2(px, py));
+      }
+      // Pastikan tidak tertutup penuh agar ada "lubang" tapi untuk Zuma biasanya hole ada di ujung
+      // Kita biarkan terbuka sedikit atau overlap?
+      // Logic Marble: Jika pathProgress >= 1 -> Over.
+    } else if (finalPola === "infinity") {
+      // FIGURE 8 (Lemniscate-ish)
+      const scale = 250;
+      for (let i = 0; i <= 100; i++) {
+        const t = (i / 100) * Math.PI * 2;
+        // Parametric equation for Lemniscate of Bernoulli or Lissajous
+        const px = w / 2 + scale * Math.cos(t);
+        const py = h / 2 + (scale * Math.sin(2 * t)) / 2;
+        points.push(new Phaser.Math.Vector2(px, py));
+      }
     } else {
-      // Default ZigZag
-      for (let i = 0; i <= 10; i++) {
-        points.push(
-          new Phaser.Math.Vector2((i / 10) * w, h / 2 + Math.sin(i * 2) * 150),
-        );
+      // Fallback Same as Sine
+      const segmentCount = 40;
+      for (let i = 0; i <= segmentCount; i++) {
+        const progress = i / segmentCount;
+        const px = 50 + progress * (w - 100);
+        const py = h / 2 + Math.sin(progress * Math.PI * 4) * 150;
+        points.push(new Phaser.Math.Vector2(px, py));
       }
     }
 
