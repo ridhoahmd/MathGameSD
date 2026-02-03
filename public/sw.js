@@ -1,111 +1,151 @@
-const CACHE_NAME = 'videa-class-master-v7'; 
+const CACHE_NAME = "videa-class-master-v8";
 
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/favicon.ico',
-  '/logo-videa.png',
-  '/explosion.mp3',
+  "/",
+  "/index.html",
+  "/manifest.json",
+  "/favicon.ico",
+  "/logo-videa.png",
+  "/explosion.mp3",
 
   // --- HTML Pages ---
-  '/html/guru.html',
-  '/html/kasir.html',
-  '/html/labirin.html',
-  '/html/leaderboard.html',
-  '/html/math.html',
-  '/html/memory.html',
-  '/html/nabi.html',
-  '/html/piano.html',
-  '/html/tajwid.html',
-  '/html/toko.html',
-  '/html/zuma.html',
+  "/html/ayat.html",
+  "/html/bintang.html",
+  "/html/guru.html",
+  "/html/kasir.html",
+  "/html/labirin-phaser.html",
+  "/html/leaderboard.html",
+  "/html/math.html",
+  "/html/memory.html",
+  "/html/nabi.html",
+  "/html/piano.html",
+  "/html/tajwid.html",
+  "/html/toko.html",
+  "/html/zuma-phaser.html",
 
-  // --- CSS Styles ---
-  '/css/style.css',
-  '/css/guru.css',
-  '/css/kasir.css',
-  '/css/labirin.css',
-  '/css/leaderboard.css',
-  '/css/math.css',
-  '/css/memory.css',
-  '/css/nabi.css',
-  '/css/piano.css',
-  '/css/tajwid.css',
-  '/css/toko.css',
-  '/css/zuma.css',
+  // --- CSS Styles (Core & Features) ---
+  "/css/style.css",
+  "/css/design-tokens.css",
+  "/css/loading.css",
+  "/css/micro-interactions.css",
+  "/css/responsive.css",
+  "/css/sidebar-fixes.css",
+  "/css/visual-enhancements.css",
+  "/css/visual-overhaul.css",
+  "/css/chat-enhanced.css",
 
-  // --- JavaScript Logic ---
-  '/js/config.js',
-  '/js/audio.js',
-  '/js/dashboard.js',  
-  '/js/game.js',       
-  '/js/kasir.js',
-  '/js/labirin.js',
-  '/js/memory.js',
-  '/js/nabi.js',
-  '/js/piano.js',
-  '/js/tajwid.js',
-  '/js/zuma.js',
-  
-  
+  // --- CSS Styles (Games) ---
+  "/css/ayat.css",
+  "/css/bintang.css",
+  "/css/guru.css",
+  "/css/kasir.css",
+  "/css/labirin-phaser.css",
+  "/css/leaderboard.css",
+  "/css/math.css",
+  "/css/memory.css",
+  "/css/nabi.css",
+  "/css/piano.css",
+  "/css/tajwid.css",
+  "/css/toko.css",
+  "/css/zuma-phaser.css",
+
+  // --- JavaScript Logic (Core & Utils) ---
+  "/js/config.js",
+  "/js/global.js",
+  "/js/audio.js",
+  "/js/dashboard.js",
+  "/js/utils/animations.js",
+  "/js/utils/loading.js",
+  "/js/utils/confetti.js",
+  "/js/utils/ui.js",
+  "/js/utils/comboManager.js",
+
+  // --- JavaScript Logic (Gamification) ---
+  "/js/gamification/achievements.js",
+  "/js/gamification/streaks.js",
+  "/js/gamification/leveling.js",
+
+  // --- JavaScript Logic (Games) ---
+  "/js/ayat.js",
+  "/js/bintang.js",
+  "/js/game.js",
+  "/js/kasir.js",
+  "/js/labirin-phaser.js",
+  "/js/memory.js",
+  "/js/nabi.js",
+  "/js/piano.js",
+  "/js/tajwid.js",
+  "/js/toko.js",
+  "/js/zuma-phaser.js",
 ];
 
 // 1. INSTALL: Cache semua aset statis
-self.addEventListener('install', event => {
+self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      console.log('📦 SW: Caching semua file game...');
+      console.log("📦 SW: Caching semua file game...");
       try {
-          return await cache.addAll(urlsToCache);
+        return await cache.addAll(urlsToCache);
       } catch (err) {
-          console.error("❌ Gagal Cache:", err);
+        console.error("❌ Gagal Cache:", err);
       }
-    })
+    }),
   );
 });
 
 // 2. ACTIVATE: Hapus cache lama (v4, v3, dll)
-self.addEventListener('activate', event => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.map(key => {
-        if (key !== CACHE_NAME) {
-            console.log('🗑️ SW: Menghapus cache lama:', key);
-            return caches.delete(key);
-        }
-      })
-    )).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys.map((key) => {
+            if (key !== CACHE_NAME) {
+              console.log("🗑️ SW: Menghapus cache lama:", key);
+              return caches.delete(key);
+            }
+          }),
+        ),
+      )
+      .then(() => self.clients.claim()),
   );
 });
 
 // 3. FETCH: Strategi "Stale-While-Revalidate" (Pakai Cache dulu, lalu update di background)
-self.addEventListener('fetch', event => {
-    if (!event.request.url.startsWith('http')) {
-        return;
-    }
+self.addEventListener("fetch", (event) => {
+  if (!event.request.url.startsWith("http")) {
+    return;
+  }
 
-    if (event.request.url.includes('/api/') || 
-        event.request.url.includes('socket.io') ||
-        event.request.url.includes('firebase')) {
-        return; 
-    }
+  if (
+    event.request.url.includes("/api/") ||
+    event.request.url.includes("socket.io") ||
+    event.request.url.includes("firebase")
+  ) {
+    return;
+  }
 
-    event.respondWith(
-        caches.match(event.request).then(cachedResponse => {
-            const fetchPromise = fetch(event.request).then(networkResponse => {
-                if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-                    const responseClone = networkResponse.clone();
-                    caches.open(CACHE_NAME).then(cache => {
-                        cache.put(event.request, responseClone);
-                    });
-                }
-                return networkResponse;
-            }).catch(() => {
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request)
+        .then((networkResponse) => {
+          if (
+            networkResponse &&
+            networkResponse.status === 200 &&
+            networkResponse.type === "basic"
+          ) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
             });
-
-            return cachedResponse || fetchPromise; 
+          }
+          return networkResponse;
         })
-    );
+        .catch(() => {});
+
+      return cachedResponse || fetchPromise;
+    }),
+  );
 });
