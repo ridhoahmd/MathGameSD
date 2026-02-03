@@ -35,19 +35,18 @@ module.exports = (httpServer) => {
     if (token) {
       jwt.verify(token, JWT_SECRET, (err, decoded) => {
         if (err) {
-          // Token invalid/expired, tapi kita biarkan connect sebagai Guest?
-          // Atau tolak jika usernya maksa login guru?
-          // Untuk fleksibilitas, kita biarkan connect tapi tandai invalid.
-          // Token invalid/expired
           console.warn(`⚠️ Invalid Token from ${socket.id}: ${err.message}`);
+          return next(
+            new Error("Authentication Error: Invalid or Expired Token"),
+          );
         } else {
           socket.decoded = decoded;
           socket.isAuth = true;
           console.log(
             `🔑 Authenticated User: ${decoded.username} (${decoded.role})`,
           );
+          next();
         }
-        next();
       });
     } else {
       next(); // Guest
