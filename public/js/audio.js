@@ -1,44 +1,54 @@
 const AudioManager = {
-  ctx: new (window.AudioContext || window.webkitAudioContext)(),
+  ctx: null,
   isMuted: false,
 
   //inisialisasi
+  getContext: function () {
+    if (!this.ctx) {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return this.ctx;
+  },
+
   init: function () {
-    if (this.ctx.state === "suspended") {
-      this.ctx.resume();
+    const ctx = this.getContext();
+    if (ctx.state === "suspended") {
+      ctx.resume();
     }
   },
 
   // 1.suaro klik
   playClick: function () {
     if (this.isMuted) return;
+    const ctx = this.getContext();
     this.init();
 
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
 
     osc.type = "sine";
-    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.1);
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1);
 
-    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
 
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(ctx.destination);
 
     osc.start();
-    osc.stop(this.ctx.currentTime + 0.1);
+    osc.stop(ctx.currentTime + 0.1);
   },
 
   // 2suara kalo bener
   playCorrect: function () {
     if (this.isMuted) return;
+    const ctx = this.getContext();
     this.init();
 
-    const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
 
     osc.type = "triangle";
     osc.frequency.setValueAtTime(523.25, now);
@@ -49,7 +59,7 @@ const AudioManager = {
     gain.gain.linearRampToValueAtTime(0, now + 0.5);
 
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(ctx.destination);
 
     osc.start();
     osc.stop(now + 0.5);
@@ -58,11 +68,12 @@ const AudioManager = {
   // 3suara klo salah
   playWrong: function () {
     if (this.isMuted) return;
+    const ctx = this.getContext();
     this.init();
 
-    const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
 
     osc.type = "sawtooth";
     osc.frequency.setValueAtTime(150, now);
@@ -72,7 +83,7 @@ const AudioManager = {
     gain.gain.linearRampToValueAtTime(0, now + 0.3);
 
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(ctx.destination);
 
     osc.start();
     osc.stop(now + 0.3);
@@ -90,20 +101,18 @@ const AudioManager = {
 
   // Helper untuk nada kustom
   playTone: function (freq, delay, duration) {
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
+    const ctx = this.getContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
     osc.type = "square";
     osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.05, this.ctx.currentTime + delay);
-    gain.gain.linearRampToValueAtTime(
-      0,
-      this.ctx.currentTime + delay + duration,
-    );
+    gain.gain.setValueAtTime(0.05, ctx.currentTime + delay);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + delay + duration);
 
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start(this.ctx.currentTime + delay);
-    osc.stop(this.ctx.currentTime + delay + duration);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime + delay);
+    osc.stop(ctx.currentTime + delay + duration);
   },
 
   // Toggle Mute

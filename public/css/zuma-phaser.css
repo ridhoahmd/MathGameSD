@@ -153,7 +153,7 @@ body {
   align-items: center;
   z-index: 100;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent);
-  pointer-events: none; /* 🔧 FIX: Allow clicks to pass through to canvas */
+  pointer-events: none !important; /* Force pass-through */
 }
 
 .hud-left,
@@ -241,7 +241,8 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1;
+  z-index: 50; /* Lower than HUD (100) but higher than background */
+  pointer-events: none; /* Let clicks pass through to canvas */
 }
 
 #game-container canvas {
@@ -250,6 +251,8 @@ body {
   margin: auto;
   max-width: 100%;
   max-height: 100%;
+  pointer-events: auto !important; /* Force input enabled */
+  touch-action: none;
 }
 
 /* ========== GAME OVER MODAL ========== */

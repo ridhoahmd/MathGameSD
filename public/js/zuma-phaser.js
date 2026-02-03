@@ -1,925 +1,922 @@
-// ============================================
-// TEMBAK ANGKA - PHASER VERSION (Hybrid)
-// Zuma-style Math Game with Phaser 3
-// ============================================
+/**
+ * ZUMA PHASER - REFACTORED & ENHANCED
+ * -----------------------------------
+ * Fitur:
+ * - Grafik Bola 3D Procedural (tanpa aset gambar eksternal)
+ * - Sistem Tembak & Fisika Akurat
+ * - Integrasi Socket.IO untuk Multiplayer & Skor
+ * - Efek Partikel & Visual Modern
+ */
 
-// === SOCKET & STATE (Keep from original) ===
-const socket = window.socket;
-let myName = localStorage.getItem("playerName") || "Guest";
-let myRoom = "";
-let score = 0;
-let gameActive = false;
-let levelData = {};
-let currentLevelNumber = 1;
-let maxEnemies = 20;
-let spawnedEnemies = 0;
-let selectedDifficulty = "mudah";
-
-// === DOM ELEMENTS ===
-const scoreEl = document.getElementById("score");
-const finalScoreEl = document.getElementById("final-score");
-const opponentScoreEl = document.getElementById("opponent-score");
-const gameOverScreen = document.getElementById("game-over-screen");
-const targetEl = document.getElementById("target-count");
-const loginScreen = document.getElementById("login-screen");
-const gameHud = document.getElementById("game-hud");
-
-// === PHASER CONFIG ===
-const config = {
-  type: Phaser.AUTO,
+// === KONFIGURASI GLOBAL ===
+const GAME_CONFIG = {
   width: 800,
   height: 600,
-  parent: "game-container",
   backgroundColor: "#0a0a1a",
   physics: {
     default: "arcade",
-    arcade: {
-      gravity: { y: 0 },
-      debug: false,
-    },
-  },
-  scene: {
-    preload: preload,
-    create: create,
-    update: update,
+    arcade: { debug: false },
   },
   scale: {
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.NO_CENTER,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
   },
 };
 
-// === PHASER GAME VARIABLES ===
-let game;
-let pathGraphics;
-let pathCurve;
-let turret;
-let turretBase;
-let ammoText;
-let marbles;
-let bullets;
-let particles;
-let emitter;
-let cursors;
-let lastSpawnTime = 0;
-let player = { currentAmmo: 5, angle: 0 };
-
-// === DIFFICULTY BUTTONS ===
-document.addEventListener("DOMContentLoaded", () => {
-  const savedName = localStorage.getItem("playerName");
-  if (savedName) {
-    const userInput = document.getElementById("username");
-    if (userInput) userInput.value = savedName;
-  }
-
-  const buttons = document.querySelectorAll(".btn-difficulty");
-  buttons.forEach((button) => {
-    button.addEventListener("click", () => {
-      buttons.forEach((btn) => btn.classList.remove("active"));
-      button.classList.add("active");
-      selectedDifficulty = button.dataset.level;
-    });
-  });
-});
-
-// === START GAME (Keep original socket logic) ===
-window.startGameMultiplayer = function () {
-  const nameInput = document.getElementById("username");
-  const roomInput = document.getElementById("room-code");
-
-  if (!nameInput || nameInput.value.trim() === "") {
-    alert("Isi nama dulu!");
-    return;
-  }
-
-  myName = nameInput.value;
-  localStorage.setItem("playerName", myName);
-
-  if (socket) {
-    socket.emit("mintaDataProfil", myName);
-    socket.emit("mulaiGame", "zuma");
-
-    let room = roomInput ? roomInput.value.trim() : "";
-    if (room === "")
-      room = "solo_" + myName + "_" + Math.floor(Math.random() * 1000);
-    myRoom = room;
-    socket.emit("joinRoom", { username: myName, room: myRoom });
-
-    currentLevelNumber = 1;
-    requestLevelData();
-  } else {
-    alert("Koneksi Server Terputus!");
-  }
+// === VARIABEL GLOBAL (State Management) ===
+let socket = window.socket || null;
+let playerName = localStorage.getItem("playerName") || "Guest";
+let currentLevel = 1;
+let selectedDifficulty = "mudah";
+let levelConfig = {
+  speed: 1, // Kecepatan bola
+  spawnRate: 2000,
+  maxEnemies: 20,
+  pola: "spiral",
 };
 
-function requestLevelData() {
-  if (loginScreen) {
-    loginScreen.innerHTML = `<h2 style='color:white;'>🛸 Memuat Level ${currentLevelNumber}...</h2>`;
+/* =========================================
+   SCENE UTAMA: ZUMA GAMEPLAY
+   ========================================= */
+class ZumaScene extends Phaser.Scene {
+  constructor() {
+    super({ key: "ZumaScene" });
   }
 
-  if (socket) {
-    socket.emit("mintaSoalAI", {
-      kategori: "zuma",
-      tingkat: selectedDifficulty,
-    });
-  }
-}
+  // --- 1. INITIALIZATION ---
+  init(data) {
+    this.score = 0;
+    this.spawnedCount = 0;
+    this.isGameOver = false;
+    this.levelData = data.levelData || {};
+    this.difficulty = data.difficulty || "mudah";
 
-// === SOCKET HANDLERS ===
-if (socket) {
-  socket.on("soalDariAI", (data) => {
-    if (data.kategori === "zuma") {
-      let info = data.data;
+    // Setup Level Params
+    const isFast = (this.levelData.speed || "").toLowerCase() === "cepat";
+    this.gameSpeed = isFast ? 1.5 : 0.8;
+    // Jarak lebih rapat (Delay dikurangi drastis)
+    this.spawnDelay = isFast ? 1000 : 1200;
+    this.maxEnemies = 15 + currentLevel * 5;
 
-      if (Array.isArray(info) && info.length > 0) {
-        let index = (currentLevelNumber - 1) % info.length;
-        levelData = info[index];
-      } else if (info && typeof info === "object") {
-        levelData = info;
-      } else {
-        levelData = { pola: "spiral", speed: "sedang" };
+    // Player State
+    this.playerAmmo = Math.floor(Math.random() * 9) + 1;
+    this.canShoot = true;
+
+    // DEBUG: DOM Level Listener
+    document.addEventListener("mousemove", (e) => {
+      // Update debug text directly if scene is running
+      if (this.debugText) {
+        this.debugText.setText(
+          `DOM: ${e.clientX},${e.clientY} | Phaser: Check...`,
+        );
       }
-
-      // Hide login, show HUD
-      if (loginScreen) loginScreen.style.display = "none";
-      if (gameOverScreen) {
-        gameOverScreen.classList.add("hidden");
-        gameOverScreen.style.display = "none";
-      }
-      if (gameHud) {
-        gameHud.style.display = "flex";
-        gameHud.style.zIndex = "9999";
-      }
-
-      // Initialize Phaser game
-      initPhaserGame();
-    }
-  });
-
-  socket.on("updateOpponentScore", (skorLawan) => {
-    if (opponentScoreEl) opponentScoreEl.innerText = skorLawan;
-  });
-}
-
-// === PHASER INITIALIZATION ===
-function initPhaserGame() {
-  console.log("Initializing Phaser Game...");
-  // Destroy existing game if any
-  if (game) {
-    game.destroy(true);
-  }
-
-  // Reset state
-  score = 0;
-  spawnedEnemies = 0;
-  maxEnemies = 15 + currentLevelNumber * 5;
-  player.currentAmmo = Math.floor(Math.random() * 9) + 1;
-
-  if (scoreEl) scoreEl.innerText = score;
-  if (targetEl) targetEl.innerText = `${spawnedEnemies}/${maxEnemies}`;
-
-  // Create Phaser game
-  game = new Phaser.Game(config);
-  gameActive = true;
-}
-
-// === PHASER PRELOAD ===
-function preload() {
-  // Create textures programmatically
-  this.load.on("complete", () => {
-    console.log("🎮 Tembak Angka Phaser loaded!");
-  });
-}
-
-// === PHASER CREATE ===
-function create() {
-  console.log("Create Function Started. OLD Game Active:", gameActive);
-  // gameActive = true; // 🔧 FIX: Moved to end of function to prevent race condition
-  const scene = this;
-
-  try {
-    // Create path graphics
-    pathGraphics = this.add.graphics();
-
-    // Generate path based on level data
-    const pathPoints = generatePathPoints(
-      levelData.pola || "spiral",
-      config.width,
-      config.height,
-    );
-
-    // Draw path
-    drawPath(pathGraphics, pathPoints);
-
-    // Create path curve for marble following
-    pathCurve = new Phaser.Curves.Spline(pathPoints);
-
-    // Create marble group
-    marbles = this.physics.add.group();
-
-    // Create bullet group
-    bullets = this.physics.add.group();
-
-    // Create particle emitter
-    const particleGraphics = this.make.graphics({ x: 0, y: 0, add: false });
-    particleGraphics.fillStyle(0xffffff, 1);
-    particleGraphics.fillCircle(4, 4, 4);
-    particleGraphics.generateTexture("particle", 8, 8);
-
-    particles = this.add.particles(0, 0, "particle", {
-      speed: { min: 50, max: 150 },
-      scale: { start: 1, end: 0 },
-      lifespan: 500,
-      blendMode: "ADD",
-      emitting: false,
     });
 
-    // Pre-generate textures
-    generateGameTextures(scene);
-
-    // Create turret
-    createTurret(scene);
-
-    // Input handling
-    this.input.on("pointermove", (pointer) => {
-      if (!gameActive) return;
-      const angle = Phaser.Math.Angle.Between(
-        turret.x,
-        turret.y,
-        pointer.x,
-        pointer.y,
-      );
-      turret.rotation = angle;
-      player.angle = angle;
+    document.addEventListener("mousedown", (e) => {
+      console.log("DOM CLICK:", e.target);
     });
-
-    this.input.on("pointerdown", (pointer) => {
-      if (!gameActive) {
-        console.warn("Click ignored: Game Inactive");
-        return;
-      }
-
-      // Check if clicking on turret (swap ammo)
-      const dist = Phaser.Math.Distance.Between(
-        pointer.x,
-        pointer.y,
-        turret.x,
-        turret.y,
-      );
-      if (dist < 50) {
-        swapAmmo(scene);
-        return;
-      }
-
-      // Shoot
-      shootBullet(scene, pointer);
-    });
-
-    // Keyboard input
-    this.input.keyboard.on("keydown-SPACE", () => {
-      swapAmmo(scene);
-    });
-
-    // Collision detection
-    this.physics.add.overlap(bullets, marbles, handleCollision, null, this);
-
-    // Store scene reference
-    this.gameScene = scene;
-
-    // Start spawning
-    lastSpawnTime = Date.now();
-
-    gameActive = true;
-    console.log("Create Function Finished. Game Active Forced to True.");
-  } catch (e) {
-    console.error("CRITICAL ERROR IN CREATE:", e);
-    // Try to recover
-    gameActive = true;
-  }
-}
-
-// === PHASER UPDATE ===
-function update() {
-  // 🔧 FIX: Safety Check to prevent crash if update runs before init
-  if (!gameActive || !marbles || !bullets) {
-    return;
   }
 
-  const scene = this;
-  const now = Date.now();
-
-  // Spawn marbles
-  const spawnRate = levelData.speed === "cepat" ? 1500 : 3000;
-  if (now - lastSpawnTime > spawnRate && spawnedEnemies < maxEnemies) {
-    spawnMarble(scene);
-    lastSpawnTime = now;
+  // --- 2. PRELOAD (Generate Aset) ---
+  preload() {
+    // Kita buat tekstur secara procedural di create() agar tidak perlu file eksternal
+    // Load Audio jika ada
+    this.load.audio("shoot", "/explosion.mp3");
   }
 
-  // Update marbles along path
-  marbles.getChildren().forEach((marble) => {
-    if (!marble.active) return;
-
-    marble.pathProgress += marble.speed;
-
-    if (marble.pathProgress >= 1) {
-      // Reached end - game over
-      console.warn("Marble reached end! Game Over.");
-      endGame();
-      return;
-    }
-
-    const point = pathCurve.getPoint(marble.pathProgress);
-    if (point) {
-      marble.x = point.x;
-      marble.y = point.y;
-      if (marble.valueText) {
-        marble.valueText.x = point.x;
-        marble.valueText.y = point.y;
-      }
-    }
-  });
-
-  // Update bullets (remove off-screen)
-  bullets.getChildren().forEach((bullet) => {
-    if (
-      bullet.x < 0 ||
-      bullet.x > config.width ||
-      bullet.y < 0 ||
-      bullet.y > config.height
-    ) {
-      if (bullet.valueText) bullet.valueText.destroy();
-      bullet.destroy();
-    }
-  });
-
-  // Check level complete
-  // Safeguarded condition
-  if (
-    spawnedEnemies > 0 &&
-    spawnedEnemies >= maxEnemies &&
-    marbles.countActive() === 0
-  ) {
-    console.warn("Level Complete Triggered!", {
-      spawnedEnemies,
-      maxEnemies,
-      active: marbles.countActive(),
-    });
-    gameActive = false;
-    setTimeout(() => {
-      alert(`🎉 LEVEL ${currentLevelNumber} SELESAI!`);
-      currentLevelNumber++;
-      requestLevelData();
-    }, 500);
-  }
-
-  // Update ammo display
-  if (ammoText) {
-    ammoText.setText(player.currentAmmo.toString());
-  }
-}
-
-// === HELPER FUNCTIONS ===
-
-function generatePathPoints(pola, w, h) {
-  let points = [];
-  const steps = 100;
-
-  pola = pola ? pola.toLowerCase().replace(/\s+/g, "_") : "spiral";
-
-  if (pola.includes("spiral") || pola.includes("lingkaran")) {
-    const cx = w / 2,
-      cy = h / 2;
-    for (let i = 0; i <= steps; i++) {
-      const angle = 0.15 * i;
-      const r = 20 + 2 * i;
-      if (r < w / 2) {
-        points.push({
-          x: cx + r * Math.cos(angle),
-          y: cy + r * Math.sin(angle),
-        });
-      }
-    }
-    points.reverse();
-  } else if (pola.includes("zigzag")) {
-    for (let i = 0; i <= steps; i++) {
-      points.push({
-        x: (i / steps) * w,
-        y: h / 2 + Math.sin(i * 0.2) * (h * 0.35),
-      });
-    }
-  } else if (pola.includes("oval") || pola.includes("elips")) {
-    const cx = w / 2,
-      cy = h / 2;
-    const rX = w * 0.4,
-      rY = h * 0.35;
-    for (let i = 0; i <= steps; i++) {
-      const prog = 1 - i / steps;
-      const ang = (i / steps) * Math.PI * 4;
-      points.push({
-        x: cx + Math.cos(ang) * (rX * prog),
-        y: cy + Math.sin(ang) * (rY * prog),
-      });
-    }
-    points.reverse();
-  } else {
-    // Default wave
-    for (let i = 0; i <= steps; i++) {
-      points.push({
-        x: (i / steps) * w,
-        y: h * 0.2 + Math.sin(i / 20) * 50 + (i / steps) * (h * 0.6),
-      });
-    }
-  }
-
-  return points;
-}
-
-function drawPath(graphics, points) {
-  // Outer glow
-  graphics.lineStyle(40, 0x00f2ff, 0.1);
-  graphics.beginPath();
-  graphics.moveTo(points[0].x, points[0].y);
-  for (let i = 1; i < points.length; i++) {
-    graphics.lineTo(points[i].x, points[i].y);
-  }
-  graphics.strokePath();
-
-  // Inner groove
-  graphics.lineStyle(32, 0x000000, 0.6);
-  graphics.beginPath();
-  graphics.moveTo(points[0].x, points[0].y);
-  for (let i = 1; i < points.length; i++) {
-    graphics.lineTo(points[i].x, points[i].y);
-  }
-  graphics.strokePath();
-
-  // Center line
-  graphics.lineStyle(2, 0xffffff, 0.05);
-  graphics.beginPath();
-  graphics.moveTo(points[0].x, points[0].y);
-  for (let i = 1; i < points.length; i++) {
-    graphics.lineTo(points[i].x, points[i].y);
-  }
-  graphics.strokePath();
-}
-
-function createTurret(scene) {
-  const x = config.width / 2;
-  const y = config.height * 0.85;
-
-  // 1. Turret Base (Futuristic Platform)
-  turretBase = scene.add.graphics();
-
-  // Outer Ring (Rotating glow)
-  turretBase.lineStyle(2, 0x00f2ff, 0.5);
-  turretBase.strokeCircle(x, y, 45);
-
-  // Main Body
-  turretBase.fillStyle(0x1a1a2e, 1);
-  turretBase.fillCircle(x, y, 38);
-  turretBase.lineStyle(4, 0x00f2ff, 1);
-  turretBase.strokeCircle(x, y, 38);
-
-  // Inner Detail
-  turretBase.fillStyle(0x000000, 0.5);
-  turretBase.fillCircle(x, y, 20);
-
-  // 2. Turret Barrel (Double Blaster)
-  const barrelGraphics = scene.make.graphics({ x: 0, y: 0, add: false });
-
-  // Barrel Body
-  barrelGraphics.fillStyle(0x333333, 1);
-  barrelGraphics.fillRoundedRect(0, -15, 65, 30, 5);
-
-  // Neon Strips
-  barrelGraphics.fillStyle(0x00f2ff, 1);
-  barrelGraphics.fillRect(10, -10, 45, 4);
-  barrelGraphics.fillRect(10, 6, 45, 4);
-
-  // Muzzle Flash Area
-  barrelGraphics.fillStyle(0xffffff, 0.8);
-  barrelGraphics.fillRect(60, -12, 4, 24);
-
-  barrelGraphics.generateTexture("barrel", 70, 30);
-
-  turret = scene.add.sprite(x, y, "barrel");
-  turret.setOrigin(0.1, 0.5); // Set pivot slightly back
-
-  // Ammo display (Holo-projector style)
-  const colors = [
-    "#f00",
-    "#0f0",
-    "#00f",
-    "#ff0",
-    "#0ff",
-    "#f0f",
-    "#f80",
-    "#8f0",
-    "#80f",
-  ];
-
-  /* 
-     We will create a dynamic sprite for the current ammo orb 
-     instead of a static circle, so it matches the 3D marbles 
-  */
-
-  // Initial Ammo Text
-  ammoText = scene.add
-    .text(x, y, player.currentAmmo.toString(), {
-      fontFamily: "Orbitron",
-      fontSize: "24px",
-      fontStyle: "bold",
-      color: "#fff",
-      shadow: { blur: 5, color: "#000000", fill: true },
-    })
-    .setOrigin(0.5)
-    .setDepth(10);
-
-  // Update ammo visual helper
-  updateTurretAmmoVisual(scene);
-
-  // Pulsing animation for the base
-  scene.tweens.add({
-    targets: turretBase,
-    scale: { from: 1, to: 1.05 },
-    alpha: { from: 0.8, to: 1 },
-    duration: 1000,
-    yoyo: true,
-    repeat: -1,
-  });
-}
-
-// Helper to update the orb graphics in the center of turret
-function updateTurretAmmoVisual(scene) {
-  if (!turret.ammoOrb) {
-    turret.ammoOrb = scene.add
-      .sprite(turret.x, turret.y, "marble_ff0000")
-      .setDepth(9);
-  }
-
-  // Get current color key
-  const colors = [
-    "#f00",
-    "#0f0",
-    "#00f",
-    "#ff0",
-    "#0ff",
-    "#f0f",
-    "#f80",
-    "#8f0",
-    "#80f",
-  ];
-  const colorHex = colors[player.currentAmmo % colors.length];
-  const textureKey = "marble_" + colorHex.replace("#", "");
-
-  if (scene.textures.exists(textureKey)) {
-    turret.ammoOrb.setTexture(textureKey);
-    turret.ammoOrb.setScale(0.8);
-    turret.ammoOrb.setDepth(200); // 🔧 FIX: High depth to ensure visibility over turret base
-    turret.ammoOrb.setVisible(true);
-  } else {
-    console.error(`❌ Missing Texture for Ammo Orb: ${textureKey}`);
-  }
-}
-
-function spawnMarble(scene) {
-  console.log("Spawning marble...");
-  if (!pathCurve) {
-    console.error("Path curve missing!");
-    return;
-  }
-
-  spawnedEnemies++;
-  if (targetEl) {
-    targetEl.innerText = `${spawnedEnemies}/${maxEnemies}`;
-  }
-
-  // Create marble
-  const startPoint = pathCurve.getPoint(0);
-
-  // Math question
-  const a = Math.floor(Math.random() * 5) + 1;
-  const b = Math.floor(Math.random() * 5) + 1;
-  const value = a + b;
-  const text = `${a}+${b}`;
-
-  // Color palette
-  const palette = levelData.palet_warna || [
-    "#ff0000",
-    "#00ff00",
-    "#0000ff",
-    "#ffff00",
-    "#ff00ff",
-  ];
-  const colorHex = palette[Math.floor(Math.random() * palette.length)];
-  const color = Phaser.Display.Color.HexStringToColor(colorHex).color;
-
-  // Use pre-generated texture based on color
-  const textureKey = "marble_" + colorHex.replace("#", "");
-
-  const marble = scene.physics.add.sprite(
-    startPoint.x,
-    startPoint.y,
-    textureKey,
-  );
-  marble.value = value;
-  marble.pathProgress = 0;
-  marble.speed = levelData.speed === "cepat" ? 0.002 : 0.001;
-  marble.colorHex = colorHex;
-
-  // Value text
-  const valueText = scene.add
-    .text(startPoint.x, startPoint.y, text, {
-      fontFamily: "Arial",
-      fontSize: "12px",
-      fontStyle: "bold",
-      color: "#fff",
-      stroke: "#000",
-      strokeThickness: 2,
-    })
-    .setOrigin(0.5);
-
-  marble.valueText = valueText;
-  marbles.add(marble);
-}
-
-function shootBullet(scene, pointer) {
-  console.log("Shooting bullet...");
-  const angle = Phaser.Math.Angle.Between(
-    turret.x,
-    turret.y,
-    pointer.x,
-    pointer.y,
-  );
-
-  const colors = [
-    "#f00",
-    "#0f0",
-    "#00f",
-    "#ff0",
-    "#0ff",
-    "#f0f",
-    "#f80",
-    "#8f0",
-    "#80f",
-  ];
-  const colorHex = colors[player.currentAmmo % colors.length];
-  const color = Phaser.Display.Color.HexStringToColor(colorHex).color;
-
-  // 🔧 FIX: Use Native Circle Shape instead of Texture (Bypassing texture gen issues)
-  const bullet = scene.add.circle(turret.x, turret.y, 12, color, 1);
-  bullet.setDepth(1000);
-  bullet.setVisible(true);
-  bullet.setActive(true);
-  bullet.value = player.currentAmmo;
-
-  // Add Physics
-  scene.physics.add.existing(bullet);
-
-  // Add white glow border (stroke)
-  bullet.setStrokeStyle(2, 0xffffff);
-
-  console.log("🔥 BULLET SHAPE SPAWNED:", {
-    x: bullet.x,
-    y: bullet.y,
-    color: colorHex,
-    visible: bullet.visible,
-    depth: bullet.depth,
-    hasBody: !!bullet.body,
-  });
-
-  // Update visual immediately after shooting
-  if (ammoText) {
-    ammoText.setText(player.currentAmmo.toString());
-  }
-
-  updateTurretAmmoVisual(scene);
-
-  const speed = 1000;
-  // Physics body velocity
-  bullet.body.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
-
-  // Value text
-  const valueText = scene.add
-    .text(turret.x, turret.y, player.currentAmmo.toString(), {
-      fontFamily: "Orbitron",
-      fontSize: "16px",
-      fontStyle: "bold",
-      color: "#fff",
-      stroke: "#000",
-      strokeThickness: 2,
-      shadow: { blur: 2, color: "#000000", fill: true },
-    })
-    .setOrigin(0.5);
-
-  bullet.valueText = valueText;
-
-  // Update text position
-  scene.time.addEvent({
-    delay: 16,
-    callback: () => {
-      if (bullet.active && valueText.active) {
-        valueText.x = bullet.x;
-        valueText.y = bullet.y;
-      }
-    },
-    loop: true,
-  });
-
-  bullets.add(bullet);
-
-  // Play sound
-  try {
-    AudioManager.playCorrect();
-  } catch (e) {}
-}
-
-function handleCollision(bullet, marble) {
-  if (!bullet.active || !marble.active) return;
-
-  const scene = game.scene.scenes[0];
-
-  if (bullet.value === marble.value) {
-    // Correct hit!
-    score += 10;
-    if (scoreEl) scoreEl.innerText = score;
-
-    // Particles
-    if (particles) {
-      particles.setPosition(marble.x, marble.y);
-      particles.setParticleTint(
-        Phaser.Display.Color.HexStringToColor(marble.colorHex || "#ffffff")
-          .color,
-      );
-      particles.explode(15);
-    }
-
-    // Cleanup
-    if (marble.valueText) marble.valueText.destroy();
-    marble.destroy();
-
-    // Send score to opponent
-    if (socket) {
-      socket.emit("updateDuelScore", { room: myRoom, skor: score });
-    }
-
+  // --- 3. CREATE (Setup Game Objects) ---
+  create() {
+    console.log("🔥 Phaser START CREATE");
     try {
-      AudioManager.playCorrect();
+      // A. SETUP GRAFIS 3D (Procedural Textures)
+      this.generateTextures();
+
+      // B. WORLD SETUP
+      this.createPath(this.levelData.pola || "spiral");
+
+      // C. GROUPS
+      this.marbles = this.physics.add.group();
+      this.bullets = this.physics.add.group();
+
+      // D. PLAYER (TURRET)
+      this.createTurret();
+      if (this.turret) {
+        this.turretInputReady = true;
+        this.targetRotation = -Math.PI / 2; // Default facing up
+      }
+
+      // E. INPUT HANDLERS (PHASER)
+      this.input.mouse.disableContextMenu();
+      this.input.on("pointermove", (pointer) => {
+        this.handleInputMove(pointer.x, pointer.y);
+      });
+      this.input.on("pointerdown", (pointer) => {
+        this.handleInputClick(pointer.x, pointer.y);
+      });
+
+      // E2. GLOBAL FALLBACK INPUT (DOM LEVEL)
+      this.inputFallbackMove = (e) => {
+        if (this.isGameOver || !this.turret) return;
+        const canvas = this.game.canvas;
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+
+        // Scaling factor (Canvas size vs Display size)
+        const scaleX = this.game.config.width / rect.width;
+        const scaleY = this.game.config.height / rect.height;
+
+        const gameX = (e.clientX - rect.left) * scaleX;
+        const gameY = (e.clientY - rect.top) * scaleY;
+
+        this.handleInputMove(gameX, gameY);
+      };
+
+      this.inputFallbackClick = (e) => {
+        if (this.isGameOver || !this.turret) return;
+        const canvas = this.game.canvas;
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = this.game.config.width / rect.width;
+        const scaleY = this.game.config.height / rect.height;
+        const gameX = (e.clientX - rect.left) * scaleX;
+        const gameY = (e.clientY - rect.top) * scaleY;
+        this.handleInputClick(gameX, gameY);
+      };
+
+      document.addEventListener("mousemove", this.inputFallbackMove);
+      document.addEventListener("mousedown", this.inputFallbackClick);
+
+      // Cleanup saat shutdown
+      this.events.on("shutdown", () => {
+        document.removeEventListener("mousemove", this.inputFallbackMove);
+        document.removeEventListener("mousedown", this.inputFallbackClick);
+      });
+
+      this.input.keyboard.on("keydown-SPACE", () => this.swapAmmo());
+
+      // --- LOGIC INPUT CORE ---
+      this.handleInputMove = function (x, y) {
+        if (this.isGameOver || !this.turret) return;
+        // DEBUG TEXT REMOVED
+
+        // Calculate target angle but DO NOT set rotation immediately
+        this.targetRotation = Phaser.Math.Angle.Between(
+          this.turret.x,
+          this.turret.y,
+          x,
+          y,
+        );
+      };
+
+      this.handleInputClick = function (x, y) {
+        if (this.isGameOver || !this.turret) return;
+        if (
+          Phaser.Math.Distance.Between(x, y, this.turret.x, this.turret.y) < 60
+        ) {
+          this.swapAmmo();
+        } else {
+          this.shootBullet({ x: x, y: y });
+        }
+      };
+
+      // F. COLLIDERS
+      this.physics.add.overlap(
+        this.bullets,
+        this.marbles,
+        this.handleCollision,
+        null,
+        this,
+      );
+
+      // G. SPAWNER TIMER
+      this.time.addEvent({
+        delay: this.spawnDelay,
+        callback: this.spawnMarble,
+        callbackScope: this,
+        loop: true,
+      });
+
+      // H. UI UPDATE
+      this.updateUI();
+
+      // SFX
+      try {
+        this.sound.play("shoot", { volume: 0 }); // Pre-warm audio
+      } catch (e) {}
+
+      console.log("✅ Phaser CREATE Finished");
+    } catch (err) {
+      console.error("❌ CRITICAL ERROR in CREATE:", err);
+      alert("Game Error: " + err.message);
+    }
+  }
+
+  // --- 4. UPDATE LOOP ---
+  update(time, delta) {
+    if (this.isGameOver) return;
+
+    // --- SMOOTH ROTATION LOGIC ---
+    if (this.turret && this.targetRotation !== undefined) {
+      const currentRotation = this.turret.rotation;
+      this.turret.rotation = Phaser.Math.Angle.RotateTo(
+        currentRotation,
+        this.targetRotation,
+        0.01 * delta,
+      );
+
+      // Counter-rotation Logic (Fix agar angka & bola TIDAK TEBALIK)
+      // Kita lawan rotasi container agar isi-nya tetap tegak lurus
+      if (this.ammoText) this.ammoText.setRotation(-this.turret.rotation);
+      if (this.ammoVisual) this.ammoVisual.setRotation(-this.turret.rotation);
+    }
+
+    // Gerakkan Kelereng ... (Existing logic)
+    this.marbles.getChildren().forEach((marble) => {
+      // ... (Existing marble update)
+      if (marble.active) {
+        marble.pathProgress += 0.0005 * this.gameSpeed * (delta / 16);
+
+        if (marble.pathProgress >= 1) {
+          this.gameOver("Kelereng Mencapai Lubang!");
+          return;
+        }
+
+        const point = this.pathCurve.getPoint(marble.pathProgress);
+        if (point) {
+          marble.setPosition(point.x, point.y);
+          if (marble.textObject) {
+            marble.textObject.setPosition(point.x, point.y);
+          }
+        }
+      }
+    });
+
+    // Cleanup Bullets
+    this.bullets.getChildren().forEach((bullet) => {
+      // ... (Existing bullet update)
+      if (
+        bullet.active &&
+        (bullet.x < 0 || bullet.x > 800 || bullet.y < 0 || bullet.y > 600)
+      ) {
+        this.destroyBullet(bullet);
+      }
+      if (bullet.active && bullet.textObject) {
+        bullet.textObject.setPosition(bullet.x, bullet.y);
+      }
+    });
+
+    // Cek Level Complete
+    if (
+      this.spawnedCount >= this.maxEnemies &&
+      this.marbles.countActive() === 0
+    ) {
+      this.levelComplete();
+    }
+  }
+
+  // ...
+
+  shootBullet(pointer) {
+    if (!this.canShoot) return;
+    this.canShoot = false; // Prevent spam
+
+    // ... (Existing shooting logic)
+    const targetX = pointer.x || 0;
+    const targetY = pointer.y || 0;
+
+    const colorKeys = [
+      "red",
+      "green",
+      "blue",
+      "yellow",
+      "purple",
+      "cyan",
+      "orange",
+    ];
+    const key = colorKeys[this.playerAmmo % colorKeys.length];
+
+    const bullet = this.bullets.create(
+      this.turret.x,
+      this.turret.y,
+      `marble_${key}`,
+    );
+    bullet.setScale(0.7);
+    bullet.setCircle(14);
+    bullet.value = this.playerAmmo;
+
+    const angle = this.turret.rotation;
+    const vec = this.physics.velocityFromRotation(angle, 600);
+    bullet.setVelocity(vec.x, vec.y);
+
+    // Add text to bullet
+    const txt = this.add
+      .text(this.turret.x, this.turret.y, this.playerAmmo.toString(), {
+        fontSize: "12px",
+        color: "#fff",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+    bullet.textObject = txt;
+
+    // Sfx
+    try {
+      this.sound.play("shoot");
     } catch (e) {}
 
-    // Smart ammo swap
-    const activeMarbles = marbles.getChildren().filter((m) => m.active);
-    if (activeMarbles.length > 0 && Math.random() < 0.8) {
-      const randomMarble =
-        activeMarbles[Math.floor(Math.random() * activeMarbles.length)];
-      player.currentAmmo = randomMarble.value;
-    } else {
-      player.currentAmmo = Math.floor(Math.random() * 9) + 1;
-    }
-
-    // Update visuals
-    if (scene) {
-      updateTurretAmmoVisual(scene);
-      if (ammoText) ammoText.setText(player.currentAmmo.toString());
-    }
-  }
-
-  // Remove bullet
-  if (bullet.valueText) bullet.valueText.destroy();
-  bullet.destroy();
-}
-
-function swapAmmo(scene) {
-  const activeMarbles = marbles.getChildren().filter((m) => m.active);
-
-  if (activeMarbles.length === 0) {
-    player.currentAmmo = Math.floor(Math.random() * 9) + 1;
-  } else {
-    const different = activeMarbles.filter(
-      (m) => m.value !== player.currentAmmo,
-    );
-    if (different.length > 0) {
-      const target = different[Math.floor(Math.random() * different.length)];
-      player.currentAmmo = target.value;
-    } else if (Math.random() < 0.2) {
-      player.currentAmmo = Math.floor(Math.random() * 9) + 1;
-    }
-  }
-
-  // Visual feedback
-  if (particles && turret) {
-    particles.setPosition(turret.x, turret.y);
-    particles.explode(8);
-  }
-
-  // Update orb visual
-  if (scene && turret && turret.ammoOrb) {
-    updateTurretAmmoVisual(scene);
-  }
-  if (ammoText) {
-    ammoText.setText(player.currentAmmo.toString());
-  }
-
-  try {
-    AudioManager.playCorrect();
-  } catch (e) {}
-}
-
-function endGame() {
-  gameActive = false;
-  console.log("Showing Game Over Screen");
-
-  if (gameOverScreen) {
-    gameOverScreen.classList.remove("hidden");
-    gameOverScreen.style.display = "flex"; // Force it
-  }
-  if (finalScoreEl) finalScoreEl.innerText = score;
-
-  if (socket) {
-    socket.emit("mintaDataProfil", myName);
-    socket.emit("simpanSkor", {
-      nama: myName,
-      skor: score,
-      game: "zuma",
+    // AUTO RELOAD logic (200ms delay)
+    this.time.delayedCall(200, () => {
+      this.randomizeAmmo();
+      this.canShoot = true; // Enable shoot again
     });
   }
+
+  randomizeAmmo() {
+    // Pick random ammo from existing marbles or completely random
+    const activeMarbles = this.marbles.getChildren().filter((m) => m.active);
+
+    // Prioritize existing colors (90% chance) to make game playable
+    if (activeMarbles.length > 0 && Math.random() < 0.9) {
+      const target =
+        activeMarbles[Phaser.Math.Between(0, activeMarbles.length - 1)];
+      // Copy value/key
+      this.playerAmmo = target.value;
+    } else {
+      // Fallback random
+      this.playerAmmo = Phaser.Math.Between(1, 9);
+    }
+    this.updateAmmoVisual();
+
+    // Animation pop for feedback
+    this.tweens.add({
+      targets: this.ammoVisual,
+      scale: { from: 0.1, to: 1.2 },
+      duration: 200,
+      ease: "Back.out",
+    });
+  }
+
+  swapAmmo() {
+    this.randomizeAmmo();
+  }
+
+  /* =========================================
+     HELPER FUNCTIONS
+     ========================================= */
+
+  // 1. TEXTURE GENERATOR (Membuat Bola 3D)
+  generateTextures() {
+    const colors = {
+      red: 0xff0000,
+      green: 0x00ff00,
+      blue: 0x0000ff,
+      yellow: 0xffff00,
+      purple: 0xff00ff,
+      cyan: 0x00ffff,
+      orange: 0xff8800,
+      lime: 0x88ff00,
+      pink: 0xff0088,
+    };
+
+    Object.keys(colors).forEach((key) => {
+      const c = Phaser.Display.Color.IntegerToColor(colors[key]);
+      const graphics = this.make.graphics({ x: 0, y: 0, add: false });
+
+      // Base Shadow
+      graphics.fillStyle(0x000000, 0.5);
+      graphics.fillCircle(18, 18, 16);
+
+      // Body (Gradient Pseudo-effect)
+      graphics.fillStyle(colors[key], 1);
+      graphics.fillCircle(16, 16, 16);
+
+      // Highlight (White Glint)
+      graphics.fillStyle(0xffffff, 0.4);
+      graphics.fillCircle(12, 12, 6); // Top-left shine
+
+      graphics.generateTexture(`marble_${key}`, 36, 36);
+    });
+
+    // Turret Texture
+    const tG = this.make.graphics({ x: 0, y: 0, add: false });
+    tG.fillStyle(0x444444);
+    tG.fillCircle(0, 0, 40); // Base
+    tG.fillStyle(0x00f2ff);
+    tG.fillRect(0, -10, 50, 20); // Barrel
+    tG.generateTexture("turret_tex", 100, 100);
+  }
+
+  // 2. PATH SISTEM
+  createPath(pola) {
+    this.pathGraphics = this.add.graphics();
+    let points = [];
+    const w = 800,
+      h = 600;
+
+    // Pola Spiral
+    if (pola.includes("spiral")) {
+      for (let i = 0; i <= 300; i++) {
+        let angle = 0.1 * i;
+        let r = 20 + 2 * i;
+        if (r > w / 2 - 50) break;
+        points.push(
+          new Phaser.Math.Vector2(
+            w / 2 + r * Math.cos(angle),
+            h / 2 + r * Math.sin(angle),
+          ),
+        );
+      }
+      points.reverse(); // Masuk dari luar ke dalam
+    } else {
+      // Default ZigZag
+      for (let i = 0; i <= 10; i++) {
+        points.push(
+          new Phaser.Math.Vector2((i / 10) * w, h / 2 + Math.sin(i * 2) * 150),
+        );
+      }
+    }
+
+    this.pathCurve = new Phaser.Curves.Spline(points);
+
+    // Gambar Jalur
+    this.pathGraphics.clear();
+    this.pathGraphics.lineStyle(40, 0x000000, 0.3); // Groove Shadow
+    this.pathCurve.draw(this.pathGraphics, 64);
+    this.pathGraphics.lineStyle(2, 0x00ffff, 0.2); // Guide Line
+    this.pathCurve.draw(this.pathGraphics, 64);
+  }
+
+  // 3. SPAWNER
+  spawnMarble() {
+    if (this.spawnedCount >= this.maxEnemies || this.isGameOver) return;
+
+    const startPoint = this.pathCurve.getPoint(0);
+    const colorKeys = [
+      "red",
+      "green",
+      "blue",
+      "yellow",
+      "purple",
+      "cyan",
+      "orange",
+    ];
+
+    // Logika Angka
+    const a = Phaser.Math.Between(1, 5);
+    const b = Phaser.Math.Between(1, 5);
+    const val = a + b;
+    const txt = `${a}+${b}`;
+
+    // Pilih Warna
+    const colorKey = colorKeys[val % colorKeys.length];
+
+    const marble = this.marbles.create(
+      startPoint.x,
+      startPoint.y,
+      `marble_${colorKey}`,
+    );
+    marble.value = val;
+    marble.colorKey = colorKey;
+    marble.pathProgress = 0;
+    marble.setCircle(16);
+
+    // Tambahkan Teks di atas marble
+    const textObj = this.add
+      .text(startPoint.x, startPoint.y, txt, {
+        fontSize: "11px",
+        fontFamily: "Arial",
+        color: "#000",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+
+    marble.textObject = textObj;
+    this.spawnedCount++;
+    this.updateUI();
+  }
+
+  // 4. TURRET & SHOOTING
+  createTurret() {
+    this.turret = this.add.container(400, 550);
+    this.turret.setDepth(100);
+
+    // 1. Barrel (Laras)
+    const barrel = this.add.rectangle(20, 0, 60, 24, 0x444444);
+    barrel.setStrokeStyle(2, 0x00f2ff);
+    this.turret.add(barrel);
+
+    // 2. Body (Bulatan)
+    const body = this.add.circle(0, 0, 35, 0x222222);
+    body.setStrokeStyle(4, 0x00f2ff);
+    this.turret.add(body);
+
+    // 3. Ammo Visual (Bola current)
+    this.ammoVisual = this.add.sprite(0, 0, "marble_red").setScale(1.2);
+    this.turret.add(this.ammoVisual);
+
+    // 4. Ammo Text
+    this.ammoText = this.add
+      .text(0, 0, "5", {
+        fontSize: "32px",
+        fontFamily: "Arial",
+        fontStyle: "bold",
+        color: "#ffffff",
+        stroke: "#000000",
+        strokeThickness: 6,
+      })
+      .setOrigin(0.5);
+    this.turret.add(this.ammoText);
+
+    this.updateAmmoVisual();
+  }
+
+  updateAmmoVisual() {
+    const colorKeys = [
+      "red",
+      "green",
+      "blue",
+      "yellow",
+      "purple",
+      "cyan",
+      "orange",
+    ];
+    const key = colorKeys[this.playerAmmo % colorKeys.length];
+
+    if (this.textures.exists(`marble_${key}`)) {
+      this.ammoVisual.setTexture(`marble_${key}`);
+    }
+    this.ammoText.setText(this.playerAmmo.toString());
+  }
+
+  shootBullet(pointer) {
+    if (!this.canShoot) return;
+    this.canShoot = false; // Prevent spam
+
+    // Fallback coordinate extraction
+    const targetX = pointer.x || 0;
+    const targetY = pointer.y || 0;
+
+    const colorKeys = [
+      "red",
+      "green",
+      "blue",
+      "yellow",
+      "purple",
+      "cyan",
+      "orange",
+    ];
+    const key = colorKeys[this.playerAmmo % colorKeys.length];
+
+    const bullet = this.bullets.create(
+      this.turret.x,
+      this.turret.y,
+      `marble_${key}`,
+    );
+    bullet.setScale(0.7);
+    bullet.setCircle(14);
+    bullet.value = this.playerAmmo;
+
+    const angle = this.turret.rotation;
+    const vec = this.physics.velocityFromRotation(angle, 600); // Speed 600
+    bullet.setVelocity(vec.x, vec.y);
+
+    // Add text to bullet
+    const txt = this.add
+      .text(this.turret.x, this.turret.y, this.playerAmmo.toString(), {
+        fontSize: "12px",
+        color: "#fff",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+    bullet.textObject = txt;
+
+    // Sfx
+    try {
+      this.sound.play("shoot");
+    } catch (e) {}
+
+    // AUTO RELOAD logic (200ms delay)
+    this.time.delayedCall(200, () => {
+      this.randomizeAmmo();
+      this.canShoot = true; // Enable shoot again
+    });
+  }
+
+  randomizeAmmo() {
+    // Pick random ammo
+    const activeMarbles = this.marbles.getChildren().filter((m) => m.active);
+
+    // Prioritize existing colors (90% chance)
+    if (activeMarbles.length > 0 && Math.random() < 0.9) {
+      const target =
+        activeMarbles[Phaser.Math.Between(0, activeMarbles.length - 1)];
+      this.playerAmmo = target.value;
+    } else {
+      this.playerAmmo = Phaser.Math.Between(1, 9);
+    }
+    this.updateAmmoVisual();
+
+    // Animation pop
+    this.tweens.add({
+      targets: this.ammoVisual,
+      scale: { from: 0.1, to: 1.2 },
+      duration: 200,
+      ease: "Back.out",
+    });
+  }
+
+  swapAmmo() {
+    this.randomizeAmmo();
+  }
+
+  handleCollision(bullet, marble) {
+    if (!bullet.active || !marble.active) return;
+
+    // Cek Hit
+    if (bullet.value === marble.value) {
+      // HIT BENAR
+      this.score += 10;
+      this.destroyMarble(marble);
+      this.destroyBullet(bullet);
+
+      // Efek Partikel
+      this.createExplosion(marble.x, marble.y, marble.colorKey);
+
+      // Sound Effect
+      if (window.safePlayCorrect) window.safePlayCorrect();
+
+      // Update Skor Socket
+      if (socket) socket.emit("updateScore", this.score);
+    } else {
+      // HIT SALAH (Hapus bullet saja)
+      // if(window.safePlayWrong) window.safePlayWrong();
+      this.destroyBullet(bullet);
+    }
+
+    this.updateUI();
+  }
+
+  destroyMarble(marble) {
+    if (marble.textObject) marble.textObject.destroy();
+    marble.destroy();
+  }
+
+  destroyBullet(bullet) {
+    if (bullet.textObject) bullet.textObject.destroy();
+    bullet.destroy();
+  }
+
+  levelComplete() {
+    // Panggil Game Over dengan status WIN
+    this.gameOver("STAGE CLEARED!", true);
+  }
+
+  createExplosion(x, y, colorKey) {
+    // Simple particle burst
+    const p = this.add.particles(0, 0, `marble_${colorKey}`, {
+      x: x,
+      y: y,
+      speed: { min: 50, max: 150 },
+      scale: { start: 0.4, end: 0 },
+      lifespan: 500,
+      quantity: 5,
+    });
+    setTimeout(() => p.destroy(), 600);
+  }
+
+  updateUI() {
+    // Update DOM elements via JS
+    const scoreEl = document.getElementById("score");
+    const targetEl = document.getElementById("target-count");
+
+    if (scoreEl) scoreEl.innerText = this.score;
+    if (targetEl)
+      targetEl.innerText = `${this.spawnedCount}/${this.maxEnemies}`;
+  }
+
+  gameOver(reason, isWin = false) {
+    this.isGameOver = true;
+    this.physics.pause();
+
+    console.log("GAME OVER:", reason);
+
+    // Tampilkan Layar Game Over UI
+    const goScreen = document.getElementById("game-over-screen");
+    const finalScore = document.getElementById("final-score");
+    const goTitle = goScreen.querySelector("h2"); // Assuming h1 or h2
+
+    // Correct selector if h2 not found
+    const actualTitle =
+      goScreen.querySelector("h1") || goScreen.querySelector("h2");
+
+    if (goScreen) {
+      goScreen.style.display = "flex";
+      goScreen.classList.remove("hidden");
+
+      if (isWin) {
+        if (actualTitle) {
+          actualTitle.innerText = "LEVEL SELESAI!";
+          actualTitle.style.color = "#00ff00";
+        }
+      } else {
+        if (actualTitle) {
+          actualTitle.innerText = "GAME OVER";
+          actualTitle.style.color = "#ff0000";
+        }
+      }
+    }
+    if (finalScore) finalScore.innerText = this.score;
+
+    // Setup Tombol Main Lagi / Lanjut
+    const btnRestart = document.querySelector(".btn-restart");
+    if (btnRestart) {
+      // Clear old event listeners by cloning
+      const newBtn = btnRestart.cloneNode(true);
+      btnRestart.parentNode.replaceChild(newBtn, btnRestart);
+
+      // Remove onclick attribute that might cause reference errors if not handled
+      newBtn.removeAttribute("onclick");
+
+      if (isWin) {
+        newBtn.innerText = "Lanjut Level Berikutnya ⏩";
+        newBtn.onclick = () => window.nextLevelZuma();
+      } else {
+        newBtn.innerText = "🔄 Main Lagi";
+        newBtn.onclick = () => window.restartZuma();
+      }
+    }
+
+    // Simpan Skor
+    if (socket) {
+      socket.emit("simpanSkor", {
+        nama: playerName,
+        skor: this.score,
+        game: "zuma",
+      });
+    }
+  }
+
+  // --- NEW METHODS FOR LEVELING ---
+  retryLevel() {
+    // Hide UI
+    document.getElementById("game-over-screen").style.display = "none";
+    // Restart scene with SAME level data
+    this.scene.restart({ levelData: this.levelData });
+  }
+
+  advanceLevel() {
+    // Hide UI
+    document.getElementById("game-over-screen").style.display = "none";
+
+    // Increment global level
+    currentLevel++;
+
+    console.log("Requesting Next Level:", currentLevel);
+
+    // Request New Data (AI)
+    if (socket) {
+      socket.emit("mintaSoalAI", {
+        kategori: "zuma",
+        tingkat: selectedDifficulty,
+        // Backend might not support 'level' param yet, but we simulates difficulty increase?
+        // If backend is stateless, we just request new generic data.
+      });
+
+      socket.once("soalDariAI", (data) => {
+        console.log("Next Level Data:", data);
+        this.scene.restart({ levelData: data.data });
+      });
+    } else {
+      // Offline Fallback
+      this.scene.restart({ levelData: this.levelData });
+    }
+  }
+
+  levelComplete() {
+    this.isGameOver = true;
+    alert(`LEVEL ${currentLevel} SELESAI!`);
+    currentLevel++;
+    // Reload scene dengan difficulty baru
+    this.scene.restart({ levelData: this.levelData }); // Harusnya fetch level baru
+    // Di versi ini kita simple reload page atau request baru
+  }
 }
 
-// === RESTART FUNCTION ===
+// === GLOBAL HELPERS ===
 window.restartZuma = function () {
-  if (gameOverScreen) {
-    gameOverScreen.classList.add("hidden");
-    gameOverScreen.style.display = "none";
+  // Wrapper for restart button
+  const game = currentGameInstance;
+  if (!game) {
+    location.reload();
+    return;
   }
-  score = 0;
-  currentLevelNumber = 1;
-  requestLevelData();
+
+  // Check context (Win vs Lose)
+  // We can just trigger the active scene's restart logic
+  const scene = game.scene.getScene("ZumaScene");
+  if (scene) {
+    scene.retryLevel();
+  } else {
+    location.reload();
+  }
 };
 
-function generateGameTextures(scene) {
-  // 1. Generate Bullet Textures (for each color)
-  const colors = [
-    "#f00",
-    "#0f0",
-    "#00f",
-    "#ff0",
-    "#0ff",
-    "#f0f",
-    "#f80",
-    "#8f0",
-    "#80f",
-  ];
+window.nextLevelZuma = function () {
+  const game = currentGameInstance;
+  if (!game) return;
+  const scene = game.scene.getScene("ZumaScene");
+  if (scene) scene.advanceLevel();
+};
 
-  colors.forEach((colorHex) => {
-    const color = Phaser.Display.Color.HexStringToColor(colorHex).color;
+// === BOOTSTRAP GAME ===
+let currentGameInstance = null;
 
-    // 1. Bullet Texture (Glowing Orb)
-    const bKey = "bullet_" + colorHex.replace("#", "");
-    if (!scene.textures.exists(bKey)) {
-      const bg = scene.make.graphics({ x: 0, y: 0, add: false });
+function initGame() {
+  if (currentGameInstance) {
+    console.warn("⚠️ Game instance already exists! Destroying old instance...");
+    currentGameInstance.destroy(true);
+    currentGameInstance = null;
+  }
 
-      // Outer Glow
-      bg.fillStyle(color, 0.4);
-      bg.fillCircle(12, 12, 12);
-
-      // Core
-      bg.fillStyle(color, 1);
-      bg.fillCircle(12, 12, 9);
-
-      // Shine
-      bg.fillStyle(0xffffff, 0.8);
-      bg.fillCircle(8, 8, 3);
-
-      bg.generateTexture(bKey, 24, 24);
-    }
-
-    // 2. Marble Texture (3D Glossy Sphere)
-    const mKey = "marble_" + colorHex.replace("#", "");
-    if (!scene.textures.exists(mKey)) {
-      const mg = scene.make.graphics({ x: 0, y: 0, add: false });
-
-      // Drop Shadow (offset)
-      mg.fillStyle(0x000000, 0.4);
-      mg.fillCircle(24, 24, 20);
-
-      // Base Circle (Darker shade for 3D depth)
-      const darkerColor =
-        Phaser.Display.Color.IntegerToColor(color).darken(20).color;
-      mg.fillStyle(darkerColor, 1);
-      mg.fillCircle(22, 22, 20);
-
-      // Gradient Body (Fake gradient via circles)
-      mg.fillStyle(color, 1);
-      mg.fillCircle(22, 20, 18); // Shifted up slightly
-
-      // Specular Highlight (The "Glossy" look)
-      mg.fillStyle(0xffffff, 0.2); // Soft broad display
-      mg.fillEllipse(22, 12, 14, 8);
-
-      mg.fillStyle(0xffffff, 0.9); // Sharp specular
-      mg.fillCircle(22, 10, 3);
-
-      mg.generateTexture(mKey, 48, 48); // Slightly larger canvas for shadow
-    }
-  });
+  const config = { ...GAME_CONFIG, scene: ZumaScene };
+  currentGameInstance = new Phaser.Game(config);
+  return currentGameInstance;
 }
+
+// === SOCKET LISTENERS ===
+document.addEventListener("DOMContentLoaded", () => {
+  // Tombol Start
+  window.startGameMultiplayer = () => {
+    // Prevent double clicks
+    const btn = document.querySelector(".btn-start");
+    if (btn) btn.disabled = true;
+
+    const nameInput = document.getElementById("username");
+    if (nameInput && nameInput.value) playerName = nameInput.value;
+
+    // Hide Login
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("game-hud").style.display = "flex";
+
+    // Start Game
+    const game = initGame(); // Start game immediately
+
+    // Request Data Level
+    if (socket) {
+      socket.emit("mintaSoalAI", {
+        kategori: "zuma",
+        tingkat: selectedDifficulty,
+      });
+
+      // Clean previous listeners to avoid dupes
+      socket.off("soalDariAI");
+
+      socket.once("soalDariAI", (data) => {
+        // Pass data ke scene
+        // Wait for scene to be ready
+        setTimeout(() => {
+          const scene = game.scene.getScene("ZumaScene");
+          if (scene) {
+            console.log("📥 Level Data Received", data);
+            // Instead of full restart, just update data if possible, or restart if needed.
+            // For now, restart is safer to apply params.
+            scene.scene.restart({ levelData: data.data });
+          }
+        }, 500);
+      });
+    }
+  };
+});
+
+// === GLOBAL HELPERS ===
+window.restartZuma = function () {
+  console.log("🔄 Restarting Level...");
+  const game = currentGameInstance;
+  if (!game) {
+    location.reload();
+    return;
+  }
+  const scene = game.scene.getScene("ZumaScene");
+  if (scene) {
+    scene.retryLevel();
+  } else {
+    location.reload();
+  }
+};
+
+window.nextLevelZuma = function () {
+  console.log("⏩ Advancing to Next Level...");
+  const game = currentGameInstance;
+  if (!game) return;
+  const scene = game.scene.getScene("ZumaScene");
+  if (scene) scene.advanceLevel();
+};
+
+// Update Difficulty Button
+const btns = document.querySelectorAll(".btn-difficulty");
+btns.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    btns.forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedDifficulty = btn.dataset.level;
+  });
+});
