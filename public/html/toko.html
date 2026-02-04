@@ -13,10 +13,11 @@
     <link rel="stylesheet" href="../css/toko.css?v=premium2" />
   </head>
   <body>
-    <!-- Particle Background Canvas -->
+    <!-- Canvas buat efek background partikel (semacam bintang-bintang gitu) -->
     <canvas id="particles-canvas"></canvas>
 
     <div class="container">
+      <!-- HEADER TOKO -->
       <div class="header-shop">
         <a href="/" class="btn-back">⬅ Kembali ke Portal</a>
         <div class="coin-balance">
@@ -28,23 +29,25 @@
 
       <p class="shop-desc">Tukarkan hasil belajarmu dengan gaya keren!</p>
 
-      <!-- Tab Navigation -->
+      <!-- TAB NAVIGASI (Avatar, Tema, Banner, dll) -->
       <div class="shop-tabs" id="shop-tabs">
-        <!-- Tabs rendered by JS -->
+        <!-- Render otomatis via JS -->
       </div>
 
+      <!-- GRID BARANG DAGANGAN -->
       <div class="shop-grid" id="shop-container">
         <p class="loading-msg">⏳ Menghubungkan ke Server...</p>
       </div>
     </div>
 
+    <!-- UTILITIES -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="../js/audio.js"></script>
 
-    <!-- Theme Loader -->
+    <!-- === THEME LOADER === -->
+    <!-- Load tema yang kesimpen biar langsung berubah pas masuk -->
     <script>
-      // Load saved theme from localStorage (sync with dashboard)
       (function loadTheme() {
         const savedTheme = localStorage.getItem("selectedTheme");
         if (savedTheme && savedTheme !== "default") {
@@ -53,7 +56,8 @@
       })();
     </script>
 
-    <!-- Particle Background Effect -->
+    <!-- === EFEK PARTIKEL BACKGROUND === -->
+    <!-- Bikin background jadi hidup dengan animasi canvas sederhana -->
     <script>
       (function initParticles() {
         const canvas = document.getElementById("particles-canvas");
@@ -90,7 +94,7 @@
         function animate() {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-          // Get accent color from CSS variable
+          // Ambil warna aksen dari CSS Variable biar sinkron sama tema
           const style = getComputedStyle(document.body);
           const accentRGB =
             style.getPropertyValue("--shop-accent-rgb").trim() || "0, 242, 255";
@@ -99,7 +103,7 @@
             p.x += p.speedX;
             p.y += p.speedY;
 
-            // Wrap around edges
+            // Wrap around edges (keluar kiri masuk kanan, dst)
             if (p.x < 0) p.x = canvas.width;
             if (p.x > canvas.width) p.x = 0;
             if (p.y < 0) p.y = canvas.height;
@@ -120,6 +124,7 @@
       })();
     </script>
 
+    <!-- Logic Utama Toko -->
     <script src="../js/toko.js"></script>
   </body>
 </html>

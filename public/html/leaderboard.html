@@ -18,7 +18,7 @@
 
       <h1>🏆 TOP 50 GLOBAL RANKING 🏆</h1>
 
-      <!-- Stats Summary -->
+      <!-- === RINGKASAN STATISTIK === -->
       <div class="leaderboard-stats">
         <div class="stat-item">
           <span class="icon">👥</span>
@@ -37,6 +37,7 @@
         </div>
       </div>
 
+      <!-- === TABEL PERINGKAT (Top 50) === -->
       <table class="rank-table">
         <thead>
           <tr>
@@ -57,7 +58,7 @@
         </tbody>
       </table>
 
-      <!-- Footer -->
+      <!-- === FOOTER & WAKTU UPDATE === -->
       <div class="leaderboard-footer">
         <button class="refresh-btn" onclick="refreshLeaderboard()">
           🔄 Refresh Data
@@ -68,6 +69,7 @@
       </div>
     </div>
 
+    <!-- Script Utama (langsung di sini biar cepet) -->
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
@@ -75,7 +77,7 @@
       const rankList = document.getElementById("rank-list");
       let maxScore = 0;
 
-      // Request data
+      // Fungsi Ambil Data
       function refreshLeaderboard() {
         rankList.innerHTML = `
           <tr>
@@ -90,10 +92,10 @@
         socket.emit("mintaLeaderboard");
       }
 
-      // Initial load
+      // Load pertama kali
       socket.emit("mintaLeaderboard");
 
-      // Handle response
+      // Handle Respon dari Server
       socket.on("updateLeaderboard", (players) => {
         rankList.innerHTML = "";
 
@@ -111,17 +113,17 @@
           return;
         }
 
-        // ✅ LIMIT TO TOP 50
+        // ✅ BATASI CUMA TOP 50 BIAR GAK BERAT
         const top50 = players.slice(0, 50);
 
-        // Calculate stats
+        // Itung statistik
         maxScore = top50[0]?.skor || top50[0]?.totalScore || 1;
         const totalScore = top50.reduce(
           (sum, p) => sum + (p.skor || p.totalScore || 0),
           0,
         );
 
-        // Update stats display
+        // Update tampilan statistik
         document.getElementById("total-players").textContent = top50.length;
         document.getElementById("total-score").textContent =
           totalScore.toLocaleString();
@@ -129,7 +131,7 @@
         document.getElementById("last-update").textContent =
           new Date().toLocaleTimeString("id-ID");
 
-        // Render rows
+        // Render Baris Tabel
         top50.forEach((player, index) => {
           const rank = index + 1;
           const score = player.skor || player.totalScore || 0;
@@ -137,14 +139,14 @@
           const role = player.role || "siswa";
           const scorePercent = (score / maxScore) * 100;
 
-          // Determine row class
+          // Style khusus buat Top 3
           let rowClass = "row-highlight";
           if (rank === 1) rowClass += " row-rank-1";
           else if (rank === 2) rowClass += " row-rank-2";
           else if (rank === 3) rowClass += " row-rank-3";
           else if (rank <= 10) rowClass += " row-top10";
 
-          // Determine rank display
+          // Icon Juara
           let rankDisplay = "";
           let rankClass = "rank-cell";
           if (rank === 1) {
@@ -160,7 +162,7 @@
             rankDisplay = `<span class="rank-number">${rank}</span>`;
           }
 
-          // Determine role styling
+          // Style Role (Guru/Admin)
           let roleClass = "player-role";
           let roleIcon = "🎓";
           if (role === "guru") {
@@ -201,7 +203,7 @@
         });
       });
 
-      // Helper functions
+      // Helper buat amanin HTML
       function escapeHtml(text) {
         const div = document.createElement("div");
         div.textContent = text;

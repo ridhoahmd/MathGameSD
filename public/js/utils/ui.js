@@ -1,3 +1,7 @@
+/**
+ * UI Helper Game
+ * Ngatur tampilan layer game & animasi dasar
+ */
 export const UI = {
   showScreen(screenId) {
     document

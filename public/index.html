@@ -4,18 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Portal Game Videa Class</title>
+
+    <!-- Biar ga nyimpen cache aneh-aneh di browser -->
     <meta
       http-equiv="Cache-Control"
       content="no-cache, no-store, must-revalidate"
     />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
+
+    <!-- Font keren dari Google (Orbitron buat judul futuristik, Poppins buat teks biasa) -->
     <link
       href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap"
       rel="stylesheet"
     />
 
-    <!-- Design System & UI Enhancements -->
+    <!-- === DESIGN SYSTEM & UI KEREN === -->
+    <!-- Ini kumpulan CSS biar tampilan makin kece badai -->
     <link rel="stylesheet" href="css/design-tokens.css" />
     <link rel="stylesheet" href="css/loading.css" />
     <link rel="stylesheet" href="css/micro-interactions.css" />
@@ -25,9 +30,12 @@
     <link rel="stylesheet" href="css/style.css?v=final" />
     <link rel="stylesheet" href="css/visual-overhaul.css" />
     <link rel="stylesheet" href="css/chat-enhanced.css" />
+
+    <!-- Ikon kecil di tab browser -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   </head>
   <body>
+    <!-- === HEADER UTAMA === -->
     <header class="main-header">
       <div class="logo-area">
         <img src="/logo-videa.png" class="logo-img" alt="Logo" />
@@ -35,6 +43,7 @@
       </div>
 
       <div class="header-right">
+        <!-- Tombol ganti tema (Gelap/Terang/Warna-warni) -->
         <button
           class="btn-theme-toggle"
           onclick="cycleTheme()"
@@ -42,12 +51,16 @@
         >
           🎨
         </button>
+        <!-- Badge status user (Guest/Siswa/Guru/Admin) -->
         <div class="role-badge" id="role-display">GUEST</div>
       </div>
     </header>
 
+    <!-- === LAYOUT UTAMA (DASHBOARD) === -->
     <div class="dashboard-container">
+      <!-- SIDEBAR KIRI (Profil & Menu) -->
       <aside class="sidebar">
+        <!-- Avatar User -->
         <div class="avatar-container" id="avatar-box">
           <img
             src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guest"
@@ -60,11 +73,13 @@
         <div class="profile-name" id="display-name">Silakan Login</div>
         <div class="badge-display hidden" id="user-badge"></div>
 
+        <!-- Kotak Skor Total -->
         <div class="stats-box">
           <div class="font-small text-ccc">TOTAL SKOR</div>
           <span class="stat-value" id="total-score">-</span>
         </div>
 
+        <!-- Menu Khusus Siswa -->
         <div class="menu-section">
           <div class="font-sizeable text-bold text-white mb-10">MENU SISWA</div>
 
@@ -81,6 +96,7 @@
           </button>
         </div>
 
+        <!-- Menu Khusus Guru (Hidden kalo bukan guru) -->
         <div class="menu-section hidden" id="guru-panel">
           <div class="font-sizeable text-bold text-green mb-10">MENU GURU</div>
           <a href="html/guru.html" class="link-wrapper">
@@ -90,6 +106,7 @@
           </a>
         </div>
 
+        <!-- Menu Khusus Admin (Hidden kalo bukan admin) -->
         <div class="menu-section hidden" id="admin-panel">
           <div class="font-sizeable text-bold text-red mb-10">ADMIN PANEL</div>
 
@@ -102,7 +119,9 @@
           </button>
         </div>
 
+        <!-- Footer Sidebar (Login/Logout) -->
         <div class="sidebar-footer">
+          <!-- Input Kode Guru (Rahasia) -->
           <div id="guru-input-area" class="hidden">
             <input
               type="password"
@@ -127,15 +146,19 @@
         </div>
       </aside>
 
+      <!-- KONTEN UTAMA (Daftar Game) -->
       <main class="main-content">
         <h2 class="misi-title">PILIH GAME</h2>
         <div class="grid-games">
+          <!-- Game 1: Matematika Dasar -->
           <a href="#" onclick="masukGame('html/math.html')" class="game-card">
             <div class="game-icon">🚀</div>
             <div class="game-title">GESIT BERHITUNG</div>
             <div class="game-desc">Matematika cepat antar galaksi!</div>
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
+
+          <!-- Game 2: Zuma Phaser -->
           <a
             href="#"
             onclick="masukGame('html/zuma-phaser.html')"
@@ -146,6 +169,8 @@
             <div class="game-desc">Hancurkan bola angka sebelum meledak!</div>
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
+
+          <!-- Game 3: Memory Match -->
           <a href="#" onclick="masukGame('html/memory.html')" class="game-card">
             <div class="game-icon">🧩</div>
             <div class="game-title">LAB MEMORI</div>
@@ -155,6 +180,7 @@
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
+          <!-- Game 4: Piano Matematika -->
           <a href="#" onclick="masukGame('html/piano.html')" class="game-card">
             <div class="game-icon">🎹</div>
             <div class="game-title">MATEMATIKA PIANO</div>
@@ -162,6 +188,7 @@
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
+          <!-- Game 5: Kasir Belanja -->
           <a href="#" onclick="masukGame('html/kasir.html')" class="game-card">
             <div class="game-icon">🏪</div>
             <div class="game-title">KASIR CILIK</div>
@@ -169,6 +196,7 @@
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
+          <!-- Game 6: Labirin -->
           <a
             href="#"
             onclick="masukGame('html/labirin-phaser.html')"
@@ -180,6 +208,7 @@
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
+          <!-- Game 7: Kisah Nabi -->
           <a href="#" onclick="masukGame('html/nabi.html')" class="game-card">
             <div class="game-icon">🕌</div>
             <div class="game-title">JEJAK NABI</div>
@@ -189,6 +218,7 @@
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
+          <!-- Game 8: Sambung Ayat -->
           <a href="#" onclick="masukGame('html/ayat.html')" class="game-card">
             <div class="game-icon">📖</div>
             <div class="game-title">SAMBUNG AYAT</div>
@@ -198,6 +228,7 @@
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
+          <!-- Game 9: Tajwid -->
           <a href="#" onclick="masukGame('html/tajwid.html')" class="game-card">
             <div class="game-icon">⚖️</div>
             <div class="game-title">PILAH HUKUM</div>
@@ -205,6 +236,7 @@
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
+          <!-- Game 10: Tangkap Bintang -->
           <a
             href="#"
             onclick="masukGame('html/bintang.html')"
@@ -219,6 +251,7 @@
       </main>
     </div>
 
+    <!-- === FITUR CHAT GLOBAL === -->
     <div id="chat-container">
       <div class="chat-header" onclick="minimizeChat()">
         <span>💬 Global Chat</span>
@@ -256,26 +289,32 @@
       </div>
     </div>
 
+    <!-- === SCRIPTS UTAMA === -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/global.js"></script>
 
+    <!-- Firebase buat Login Google -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
-    <!-- UI Enhancement Utilities -->
+    <!-- === UTILITIES UI === -->
+    <!-- Script tambahan buat bikin UI makin hidup -->
     <script src="js/utils/animations.js"></script>
     <script src="js/utils/loading.js"></script>
     <script src="js/utils/confetti.js"></script>
 
-    <!-- Gamification Systems -->
+    <!-- === SISTEM GAMIFIKASI === -->
+    <!-- Biar makin seru, kita kasih achievement, streak, sama levelling -->
     <script src="js/gamification/achievements.js"></script>
     <script src="js/gamification/streaks.js"></script>
     <script src="js/gamification/leveling.js"></script>
 
+    <!-- Logic Core -->
     <script src="js/config.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/dashboard.js"></script>
 
+    <!-- Service Worker buat PWA (biar bisa jalan offline dikit-dikit) -->
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {

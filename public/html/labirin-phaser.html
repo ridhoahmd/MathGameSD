@@ -8,6 +8,7 @@
     />
     <title>Labirin Ilmu - Phaser Edition</title>
 
+    <!-- CSP Config yang aman buat Phaser -->
     <meta
       http-equiv="Content-Security-Policy"
       content="
@@ -30,17 +31,19 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   </head>
   <body>
-    <!-- HEADER -->
+    <!-- === HEADER === -->
     <header class="game-header">
       <a href="/" class="btn-back">⬅ MENU</a>
       <h1 class="game-title">🌀 LABIRIN ILMU</h1>
       <div class="score-box">SKOR: <span id="score">0</span></div>
     </header>
 
-    <!-- PHASER GAME CONTAINER -->
+    <!-- === ARENA LABIRIN (CANVAS PHASER) === -->
+    <!-- Di sini game Phaser bakal dirender -->
     <div id="game-container"></div>
 
-    <!-- D-PAD CONTROLS (Mobile) -->
+    <!-- === KONTROL D-PAD (MOBILE ONLY) === -->
+    <!-- Tombol panah buat main di HP -->
     <footer class="game-controls">
       <div class="d-pad">
         <button class="btn-ctrl btn-up">▲</button>
@@ -50,13 +53,14 @@
       </div>
     </footer>
 
-    <!-- LOADING / START SCREEN -->
+    <!-- === LAYAR LOADING / START SCREEN === -->
     <div id="loading-screen" class="modal-overlay">
       <div class="modal-content">
         <h1 class="modal-title">🌀 LABIRIN ILMU</h1>
         <p class="subtitle">Phaser Edition</p>
         <p>Temukan jalan keluar sambil belajar!</p>
 
+        <!-- Input Kode Kelas (Opsional) -->
         <div class="input-group">
           <input
             type="text"
@@ -66,6 +70,7 @@
           />
         </div>
 
+        <!-- Pilihan Kesulitan -->
         <div class="difficulty-group">
           <p>Pilih Tingkat Kesulitan:</p>
           <div class="buttons-row">
@@ -83,7 +88,8 @@
       </div>
     </div>
 
-    <!-- QUIZ MODAL -->
+    <!-- === MODAL KUIS / RINTANGAN === -->
+    <!-- Muncul kalau nabrak musuh atau item kuis -->
     <div id="quiz-modal" class="modal-overlay" style="display: none">
       <div class="modal-content quiz-box">
         <h2 id="quiz-title">🚧 RINTANGAN!</h2>
@@ -99,7 +105,8 @@
       </div>
     </div>
 
-    <!-- AI TUTOR OVERLAY -->
+    <!-- === TUTOR AI OVERLAY === -->
+    <!-- Muncul pas salah jawab kuis -->
     <div id="tutor-overlay" class="tutor-overlay" style="display: none">
       <div class="tutor-container">
         <div class="tutor-icon">🤖</div>
@@ -115,7 +122,7 @@
       </div>
     </div>
 
-    <!-- SCRIPTS -->
+    <!-- === SCRIPTS === -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="../js/audio.js?v=r3"></script>

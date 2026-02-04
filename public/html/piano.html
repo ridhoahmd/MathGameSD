@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Piano Speed - Videa Class</title>
 
+    <!-- CSP Keamanan -->
     <meta
       http-equiv="Content-Security-Policy"
       content="
@@ -24,27 +25,32 @@
     <link rel="stylesheet" href="../css/visual-enhancements.css" />
   </head>
 
+  <!-- Matiin klik kanan biar fokus main -->
   <body oncontextmenu="return false;">
     <a href="/" class="btn-back">⬅ Menu</a>
 
+    <!-- === HUD (Skor & Timer) === -->
     <div class="hud">
       <div class="score-box">Skor: <span id="score">0</span></div>
       <div class="timer-box">⏳ <span id="timer">60</span>s</div>
     </div>
 
+    <!-- === KOTAK SOAL / INSTRUKSI === -->
     <div class="question-box" id="question">PILIH LEVEL & MULAI</div>
 
+    <!-- === KONTROL AWAL === -->
     <div class="controls-area" id="start-controls">
       <div class="difficulty-selector">
-        <button class="btn-level active" data-level="mudah">
+        <button class="btn-diff active" data-level="mudah">
           Mudah (3 Nada)
         </button>
-        <button class="btn-level" data-level="sedang">Sedang (5 Nada)</button>
-        <button class="btn-level" data-level="sulit">Sulit (7 Nada)</button>
+        <button class="btn-diff" data-level="sedang">Sedang (5 Nada)</button>
+        <button class="btn-diff" data-level="sulit">Sulit (7 Nada)</button>
       </div>
       <button onclick="startGameSession()" class="btn-start">MULAI 🎵</button>
     </div>
 
+    <!-- === TUTS PIANO === -->
     <div class="piano-container">
       <button
         class="key"
@@ -128,6 +134,7 @@
       </button>
     </div>
 
+    <!-- === GAME OVER MODAL === -->
     <div class="modal" id="game-over-modal">
       <div class="modal-content">
         <h1 class="modal-title">WAKTU HABIS!</h1>
@@ -142,9 +149,10 @@
       </div>
     </div>
 
+    <!-- === SCRIPTS === -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="../js/global.js"></script>
-    <!-- Gamification Systems -->
+    <!-- Sistem Gamifikasi -->
     <script src="../js/gamification/achievements.js"></script>
     <script src="../js/gamification/streaks.js"></script>
     <script src="../js/gamification/leveling.js"></script>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pilah Hukum Tajwid - Videa Class</title>
 
+    <!-- Font Arab yang enak dibaca (Amiri) -->
     <link
       href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Poppins:wght@400;700&display=swap"
       rel="stylesheet"
@@ -14,12 +15,14 @@
     <link rel="stylesheet" href="../css/visual-enhancements.css" />
   </head>
   <body>
+    <!-- === TOP BAR === -->
     <div class="top-bar">
       <a href="/" class="btn-back">⬅ Kembali</a>
       <div class="score-badge">✨ Skor: <span id="score">0</span></div>
     </div>
 
     <div class="game-wrapper">
+      <!-- === LAYAR START === -->
       <div id="start-screen" class="panel active glass-panel">
         <div class="game-logo">⚖️</div>
         <h1 class="title">PILAH HUKUM</h1>
@@ -35,7 +38,9 @@
         <button onclick="startGame()" class="btn-start">MULAI MAIN</button>
       </div>
 
+      <!-- === LAYAR MAIN (SORTIR KARTU) === -->
       <div id="game-screen" class="panel hidden">
+        <!-- Area Keranjang (Kiri/Kanan) -->
         <div class="buckets-area">
           <div
             class="bucket left-bucket"
@@ -55,6 +60,7 @@
           </div>
         </div>
 
+        <!-- Kartu Soal (Bisa digeser/drag) -->
         <div class="card-container">
           <div id="card" class="flashcard">
             <span id="arabic-text">...</span>
@@ -62,9 +68,11 @@
           <div class="drag-hint">Geser (HP) atau Tekan Panah (PC)</div>
         </div>
 
+        <!-- Feedback Visual (Benar/Salah) -->
         <div id="feedback-overlay"></div>
       </div>
 
+      <!-- === LAYAR HASIL === -->
       <div id="result-screen" class="panel hidden glass-panel">
         <h2
           style="
@@ -95,6 +103,7 @@
       </div>
     </div>
 
+    <!-- === TUTOR AI OVERLAY === -->
     <div id="tutor-overlay" class="tutor-overlay">
       <div class="tutor-icon">🤖</div>
       <div class="tutor-box">
@@ -109,10 +118,11 @@
       </div>
     </div>
 
+    <!-- === SCRIPTS === -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="../js/audio.js?v=fix_ui_1"></script>
     <script src="../js/global.js"></script>
-    <!-- Gamification Systems -->
+    <!-- Sistem Gamifikasi -->
     <script src="../js/gamification/achievements.js"></script>
     <script src="../js/gamification/streaks.js"></script>
     <script src="../js/gamification/leveling.js"></script>

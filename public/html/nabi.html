@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Jejak Para Nabi - Videa Class</title>
 
+    <!-- CSP Agar aman -->
     <meta
       http-equiv="Content-Security-Policy"
       content="
@@ -17,6 +18,7 @@
     "
     />
 
+    <!-- Font Cinzel (Klasik) buat nuansa sejarah -->
     <link
       href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Poppins:wght@300;400;600&display=swap"
       rel="stylesheet"
@@ -26,6 +28,7 @@
     <link rel="stylesheet" href="../css/visual-enhancements.css" />
   </head>
   <body>
+    <!-- === TOP BAR === -->
     <div class="top-bar">
       <a href="/" class="btn-back">⬅ Kembali</a>
       <div class="level-badge">
@@ -33,6 +36,7 @@
       </div>
     </div>
 
+    <!-- === CONTAINER GAME === -->
     <div class="game-container">
       <div class="game-header">
         <h1 class="title-glow">JEJAK PARA NABI</h1>
@@ -42,6 +46,7 @@
         </div>
       </div>
 
+      <!-- 1. Layar Start -->
       <div id="start-screen" class="panel active">
         <p class="intro-text">"Sampaikanlah dariku walau hanya satu ayat."</p>
         <p class="sub-text">
@@ -59,6 +64,7 @@
         </button>
       </div>
 
+      <!-- 2. Layar Main (Kuis) -->
       <div id="game-screen" class="panel hidden">
         <div class="progress-bar">
           <div class="progress-fill" id="progress"></div>
@@ -74,6 +80,7 @@
         <div class="options-grid" id="options-container"></div>
       </div>
 
+      <!-- 3. Layar Hasil -->
       <div id="result-screen" class="panel hidden">
         <h2>PETUALANGAN SELESAI</h2>
         <div class="final-score-box">
@@ -91,6 +98,7 @@
       </div>
     </div>
 
+    <!-- === TUTOR AI OVERLAY === -->
     <div id="tutor-overlay" class="tutor-overlay">
       <div class="tutor-icon">🤖</div>
 
@@ -109,10 +117,11 @@
       </div>
     </div>
 
+    <!-- === SCRIPTS === -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="../js/audio.js?v=final"></script>
     <script src="../js/global.js"></script>
-    <!-- Gamification Systems -->
+    <!-- Sistem Gamifikasi -->
     <script src="../js/gamification/achievements.js"></script>
     <script src="../js/gamification/streaks.js"></script>
     <script src="../js/gamification/leveling.js"></script>

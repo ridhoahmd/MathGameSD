@@ -8,6 +8,7 @@
     />
     <title>Tangkap Bintang - Videa Class</title>
 
+    <!-- CSP biar aman, tapi tetep bolehin script yang kita butuhin -->
     <meta
       http-equiv="Content-Security-Policy"
       content="
@@ -30,7 +31,7 @@
   </head>
 
   <body>
-    <!-- Start Screen Overlay -->
+    <!-- === LAYAR AWAL (PILAH LEVEL) === -->
     <div id="start-screen" class="modal">
       <div class="modal-content">
         <h1>🌟 TANGKAP BINTANG</h1>
@@ -64,7 +65,8 @@
         </div>
       </div>
     </div>
-    <!-- Top Bar with Centered HUD -->
+
+    <!-- === HUD ATAS (Skor, Nyawa, Waktu) === -->
     <div class="top-bar">
       <a href="/" class="btn-back">⬅ MENU</a>
 
@@ -84,15 +86,15 @@
       </div>
     </div>
 
-    <!-- Math Question Display -->
+    <!-- === TAMPILAN SOAL MTK === -->
     <div id="question-container">
       <span id="question-text">Bersiap...</span>
     </div>
 
-    <!-- Phaser Game Container -->
+    <!-- === AREA GAME PHASER (CANVAS DI SINI) === -->
     <div id="game-container"></div>
 
-    <!-- Game Over Modal -->
+    <!-- === MODAL GAME OVER (KALO KALAH/MENANG) === -->
     <div id="game-over-modal" class="modal hidden">
       <div class="modal-content">
         <h1>🌟 PERMAINAN SELESAI 🌟</h1>
@@ -109,10 +111,12 @@
       </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- === SCRIPTS === -->
+    <!-- Library Phaser buat game engine -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="../js/audio.js"></script>
+    <!-- Logic Utama Game -->
     <script src="../js/bintang.js"></script>
   </body>
 </html>

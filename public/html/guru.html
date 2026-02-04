@@ -11,14 +11,17 @@
     />
     <link rel="stylesheet" href="../css/guru.css?v=final" />
 
+    <!-- Library buat Print PDF & Bikin Tabel PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <!-- SweetAlert buat popup cantik -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/socket.io/socket.io.js"></script>
   </head>
 
   <body>
     <div class="container">
+      <!-- Header dengan Tombol Balik & Print -->
       <div class="header-actions">
         <a href="/" class="btn-back">⬅ Dashboard</a>
         <button onclick="downloadPDF()" class="btn-print">
@@ -26,6 +29,7 @@
         </button>
       </div>
 
+      <!-- Tombol Buka Panel Input Soal -->
       <div class="header-actions secondary-header">
         <button
           onclick="toggleInputPanel()"
@@ -36,12 +40,14 @@
         </button>
       </div>
 
+      <!-- === PANEL INPUT SOAL MANUAL === -->
       <div id="input-soal-panel" class="container-input hidden">
         <h2>✍️ Input Soal Baru</h2>
         <p class="text-muted-small">
           Simpan soal manual untuk Ujian Khusus/Kelas Tertentu.
         </p>
 
+        <!-- Kode Ujian Wajib -->
         <label>Kode Kelas/Ujian Khusus (Contoh: IPA7A_UTS):</label>
         <input
           type="text"
@@ -71,12 +77,14 @@
           </div>
         </div>
 
+        <!-- Area input soal dinamis nanti dirender JS -->
         <div id="soal-input-area">
           <p class="text-info-yellow">
             Pilih Game di atas untuk memuat template input.
           </p>
         </div>
 
+        <!-- === PENGATURAN PRIORITAS SUMBER SOAL === -->
         <div class="container-input container-priority">
           <h3>⚙️ PRIORITAS PENGAMBILAN SOAL</h3>
           <p class="text-desc">
@@ -105,6 +113,7 @@
         </button>
       </div>
 
+      <!-- === TABEL DATA NILAI SISWA === -->
       <h1>📋 DATA SISWA & NILAI (V2.0)</h1>
 
       <div id="user-status-info" class="text-center mb-20"></div>
@@ -143,6 +152,7 @@
       </div>
     </div>
 
+    <!-- Script Logic Halaman Guru -->
     <script>
       // --- 1. INISIALISASI & GLOBAL VARS ---
       const socket = io();
@@ -374,6 +384,7 @@
         Swal.fire(
           "Info",
           "Logika penyimpanan soal belum terhubung ke Server.",
+          "info",
           "info",
         );
       };

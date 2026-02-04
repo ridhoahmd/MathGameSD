@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Math Battle SD</title>
 
+    <!-- CSP Biar aman -->
     <meta
       http-equiv="Content-Security-Policy"
       content="
@@ -23,6 +24,7 @@
       rel="stylesheet"
     />
 
+    <!-- Styles khusus Math Game -->
     <link rel="stylesheet" href="../css/base.css?v=2" />
     <link rel="stylesheet" href="../css/variables.css?v=2" />
     <link rel="stylesheet" href="../css/math.css?v=2" />
@@ -33,6 +35,7 @@
     <a href="/" class="btn-back">⬅ MENU</a>
 
     <div class="container">
+      <!-- === LAYAR LOGIN / LOBBY === -->
       <div id="login-screen" class="screen">
         <h1>MATH BATTLE</h1>
         <p class="login-subtitle">Masuk ke arena pertempuran!</p>
@@ -50,6 +53,7 @@
           placeholder="Kode Arena (Kosongkan utk Latihan)"
         />
 
+        <!-- Pilihan Level -->
         <div class="difficulty-selector">
           <button class="btn-difficulty active" data-level="mudah">
             Mudah
@@ -61,7 +65,9 @@
         <button class="btn-action btn-start">MULAI PERTEMPURAN 🚀</button>
       </div>
 
+      <!-- === LAYAR PERMAINAN (BATTLE) === -->
       <div id="game-screen" class="screen hidden">
+        <!-- Skor Pemain vs Lawan -->
         <div class="score-box">
           <div class="score-item">
             KAMU<span id="score" class="score-val score-green">0</span>
@@ -73,6 +79,7 @@
 
         <div id="status-display" class="status-text"></div>
 
+        <!-- Progress Bar -->
         <div class="progress-container">
           <div id="progress-bar" class="progress-fill"></div>
         </div>
@@ -81,6 +88,7 @@
           Target: <span id="q-current">0</span> / <span id="q-total">∞</span>
         </p>
 
+        <!-- Soal Matematika -->
         <h2 id="question-display">Loading...</h2>
 
         <input type="number" id="answer-input" placeholder="Ketik Jawaban..." />
@@ -94,6 +102,7 @@
       </div>
     </div>
 
+    <!-- === LAYAR GAME OVER (SELESAI) === -->
     <div id="game-over-screen">
       <div class="go-content">
         <h1 class="go-title">GAME OVER</h1>
@@ -113,17 +122,18 @@
       </div>
     </div>
 
+    <!-- === SCRIPTS === -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script src="../js/audio.js?v=final"></script>
     <script src="../js/global.js"></script>
-    <!-- Gamification Systems -->
+    <!-- === SISTEM GAMIFIKASI === -->
     <script src="../js/gamification/achievements.js"></script>
     <script src="../js/gamification/streaks.js"></script>
     <script src="../js/gamification/leveling.js"></script>
     <script src="../js/utils/comboManager.js"></script>
-    <!-- Use Type Module for ES6 imports -->
+    <!-- Logic Game Modul -->
     <script type="module" src="../js/game.js?v=Refactored"></script>
   </body>
 </html>

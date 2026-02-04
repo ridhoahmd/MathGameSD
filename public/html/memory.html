@@ -4,10 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Memory Lab - Videa Class</title>
+
+    <!-- Font Keren -->
     <link
       href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Style Memory Game -->
     <link rel="stylesheet" href="../css/memory.css?v=fix" />
     <link rel="stylesheet" href="../css/visual-enhancements.css" />
   </head>
@@ -18,27 +22,29 @@
       <h1>MEMORY LAB</h1>
       <p>Retas sistem dengan mencocokkan kode!</p>
 
+      <!-- === LAYAR START === -->
       <div id="start-screen">
         <div class="difficulty-options">
-          <button class="btn-difficulty active" data-level="mudah">
-            Mudah
-          </button>
-          <button class="btn-difficulty" data-level="sedang">Sedang</button>
-          <button class="btn-difficulty" data-level="sulit">Sulit</button>
+          <button class="btn-diff active" data-level="mudah">Mudah</button>
+          <button class="btn-diff" data-level="sedang">Sedang</button>
+          <button class="btn-diff" data-level="sulit">Sulit</button>
         </div>
 
         <button onclick="initGame()" class="btn-start">MULAI GAME</button>
       </div>
 
+      <!-- === LAYAR MAIN === -->
       <div id="game-screen">
         <div class="info-panel">
           <span>Langkah: <span id="moves" class="info-val">0</span></span>
         </div>
 
+        <!-- Papan Kartu (Dibuat otomatis sm JS) -->
         <div class="game-board" id="board"></div>
       </div>
     </div>
 
+    <!-- === POPUP MENANG === -->
     <div id="win-screen" class="win-modal">
       <div class="win-content">
         <h2 class="win-title">MISSION COMPLETE!</h2>
@@ -57,13 +63,15 @@
       </div>
     </div>
 
+    <!-- === SCRIPTS === -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="../js/audio.js"></script>
     <script src="../js/global.js"></script>
-    <!-- Gamification Systems -->
+    <!-- Sistem Gamifikasi -->
     <script src="../js/gamification/achievements.js"></script>
     <script src="../js/gamification/streaks.js"></script>
     <script src="../js/gamification/leveling.js"></script>
+    <!-- Logic Memory -->
     <script src="../js/memory.js?v=fix"></script>
   </body>
 </html>
