@@ -29,7 +29,7 @@ const MAX_TUTOR_USAGE = 3;
 
 // 2. Pilihan Level
 document.addEventListener("DOMContentLoaded", () => {
-  const diffButtons = document.querySelectorAll(".btn-difficulty");
+  const diffButtons = document.querySelectorAll(".btn-diff");
   diffButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       diffButtons.forEach((b) => b.classList.remove("active"));

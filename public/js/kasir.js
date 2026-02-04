@@ -22,10 +22,10 @@ let timerInterval;
 let playerName = localStorage.getItem("playerName") || "Guest";
 
 // Setup Tombol Level - 🔧 FIX: Standardized to .btn-difficulty
-document.querySelectorAll(".btn-difficulty").forEach((btn) => {
+document.querySelectorAll(".btn-diff").forEach((btn) => {
   btn.addEventListener("click", () => {
     document
-      .querySelectorAll(".btn-difficulty")
+      .querySelectorAll(".btn-diff")
       .forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     currentLevel = btn.dataset.level;

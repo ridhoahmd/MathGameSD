@@ -1,6 +1,6 @@
 /* ============================================
-   TEMBAK ANGKA PHASER - PREMIUM STYLING
-   Zuma-style game with neon space theme
+   TEMBAK ANGKA PHASER - GAYA PREMIUM
+   Game ala Zuma dengan tema luar angkasa neon
    ============================================ */
 
 * {
@@ -17,7 +17,7 @@ body {
   color: white;
 }
 
-/* ========== LOGIN SCREEN ========== */
+/* ========== LAYAR LOGIN (MASUK) ========== */
 .login-box {
   position: fixed;
   top: 50%;
@@ -141,7 +141,7 @@ body {
   color: #ff4444;
 }
 
-/* ========== GAME HUD ========== */
+/* ========== HUD GAME (TAMPILAN ATAS) ========== */
 #game-hud {
   position: fixed;
   top: 0;
@@ -153,7 +153,7 @@ body {
   align-items: center;
   z-index: 100;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent);
-  pointer-events: none !important; /* Force pass-through */
+  pointer-events: none !important; /* Biarkan klik nembus ke canvas */
 }
 
 .hud-left,
@@ -162,7 +162,7 @@ body {
   display: flex;
   align-items: center;
   gap: 15px;
-  pointer-events: auto; /* 🔧 FIX: Restore interaction for HUD elements */
+  pointer-events: auto; /* 🔧 FIX: Balikin interaksi buat tombol HUD */
 }
 
 .hud-center {
@@ -231,7 +231,7 @@ body {
   background: rgba(255, 68, 68, 0.4);
 }
 
-/* ========== GAME CONTAINER ========== */
+/* ========== CONTAINER GAME ========== */
 #game-container {
   position: fixed;
   top: 0;
@@ -241,8 +241,8 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 50; /* Lower than HUD (100) but higher than background */
-  pointer-events: none; /* Let clicks pass through to canvas */
+  z-index: 50; /* Di bawah HUD (100) tapi di atas background */
+  pointer-events: none; /* Biarkan klik nembus ke canvas */
 }
 
 #game-container canvas {
@@ -251,11 +251,11 @@ body {
   margin: auto;
   max-width: 100%;
   max-height: 100%;
-  pointer-events: auto !important; /* Force input enabled */
+  pointer-events: auto !important; /* Paksa input aktif */
   touch-action: none;
 }
 
-/* ========== GAME OVER MODAL ========== */
+/* ========== MODAL GAME OVER (SELESAI) ========== */
 .modal {
   position: fixed;
   top: 0;
@@ -345,7 +345,7 @@ body {
   border-color: white;
 }
 
-/* ========== RESPONSIVE ========== */
+/* ========== RESPONSIF ========== */
 @media (max-width: 768px) {
   .login-box {
     width: 90%;

@@ -32,10 +32,10 @@ let tutorUsageCount = 0;
 const MAX_TUTOR_USAGE = 3;
 
 // 1. Tombol Difficulty
-document.querySelectorAll(".btn-difficulty").forEach((btn) => {
+document.querySelectorAll(".btn-diff").forEach((btn) => {
   btn.addEventListener("click", () => {
     document
-      .querySelectorAll(".btn-difficulty")
+      .querySelectorAll(".btn-diff")
       .forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     currentLevel = btn.dataset.level;

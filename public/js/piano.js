@@ -53,10 +53,10 @@ function playTone(num) {
 }
 
 // Pilih Level
-document.querySelectorAll(".btn-difficulty").forEach((btn) => {
+document.querySelectorAll(".btn-diff").forEach((btn) => {
   btn.addEventListener("click", () => {
     document
-      .querySelectorAll(".btn-difficulty")
+      .querySelectorAll(".btn-diff")
       .forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     level = btn.dataset.level;
