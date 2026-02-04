@@ -2,9 +2,9 @@ require("dotenv").config();
 
 const CURRENT_AI_MODEL = "glm";
 const MAX_RETRIES = 3;
-const BASE_DELAY = 1000; // 1 second
+const BASE_DELAY = 1000; // 1 detik
 
-// 🔧 FIX: Helper function with retry logic
+// Fungsi bantu buat request ulang kalau gagal
 async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     const controller = new AbortController();
@@ -29,16 +29,16 @@ async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
 
       const isLastAttempt = attempt === retries;
       const isRetryable =
-        err.name === "AbortError" || (err.message && err.message.includes("5")); // 5xx errors
+        err.name === "AbortError" || (err.message && err.message.includes("5")); // Error server (5xx)
 
       if (isLastAttempt || !isRetryable) {
         throw err;
       }
 
-      // Exponential backoff: 1s, 2s, 4s
+      // Tunggu makin lama (Exponential backoff)
       const delay = BASE_DELAY * Math.pow(2, attempt - 1);
       console.log(
-        `⏳ AI request attempt ${attempt} failed, retrying in ${delay}ms...`,
+        `⏳ AI request cobaan ke-${attempt} gagal, coba lagi dalam ${delay}ms...`,
       );
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
@@ -48,7 +48,7 @@ async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
 async function askAI(promptText) {
   const apiKey = process.env.ZHIPU_API_KEY;
   if (!apiKey) {
-    console.warn("⚠️ API Key AI Kosong/Salah");
+    console.warn("⚠️ Kunci API AI ga ketemu");
     throw new Error("Misconfiguration: API Key Missing");
   }
 
@@ -84,10 +84,9 @@ async function askAI(promptText) {
         ? data.choices[0].message.content
         : null;
 
-    if (!content)
-      return "Maaf, AI sedang tidak dapat menjawab (Empty Response).";
+    if (!content) return "Maaf, AI lagi bingung (Jawaban Kosong).";
 
-    // Sanitizer: If response contains markdown ```json ... ```, extract it
+    // Bersihin format markdown kalau ada
     if (content.includes("```json")) {
       const match = content.match(/```json([\s\S]*?)```/);
       if (match && match[1]) {
@@ -103,7 +102,7 @@ async function askAI(promptText) {
     return content;
   } catch (err) {
     if (err.name === "AbortError") {
-      throw new Error("AI Service Timeout (15s) - semua retry gagal");
+      throw new Error("AI lelet banget (Timeout)");
     }
     throw err;
   }

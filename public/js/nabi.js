@@ -14,7 +14,7 @@ const ui = {
   progressFill: document.getElementById("progress"),
   finalScore: document.getElementById("final-score"),
   resultMsg: document.getElementById("result-msg"),
-  // Tutor UI
+  // UI Tutor
   tutorOverlay: document.getElementById("tutor-overlay"),
   tutorText: document.getElementById("tutor-text"),
 };
@@ -27,11 +27,11 @@ let timeLeft = 0;
 let timerInterval;
 let playerName = localStorage.getItem("playerName") || "Guest";
 
-// Limit Tutor
+// Batas Tutor
 let tutorUsageCount = 0;
 const MAX_TUTOR_USAGE = 3;
 
-// 1. SETUP TOMBOL - 🔧 FIX: Standardized to .btn-difficulty
+// 1. Tombol Difficulty
 document.querySelectorAll(".btn-difficulty").forEach((btn) => {
   btn.addEventListener("click", () => {
     document
@@ -44,7 +44,7 @@ document.querySelectorAll(".btn-difficulty").forEach((btn) => {
   });
 });
 
-// 2. START GAME
+// 2. Mulai Game
 function startGame() {
   const btnStart = document.querySelector(".btn-start");
   if (btnStart) {
@@ -53,7 +53,7 @@ function startGame() {
   }
   if (typeof AudioManager !== "undefined") AudioManager.init();
 
-  // REFRESH SESSION
+  // Refresh Sesi
   if (window.socket) {
     window.socket.emit("mintaDataProfil", playerName);
     window.socket.emit("mulaiGame", "nabi");
@@ -73,13 +73,13 @@ function startGame() {
   }, 8000);
 }
 
-// 3. TERIMA DATA
+// 3. Terima Data
 if (window.socket) {
   socket.on("soalDariAI", (response) => {
     if (response.kategori === "nabi") {
-      // 🔧 FIX: Better error handling
+      // Cek error dulu
       if (!response.data || response.data.length === 0) {
-        console.error("Nabi game: No data from server");
+        console.error("Nabi game: Error data");
         alert("Gagal memuat soal. Silakan coba lagi.");
 
         const btnStart = document.querySelector(".btn-start");
@@ -183,7 +183,7 @@ function checkAnswer(selectedRaw, correctRaw, btnElement) {
       AudioManager.playCorrect();
     } catch (e) {}
 
-    // COMBO
+    // Hitung Combo
     let multiplier = 1;
     if (typeof ComboManager !== "undefined")
       multiplier = ComboManager.addStreak();
@@ -204,13 +204,13 @@ function checkAnswer(selectedRaw, correctRaw, btnElement) {
       AudioManager.playWrong();
     } catch (e) {}
 
-    // Highlight Benar
+    // Kasih tau jawaban bener
     allButtons.forEach((b) => {
       if (cleanStr(b.innerText).includes(correct))
         b.style.background = "#2ecc71";
     });
 
-    // PANGGIL AI TUTOR JIKA SALAH
+    // Panggil AI klo salah
     panggilTutor(
       document.getElementById("question-text").innerText,
       selectedRaw,
@@ -219,7 +219,7 @@ function checkAnswer(selectedRaw, correctRaw, btnElement) {
   }
 }
 
-// LOGIKA TUTOR
+// Logika Tutor
 function panggilTutor(soal, jawabUser, jawabBenar) {
   if (tutorUsageCount >= MAX_TUTOR_USAGE) {
     setTimeout(() => {
@@ -230,7 +230,7 @@ function panggilTutor(soal, jawabUser, jawabBenar) {
   }
   tutorUsageCount++;
 
-  // 🔧 FIX: Clear timer when tutor opens so it doesn't expire during explanation
+  // Stop timer pas tutor muncul
   clearInterval(timerInterval);
 
   if (ui.tutorOverlay) {
@@ -246,7 +246,7 @@ function panggilTutor(soal, jawabUser, jawabBenar) {
   }
 
   if (window.socket) {
-    socket.emit("mintaPenjelasan", {
+    window.socket.emit("mintaPenjelasan", {
       game: "nabi",
       soal: soal,
       jawabanUser: jawabUser,
@@ -255,14 +255,14 @@ function panggilTutor(soal, jawabUser, jawabBenar) {
   }
 }
 
-// TERIMA JAWABAN TUTOR
+// Terima jawaban tutor
 if (window.socket) {
   socket.on("penjelasanTutor", (data) => {
     if (ui.tutorText) ui.tutorText.innerHTML = data.penjelasan || data.teks;
   });
 }
 
-// TUTUP TUTOR
+// Tutup tutor
 window.tutupTutor = function () {
   if (ui.tutorOverlay) ui.tutorOverlay.style.display = "none";
   currentIndex++;
@@ -270,7 +270,7 @@ window.tutupTutor = function () {
 };
 
 function endGame() {
-  // 🔧 FIX: Clear timer to prevent memory leak
+  // Bersihin timer
   clearInterval(timerInterval);
 
   screens.game.classList.remove("active");

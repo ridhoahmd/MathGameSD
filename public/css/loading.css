@@ -1,6 +1,6 @@
 /* ========================================
-   LOADING SYSTEM
-   Skeleton Screens, Progress Indicators, Spinners
+   SISTEM LOADING
+   Skeleton, Indikator Progress, Spinner
    ======================================== */
 
 /* === LOADING OVERLAY === */
@@ -48,7 +48,7 @@
   border-width: 3px;
 }
 
-/* Dual Ring Spinner */
+/* Spinner Cincin Ganda */
 .spinner-dual {
   display: inline-block;
   width: 64px;
@@ -86,7 +86,7 @@
   overflow: hidden;
 }
 
-/* Animated Shimmer on Progress */
+/* Efek Kilau di Progress */
 .progress-bar::after {
   content: "";
   position: absolute;
@@ -103,7 +103,7 @@
   animation: shimmer 2s infinite;
 }
 
-/* Indeterminate Progress */
+/* Progress Gak Jelas (Indeterminate) */
 .progress-bar.indeterminate {
   width: 40% !important;
   animation: progress-indeterminate 1.5s ease-in-out infinite;
@@ -118,7 +118,7 @@
   }
 }
 
-/* === SKELETON SCREENS === */
+/* === SKELETON SCREENS (Bayangan Loading) === */
 .skeleton {
   background: linear-gradient(
     90deg,
@@ -140,7 +140,7 @@
   }
 }
 
-/* Skeleton Variants */
+/* Varian Skeleton */
 .skeleton-text {
   height: 1rem;
   margin-bottom: 0.5rem;
@@ -175,7 +175,7 @@
   border-radius: var(--radius-md);
 }
 
-/* === GAME CARD SKELETON === */
+/* === SKELETON KARTU GAME === */
 .game-card-skeleton {
   background: rgba(255, 255, 255, 0.05);
   border-radius: var(--radius-lg);
@@ -190,7 +190,7 @@
   margin-bottom: 1rem;
 }
 
-/* === LOADING TEXT === */
+/* === TEKS LOADING === */
 .loading-text {
   color: #fff;
   font-size: var(--font-lg);
@@ -222,7 +222,7 @@
   }
 }
 
-/* === CIRCULAR PROGRESS === */
+/* === PROGRESS LINGKARAN === */
 .circular-progress {
   width: 80px;
   height: 80px;
@@ -260,7 +260,7 @@
   color: #fff;
 }
 
-/* === SHIMMER EFFECT (for images) === */
+/* === EFEK SHIMMER (untuk gambar) === */
 .shimmer {
   position: relative;
   overflow: hidden;
@@ -283,7 +283,7 @@
   animation: shimmer 2s infinite;
 }
 
-/* === LOADING STATES FOR BUTTONS === */
+/* === TOMBOL LOADING === */
 .btn-loading {
   position: relative;
   color: transparent !important;
@@ -304,7 +304,7 @@
   animation: spin 0.6s linear infinite;
 }
 
-/* === PAGE TRANSITION === */
+/* === TRANSISI HALAMAN === */
 .page-transition-enter {
   opacity: 0;
   transform: translateY(20px);
@@ -325,7 +325,7 @@
   transition: opacity var(--duration-normal) var(--ease-smooth);
 }
 
-/* === LOADING BOUNCE (Playful) === */
+/* === LODAING MANTUL (Ceria) === */
 .loading-bounce {
   display: flex;
   gap: 0.5rem;
@@ -362,7 +362,7 @@
   }
 }
 
-/* === RESPONSIVE === */
+/* === RESPONSIF === */
 @media (max-width: 768px) {
   .loading-text {
     font-size: var(--font-md);

@@ -1,4 +1,4 @@
-/* 1. GLOBAL STYLE */
+/* 1. GAYA GLOBAL */
 body {
   margin: 0;
   padding: 0;
@@ -13,7 +13,7 @@ body {
   justify-content: center;
 }
 
-/* 2. CONTAINER UTAMA */
+/* 2. KONTAINER UTAMA */
 .game-container {
   text-align: center;
   width: 95%;
@@ -223,7 +223,7 @@ h1 {
   font-weight: bold;
 }
 
-/* --- VISUAL UPGRADE 1: BACKGROUND SIRKUIT --- */
+/* --- UPDATE VISUAL 1: BACKGROUND SIRKUIT --- */
 body {
   /* Timpa background lama dengan warna gelap + pola sirkuit halus */
   background-color: #0a0a12;
@@ -236,7 +236,7 @@ body {
     url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415L51.8 0h2.827zM5.373 0l-.83.828L5.96 2.242 8.2 0H5.374zM48.97 0l3.657 3.657-1.414 1.414L46.143 0h2.828zM11.03 0L7.372 3.657 8.787 5.07 13.857 0H11.03zm32.284 0L49.8 6.485 48.384 7.9l-7.9-7.9h2.83zM16.686 0L10.2 6.485 11.616 7.9l7.9-7.9h-2.83zm20.97 0l9.193 9.193-1.414 1.414L34.828 0h2.828zM22.344 0L13.15 9.193l1.414 1.414L25.172 0h-2.828zm10.6 0l14.85 14.85-1.415 1.414L30.117 0h2.828zM27.057 0L12.207 14.85l1.414 1.414L29.883 0h-2.828zm9.943 0l17.678 17.678-1.414 1.414L34.172 0h2.828zM23 0L5.322 17.678 6.736 19.092 25.828 0H23zm13.457 0l20.505 20.505-1.414 1.414L33.63 0h2.828zM23.543 0L3.038 20.505l1.414 1.414L26.37 0h-2.828zM43 0l23.333 23.333-1.414 1.414L40.172 0H43zm-26 0L-6.333 23.333-4.92 24.747 19.828 0H17zm32.543 0l26.162 26.162-1.414 1.414L43.017 0h2.828zM10.457 0L-15.705 26.162l1.414 1.414L13.283 0h-2.828zM57 0l28.99 28.99-1.414 1.414L54.172 0H57zm-54 0L-25.99 28.99-24.576 30.404 5.828 0H3zM53.97 3.657l3.657 3.657-1.414 1.414L51.143 3.657h2.828zM6.03 3.657L2.372 7.314 3.787 8.728 8.857 3.657H6.03zm42.284 0L54.8 10.142 53.384 11.556l-7.9-7.9h2.83zM11.686 3.657L5.2 10.142 6.616 11.556l7.9-7.9h-2.83zm30.97 0l9.193 9.193-1.414 1.414L39.828 3.657h2.828zM17.344 3.657L8.15 12.85l1.414 1.414L20.172 3.657h-2.828zM36.943 0l17.678 17.678-1.414 1.414L34.117 0h2.828zM23.057 0L5.379 17.678 6.793 19.092 25.883 0h-2.828zM40 0l20.505 20.505-1.414 1.414L37.172 0H40zM20 0L-0.505 20.505 0.909 21.92 22.828 0H20z' fill='%23232742' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E");
 }
 
-/* --- VISUAL UPGRADE 2: KARTU NEON CHIP (VERSI FIX: NO PEEKING) --- */
+/* --- UPDATE VISUAL 2: KARTU NEON CHIP (VERSI FIX: NO PEEKING) --- */
 
 /* 1. Tampilan Punggung Kartu (Tetap Neon Keren) */
 .card::after {
@@ -254,18 +254,18 @@ body {
 
 /* KASUS A: Jika kartu masih TERTUTUP (Punggung) */
 .card.card-closed:hover {
-  /* PENTING: Tetap pertahankan rotateY(180deg) agar TIDAK MENGINTIP */
+  /* PENTING: Tetap pertahankan rotateY(180deg) biar NGGA NGINTIP */
   transform: rotateY(180deg) scale(1.05);
 
   /* Efek cahaya makin terang */
   box-shadow: 0 0 25px rgba(0, 242, 255, 0.8);
-  border-color: #fff; /* Border jadi putih saat disentuh */
-  z-index: 10; /* Agar kartu melayang sedikit di atas kartu lain */
+  border-color: #fff; /* Border jadi putih pas disentuh */
+  z-index: 10; /* Biar kartu melayang sedikit diatas yang lain */
 }
 
 /* KASUS B: Jika kartu sudah TERBUKA atau SUDAH COCOK */
 .card:not(.card-closed):hover {
-  /* Cukup perbesar saja tanpa rotasi */
+  /* Cukup perbesar aja tanpa muter */
   transform: scale(1.05);
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
   z-index: 10;
@@ -292,7 +292,7 @@ body {
   }
 }
 
-/* --- VISUAL UPGRADE 3: CONTAINER BERDENYUT --- */
+/* --- UPDATE VISUAL 3: CONTAINER BERDENYUT --- */
 
 /* Definisi animasi denyutan neon */
 @keyframes neonBorderPulse {
@@ -315,14 +315,14 @@ body {
 /* Terapkan animasi ke wadah utama dan modal menang */
 .game-container,
 .win-content {
-  border-width: 2px; /* Pertebal sedikit bordernya */
+  border-width: 2px; /* Pertebal dikit bordernya */
   animation: neonBorderPulse 3s infinite alternate; /* Animasi jalan terus */
 }
 
 /* --- TAMBAHAN UNTUK MEMORY.HTML --- */
 #game-screen {
-  display: none; /* Sembunyikan layar game saat awal load */
-  width: 100%; /* Pastikan lebar penuh mengikuti container */
+  display: none; /* Sembunyikan layar game pas awal */
+  width: 100%; /* Pastikan lebar penuh ngikut container */
 }
 
 @media (max-width: 480px) {

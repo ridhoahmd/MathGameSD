@@ -1,5 +1,4 @@
-
-// Konfigurasi Firebase 
+// Settingan Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyApeL2uxjjfsiwtHhCd4mmgWT0biz-nI84",
   authDomain: "mathgamesd.firebaseapp.com",
@@ -9,16 +8,16 @@ const firebaseConfig = {
   appId: "1:595640141584:web:d02523bc844e52550f4795",
 };
 
-// Inisialisasi Firebase (Cek dulu biar gak error double init)
-if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+// Nyalain Firebase (Cek dulu biar ga double)
+if (typeof firebase !== "undefined" && !firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-// KITA HANYA PAKAI AUTH (Login). 
-// Database Realtime dimatikan agar 100% data masuk ke PostgreSQL.
+// CUMA PAKE AUTH YA!
+// Database murni pake PostgreSQL lewat server, firebase cuma numpang login.
 let auth;
-if (typeof firebase !== 'undefined') {
-    auth = firebase.auth();
+if (typeof firebase !== "undefined") {
+  auth = firebase.auth();
 }
 
-console.log("✅ Firebase Auth Ready (Database disconnected)");
+console.log("✅ Firebase Auth Aman (Database putus)");

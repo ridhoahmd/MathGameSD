@@ -1,6 +1,6 @@
 /**
- * Confetti System - Lightweight Particle Animation
- * For celebrating wins, achievements, and milestones
+ * Sistem Confetti - Partikel Keren
+ * Buat selebrasi kemenangan atau achievement
  */
 
 class ConfettiSystem {

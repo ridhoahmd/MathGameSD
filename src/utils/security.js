@@ -1,6 +1,6 @@
 const xss = require("xss");
 
-// 🛡️ Enhanced bad word list (dapat ditambah sesuai kebutuhan)
+// Daftar Kata Kasar (Sensor)
 const BAD_WORDS = [
   "anjing",
   "babi",
@@ -24,9 +24,9 @@ const BAD_WORDS = [
   "laknat",
 ];
 
-// Regex patterns untuk deteksi obfuscation
+// Pola Regex buat deteksi kata yang disamarin
 function createBypassPatterns(word) {
-  // Handle leet speak: a=4/@, e=3, i=1/!, o=0, s=5/$, t=7
+  // Peta karakter alay: a=4/@, e=3, dll
   const leetMap = {
     a: "[a4@]",
     e: "[e3]",
@@ -38,7 +38,7 @@ function createBypassPatterns(word) {
 
   let pattern = "";
   for (const char of word.toLowerCase()) {
-    // Allow separator characters between letters (periods, spaces, dashes)
+    // Bolehin pemisah (. - _)
     if (pattern) pattern += "[.\\s\\-_]*";
     pattern += leetMap[char] || char;
   }
@@ -52,19 +52,19 @@ function sanitizeKey(key) {
 function sanitizeMessage(message) {
   if (!message || !message.trim()) return "";
 
-  // Limit length
+  // Batasi panjang
   const rawPesan = message.substring(0, 100);
 
-  // XSS sanitization first
+  // Bersihin XSS dulu
   let cleanPesan = xss(rawPesan);
 
-  // Apply bad word filter with bypass detection
+  // Sensor kata kasar
   for (const word of BAD_WORDS) {
     const pattern = createBypassPatterns(word);
     cleanPesan = cleanPesan.replace(pattern, "***");
   }
 
-  // Remove excessive repeated characters (spam prevention)
+  // Hapus karakter berulang berlebihan (spam)
   cleanPesan = cleanPesan.replace(/(.)\1{4,}/g, "$1$1$1");
 
   return cleanPesan;

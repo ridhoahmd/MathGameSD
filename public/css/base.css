@@ -1,4 +1,4 @@
-/* BASE STYLES & RESET */
+/* STYLE DASAR & RESET */
 * {
   box-sizing: border-box;
 }
@@ -63,7 +63,7 @@ button {
   background: #00c2cc;
 }
 
-/* UTILITY CLASSES */
+/* CLASS UTAMA */
 .hidden {
   display: none !important;
 }
@@ -92,12 +92,11 @@ button {
   margin-bottom: 20px;
 }
 
-/* ANIMATIONS */
+/* ANIMASI */
 @keyframes flashGreen {
   0% {
     background-color: var(--neon-green);
   }
-
   100% {
     background-color: transparent;
   }
@@ -107,7 +106,6 @@ button {
   0% {
     background-color: var(--neon-red);
   }
-
   100% {
     background-color: transparent;
   }

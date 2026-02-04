@@ -16,7 +16,7 @@ export class GameEngine {
 
     // Show loading for game initialization
     if (typeof LoadingUI !== "undefined") {
-      LoadingUI.show("Starting game...");
+      LoadingUI.show("Mulai game...");
       setTimeout(() => LoadingUI.hide(), 500);
     }
   }
@@ -27,14 +27,14 @@ export class GameEngine {
     const oldScore = this.score;
     this.score += points;
 
-    // Animated counter instead of instant update
+    // Animasi skor
     if (typeof AnimationUtils !== "undefined") {
       const scoreEl = document.getElementById("score");
       if (scoreEl) {
         AnimationUtils.animateCounter(scoreEl, oldScore, this.score, 500);
         AnimationUtils.addTempClass(scoreEl, "score-pop", 300);
 
-        // Show +points increment
+        // Tampil poin nambah
         const container = scoreEl.parentElement;
         if (container) {
           AnimationUtils.showScoreIncrement(container, points, {
@@ -51,7 +51,7 @@ export class GameEngine {
   }
 
   playSound(type) {
-    // Basic wrapper, expects global AudioManager or we can import it
+    // Wrapper audio
     if (window.AudioManager) {
       if (type === "correct") window.AudioManager.playCorrect();
       else if (type === "wrong") window.AudioManager.playWrong();
@@ -63,7 +63,7 @@ export class GameEngine {
     this.gameActive = false;
     this.playSound("win");
 
-    // Show confetti!
+    // Efek Konfeti
     if (typeof confetti !== "undefined") {
       if (this.score > 500) {
         confetti.victory(); // Epic celebration
@@ -87,13 +87,13 @@ export class GameEngine {
         game: this.gameSlug,
       });
 
-      // 🔧 FIX: Use single listener with timeout handling inside
+      // Timeout save score
       let timeoutId = setTimeout(() => {
         console.log("⏱️ Score save timeout - refreshing profile anyway");
         this.socket.emit("mintaDataProfil", this.playerName);
       }, 2000);
 
-      // TUNGGU konfirmasi dari server baru refresh
+      // Tunggu respon server
       this.socket.once("skorTersimpan", (data) => {
         // Clear timeout since we got response
         clearTimeout(timeoutId);

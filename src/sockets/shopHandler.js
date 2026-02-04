@@ -47,8 +47,7 @@ module.exports = (socket, io) => {
       }
 
       // 3. Proses Transaksi Aman
-      // Re-fetch object to ensure latest state right before update to minimize race window
-      // Ideal fix would be a transaction with locking, but for this scale, this suffices.
+      // Ambil ulang user biar data terbaru
       const freshUser = await prisma.user.findUnique({
         where: { username: username },
       });
@@ -102,7 +101,7 @@ module.exports = (socket, io) => {
     const { username, tipe, itemId } = data;
 
     try {
-      // 🛡️ SECURITY: Validate user owns the item before equipping
+      // 🛡️ SECURITY: Cek user punya item ga sebelum dipake
       const user = await prisma.user.findUnique({
         where: { username: username },
         select: { inventory: true },
@@ -121,10 +120,10 @@ module.exports = (socket, io) => {
         myInventory = ["default"];
       }
 
-      // Check if user owns the item (default is always owned)
+      // Cek kepemilikan (default selalu punya)
       if (itemId !== "default" && !myInventory.includes(itemId)) {
         console.warn(
-          `⚠️ Unauthorized equip attempt: ${username} tried to equip ${itemId}`,
+          `⚠️ Percobaan equip ilegal: ${username} mau pakai ${itemId}`,
         );
         socket.emit("transaksiGagal", "Kamu belum memiliki item ini!");
         return;

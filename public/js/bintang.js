@@ -1,19 +1,19 @@
 // ============================================
-// TANGKAP BINTANG - PHASER GAME
-// Educational Math Game with Phaser 3
+// GAME TANGKAP BINTANG
+// Game matematika simpel pake Phaser 3
 // ============================================
 
-// Socket connection for score saving
+// Koneksi socket buat save skor
 const socket = io();
-const username = localStorage.getItem("playerName") || "Guest";
+const username = localStorage.getItem("playerName") || "Tamu";
 
-// Game State
+// State Game
 let gameActive = false;
-let currentDifficulty = "mudah"; // mudah, sedang, sulit
+let currentDifficulty = "mudah"; // pilihan: mudah, sedang, sulit
 let combo = 0;
 let maxCombo = 0;
 
-// Config
+// Config dasar
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
 
@@ -37,11 +37,11 @@ const config = {
   },
   scale: {
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH, // Let Phaser handle centering inside container
+    autoCenter: Phaser.Scale.CENTER_BOTH, // Biar pas di tengah layar
   },
 };
 
-// Game Variables
+// Variabel main game
 let player;
 let stars;
 let cursors;
@@ -54,10 +54,10 @@ let gameOver = false;
 let timerEvent;
 let starSpawnTimer;
 
-// Particles
+// Efek partikel
 let emitter;
 
-// DOM Elements
+// Elemen HTML (DOM)
 const scoreDisplay = document.getElementById("score-display");
 const livesDisplay = document.getElementById("lives-display");
 const timeDisplay = document.getElementById("time-display");
@@ -66,20 +66,20 @@ const gameOverModal = document.getElementById("game-over-modal");
 const startScreen = document.getElementById("start-screen");
 const finalScoreEl = document.getElementById("final-score");
 
-// Initialize Phaser Game (Wait for user to start)
+// Inisialisasi Phaser (Nunggu player klik start)
 let game;
 
-// --- DIFFICULTY SETTINGS ---
+// --- PENGATURAN KESULITAN ---
 const difficultySettings = {
   mudah: { spawnRate: 1500, speedMin: 2, speedMax: 4, ops: ["+"] },
   sedang: { spawnRate: 1200, speedMin: 4, speedMax: 6, ops: ["+", "-"] },
   sulit: { spawnRate: 800, speedMin: 6, speedMax: 9, ops: ["+", "-", "×"] },
 };
 
-// --- GLOBAL FUNCTIONS ---
+// --- FUNGSI GLOBAL ---
 window.selectDifficulty = function (level) {
   currentDifficulty = level;
-  startScreen.classList.add("hidden"); // Hide start screen
+  startScreen.classList.add("hidden"); // Umpetin layar start
   startGame();
 };
 
@@ -87,24 +87,24 @@ function startGame() {
   if (!game) {
     game = new Phaser.Game(config);
   } else {
-    // Restart scene if game already exists
+    // Kalo game udah ada, restart aja scenenya
     game.scene.scenes[0].scene.restart();
   }
   gameActive = true;
 }
 
-// Preload
+// Load aset dulu
 function preload() {
   this.load.on("complete", () => {
-    console.log(`🎮 Tangkap Bintang loaded! Difficulty: ${currentDifficulty}`);
+    console.log(`🎮 Game Tangkap Bintang siap! Mode: ${currentDifficulty}`);
   });
 }
 
-// Create Game Objects
+// Bikin objek-objek game di sini
 function create() {
-  const scene = this; // Capture scene reference
+  const scene = this; // Simpen referensi scene
 
-  // Reset State
+  // Reset semua stats
   score = 0;
   lives = 3;
   timeLeft = 60;
@@ -112,18 +112,19 @@ function create() {
   gameOver = false;
   updateUI();
 
-  // Background gradient
+  // Bikin background gradasi biar keren
   const bg = this.add.graphics();
   bg.fillGradientStyle(0x0a0a1a, 0x0a0a1a, 0x1a1a3e, 0x1a1a3e, 1);
   bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-  // Add stars background decoration
+  // Hiasan bintang bintang latar belakang
   for (let i = 0; i < 50; i++) {
     const x = Phaser.Math.Between(0, GAME_WIDTH);
     const y = Phaser.Math.Between(0, GAME_HEIGHT);
     const size = Phaser.Math.Between(1, 3);
     const star = this.add.circle(x, y, size, 0xffffff, 0.3);
 
+    // Animasi kedip-kedip
     this.tweens.add({
       targets: star,
       alpha: { from: 0.1, to: 0.5 },
@@ -133,26 +134,26 @@ function create() {
     });
   }
 
-  // Generate Player Texture
+  // Bikin tekstur Player manual (ga pake gambar luar)
   if (!this.textures.exists("player")) {
     const playerGraphics = this.make.graphics({ x: 0, y: 0, add: false });
-    playerGraphics.fillStyle(0x00f2ff, 0.3); // Glow
+    playerGraphics.fillStyle(0x00f2ff, 0.3); // Cahaya glow
     playerGraphics.fillRoundedRect(-5, -5, 90, 40, 15);
-    playerGraphics.fillStyle(0x00f2ff, 1); // Body
+    playerGraphics.fillStyle(0x00f2ff, 1); // Badan pesawat
     playerGraphics.fillRoundedRect(0, 0, 80, 30, 10);
     playerGraphics.fillStyle(0x00b4d8, 1); // Highlight
     playerGraphics.fillRoundedRect(5, 5, 70, 20, 8);
-    playerGraphics.fillStyle(0xffffff, 0.5); // Shine
+    playerGraphics.fillStyle(0xffffff, 0.5); // Kilap
     playerGraphics.fillRoundedRect(15, 8, 50, 5, 3);
     playerGraphics.generateTexture("player", 90, 40);
   }
 
-  // Create Player
+  // Spawn Player
   player = this.physics.add.sprite(GAME_WIDTH / 2, GAME_HEIGHT - 50, "player");
   player.setCollideWorldBounds(true);
   player.setImmovable(true);
 
-  // Generate Star Textures
+  // Bikin tekstur Bintang (bintang beneran vs salah)
   if (!this.textures.exists("star")) {
     const starGraphics = this.make.graphics({ x: 0, y: 0, add: false });
     starGraphics.fillStyle(0xffeb3b, 1);
@@ -167,7 +168,7 @@ function create() {
     wrongStarGraphics.generateTexture("wrongStar", 50, 50);
   }
 
-  // Powerup Texture
+  // Tekstur partikel ledakan
   if (!this.textures.exists("particle")) {
     const p = this.make.graphics({ x: 0, y: 0, add: false });
     p.fillStyle(0xffffff, 1);
@@ -175,7 +176,7 @@ function create() {
     p.generateTexture("particle", 8, 8);
   }
 
-  // Particle Emitter
+  // Setup Emitter Partikel
   const particles = this.add.particles(0, 0, "particle", {
     speed: { min: 50, max: 150 },
     scale: { start: 1, end: 0 },
@@ -184,27 +185,27 @@ function create() {
   });
   emitter = particles;
 
-  // Stars group
+  // Grup bintang jatuh
   stars = this.physics.add.group();
 
-  // Collision detection
+  // Deteksi tabrakan player sama bintang
   this.physics.add.overlap(player, stars, collectStar, null, this);
 
-  // Input
+  // Input keyboard & mouse
   cursors = this.input.keyboard.createCursorKeys();
   this.input.on("pointermove", (pointer) => {
     if (!gameOver) {
-      // Scale pointer x to match canvas scaling
+      // Skala pointer biar pas sama canvas
       const scaleX = GAME_WIDTH / scene.scale.displaySize.width;
-      // Simple approximation or just rely on Phaser's internal input mapping which is usually good
+      // Gerakin player ngikutin mouse (tapi dibatesin dikit)
       player.x = Phaser.Math.Clamp(pointer.x, 40, GAME_WIDTH - 40);
     }
   });
 
-  // Generate first question
+  // Soal pertama
   generateQuestion();
 
-  // Timer
+  // Timer game
   timerEvent = this.time.addEvent({
     delay: 1000,
     callback: updateTimer,
@@ -212,7 +213,7 @@ function create() {
     loop: true,
   });
 
-  // Spawn stars periodically based on difficulty
+  // Timer spawn bintang (sesuai kesulitan)
   const settings = difficultySettings[currentDifficulty];
   starSpawnTimer = this.time.addEvent({
     delay: settings.spawnRate,
@@ -221,39 +222,39 @@ function create() {
     loop: true,
   });
 
-  // Initial spawns
+  // Spawn awal biar ga sepi
   for (let i = 0; i < 3; i++) {
     this.time.delayedCall(i * 500, spawnStar, [], this);
   }
 }
 
-// Update Loop
+// Loop Utama (Update setiap frame)
 function update() {
   if (gameOver) return;
 
-  // Keyboard controls
+  // Kontrol keyboard
   if (cursors.left.isDown) {
     player.x -= 10;
   } else if (cursors.right.isDown) {
     player.x += 10;
   }
 
-  // Keep player in bounds
+  // Jaga player tetep dalem layar
   player.x = Phaser.Math.Clamp(player.x, 40, GAME_WIDTH - 40);
 
-  // Move stars down
+  // Gerakin bintang ke bawah
   stars.getChildren().forEach((star) => {
     star.y += star.getData("speed");
-    star.rotation += 0.02;
+    star.rotation += 0.02; // Puter dikit biar dinamis
 
-    // Update text position
+    // Update posisi teks angka di bintang
     const text = star.getData("text");
     if (text && text.active) {
       text.x = star.x;
       text.y = star.y;
     }
 
-    // Remove off-screen stars
+    // Hapus kalo udah lewat bawah layar
     if (star.y > GAME_HEIGHT + 30) {
       if (text) text.destroy();
       star.destroy();
@@ -261,7 +262,7 @@ function update() {
   });
 }
 
-// Draw Star Shape Helper
+// Fungsi bantu gambar bintang
 function drawStar(graphics, cx, cy, spikes, outerRadius, innerRadius) {
   let rot = (Math.PI / 2) * 3;
   let x = cx;
@@ -288,7 +289,7 @@ function drawStar(graphics, cx, cy, spikes, outerRadius, innerRadius) {
   graphics.fillPath();
 }
 
-// Generate Math Question
+// Bikin soal matematika random
 function generateQuestion() {
   const settings = difficultySettings[currentDifficulty];
   const op = settings.ops[Math.floor(Math.random() * settings.ops.length)];
@@ -311,20 +312,20 @@ function generateQuestion() {
   currentQuestion = `${a} ${op} ${b} = ?`;
   questionText.textContent = currentQuestion;
 
-  // Animate Question Text
+  // Animasi dikit pas soal ganti
   questionText.style.transform = "scale(1.2)";
   setTimeout(() => (questionText.style.transform = "scale(1)"), 200);
 }
 
-// Spawn Star
+// Munculin bintang
 function spawnStar() {
   if (gameOver) return;
 
   const x = Phaser.Math.Between(50, GAME_WIDTH - 50);
-  const isCorrect = Math.random() < 0.4; // 40% Chance correct
+  const isCorrect = Math.random() < 0.4; // 40% kemungkinan bener
 
-  // Logic to prevent too many wrong stars in a row?
-  // For now simple random is fine strictly
+  // Mencegah kebanyakan salah?
+  // Nanti aja dipikirin, sekarang random dulu
 
   const value = isCorrect
     ? correctAnswer
@@ -341,7 +342,7 @@ function spawnStar() {
   star.setData("isCorrect", value === correctAnswer);
   star.setData("speed", speed);
 
-  // Add number text
+  // Tampilin angkanya
   const scene = game.scene.scenes[0];
   const text = scene.add.text(x, -40, value.toString(), {
     fontFamily: "Orbitron, sans-serif",
@@ -353,29 +354,29 @@ function spawnStar() {
   star.setData("text", text);
 }
 
-// Collect Star Handler
+// Pas bintang diambil
 function collectStar(player, star) {
   const isCorrect = star.getData("isCorrect");
   const value = star.getData("value");
   const text = star.getData("text");
   const scene = this;
 
-  // Cleanup star
+  // Bersihin
   if (text) text.destroy();
   star.destroy();
 
   if (value === correctAnswer) {
-    // CORRECT!
-    score += 10 + combo * 5; // Combo Bonus
+    // BENAR!
+    score += 10 + combo * 5; // Bonus Combo
     combo++;
     if (combo > maxCombo) maxCombo = combo;
 
-    // Play Sound
+    // Bunyi ting!
     try {
       AudioManager.playCorrect();
     } catch (e) {}
 
-    // Visuals
+    // Efek visual
     showFeedback(
       scene,
       player.x,
@@ -394,7 +395,7 @@ function collectStar(player, star) {
       );
     }
 
-    // Particles
+    // Partikel meledak
     if (emitter) {
       emitter.setPosition(player.x, player.y);
       emitter.setParticleTint(0x38ef7d);
@@ -403,26 +404,26 @@ function collectStar(player, star) {
 
     generateQuestion();
 
-    // Clear other stars to prevent confusion
+    // Hapus bintang lain biar ga bingung
     stars.getChildren().forEach((s) => {
       if (s.getData("text")) s.getData("text").destroy();
       s.destroy();
     });
   } else {
-    // WRONG!
+    // SALAH!
     combo = 0; // Reset Combo
     score = Math.max(0, score - 5);
     lives--;
 
-    // Play Sound
+    // Bunyi tetot
     try {
       AudioManager.playWrong();
     } catch (e) {}
 
-    // Visuals
+    // Visual merah
     showFeedback(scene, player.x, player.y - 50, "-5", 0xff4444);
 
-    // Particles
+    // Partikel merah
     if (emitter) {
       emitter.setPosition(player.x, player.y);
       emitter.setParticleTint(0xff4444);
@@ -480,7 +481,7 @@ function endGame(scene) {
   finalScoreEl.innerText = score;
   gameOverModal.classList.remove("hidden");
 
-  // Save Score
+  // Kirim skor ke server
   if (socket) {
     socket.emit("simpanSkor", {
       nama: username,

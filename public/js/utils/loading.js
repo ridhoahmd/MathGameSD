@@ -1,6 +1,6 @@
 /**
  * Loading Manager
- * Centralized loading state management for MathGameSD
+ * Biar loading gak sepi-sepi banget
  */
 
 class LoadingManager {
@@ -10,7 +10,7 @@ class LoadingManager {
   }
 
   init() {
-    // Create loading overlay if it doesn't exist
+    // Buat overlay kalau belum ada
     if (!document.getElementById("global-loading-overlay")) {
       this.overlay = this.createOverlay();
       document.body.appendChild(this.overlay);
@@ -33,8 +33,8 @@ class LoadingManager {
   }
 
   /**
-   * Show loading overlay with optional message
-   * @param {string} message - Loading message
+   * Tampilkan overlay dengan pesan
+   * @param {string} message - Pesan loading
    */
   show(message = "Loading") {
     if (this.overlay) {
@@ -47,7 +47,7 @@ class LoadingManager {
   }
 
   /**
-   * Hide loading overlay
+   * Sembunyikan overlay
    */
   hide() {
     if (this.overlay) {
@@ -57,9 +57,9 @@ class LoadingManager {
   }
 
   /**
-   * Show loading with auto-hide after duration
+   * Tampilkan loading pakai waktu
    * @param {string} message
-   * @param {number} duration - milliseconds
+   * @param {number} duration - milidetik
    */
   showTimed(message = "Loading", duration = 2000) {
     this.show(message);
@@ -67,7 +67,7 @@ class LoadingManager {
   }
 
   /**
-   * Create inline spinner element
+   * Bikin elemen spinner
    * @param {string} size - 'sm', 'md', 'lg'
    * @returns {HTMLElement}
    */
@@ -78,7 +78,7 @@ class LoadingManager {
   }
 
   /**
-   * Create progress bar element
+   * Bikin progress bar
    * @param {number} value - 0 to 100
    * @returns {Object} - { container, update }
    */
@@ -115,9 +115,9 @@ class LoadingManager {
   }
 
   /**
-   * Replace element with skeleton while loading
+   * Ganti elemen dengan skeleton pas loading
    * @param {HTMLElement} element
-   * @param {Function} loadFn - Function that returns a promise
+   * @param {Function} loadFn - Fungsi promise
    */
   async withSkeleton(element, loadFn) {
     const skeleton = this.createSkeleton("card");
@@ -136,7 +136,7 @@ class LoadingManager {
   }
 
   /**
-   * Show loading on button
+   * Loading di tombol
    * @param {HTMLElement} button
    */
   buttonLoading(button) {
@@ -145,7 +145,7 @@ class LoadingManager {
   }
 
   /**
-   * Remove loading from button
+   * Hapus loading di tombol
    * @param {HTMLElement} button
    */
   buttonReady(button) {

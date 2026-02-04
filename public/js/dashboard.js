@@ -1,13 +1,13 @@
-// public/js/dashboard.js - VERSI FINAL (FITUR LENGKAP + SQL SECURE)
+// Dashboard Utama (Lengkap + Aman)
 
-// Use global socket from global.js (avoid duplicate connection)
+// Pake socket global biar ga dobel koneksi
 const socket = window.socket || io();
 
-// --- SETUP FIREBASE AUTH (TETAP DIPAKAI UNTUK LOGIN GOOGLE) ---
+// Setup Firebase buat Login Google
 const provider = new firebase.auth.GoogleAuthProvider();
 let currentUser = null;
 
-// --- BADGE INFO MAPPING ---
+// --- LIST MEDALI (BADGE) ---
 const BADGE_INFO = {
   badge_math: { name: "Ahli Matematika", emoji: "🎖️" },
   badge_quran: { name: "Penghafal Quran", emoji: "📚" },
@@ -34,46 +34,44 @@ if (nameDisplay) nameDisplay.innerText = localName;
 if (avatarDisplay)
   avatarDisplay.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${localName}`;
 
-// MINTA DATA KE SERVER SQL SAAT PERTAMA BUKA
+// Ambil data user dari database pas pertama buka
 requestSQLData(localName);
 
-// --- 2. FUNGSI UTAMA: MINTA DATA KE SQL (DIPERBAIKI) ---
+// --- 2. Fungsi minta data profil ---
 function requestSQLData(username) {
   if (!username) return;
 
-  // Cek apakah kita punya foto Google & UID di Auth saat ini?
+  // Cek apakah kita punya foto Google & UID login sekarang?
   let photoURL = null;
-  let uid = null; // [PENTING] Variable UID
+  let uid = null; // UID penting biar unik
 
   if (typeof auth !== "undefined" && auth.currentUser) {
     photoURL = auth.currentUser.photoURL;
-    uid = auth.currentUser.uid; // [PENTING] Ambil UID dari Google
+    uid = auth.currentUser.uid; // Ambil UID dari user Google
   }
 
-  console.log("📡 Meminta profil SQL untuk:", username);
+  console.log("📡 Minta data profil buat:", username);
 
   // Kirim Paket Lengkap: Nama + Foto + UID
   socket.emit("mintaDataProfil", {
     nama: username,
     foto: photoURL,
-    uid: uid, // [PENTING] Kirim UID agar server bisa mengenali user unik
+    uid: uid, // Kirim UID biar server tau ini siapa
   });
 }
 
-// --- 3. TERIMA DATA DARI SQL (SOCKET.IO) ---
+// --- 3. Terima update profil dari server ---
 socket.on("updateProfil", (data) => {
-  //console.log("📦 Profil SQL Diterima:", data);
-
-  // A. UPDATE NAMA & GAMBAR
+  // Update Nama
   if (nameDisplay) nameDisplay.innerText = data.nama;
 
-  // Cek foto
+  // Update Foto
   if (avatarDisplay) {
     if (data.foto) {
       avatarDisplay.src = data.foto;
-      // Jika foto Google gagal/429, ganti ke Dicebear otomatis
+      // Kalo foto google error, pake avatar default
       avatarDisplay.onerror = function () {
-        this.onerror = null; // Mencegah loop
+        this.onerror = null; // Biar ga loop
         this.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.nama}`;
       };
     } else {
@@ -81,10 +79,10 @@ socket.on("updateProfil", (data) => {
     }
 
     // --- UPDATE BINGKAI (FRAME) ---
-    // 1. Reset class ke default
+    // 1. Reset class ke awal
     avatarDisplay.className = "logo-img";
 
-    // 2. Tambah class frame jika ada
+    // 2. Tambah class frame kalo ada
     if (data.frame && data.frame !== "default") {
       let frameClass = data.frame;
       if (!frameClass.startsWith("frame-")) {
@@ -95,7 +93,7 @@ socket.on("updateProfil", (data) => {
     }
   }
 
-  // B. UPDATE ROLE (ADMIN/GURU/SISWA)
+  // UPDATE ROLE (ADMIN/GURU/SISWA)
   const roleEl = document.getElementById("role-display");
   if (roleEl) roleEl.innerText = (data.role || "GUEST").toUpperCase();
 
@@ -113,25 +111,25 @@ socket.on("updateProfil", (data) => {
     if (guruPanel) guruPanel.classList.remove("hidden");
   }
 
-  // C. UPDATE TOTAL SCORE (Sinkron dengan Leaderboard)
+  // UPDATE SKOR (Sinkron dengan Leaderboard)
   const xpDisplay = document.getElementById("total-score");
   if (xpDisplay) xpDisplay.innerText = data.skor || "0";
 
-  // D. TEMA (hanya apply jika user belum manual pilih tema)
+  // UPDATE TEMA (kalo belum ada settingan manual di lokal)
   const savedTheme = localStorage.getItem("selectedTheme");
 
-  // Jika user sudah pilih manual, skip server theme
+  // Kalo user blm pilih sendiri, pake tema dari server
   if (!savedTheme && data.theme && data.theme !== "default") {
     document.body.className = ""; // Reset classes
     document.body.classList.add("theme-" + data.theme);
   }
-  // Jika ada saved theme, tetap gunakan itu (priority)
+  // Kalo ada settingan lokal, pake yang lokal
   else if (savedTheme && savedTheme !== "default") {
     document.body.className = "";
     document.body.classList.add("theme-" + savedTheme);
   }
 
-  // E. UPDATE BADGE DISPLAY
+  // UPDATE MEDALI
   const badgeDisplay = document.getElementById("user-badge");
   if (badgeDisplay) {
     if (data.badge) {
@@ -146,8 +144,8 @@ socket.on("updateProfil", (data) => {
     }
   }
 
-  // F. UPDATE LEVEL & STREAK DISPLAY (Gamification)
-  // 🔧 FIX: Ensure gamification displays are updated when profile loads
+  // UPDATE LEVEL & XP (Gamification Client Side)
+  // Tunggu bentar biar script lain siap
   setTimeout(() => {
     if (typeof PlayerLevel !== "undefined") {
       PlayerLevel.updateXPDisplay();
@@ -158,7 +156,7 @@ socket.on("updateProfil", (data) => {
   }, 100);
 });
 
-// --- 4. CHAT LOGIC  ---
+// --- 4. FITUR CHAT ---
 function toggleChat() {
   const chatBox = document.getElementById("chat-container");
   if (chatBox.classList.contains("minimized"))
@@ -208,7 +206,7 @@ socket.on("chatMessage", (data) => {
   }
 });
 
-// --- 5. LOGIN GOOGLE (FITUR LAMA TETAP ADA) ---
+// --- 5. SYSTEM LOGIN ---
 function toggleInputGuru() {
   const area = document.getElementById("guru-input-area");
   const text = document.getElementById("text-guru");
@@ -234,7 +232,7 @@ async function loginGoogle() {
   const guruCode = guruCodeInput ? guruCodeInput.value.trim() : "";
   let adminToken = null;
 
-  // 1. Jika ada kode guru, verifikasi dulu ke server sebelum login Google
+  // 1. Cek kode guru kalo diisi
   if (guruCode) {
     try {
       const res = await fetch("/api/login-guru", {
@@ -245,20 +243,20 @@ async function loginGoogle() {
       const data = await res.json();
 
       if (data.success) {
-        adminToken = data.token; // Simpan token sementara
-        localStorage.setItem("guruToken", adminToken); // Persist
+        adminToken = data.token; // Simpan token
+        localStorage.setItem("guruToken", adminToken);
       } else {
-        alert("Kode Guru Salah! Login dibatalkan.");
+        alert("Kode Guru Salah! Ga jadi login.");
         return;
       }
     } catch (err) {
       console.error("Login Guru Error:", err);
-      alert("Gagal verifikasi kode guru.");
+      alert("Error verifikasi kode guru.");
       return;
     }
   }
 
-  // 2. Lanjut Login Google
+  // 2. Lanjut Login Google via Popup
   auth
     .signInWithPopup(provider)
     .then((result) => {
@@ -267,7 +265,7 @@ async function loginGoogle() {
 
       localStorage.setItem("playerName", safeName);
 
-      // Panggil requestData dengan token (jika ada)
+      // Minta data profil
       requestSQLData(safeName);
 
       document.getElementById("btn-login").classList.add("hidden");
@@ -291,14 +289,14 @@ function logout() {
   });
 }
 
-// Listener Auth State
+// Cek status login
 if (typeof auth !== "undefined") {
   auth.onAuthStateChanged((user) => {
     if (user) {
       currentUser = user;
       const safeName = sanitizeName(user.displayName);
 
-      // Update UI Login
+      // Update UI
       const btnLogin = document.getElementById("btn-login");
       if (btnLogin) btnLogin.classList.add("hidden");
 
@@ -315,10 +313,10 @@ if (typeof auth !== "undefined") {
 
 function masukGame(url) {
   if (localStorage.getItem("playerName")) window.location.href = url;
-  else alert("Silakan refresh halaman untuk mendapatkan ID Guest.");
+  else alert("Refresh dlu bro buat dapet ID Guest.");
 }
 
-// --- 6. AUDIO & SERVICE WORKER (FITUR LAMA TETAP ADA) ---
+// --- 6. AUDIO & SW ---
 document.addEventListener("DOMContentLoaded", () => {
   const allButtons = document.querySelectorAll("button, .game-card");
   allButtons.forEach((btn) => {
@@ -336,18 +334,18 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-// --- 7. TEMA CYCLING (DIPERBAIKI - DENGAN PERSISTENCE) ---
+// --- 7. GANTI TEMA ---
 
-// Load saved theme on page load
+// Load tema tersimpan pas buka web
 function loadSavedTheme() {
   const savedTheme = localStorage.getItem("selectedTheme");
   if (savedTheme && savedTheme !== "default") {
     document.body.classList.add("theme-" + savedTheme);
-    console.log("✅ Theme restored:", savedTheme);
+    console.log("✅ Tema dipasang:", savedTheme);
   }
 }
 
-// Call on script load
+// Jalanin
 loadSavedTheme();
 
 function cycleTheme() {
@@ -373,13 +371,13 @@ function cycleTheme() {
   let nextIndex = (currentThemeIndex + 1) % themes.length;
   let nextTheme = themes[nextIndex];
 
-  // Terapkan ke Layar
+  // Terapkan
   body.className = ""; // Reset
   if (nextTheme !== "default") {
     body.classList.add("theme-" + nextTheme);
   }
 
-  // SAVE TO LOCALSTORAGE untuk persistence
+  // Simpen
   localStorage.setItem("selectedTheme", nextTheme);
-  console.log("💾 Theme saved:", nextTheme);
+  console.log("💾 Tema disimpen:", nextTheme);
 }

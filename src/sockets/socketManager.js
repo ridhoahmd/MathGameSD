@@ -5,7 +5,7 @@ const {
   cleanUpSocketRateLimit,
 } = require("../utils/rateLimit");
 
-// Handlers
+// Handlers (Pengurus masing-masing fitur)
 const userHandler = require("./userHandler");
 const gameHandler = require("./gameHandler");
 const chatHandler = require("./chatHandler");
@@ -24,7 +24,7 @@ module.exports = (httpServer) => {
     },
   });
 
-  // Middleware Auth
+  // Auth Middleware
   io.use((socket, next) => {
     const token = socket.handshake.auth.token;
 
@@ -35,7 +35,7 @@ module.exports = (httpServer) => {
     if (token) {
       jwt.verify(token, JWT_SECRET, (err, decoded) => {
         if (err) {
-          console.warn(`⚠️ Invalid Token from ${socket.id}: ${err.message}`);
+          console.warn(`⚠️ Token ga valid dari ${socket.id}: ${err.message}`);
           return next(
             new Error("Authentication Error: Invalid or Expired Token"),
           );
@@ -43,23 +43,23 @@ module.exports = (httpServer) => {
           socket.decoded = decoded;
           socket.isAuth = true;
           console.log(
-            `🔑 Authenticated User: ${decoded.username} (${decoded.role})`,
+            `🔑 User Ter-autentikasi: ${decoded.username} (${decoded.role})`,
           );
           next();
         }
       });
     } else {
-      next(); // Guest
+      next(); // Tamu
     }
   });
 
   io.on("connection", (socket) => {
     console.log(`✅ User CONNECTED: ${socket.id} | Auth: ${socket.isAuth}`);
 
-    // Global Middleware / Rate Limit Check for specific heavy events could be applied here
-    // For now we just bind the handlers
+    // Middleware Global / Rate Limit bisa ditaruh sini
+    // Sekarang kita langsung bind handler aja
 
-    // Bind Handlers
+    // Sambungin Handlers
     userHandler(socket, io);
     gameHandler(socket, io);
     chatHandler(socket, io);

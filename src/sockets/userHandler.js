@@ -1,6 +1,6 @@
 const prisma = require("../config/prisma");
 
-// XP rate multipliers per game (same as frontend)
+// Rate pengali XP per game (sama kayak di frontend)
 const XP_RATES = {
   math: 1.0,
   zuma: 0.8,
@@ -13,13 +13,13 @@ const XP_RATES = {
   tajwid: 1.1,
 };
 
-// Calculate XP from score
+// Hitung XP dari skor
 function getXPFromScore(game, score) {
   const rate = XP_RATES[game] || 1.0;
   return Math.floor(score * rate);
 }
 
-// Calculate level from XP (formula: Level = floor(sqrt(XP / 100)))
+// Hitung level dari XP (Rumus: Level = floor(sqrt(XP / 100)))
 function calculateLevel(xp) {
   return Math.floor(Math.sqrt(xp / 100));
 }
@@ -40,14 +40,11 @@ module.exports = (socket, io) => {
     if (!username) return;
 
     // SECURITY CHECKS
-    // 1. Jika user mencoba mengakses profil 'admin' atau 'guru', WAJIB punya token valid.
+    // 1. Jika user coba akses profil 'admin' atau 'guru', WAJIB punya token valid.
     // 2. Jika user punya token, paksa username sesuai token.
     if (socket.isAuth && socket.decoded) {
-      // Jika authenticated, username HARUS ikut token untuk konsistensi
-      // Kecuali admin mau lihat profil orang lain?
-      // Untuk sekarang asumsi: token guru = identity guru.
       if (socket.decoded.role === "guru" || socket.decoded.role === "admin") {
-        // 🔧 FIX: Log authenticated high-privilege access
+        // Log akses authenticated
         console.log(
           `✅ Authenticated ${socket.decoded.role} accessing profile: ${username}`,
         );
@@ -60,9 +57,9 @@ module.exports = (socket, io) => {
         where: { username: username },
       });
 
-      // 🚨 PREVENT IMPERSONATION (SOFT CHECK)
-      // Jika user di DB adalah admin/guru, TAPI socket tidak punya token auth yang sesuai:
-      // JANGAN BLOKIR, tapi DOWNGRADE ke 'siswa' agar mereka tetap bisa main/lihat profil sendiri.
+      // 🚨 CEGAH PENYAMARAN (SOFT CHECK)
+      // Jika user di DB adalah admin/guru tapi socket ga punya token sah:
+      // JANGAN BLOKIR total, tapi TURUNKAN ke 'siswa' biar tetep bisa main.
       let effectiveRole = user ? user.role : "siswa";
 
       if (user && (user.role === "admin" || user.role === "guru")) {
@@ -71,9 +68,9 @@ module.exports = (socket, io) => {
           (socket.decoded && socket.decoded.role !== "guru")
         ) {
           console.warn(
-            `⚠️ Unauthorized access to ADMIN account ${username}. Downgrading to SISWA for this session.`,
+            `⚠️ Unauthorized access to ADMIN account ${username}. Downgrading to SISWA.`,
           );
-          // Paksa jadi siswa di sesi ini agar aman
+          // Paksa jadi siswa sesi ini
           effectiveRole = "siswa";
         }
       }
@@ -97,7 +94,7 @@ module.exports = (socket, io) => {
         });
       }
 
-      // Refetch to be sure
+      // Refetch biar yakin
       user = await prisma.user.findUnique({
         where: { username: username },
       });
@@ -144,7 +141,7 @@ module.exports = (socket, io) => {
     if (isNaN(skor)) skor = 0;
 
     // 🛡️ SECURITY: VALIDASI SKOR
-    const MAX_SCORE_PER_GAME = 1000; // Contoh batas wajar per sesi
+    const MAX_SCORE_PER_GAME = 1000; // Contoh batas wajar
     if (skor > MAX_SCORE_PER_GAME) {
       console.warn(`⚠️ Suspicious Score Attempt: ${skor} by ${data.nama}`);
       skor = MAX_SCORE_PER_GAME; // Cap skor
@@ -173,7 +170,7 @@ module.exports = (socket, io) => {
         });
       }
 
-      // Calculate new XP and level
+      // Hitung XP dan level baru
       let existingUser = await prisma.user.findUnique({
         where: { username: safeName },
       });
@@ -211,7 +208,7 @@ module.exports = (socket, io) => {
         },
       });
 
-      // Confirm success to client so they can refresh
+      // Konfirmasi sukses ke client
       socket.emit("skorTersimpan", {
         totalScore: updatedUser.totalScore,
         koin: updatedUser.coins,
@@ -220,7 +217,7 @@ module.exports = (socket, io) => {
         xpGained: xpGained,
       });
 
-      // Notify teachers if needed (Global Emit can be handled via io)
+      // Notifikasi ke guru (Global Emit via io)
       if (io) io.emit("refreshDataGuru");
     } catch (err) {
       console.error("❌ DB Error:", err.message);
@@ -274,9 +271,9 @@ module.exports = (socket, io) => {
   socket.on("updateUserRole", async (data) => {
     const { targetUser, newRole } = data;
 
-    // 🛡️ SECURITY: STRICT AUTH CHECK
+    // 🛡️ SECURITY: CEK OTORITAS KETAT
     if (!socket.isAuth || !socket.decoded || socket.decoded.role !== "guru") {
-      console.warn(`⚠️ Unauthorized Role Update Attempt by ${socket.id}`);
+      console.warn(`⚠️ Percobaan Update Role Ilegal oleh ${socket.id}`);
       socket.emit(
         "errorUpdate",
         "Akses Ditolak: Anda bukan Guru/Admin terverifikasi.",
@@ -301,7 +298,7 @@ module.exports = (socket, io) => {
   socket.on("adminResetSystem", async (data) => {
     const passwordInput = typeof data === "object" ? data.password : "";
 
-    // 🛡️ SECURITY: ALSO CHECK TOKEN
+    // 🛡️ SECURITY: CEK TOKEN JUGA
     if (!socket.isAuth || !socket.decoded || socket.decoded.role !== "guru") {
       console.warn(`⚠️ Unauthorized Reset Attempt by ${socket.id}`);
       return;
@@ -319,7 +316,7 @@ module.exports = (socket, io) => {
       await prisma.user.updateMany({
         data: { coins: 0, totalScore: 0, inventory: ["default"] },
       });
-      console.log("⚠️ SYSTEM RESET BY AUTHENTICATED ADMIN");
+      console.log("⚠️ SYSTEM RESET OLEH ADMIN TERVALIDASI");
       if (io) io.emit("forceRefresh");
     } catch (e) {
       console.error("Gagal Reset:", e);

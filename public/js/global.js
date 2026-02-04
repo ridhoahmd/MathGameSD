@@ -1,10 +1,10 @@
-// 1. INISIALISASI SOCKET GLOBAL
+// 1. KONEKSI SOCKET UTAMA
 window.socket = io();
 
-// 2. IDENTITAS PEMAIN GLOBAL
+// 2. NAMA PLAYER
 window.playerName = localStorage.getItem("playerName") || "Guest";
 
-// 3. UI KONEKSI TERPUTUS (OFFLINE)
+// 3. TAMPILAN KALO OFFLINE
 function createOfflineUI() {
   if (document.getElementById("connection-overlay")) return;
 
@@ -17,7 +17,7 @@ function createOfflineUI() {
         <div class="conn-sub">Sedang mencoba menghubungkan kembali...</div>
     `;
 
-  // Style sederhana agar rapi (jika CSS belum memuat)
+  // Style sederhana biar rapi
   overlay.style.position = "fixed";
   overlay.style.top = "0";
   overlay.style.left = "0";
@@ -33,31 +33,28 @@ function createOfflineUI() {
   document.body.appendChild(overlay);
 }
 
-// Jalankan fungsi pembuatan UI saat file ini dimuat
+// Bikin UI offline pas diload
 createOfflineUI();
 
-// 4. LOGIKA DETEKSI KONEKSI (Global)
+// 4. DETEKSI PUTUS/NYAMBUNG
 let isReconnecting = false;
 
 window.socket.on("disconnect", (reason) => {
-  console.log("⚠️ Koneksi Global Putus:", reason);
+  console.log("⚠️ Putus koneksi:", reason);
   isReconnecting = true;
   const overlay = document.getElementById("connection-overlay");
 
-  // Tampilkan overlay dengan display flex agar centered
+  // Tampilkan overlay
   if (overlay) overlay.style.display = "flex";
 });
 
 window.socket.on("connect", () => {
   if (isReconnecting) {
-    console.log("✅ Koneksi Global Tersambung Kembali!");
+    console.log("✅ Nyambung lagi!");
     isReconnecting = false;
     const overlay = document.getElementById("connection-overlay");
     if (overlay) overlay.style.display = "none";
-
-    // Opsional: Reload halaman jika perlu data segar
-    // location.reload();
   }
 });
 
-console.log("✅ Global System Loaded (Socket & Offline UI Ready)");
+console.log("✅ Sistem Global Siap (Socket & Offline UI)");

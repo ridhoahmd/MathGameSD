@@ -7,6 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Data User (Pemain)
 model User {
   id            Int      @id @default(autoincrement())
   firebaseUid   String?  @unique
@@ -14,10 +15,10 @@ model User {
   role          String   @default("siswa")
   coins         Int      @default(0)
   totalScore    Int      @default(0)
-  xp            Int      @default(0)
-  level         Int      @default(0)
+  xp            Int      @default(0) // Poin pengalaman
+  level         Int      @default(0) // Level pemain
   photoURL      String?
-  inventory     Json     @default("[\"default\"]")
+  inventory     Json     @default("[\"default\"]") // Barang yang dimiliki
   activeTheme   String   @default("default")
   equippedFrame String   @default("default")
   equippedBadge String?
@@ -27,14 +28,16 @@ model User {
 }
 
 
+// Data Game
 model Game {
   id          Int     @id @default(autoincrement())
-  slug        String  @unique
+  slug        String  @unique // ID unik game (misal: math, zuma)
   title       String
   description String?
   scores      Score[]
 }
 
+// Riwayat Skor
 model Score {
   id       Int      @id @default(autoincrement())
   score    Int
@@ -45,6 +48,7 @@ model Score {
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// Bank Soal
 model GameQuestion {
   id        Int      @id @default(autoincrement())
   category  String

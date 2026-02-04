@@ -1,4 +1,4 @@
-/* GLOBAL SETTINGS */
+/* PENGATURAN GLOBAL */
 body {
   margin: 0;
   padding: 0;
@@ -51,15 +51,17 @@ body {
   border: 2px solid #e17055;
 }
 
-/* CONTAINER (MESIN KASIR) */
+/* KONTAINER (MESIN KASIR) */
 .game-container {
   width: 90%;
-  max-width: 450px; /* Lebih ramping seperti struk */
+  max-width: 450px; /* Lebih ramping kayak struk */
   max-height: 90vh;
   background: #0984e3; /* Warna Mesin Biru */
   border-radius: 30px;
   padding: 20px;
-  box-shadow: 0 15px 0 #074f85, 0 25px 30px rgba(0, 0, 0, 0.3); /* Efek 3D Tebal */
+  box-shadow:
+    0 15px 0 #074f85,
+    0 25px 30px rgba(0, 0, 0, 0.3); /* Efek 3D Tebal */
   text-align: center;
   position: relative;
   overflow-y: auto;
@@ -279,7 +281,7 @@ body {
   color: #d63031;
 }
 
-/* RESULT */
+/* HASIL */
 .final-score-box {
   margin: 20px 0;
   padding: 20px;

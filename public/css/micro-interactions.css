@@ -1,11 +1,11 @@
 /* ========================================
-   MICRO-INTERACTIONS
-   Button Effects, Hover States, Ripples, Bounces
+   MIKRO-INTERAKSI
+   Efek Tombol, Hover, Riak (Ripple), Mantul
    ======================================== */
 
-/* === ENHANCED BUTTON INTERACTIONS === */
+/* === INTERAKSI TOMBOL === */
 
-/* Base Button Enhancement */
+/* Peningkatan Dasar Tombol */
 button,
 .btn,
 .btn-menu,
@@ -19,7 +19,7 @@ button,
   transform: translateY(0);
 }
 
-/* Hover Scale */
+/* Skala Hover */
 button:hover:not(:disabled),
 .btn:hover:not(:disabled),
 .btn-menu:hover,
@@ -33,7 +33,7 @@ button:active:not(:disabled),
   transform: translateY(0) scale(0.98);
 }
 
-/* === RIPPLE EFFECT === */
+/* === EFEK RIAK (RIPPLE) === */
 .ripple {
   position: relative;
   overflow: hidden;
@@ -64,7 +64,7 @@ button:active:not(:disabled),
   transition: 0s;
 }
 
-/* === GLO W EFFECT ON HOVER === */
+/* === EFEK GLOW SAAT HOVER === */
 .glow-on-hover {
   transition: all var(--duration-normal) var(--ease-smooth);
 }
@@ -77,7 +77,7 @@ button:active:not(:disabled),
   transform: scale(1.02);
 }
 
-/* === BOUNCE ANIMATION === */
+/* === ANIMASI MANTUL (BOUNCE) === */
 .bounce-on-hover:hover {
   animation: bounce 0.6s var(--ease-bounce);
 }
@@ -98,7 +98,7 @@ button:active:not(:disabled),
   }
 }
 
-/* === SHAKE ANIMATION (for errors) === */
+/* === ANIMASI GOYANG (SHAKE - buat error) === */
 @keyframes shake {
   0%,
   100% {
@@ -141,7 +141,7 @@ button:active:not(:disabled),
   animation: wobble 0.5s var(--ease-smooth);
 }
 
-/* === HEARTBEAT PULSE === */
+/* === DENYUT JANTUNG (HEARTBEAT) === */
 @keyframes heartbeat {
   0%,
   100% {
@@ -161,7 +161,7 @@ button:active:not(:disabled),
   animation: heartbeat 0.8s var(--ease-smooth);
 }
 
-/* === FLOAT ANIMATION === */
+/* === ANIMASI MELAYANG (FLOAT) === */
 @keyframes float {
   0%,
   100% {
@@ -176,7 +176,7 @@ button:active:not(:disabled),
   animation: float 2s ease-in-out infinite;
 }
 
-/* === CARD INTERACTIONS === */
+/* === INTERAKSI KARTU === */
 .game-card {
   transition: all var(--duration-normal) var(--ease-smooth);
   cursor: pointer;
@@ -198,9 +198,9 @@ button:active:not(:disabled),
   transform: translateY(-4px) scale(1);
 }
 
-/* === SCORE ANIMATIONS === */
+/* === ANIMASI SKOR === */
 
-/* Score Pop */
+/* Skor Muncul (Pop) */
 @keyframes scorePop {
   0% {
     transform: scale(1);
@@ -217,7 +217,7 @@ button:active:not(:disabled),
   animation: scorePop 0.3s var(--ease-bounce);
 }
 
-/* Score Increment Feedback */
+/* Feedback Skor Nambah */
 .score-increment {
   position: absolute;
   font-size: var(--font-lg);
@@ -244,7 +244,7 @@ button:active:not(:disabled),
   }
 }
 
-/* === ICON ANIMATIONS === */
+/* === ANIMASI IKON === */
 .icon-spin {
   display: inline-block;
   transition: transform var(--duration-normal) var(--ease-smooth);
@@ -254,7 +254,7 @@ button:active:not(:disabled),
   transform: rotate(360deg);
 }
 
-/* === BUTTON GROUP WAVE EFFECT === */
+/* === EFEK GELOMBANG GRUP TOMBOL === */
 .btn-group {
   display: flex;
   gap: var(--space-sm);
@@ -287,7 +287,7 @@ button:active:not(:disabled),
   }
 }
 
-/* === TOOLTIP ANIMATIONS === */
+/* === ANIMASI TOOLTIP === */
 .tooltip {
   position: absolute;
   background: rgba(0, 0, 0, 0.9);
@@ -308,7 +308,7 @@ button:active:not(:disabled),
   transform: translateY(0);
 }
 
-/* === LOADING DOTS ANIMATION === */
+/* === ANIMASI TITIK MENGETIK === */
 .typing-indicator {
   display: inline-flex;
   gap: 4px;
@@ -348,7 +348,7 @@ button:active:not(:disabled),
   }
 }
 
-/* === BADGE ANIMATIONS === */
+/* === ANIMASI BADGE === */
 .badge-unlock {
   animation: badgeUnlock 0.8s var(--ease-bounce);
 }
@@ -367,7 +367,7 @@ button:active:not(:disabled),
   }
 }
 
-/* === STAR RATING ANIMATION === */
+/* === ANIMASI BINTANG RATING === */
 .star {
   display: inline-block;
   transition: transform var(--duration-fast) var(--ease-bounce);
@@ -394,7 +394,7 @@ button:active:not(:disabled),
   }
 }
 
-/* === NOTIFICATION BADGE PULSE === */
+/* === DENYUT BADGE NOTIFIKASI === */
 .notification-badge {
   position: absolute;
   top: -5px;
@@ -424,7 +424,7 @@ button:active:not(:disabled),
   }
 }
 
-/* === SUCCESS/ERROR FEEDBACK === */
+/* === FEEDBACK SUKSES/ERROR === */
 .success-pulse {
   animation: successPulse 0.5s var(--ease-smooth);
 }
@@ -451,7 +451,7 @@ button:active:not(:disabled),
   }
 }
 
-/* === SLIDE IN ANIMATIONS === */
+/* === ANIMASI SLIDE IN === */
 .slide-in-left {
   animation: slideInLeft 0.4s var(--ease-smooth);
 }
@@ -512,7 +512,7 @@ button:active:not(:disabled),
   }
 }
 
-/* === ZOOM ANIMATIONS === */
+/* === ANIMASI ZOOM === */
 .zoom-in {
   animation: zoomIn 0.3s var(--ease-smooth);
 }
@@ -543,7 +543,7 @@ button:active:not(:disabled),
   }
 }
 
-/* === FLIP ANIMATION === */
+/* === ANIMASI BALIK (FLIP) === */
 .flip {
   animation: flip 0.6s var(--ease-smooth);
 }

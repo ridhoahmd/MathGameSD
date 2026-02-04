@@ -2,7 +2,7 @@ const AudioManager = {
   ctx: null,
   isMuted: false,
 
-  //inisialisasi
+  // Siapin Audio Context
   getContext: function () {
     if (!this.ctx) {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -17,7 +17,7 @@ const AudioManager = {
     }
   },
 
-  // 1.suaro klik
+  // 1. Bunyi klik tombol
   playClick: function () {
     if (this.isMuted) return;
     const ctx = this.getContext();
@@ -40,7 +40,7 @@ const AudioManager = {
     osc.stop(ctx.currentTime + 0.1);
   },
 
-  // 2suara kalo bener
+  // 2. Bunyi kalo jawab bener
   playCorrect: function () {
     if (this.isMuted) return;
     const ctx = this.getContext();
@@ -65,7 +65,7 @@ const AudioManager = {
     osc.stop(now + 0.5);
   },
 
-  // 3suara klo salah
+  // 3. Bunyi kalo jawab salah
   playWrong: function () {
     if (this.isMuted) return;
     const ctx = this.getContext();
@@ -89,7 +89,7 @@ const AudioManager = {
     osc.stop(now + 0.3);
   },
 
-  // 4.surara menang/selesai
+  // 4. Bunyi menang/selesai game
   playWin: function () {
     if (this.isMuted) return;
     this.init();
@@ -99,7 +99,7 @@ const AudioManager = {
     this.playTone(783.99, 0.3, 0.4);
   },
 
-  // Helper untuk nada kustom
+  // Fungsi bantu buat mainin nada
   playTone: function (freq, delay, duration) {
     const ctx = this.getContext();
     const osc = ctx.createOscillator();
@@ -115,25 +115,25 @@ const AudioManager = {
     osc.stop(ctx.currentTime + delay + duration);
   },
 
-  // Toggle Mute
+  // Toggle Mute (Mati/Nyalain suara)
   toggleMute: function () {
     this.isMuted = !this.isMuted;
     return this.isMuted;
   },
 };
 
-// 🔧 FIX: Safe wrapper functions untuk consistent error handling
+// Fungsi aman biar ga error kalo audio manager belom keload
 window.safePlaySound = function (soundType) {
   try {
     if (typeof AudioManager !== "undefined" && AudioManager[soundType]) {
       AudioManager[soundType]();
     }
   } catch (e) {
-    console.warn(`Audio playback failed for ${soundType}:`, e.message);
+    console.warn(`Gagal play audio ${soundType}:`, e.message);
   }
 };
 
-// Convenience shortcuts
+// Shortcut biar gampang manggilnya
 window.safePlayClick = () => safePlaySound("playClick");
 window.safePlayCorrect = () => safePlaySound("playCorrect");
 window.safePlayWrong = () => safePlaySound("playWrong");

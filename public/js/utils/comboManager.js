@@ -3,7 +3,7 @@ const ComboManager = {
   maxStreak: 0,
   comboContainer: null,
 
-  // Audio notes untuk progression (C Major Scale)
+  // Audio notes (C Major Scale)
   tones: [261.63, 293.66, 329.63, 349.23, 392.0, 440.0, 493.88, 523.25],
 
   init: function () {
@@ -28,10 +28,10 @@ const ComboManager = {
   addStreak: function () {
     this.currentStreak++;
 
-    // Play sound effect with raising pitch
+    // Mainkan suara nada naik
     this.playComboSound();
 
-    // Show visual effect
+    // Tampilkan efek visual
     this.showComboVisual();
 
     return this.calculateBonus();

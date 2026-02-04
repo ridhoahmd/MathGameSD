@@ -1,7 +1,7 @@
 const socket = io();
 const username = localStorage.getItem("playerName");
 
-// --- DAFTAR ITEM FRAMES ---
+// Daftar bingkai
 const frameItems = [
   {
     id: "default",
@@ -40,7 +40,7 @@ const frameItems = [
   },
 ];
 
-// --- DAFTAR ITEM BADGES ---
+// Daftar lencana
 const badgeItems = [
   {
     id: "badge_math",
@@ -72,11 +72,11 @@ const badgeItems = [
   },
 ];
 
-// Current active tab
+// Tab aktif
 let activeTab = "frame";
 let serverData = null;
 
-// 1. MINTA DATA SAAT LOAD
+// 1. Ambil data pas loading
 document.addEventListener("DOMContentLoaded", () => {
   if (!username) {
     if (typeof Swal !== "undefined") {
@@ -95,21 +95,21 @@ document.addEventListener("DOMContentLoaded", () => {
   socket.emit("mintaInventory", username);
 });
 
-// 2. TERIMA DATA DARI SERVER
+// 2. Data masuk dari server
 socket.on("dataInventory", (data) => {
   console.log("📦 Data Diterima:", data);
   serverData = data;
 
-  // A. Update Koin
+  // A. Update koin
   const coinEl = document.getElementById("user-coins");
   if (coinEl) coinEl.innerText = (data.koin || 0).toLocaleString();
 
-  // B. Render Tabs and Shop
+  // B. Tampilkan toko
   renderTabs();
   renderShop();
 });
 
-// 3. RENDER TABS
+// 3. Tampilkan Tab
 function renderTabs() {
   const tabContainer = document.getElementById("shop-tabs");
   if (!tabContainer) return;
@@ -124,14 +124,14 @@ function renderTabs() {
   `;
 }
 
-// Switch tab function
+// Ganti tab
 window.switchTab = function (tab) {
   activeTab = tab;
   renderTabs();
   renderShop();
 };
 
-// 4. FUNGSI RENDER TAMPILAN
+// 4. Tampilkan barang
 function renderShop() {
   const container = document.getElementById("shop-container");
   const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
@@ -142,11 +142,11 @@ function renderShop() {
   const items = activeTab === "frame" ? frameItems : badgeItems;
 
   items.forEach((item) => {
-    // Cek inventory user dari data server
+    // Cek inventory
     const inventory = serverData.owned || ["default"];
     const isOwned = inventory.includes(item.id) || item.id === "default";
 
-    // Cek apakah sedang dipakai (Frame atau Badge)
+    // Cek apa lagi dipake
     let isEquipped = false;
     if (item.type === "frame") {
       isEquipped = serverData.activeFrame === item.id;
@@ -158,7 +158,7 @@ function renderShop() {
 
     let btnHtml = "";
 
-    // LOGIKA TOMBOL
+    // Logika tombol
     if (isEquipped) {
       btnHtml = `<button class="btn-equipped" disabled>SEDANG DIPAKAI</button>`;
     } else if (isOwned) {
@@ -170,7 +170,7 @@ function renderShop() {
       btnHtml = `<button class="btn-poor" disabled>Kurang ${kurang}</button>`;
     }
 
-    // HTML CARD - Different for frames vs badges
+    // HTML Kartu
     let cardHtml = "";
     if (item.type === "frame") {
       cardHtml = `
@@ -188,7 +188,7 @@ function renderShop() {
         </div>
       `;
     } else {
-      // Badge card
+      // Kartu Badge
       cardHtml = `
         <div class="shop-card badge-card">
           <div class="badge-preview">
@@ -209,9 +209,9 @@ function renderShop() {
   });
 }
 
-// 5. GLOBAL FUNCTIONS (AKSI TOMBOL)
+// 5. Fungsi Tombol
 
-// --- A. BELI ITEM ---
+// Belanja item
 window.buyItem = function (itemId, price) {
   if (typeof Swal === "undefined") {
     if (confirm(`Yakin beli ${itemId} seharga ${price} koin?`)) {
@@ -244,11 +244,11 @@ window.buyItem = function (itemId, price) {
   });
 };
 
-// --- B. PAKAI ITEM (EQUIP) ---
+// Pakai item
 window.equipItem = function (itemId, itemType) {
   let tipe = itemType || "frame";
 
-  // Auto-detect type if not provided
+  // Cek tipe otomatis
   if (!itemType) {
     if (itemId.startsWith("badge_")) {
       tipe = "badge";
@@ -267,7 +267,7 @@ window.equipItem = function (itemId, itemType) {
   });
 };
 
-// 6. RESPON SOCKET DARI SERVER
+// 6. Respon Server
 
 socket.on("transaksiSukses", (data) => {
   Swal.fire({

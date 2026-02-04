@@ -1,4 +1,4 @@
-/* MATH GAME SPECIFIC STYLES */
+/* GAYA KHUSUS MATH GAME */
 
 /* CONTAINER KACA */
 .container {
@@ -11,7 +11,7 @@
   max-height: 90vh;
   overflow-y: auto;
   margin: 80px auto 20px;
-  /* Jarak dari atas agar tidak tertutup header jika ada */
+  /* Jarak atas biar ga ketutup */
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
   border: 1px solid var(--border-neon);
   -webkit-backdrop-filter: blur(10px);
@@ -45,7 +45,7 @@ h1 {
   font-size: 1.8rem;
 }
 
-/* INPUT FIELD */
+/* INPUT TEXT */
 input {
   padding: 15px;
   width: 100%;
@@ -98,7 +98,7 @@ input:focus {
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
-/* SKOR BOX */
+/* BOX SKOR */
 .score-box {
   display: flex;
   justify-content: space-between;
@@ -155,7 +155,7 @@ input:focus {
   box-shadow: 0 0 10px var(--shadow-neon);
 }
 
-/* GAME OVER SCREEN */
+/* LAYAR GAME OVER */
 #game-over-screen {
   position: fixed;
   top: 0;
@@ -206,8 +206,6 @@ input:focus {
 }
 
 .btn-restart {
-  /* btn-action styles duplicated manually below */
-  /* Pseudo-code concept, manually applied below */
   padding: 12px 30px;
   width: 100%;
   border-radius: 50px;

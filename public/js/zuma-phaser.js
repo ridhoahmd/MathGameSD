@@ -1,5 +1,5 @@
 /**
- * ZUMA PHASER - REFACTORED & ENHANCED
+ * ZUMA PHASER - VERSI KEREN
  * -----------------------------------
  * Fitur:
  * - Grafik Bola 3D Procedural (tanpa aset gambar eksternal)
@@ -8,7 +8,7 @@
  * - Efek Partikel & Visual Modern
  */
 
-// === KONFIGURASI GLOBAL ===
+// Config Phaser
 const GAME_CONFIG = {
   width: 800,
   height: 600,
@@ -23,7 +23,7 @@ const GAME_CONFIG = {
   },
 };
 
-// === VARIABEL GLOBAL (State Management) ===
+// Variabel Global
 let socket = window.socket || null;
 let playerName = localStorage.getItem("playerName") || "Guest";
 let currentLevel = 1;
@@ -35,24 +35,22 @@ let levelConfig = {
   pola: "spiral",
 };
 
-/* =========================================
-   SCENE UTAMA: ZUMA GAMEPLAY
-   ========================================= */
+// SCENE ZUMA
 class ZumaScene extends Phaser.Scene {
   constructor() {
     super({ key: "ZumaScene" });
   }
 
-  // --- 1. INITIALIZATION ---
+  // 1. Inisialisasi
   init(data) {
-    // FIX: Score Accumulation (Use passed score or 0)
+    // Ambil skor sebelumnya
     this.score = data.score || 0;
     this.spawnedCount = 0;
     this.isGameOver = false;
     this.levelData = data.levelData || {};
     this.difficulty = data.difficulty || "mudah";
 
-    // Setup Level Params based on Difficulty (Global selectedDifficulty)
+    // Setup kesulitan
     // Fallback to data.difficulty if provided, else use global
     this.difficulty = data.difficulty || selectedDifficulty || "mudah";
 
@@ -77,7 +75,7 @@ class ZumaScene extends Phaser.Scene {
         targetDelay = 1500;
     }
 
-    // Override if Level Data says "cepat" (Legacy check)
+    // Mode cepat
     const isFast = (this.levelData.speed || "").toLowerCase() === "cepat";
     if (isFast) {
       targetSpeed = 1.5;
@@ -88,13 +86,13 @@ class ZumaScene extends Phaser.Scene {
     this.spawnDelay = targetDelay;
     this.maxEnemies = 15 + currentLevel * 5;
 
-    // Player State
+    // Status Player
     this.playerAmmo = Math.floor(Math.random() * 9) + 1;
     this.canShoot = true;
 
-    // DEBUG: DOM Level Listener
+    // Debug Mouse
     document.addEventListener("mousemove", (e) => {
-      // Update debug text directly if scene is running
+      // Update teks debug
       if (this.debugText) {
         this.debugText.setText(
           `DOM: ${e.clientX},${e.clientY} | Phaser: Check...`,
@@ -107,35 +105,35 @@ class ZumaScene extends Phaser.Scene {
     });
   }
 
-  // --- 2. PRELOAD (Generate Aset) ---
+  // 2. Preload
   preload() {
-    // Kita buat tekstur secara procedural di create() agar tidak perlu file eksternal
-    // Load Audio jika ada
+    // Bikin tekstur sendiri biar ringan
+    // Load suara
     this.load.audio("shoot", "/explosion.mp3");
   }
 
-  // --- 3. CREATE (Setup Game Objects) ---
+  // 3. Create
   create() {
     console.log("🔥 Phaser START CREATE");
     try {
-      // A. SETUP GRAFIS 3D (Procedural Textures)
+      // A. Bikin Grafik 3D
       this.generateTextures();
 
-      // B. WORLD SETUP
+      // B. Bikin Jalur
       this.createPath(this.levelData.pola || "spiral");
 
-      // C. GROUPS
+      // C. Grup Fisika
       this.marbles = this.physics.add.group();
       this.bullets = this.physics.add.group();
 
-      // D. PLAYER (TURRET)
+      // D. Penembak
       this.createTurret();
       if (this.turret) {
         this.turretInputReady = true;
         this.targetRotation = -Math.PI / 2; // Default facing up
       }
 
-      // E. INPUT HANDLERS (PHASER)
+      // E. Input Mouse/Touch
       this.input.mouse.disableContextMenu();
       this.input.on("pointermove", (pointer) => {
         this.handleInputMove(pointer.x, pointer.y);
@@ -144,14 +142,14 @@ class ZumaScene extends Phaser.Scene {
         this.handleInputClick(pointer.x, pointer.y);
       });
 
-      // E2. GLOBAL FALLBACK INPUT (DOM LEVEL)
+      // E2. Input Cadangan
       this.inputFallbackMove = (e) => {
         if (this.isGameOver || !this.turret) return;
         const canvas = this.game.canvas;
         if (!canvas) return;
         const rect = canvas.getBoundingClientRect();
 
-        // Scaling factor (Canvas size vs Display size)
+        // Ukuran layar
         const scaleX = this.game.config.width / rect.width;
         const scaleY = this.game.config.height / rect.height;
 
@@ -176,7 +174,7 @@ class ZumaScene extends Phaser.Scene {
       document.addEventListener("mousemove", this.inputFallbackMove);
       document.addEventListener("mousedown", this.inputFallbackClick);
 
-      // Cleanup saat shutdown
+      // Bersihin event
       this.events.on("shutdown", () => {
         document.removeEventListener("mousemove", this.inputFallbackMove);
         document.removeEventListener("mousedown", this.inputFallbackClick);
@@ -184,12 +182,12 @@ class ZumaScene extends Phaser.Scene {
 
       this.input.keyboard.on("keydown-SPACE", () => this.swapAmmo());
 
-      // --- LOGIC INPUT CORE ---
+      // --- Logika Input ---
       this.handleInputMove = function (x, y) {
         if (this.isGameOver || !this.turret) return;
-        // DEBUG TEXT REMOVED
+        // Hapus debug
 
-        // Calculate target angle but DO NOT set rotation immediately
+        // Hitung sudut putar
         this.targetRotation = Phaser.Math.Angle.Between(
           this.turret.x,
           this.turret.y,
@@ -209,7 +207,7 @@ class ZumaScene extends Phaser.Scene {
         }
       };
 
-      // F. COLLIDERS
+      // F. Tabrakan
       this.physics.add.overlap(
         this.bullets,
         this.marbles,
@@ -218,7 +216,7 @@ class ZumaScene extends Phaser.Scene {
         this,
       );
 
-      // G. SPAWNER TIMER
+      // G. Timer Muncul Bola
       this.time.addEvent({
         delay: this.spawnDelay,
         callback: this.spawnMarble,
@@ -226,10 +224,10 @@ class ZumaScene extends Phaser.Scene {
         loop: true,
       });
 
-      // H. UI UPDATE
+      // H. Update UI
       this.updateUI();
 
-      // SFX
+      // Suara
       try {
         this.sound.play("shoot", { volume: 0 }); // Pre-warm audio
       } catch (e) {}
@@ -241,11 +239,11 @@ class ZumaScene extends Phaser.Scene {
     }
   }
 
-  // --- 4. UPDATE LOOP ---
+  // 4. Update Loop
   update(time, delta) {
     if (this.isGameOver) return;
 
-    // --- SMOOTH ROTATION LOGIC ---
+    // --- Rotasi Mulus ---
     if (this.turret && this.targetRotation !== undefined) {
       const currentRotation = this.turret.rotation;
       this.turret.rotation = Phaser.Math.Angle.RotateTo(
@@ -254,13 +252,13 @@ class ZumaScene extends Phaser.Scene {
         0.01 * delta,
       );
 
-      // Counter-rotation Logic (Fix agar angka & bola TIDAK TEBALIK)
-      // Kita lawan rotasi container agar isi-nya tetap tegak lurus
+      // Putar balik biar ga kebalik
+      // Biar tegak lurus
       if (this.ammoText) this.ammoText.setRotation(-this.turret.rotation);
       if (this.ammoVisual) this.ammoVisual.setRotation(-this.turret.rotation);
     }
 
-    // Gerakkan Kelereng ... (Existing logic)
+    // Gerakin Kelereng
     this.marbles.getChildren().forEach((marble) => {
       // ... (Existing marble update)
       if (marble.active) {
@@ -281,7 +279,7 @@ class ZumaScene extends Phaser.Scene {
       }
     });
 
-    // Cleanup Bullets
+    // Hapus peluru
     this.bullets.getChildren().forEach((bullet) => {
       // ... (Existing bullet update)
       if (
@@ -295,7 +293,7 @@ class ZumaScene extends Phaser.Scene {
       }
     });
 
-    // Cek Level Complete
+    // Cek Level Selesai
     if (
       this.spawnedCount >= this.maxEnemies &&
       this.marbles.countActive() === 0
@@ -528,7 +526,7 @@ class ZumaScene extends Phaser.Scene {
     this.pathCurve.draw(this.pathGraphics, 64);
   }
 
-  // 3. SPAWNER
+  // 3. Munculin Bola (Spawner)
   spawnMarble() {
     if (this.spawnedCount >= this.maxEnemies || this.isGameOver) return;
 
@@ -577,26 +575,26 @@ class ZumaScene extends Phaser.Scene {
     this.updateUI();
   }
 
-  // 4. TURRET & SHOOTING
+  // 4. Penembak & Peluru
   createTurret() {
     this.turret = this.add.container(400, 550);
     this.turret.setDepth(100);
 
-    // 1. Barrel (Laras)
+    // 1. Laras (Barrel)
     const barrel = this.add.rectangle(20, 0, 60, 24, 0x444444);
     barrel.setStrokeStyle(2, 0x00f2ff);
     this.turret.add(barrel);
 
-    // 2. Body (Bulatan)
+    // 2. Badan (Body)
     const body = this.add.circle(0, 0, 35, 0x222222);
     body.setStrokeStyle(4, 0x00f2ff);
     this.turret.add(body);
 
-    // 3. Ammo Visual (Bola current)
+    // 3. Visual Peluru Aktif
     this.ammoVisual = this.add.sprite(0, 0, "marble_red").setScale(1.2);
     this.turret.add(this.ammoVisual);
 
-    // 4. Ammo Text
+    // 4. Teks Peluru
     this.ammoText = this.add
       .text(0, 0, "5", {
         fontSize: "32px",
@@ -632,9 +630,9 @@ class ZumaScene extends Phaser.Scene {
 
   shootBullet(pointer) {
     if (!this.canShoot) return;
-    this.canShoot = false; // Prevent spam
+    this.canShoot = false; // Jangan spam
 
-    // Fallback coordinate extraction
+    // Ambil koordinat target
     const targetX = pointer.x || 0;
     const targetY = pointer.y || 0;
 
@@ -659,10 +657,10 @@ class ZumaScene extends Phaser.Scene {
     bullet.value = this.playerAmmo;
 
     const angle = this.turret.rotation;
-    const vec = this.physics.velocityFromRotation(angle, 600); // Speed 600
+    const vec = this.physics.velocityFromRotation(angle, 600); // Kecepatan 600
     bullet.setVelocity(vec.x, vec.y);
 
-    // Add text to bullet
+    // Teks di peluru
     const txt = this.add
       .text(this.turret.x, this.turret.y, this.playerAmmo.toString(), {
         fontSize: "12px",
@@ -672,23 +670,23 @@ class ZumaScene extends Phaser.Scene {
       .setOrigin(0.5);
     bullet.textObject = txt;
 
-    // Sfx
+    // Suara
     try {
       this.sound.play("shoot");
     } catch (e) {}
 
-    // AUTO RELOAD logic (200ms delay)
+    // Reload otomatis (200ms)
     this.time.delayedCall(200, () => {
       this.randomizeAmmo();
-      this.canShoot = true; // Enable shoot again
+      this.canShoot = true; // Bisa tembak lagi
     });
   }
 
   randomizeAmmo() {
-    // Pick random ammo
+    // Pilih peluru acak
     const activeMarbles = this.marbles.getChildren().filter((m) => m.active);
 
-    // Prioritize existing colors (90% chance)
+    // Prioritaskan warna yang ada (90%)
     if (activeMarbles.length > 0 && Math.random() < 0.9) {
       const target =
         activeMarbles[Phaser.Math.Between(0, activeMarbles.length - 1)];
@@ -698,7 +696,7 @@ class ZumaScene extends Phaser.Scene {
     }
     this.updateAmmoVisual();
 
-    // Animation pop
+    // Animasi muncul
     this.tweens.add({
       targets: this.ammoVisual,
       scale: { from: 0.1, to: 1.2 },
@@ -714,7 +712,7 @@ class ZumaScene extends Phaser.Scene {
   handleCollision(bullet, marble) {
     if (!bullet.active || !marble.active) return;
 
-    // Cek Hit
+    // Cek Kena
     if (bullet.value === marble.value) {
       // HIT BENAR
       this.score += 10;
@@ -754,7 +752,7 @@ class ZumaScene extends Phaser.Scene {
   }
 
   createExplosion(x, y, colorKey) {
-    // Simple particle burst
+    // Efek ledakan simpel
     const p = this.add.particles(0, 0, `marble_${colorKey}`, {
       x: x,
       y: y,
@@ -767,7 +765,7 @@ class ZumaScene extends Phaser.Scene {
   }
 
   updateUI() {
-    // Update DOM elements via JS
+    // Update elemen DOM
     const scoreEl = document.getElementById("score");
     const targetEl = document.getElementById("target-count");
 
@@ -785,9 +783,7 @@ class ZumaScene extends Phaser.Scene {
     // Tampilkan Layar Game Over UI
     const goScreen = document.getElementById("game-over-screen");
     const finalScore = document.getElementById("final-score");
-    const goTitle = goScreen.querySelector("h2"); // Assuming h1 or h2
-
-    // Correct selector if h2 not found
+    // Cari judul h1 atau h2
     const actualTitle =
       goScreen.querySelector("h1") || goScreen.querySelector("h2");
 
@@ -812,11 +808,11 @@ class ZumaScene extends Phaser.Scene {
     // Setup Tombol Main Lagi / Lanjut
     const btnRestart = document.querySelector(".btn-restart");
     if (btnRestart) {
-      // Clear old event listeners by cloning
+      // Hapus listener lama dengan clone
       const newBtn = btnRestart.cloneNode(true);
       btnRestart.parentNode.replaceChild(newBtn, btnRestart);
 
-      // Remove onclick attribute that might cause reference errors if not handled
+      // Hapus onclick biar gak error
       newBtn.removeAttribute("onclick");
 
       if (isWin) {
@@ -838,24 +834,24 @@ class ZumaScene extends Phaser.Scene {
     }
   }
 
-  // --- NEW METHODS FOR LEVELING ---
+  // --- Metode Baru buat Leveling ---
   retryLevel() {
-    // Hide UI
+    // Sembunyiin UI
     document.getElementById("game-over-screen").style.display = "none";
-    // Restart scene with SAME level data, pass accumulated score
+    // Restart scene dengan data level SAMA
     this.scene.restart({ levelData: this.levelData, score: this.score });
   }
 
   advanceLevel() {
-    // Hide UI
+    // Sembunyiin UI
     document.getElementById("game-over-screen").style.display = "none";
 
-    // Increment global level
+    // Naik global level
     currentLevel++;
 
-    console.log("Requesting Next Level:", currentLevel);
+    console.log("Minta Level Baru:", currentLevel);
 
-    // Request New Data (AI)
+    // Minta Data Baru (AI)
     if (socket) {
       socket.emit("mintaSoalAI", {
         kategori: "zuma",
@@ -863,36 +859,26 @@ class ZumaScene extends Phaser.Scene {
       });
 
       socket.once("soalDariAI", (data) => {
-        console.log("Next Level Data:", data);
+        console.log("Data Level Baru:", data);
         this.scene.restart({ levelData: data.data, score: this.score });
       });
     } else {
-      // Offline Fallback
+      // Fallback Offline
       this.scene.restart({ levelData: this.levelData, score: this.score });
     }
   }
-
-  levelComplete() {
-    this.isGameOver = true;
-    alert(`LEVEL ${currentLevel} SELESAI!`);
-    currentLevel++;
-    // Reload scene dengan difficulty baru
-    this.scene.restart({ levelData: this.levelData }); // Harusnya fetch level baru
-    // Di versi ini kita simple reload page atau request baru
-  }
 }
 
-// === GLOBAL HELPERS ===
+// === FUNGSI GLOBAL ===
 window.restartZuma = function () {
-  // Wrapper for restart button
+  // Wrapper tombol restart
   const game = currentGameInstance;
   if (!game) {
     location.reload();
     return;
   }
 
-  // Check context (Win vs Lose)
-  // We can just trigger the active scene's restart logic
+  // Cek scene aktif
   const scene = game.scene.getScene("ZumaScene");
   if (scene) {
     scene.retryLevel();
@@ -913,7 +899,7 @@ let currentGameInstance = null;
 
 function initGame() {
   if (currentGameInstance) {
-    console.warn("⚠️ Game instance already exists! Destroying old instance...");
+    console.warn("⚠️ Game udah ada! Hancurkan yang lama...");
     currentGameInstance.destroy(true);
     currentGameInstance = null;
   }
@@ -927,39 +913,38 @@ function initGame() {
 document.addEventListener("DOMContentLoaded", () => {
   // Tombol Start
   window.startGameMultiplayer = () => {
-    // Prevent double clicks
+    // Cegah klik ganda
     const btn = document.querySelector(".btn-start");
     if (btn) btn.disabled = true;
 
     const nameInput = document.getElementById("username");
     if (nameInput && nameInput.value) playerName = nameInput.value;
 
-    // Hide Login
+    // Sembunyiin Login
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("game-hud").style.display = "flex";
 
-    // Start Game
+    // Mulai Game
     const game = initGame(); // Start game immediately
 
-    // Request Data Level
+    // Minta Data Level
     if (socket) {
       socket.emit("mintaSoalAI", {
         kategori: "zuma",
         tingkat: selectedDifficulty,
       });
 
-      // Clean previous listeners to avoid dupes
+      // Bersihin listener lama
       socket.off("soalDariAI");
 
       socket.once("soalDariAI", (data) => {
         // Pass data ke scene
-        // Wait for scene to be ready
+        // Tunggu scene siap
         setTimeout(() => {
           const scene = game.scene.getScene("ZumaScene");
           if (scene) {
-            console.log("📥 Level Data Received", data);
-            // Instead of full restart, just update data if possible, or restart if needed.
-            // For now, restart is safer to apply params.
+            console.log("📥 Data Level Masuk", data);
+            // Restart buat apply param
             scene.scene.restart({ levelData: data.data });
           }
         }, 500);
@@ -967,30 +952,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 });
-
-// === GLOBAL HELPERS ===
-window.restartZuma = function () {
-  console.log("🔄 Restarting Level...");
-  const game = currentGameInstance;
-  if (!game) {
-    location.reload();
-    return;
-  }
-  const scene = game.scene.getScene("ZumaScene");
-  if (scene) {
-    scene.retryLevel();
-  } else {
-    location.reload();
-  }
-};
-
-window.nextLevelZuma = function () {
-  console.log("⏩ Advancing to Next Level...");
-  const game = currentGameInstance;
-  if (!game) return;
-  const scene = game.scene.getScene("ZumaScene");
-  if (scene) scene.advanceLevel();
-};
 
 // Update Difficulty Button
 const btns = document.querySelectorAll(".btn-difficulty");

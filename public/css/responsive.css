@@ -1,11 +1,11 @@
 /* ========================================
-   RESPONSIVE DESIGN
-   Mobile-First, Touch-Friendly, Fluid Typography
+   DESAIN RESPONSIF
+   Mobile-First, Ramah Sentuhan, Tipografi Cair
    ======================================== */
 
-/* === FLUID TYPOGRAPHY === */
+/* === TIPOGRAFI CAIR === */
 html {
-  /* Base font size: 14px on mobile, scales to 16px on desktop */
+  /* Ukuran font dasar: 14px di HP, naik jadi 16px di desktop */
   font-size: clamp(14px, 1.5vw, 16px);
 }
 
@@ -29,25 +29,25 @@ p {
   line-height: var(--leading-normal);
 }
 
-/* === MOBILE-FIRST BASE STYLES === */
+/* === GAYA DASAR MOBILE-FIRST === */
 
-/* Container - DON'T override dashboard-container from style.css */
+/* Kontainer - JANGAN timpa dashboard-container dari style.css */
 
-/* Sidebar - DON'T override, let style.css handle it */
+/* Sidebar - JANGAN timpa, biarkan style.css yang atur */
 
-/* Main Content - ONLY adjust padding, don't change flex */
+/* Konten Utama - CUMA atur padding, jangan ubah flex */
 .main-content {
   padding: var(--space-md);
 }
 
-/* Grid Games */
+/* Grid Game */
 .grid-games {
   display: grid;
-  grid-template-columns: 1fr; /* Single column on mobile */
+  grid-template-columns: 1fr; /* Satu kolom di HP */
   gap: var(--space-md);
 }
 
-/* Game Cards */
+/* Kartu Game */
 .game-card {
   padding: var(--space-lg);
   min-height: 120px;
@@ -67,7 +67,7 @@ p {
   font-size: var(--font-sm);
 }
 
-/* Buttons - Touch-Friendly */
+/* Tombol - Ramah Sentuhan */
 button,
 .btn,
 .btn-menu,
@@ -98,7 +98,7 @@ button,
   height: 40px;
 }
 
-/* Chat Container */
+/* Wadah Chat */
 #chat-container {
   width: 100%;
   max-width: 100%;
@@ -147,9 +147,9 @@ button,
   }
 }
 
-/* === TABLET LANDSCAPE / SMALL LAPTOP (768px+) === */
+/* === TABLET LANDSCAPE / LAPTOP KECIL (768px+) === */
 @media (min-width: 768px) {
-  /* DON'T override dashboard-container or sidebar - original CSS handles it well */
+  /* JANGAN timpa dashboard-container atau sidebar - CSS asli menangani dengan baik */
 
   .grid-games {
     grid-template-columns: repeat(2, 1fr);
@@ -181,24 +181,24 @@ button,
   }
 }
 
-/* === LARGE DESKTOP (1536px+) === */
+/* === DESKTOP BESAR (1536px+) === */
 @media (min-width: 1536px) {
   .grid-games {
     grid-template-columns: repeat(4, 1fr);
   }
 }
 
-/* === MOBILE LANDSCAPE === */
+/* === HP LANDSCAPE === */
 @media (max-height: 600px) and (orientation: landscape) {
-  /* Keep minimal adjustments only */
+  /* Penyesuaian minimal aja */
   #chat-container {
     height: 80vh;
   }
 }
 
-/* === TOUCH DEVICE OPTIMIZATIONS === */
+/* === OPTIMISASI PERANGKAT SENTUH === */
 @media (hover: none) and (pointer: coarse) {
-  /* Increase touch targets */
+  /* Perbesar target sentuh */
   button,
   .btn,
   a {
@@ -206,14 +206,14 @@ button,
     padding: var(--space-md) var(--space-lg);
   }
 
-  /* Remove hover effects on touch devices */
+  /* Hapus efek hover di layar sentuh */
   button:hover,
   .btn:hover,
   .game-card:hover {
     transform: none;
   }
 
-  /* Add active/tap states instead */
+  /* Tambah state aktif/tekan sebagai gantinya */
   button:active,
   .btn:active,
   .game-card:active {
@@ -221,14 +221,14 @@ button,
     opacity: 0.8;
   }
 
-  /* Larger tap areas for small elements */
+  /* Area tap lebih besar untuk elemen kecil */
   .close-btn,
   .icon-btn {
     padding: var(--space-md);
   }
 }
 
-/* === PRINT STYLES === */
+/* === GAYA CETAK (PRINT) === */
 @media print {
   .sidebar,
   .main-header,
@@ -249,15 +249,15 @@ button,
   }
 }
 
-/* === HIGH DPI SCREENS === */
+/* === LAYAR DPI TINGGI === */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  /* Sharper borders and shadows */
+  /* Border dan bayangan lebih tajam */
   .game-card {
     border-width: 0.5px;
   }
 }
 
-/* === LEADERBOARD RESPONSIVE === */
+/* === LEADERBOARD RESPONSIF === */
 .leaderboard-table {
   width: 100%;
   overflow-x: auto;
@@ -279,13 +279,13 @@ button,
     padding: var(--space-xs) var(--space-sm);
   }
 
-  /* Hide less important columns on mobile */
+  /* Sembunyikan kolom kurang penting di HP */
   .leaderboard-table .hide-on-small {
     display: none;
   }
 }
 
-/* === MODAL RESPONSIVE === */
+/* === MODAL RESPONSIF === */
 .modal {
   width: 95vw;
   max-width: 500px;
@@ -300,14 +300,14 @@ button,
   }
 }
 
-/* === FORM INPUTS RESPONSIVE === */
+/* === INPUT FORM RESPONSIF === */
 input[type="text"],
 input[type="password"],
 input[type="number"],
 select,
 textarea {
   min-height: var(--touch-target-min);
-  font-size: 16px; /* Prevents zoom on iOS */
+  font-size: 16px; /* Mencegah zoom di iOS */
   padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-md);
 }
@@ -322,7 +322,7 @@ textarea {
   }
 }
 
-/* === SAFE AREA INSETS (for notched devices) === */
+/* === SAFE AREA INSETS (buat HP berponi) === */
 @supports (padding: env(safe-area-inset-top)) {
   .main-header {
     padding-top: max(var(--space-md), env(safe-area-inset-top));
@@ -338,7 +338,7 @@ textarea {
   }
 }
 
-/* === GRID UTILITIES === */
+/* === UTILITAS GRID === */
 .grid-auto-fit {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -351,7 +351,7 @@ textarea {
   gap: var(--space-lg);
 }
 
-/* === FLEX UTILITIES === */
+/* === UTILITAS FLEX === */
 .flex-responsive {
   display: flex;
   flex-direction: column;
@@ -364,7 +364,7 @@ textarea {
   }
 }
 
-/* === ASPECT RATIO (for images/video) === */
+/* === RASIO ASPEK (untuk gambar/video) === */
 .aspect-16-9 {
   aspect-ratio: 16 / 9;
   overflow: hidden;
@@ -380,7 +380,7 @@ textarea {
   overflow: hidden;
 }
 
-/* === SCROLLBAR STYLING === */
+/* === STYLE SCROLLBAR === */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -400,7 +400,7 @@ textarea {
   background: rgba(0, 242, 255, 0.5);
 }
 
-/* For Firefox */
+/* Buat Firefox */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 242, 255, 0.3) rgba(255, 255, 255, 0.05);

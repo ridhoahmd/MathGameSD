@@ -1,6 +1,6 @@
 /**
- * Daily Streak System
- * Track consecutive login days and reward users
+ * Sistem Streak Harian
+ * Pantau login harian dan kasih hadiah
  */
 
 class DailyStreakSystem {
@@ -18,7 +18,7 @@ class DailyStreakSystem {
   }
 
   /**
-   * Load streak from localStorage
+   * Load streak lokal
    */
   loadStreak() {
     const data = localStorage.getItem("daily_streak");
@@ -29,7 +29,7 @@ class DailyStreakSystem {
   }
 
   /**
-   * Save streak to localStorage
+   * Simpan streak
    */
   saveStreak() {
     localStorage.setItem(
@@ -43,7 +43,7 @@ class DailyStreakSystem {
   }
 
   /**
-   * Check if dates are consecutive days
+   * Cek hari berurutan
    */
   isConsecutiveDay(date1, date2) {
     const d1 = new Date(date1);
@@ -60,7 +60,7 @@ class DailyStreakSystem {
   }
 
   /**
-   * Check if same day
+   * Cek hari sama
    */
   isSameDay(date1, date2) {
     const d1 = new Date(date1);
@@ -74,13 +74,13 @@ class DailyStreakSystem {
   }
 
   /**
-   * Check and update streak on login
+   * Cek streak pas login
    */
   checkAndUpdateStreak() {
     const today = new Date();
 
     if (!this.lastLogin) {
-      // First time login
+      // Login pertama
       this.currentStreak = 1;
       this.lastLogin = today.toISOString();
       this.longestStreak = 1;
@@ -92,12 +92,12 @@ class DailyStreakSystem {
     const lastLoginDate = new Date(this.lastLogin);
 
     if (this.isSameDay(today, lastLoginDate)) {
-      // Already logged in today
+      // Udah login hari ini
       return false;
     }
 
     if (this.isConsecutiveDay(lastLoginDate, today)) {
-      // Consecutive day - increment streak!
+      // Hari berurutan - tambah streak!
       this.currentStreak++;
       this.lastLogin = today.toISOString();
 
@@ -115,7 +115,7 @@ class DailyStreakSystem {
 
       return true;
     } else {
-      // Streak broken!
+      // Streak putus!
       const oldStreak = this.currentStreak;
       this.currentStreak = 1;
       this.lastLogin = today.toISOString();
@@ -145,7 +145,7 @@ class DailyStreakSystem {
   }
 
   /**
-   * Show streak notification
+   * Notif streak
    */
   showStreakNotification(streak, isFirst = false) {
     const messages = {
@@ -165,7 +165,7 @@ class DailyStreakSystem {
   }
 
   /**
-   * Show streak broken notification
+   * Notif streak putus
    */
   showStreakBrokenNotification(oldStreak) {
     this.showToast(
@@ -176,7 +176,7 @@ class DailyStreakSystem {
   }
 
   /**
-   * Show toast notification
+   * Tampilkan toast
    */
   showToast(message, type = "streak", celebration = false) {
     const toast = document.createElement("div");
@@ -262,7 +262,7 @@ class DailyStreakSystem {
   }
 
   /**
-   * Get days until streak milestone
+   * Hari menuju milestone
    */
   getDaysToNextMilestone() {
     const milestones = [3, 7, 14, 30, 100];
@@ -271,7 +271,7 @@ class DailyStreakSystem {
   }
 
   /**
-   * Update sidebar with streak info
+   * Update tampilan streak
    */
   updateStreakDisplay() {
     let streakEl = document.getElementById("streak-display");

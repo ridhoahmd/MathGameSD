@@ -1,11 +1,11 @@
 // --- 1. SETUP UI ---
 const ui = {
-  // Game Elements
+  // Elemen Game
   start: document.getElementById("start-screen"),
   game: document.getElementById("game-screen"),
   result: document.getElementById("result-screen"),
 
-  // Data Elements
+  // Data Elemen
   questionText: document.getElementById("question-text"),
   optionsContainer: document.getElementById("options-container"),
   qCurrent: document.getElementById("q-current"),
@@ -13,15 +13,15 @@ const ui = {
   score: document.getElementById("score"),
   finalScore: document.getElementById("final-score"),
 
-  // Tutor UI (Pastikan ID di HTML sesuai)
+  // UI Tutor (Pastikan ID ada)
   tutorOverlay: document.getElementById("tutor-overlay"),
   tutorText: document.getElementById("tutor-text"),
 
-  // Latin UI
+  // UI Latin
   latinText: document.getElementById("latin-text"),
 };
 
-// Global Vars
+// Variabel Global
 let questions = [];
 let currentIndex = 0;
 let score = 0;
@@ -31,7 +31,7 @@ const MAX_TUTOR_USAGE = 3;
 let currentLevel = "mudah";
 let playerName = localStorage.getItem("playerName") || "Guest";
 
-// --- 2. LISTENER LEVEL --- 🔧 FIX: Standardized to .btn-difficulty
+// --- 2. PILIH LEVEL ---
 document.querySelectorAll(".btn-difficulty").forEach((btn) => {
   btn.addEventListener("click", () => {
     document
@@ -42,7 +42,7 @@ document.querySelectorAll(".btn-difficulty").forEach((btn) => {
   });
 });
 
-// --- 3. START GAME ---
+// --- 3. MULAI GAME ---
 function startGame() {
   const btnStart = document.querySelector(".btn-start");
   if (btnStart) {
@@ -58,7 +58,7 @@ function startGame() {
     });
   }
 
-  // Safety Timeout
+  // Jaga-jaga kalo loading kelamaan (Timeout)
   setTimeout(() => {
     if (ui.start && !ui.start.classList.contains("hidden")) {
       if (btnStart) {
@@ -69,13 +69,13 @@ function startGame() {
   }, 8000);
 }
 
-// --- 4. TERIMA DATA ---
+// --- 4. TERIMA DATA SOAL ---
 if (window.socket) {
   window.socket.on("soalDariAI", (response) => {
-    // 🔧 FIX: Better error handling
+    // Cek error dlu
     if (!response || !response.data || response.data.length === 0) {
-      console.error("Ayat game: Invalid data from server");
-      alert("Gagal memuat soal. Silakan coba lagi.");
+      console.error("Game Ayat: Data server error");
+      alert("Gagal memuat soal. Coba lagi ya.");
 
       const btnStart = document.querySelector(".btn-start");
       if (btnStart) {
@@ -106,7 +106,7 @@ if (window.socket) {
   });
 }
 
-// --- 5. RENDER SOAL ---
+// --- 5. TAMPILIN SOAL ---
 function loadQuestion() {
   isAnswering = false;
 
@@ -120,7 +120,7 @@ function loadQuestion() {
   if (ui.qCurrent) ui.qCurrent.innerText = currentIndex + 1;
   if (ui.optionsContainer) ui.optionsContainer.innerHTML = "";
 
-  // Latin setup
+  // Set teks latin (disembunyiin dulu)
   if (ui.latinText) {
     ui.latinText.innerText = q.latin || "";
     ui.latinText.style.display = "none";
@@ -143,7 +143,7 @@ function loadQuestion() {
       if (isCorrect) {
         btn.classList.add("correct");
 
-        // COMBO
+        // Itung Combo
         let multiplier = 1;
         if (typeof ComboManager !== "undefined")
           multiplier = ComboManager.addStreak();
@@ -165,13 +165,13 @@ function loadQuestion() {
           AudioManager.playWrong();
         } catch (e) {}
 
-        // Highlight yang benar
+        // Kasih tau yang bener
         const allBtns = document.querySelectorAll(".btn-option");
         allBtns.forEach((b) => {
           if (b.innerText === kunci) b.classList.add("correct");
         });
 
-        // Panggil Tutor (Jika Kuota Ada)
+        // Panggil Tutor (Kalo masih ada kuota)
         if (tutorUsageCount < MAX_TUTOR_USAGE) {
           setTimeout(() => {
             panggilTutor(q.tanya || q.soal, opt, kunci);
@@ -188,11 +188,11 @@ function loadQuestion() {
   });
 }
 
-// --- 6. LOGIKA TUTOR (DIPERBAIKI DISPLAY-NYA) ---
+// --- 6. TUTOR AI ---
 function panggilTutor(soal, jawabUser, jawabBenar) {
   tutorUsageCount++;
 
-  // [PENTING] Gunakan 'flex' agar CSS justify-content: center bekerja
+  // PENTING: pake flex center biar rapi
   if (ui.tutorOverlay) {
     ui.tutorOverlay.style.display = "flex";
     ui.tutorOverlay.classList.remove("hidden");
@@ -216,12 +216,12 @@ function panggilTutor(soal, jawabUser, jawabBenar) {
   }
 }
 
-// Terima Balasan Tutor
+// Dapet Jawaban Tutor
 if (window.socket) {
   window.socket.on("penjelasanTutor", (data) => {
     if (ui.tutorText) {
       ui.tutorText.innerHTML =
-        data.penjelasan || data.teks || "Maaf, koneksi terputus.";
+        data.penjelasan || data.teks || "Maaf, koneksi putus.";
     }
   });
 }
@@ -231,12 +231,12 @@ window.tutupTutor = function () {
   if (ui.tutorOverlay) {
     ui.tutorOverlay.style.display = "none";
   }
-  // Lanjut game
+  // Lanjut main
   currentIndex++;
   loadQuestion();
 };
 
-// --- 7. TOGGLE LATIN ---
+// --- 7. TOGGLE TEKS LATIN ---
 window.toggleLatin = function () {
   if (ui.latinText) {
     if (ui.latinText.style.display === "none") {
@@ -247,7 +247,7 @@ window.toggleLatin = function () {
   }
 };
 
-// --- 8. END GAME ---
+// --- 8. GAME SELESAI ---
 function endGame() {
   ui.game.classList.add("hidden");
   ui.result.classList.remove("hidden");
@@ -262,7 +262,7 @@ function endGame() {
   }
 }
 
-// --- 9. INIT ---
+// --- 9. INISIALISASI ---
 document.addEventListener("DOMContentLoaded", () => {
   const btnStart = document.querySelector(".btn-start");
   if (btnStart) {

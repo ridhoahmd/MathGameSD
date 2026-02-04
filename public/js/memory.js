@@ -1,12 +1,12 @@
 const socket = window.socket;
 
-// Element DOM
+// Ambil elemen HTML
 const board = document.getElementById("board");
 const movesEl = document.getElementById("moves");
 const finalScoreEl = document.getElementById("final-score");
 const winScreen = document.getElementById("win-screen");
 
-// Game State
+// Variable Game
 let cards = [];
 let hasFlippedCard = false;
 let lockBoard = false;
@@ -16,9 +16,9 @@ let moves = 0;
 let totalPairs = 0;
 let playerName = localStorage.getItem("playerName") || "Guest";
 let selectedDifficulty = "mudah";
-let isFlashing = false; // Flag untuk mencegah klik saat flash
+let isFlashing = false; // Flag buat flash
 
-// 1. Listener Tombol Kesulitan
+// 1. Tombol Ganti Level
 document.addEventListener("DOMContentLoaded", () => {
   const buttons = document.querySelectorAll(".btn-difficulty");
   buttons.forEach((button) => {
@@ -30,20 +30,19 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// 2. FUNGSI MULAI GAME (LOGIKA SWITCH ID)
+// 2. MULAI GAME
 function initGame() {
   if (window.socket) {
     console.log("⏱️ Start Memory");
     window.socket.emit("mulaiGame", "memory");
   }
 
-  // A. Sembunyikan Menu
+  // A. Ilangin Menu
   document.getElementById("start-screen").style.display = "none";
-  // B. Tampilkan Game
+  // B. Munculin Game
   document.getElementById("game-screen").style.display = "block";
 
-  // Pesan Loading
-  // 🔧 FIX: Better loading state with spinner
+  // Loading muter-muter biar keren
   board.innerHTML = `
     <div style="grid-column: 1/-1; text-align: center; color: white;">
       <div style="margin: 20px 0;">
@@ -53,7 +52,7 @@ function initGame() {
     </div>
   `;
 
-  // Add spinner animation if not exists
+  // Masukin animasi loading klo belom ada
   if (!document.getElementById("memory-spinner-style")) {
     const style = document.createElement("style");
     style.id = "memory-spinner-style";
@@ -73,12 +72,12 @@ function initGame() {
   });
 }
 
-// 3. Menerima Data
+// 3. Dapet Soal dari AI
 socket.on("soalDariAI", (response) => {
   if (response.kategori === "memory") {
     let rawData = response.data;
 
-    // Parser Cerdas
+    // Ubah data jadi array
     if (!Array.isArray(rawData)) {
       if (rawData && rawData.data) rawData = rawData.data;
       else if (rawData && typeof rawData === "object")
@@ -108,7 +107,7 @@ socket.on("soalDariAI", (response) => {
       })
       .filter((item) => item && item.a && item.b);
 
-    // Limit Soal sesuai Difficulty
+    // Batasin jumlah kartu sesuai level
     let maxPairs = 6;
     if (selectedDifficulty === "sedang") maxPairs = 8;
     if (selectedDifficulty === "sulit") maxPairs = 12;
@@ -118,7 +117,7 @@ socket.on("soalDariAI", (response) => {
       cleanPairs = cleanPairs.slice(0, maxPairs);
     }
 
-    // 🔧 FIX: Better error handling
+    // Cek error takut datanya zonk
     if (cleanPairs.length === 0) {
       board.innerHTML =
         '<p style="color:red;">❌ Gagal memuat soal. Silakan refresh halaman.</p>';
@@ -141,11 +140,11 @@ socket.on("soalDariAI", (response) => {
   }
 });
 
-// 🔧 FIX: Add resize listener untuk responsive canvas
+// Responfif kalo layar diubah
 window.addEventListener("resize", () => {
   if (!board || board.children.length === 0) return;
 
-  // Recalculate grid layout on resize
+  // Itung ulang grid
   if (selectedDifficulty === "mudah") {
     board.style.gridTemplateColumns = "repeat(3, 1fr)";
     board.style.maxWidth = "260px";
@@ -158,26 +157,26 @@ window.addEventListener("resize", () => {
   }
 });
 
-// 4. SETUP BOARD (GRID MANUAL 3x4, 4x4, 6x4)
+// 4. BIKIN PAPAN GAME (Atur Grid)
 function setupBoard(cardsArray) {
   board.innerHTML = "";
 
-  // Set Grid Columns & Width via JS (Agar Ukuran Kartu Konsisten)
+  // Atur lebar & kolom lewat JS
   if (selectedDifficulty === "mudah") {
     // 12 kartu (3x4)
     board.style.gridTemplateColumns = "repeat(3, 1fr)";
-    board.style.maxWidth = "260px"; // Batasi lebar agar kartu kecil (seperti sulit)
+    board.style.maxWidth = "260px"; // Kecil aja
   } else if (selectedDifficulty === "sedang") {
     // 16 kartu (4x4)
     board.style.gridTemplateColumns = "repeat(4, 1fr)";
-    board.style.maxWidth = "340px"; // Batasi lebar
+    board.style.maxWidth = "340px";
   } else if (selectedDifficulty === "sulit") {
     // 24 kartu (6x4)
     board.style.gridTemplateColumns = "repeat(6, 1fr)";
-    board.style.maxWidth = "480px"; // Full width
+    board.style.maxWidth = "480px"; // Lebar banget
   }
 
-  // Acak Kartu
+  // Kocok kartunya
   cardsArray.sort(() => 0.5 - Math.random());
 
   cardsArray.forEach((item) => {
@@ -187,7 +186,7 @@ function setupBoard(cardsArray) {
 
     const front = document.createElement("div");
     front.classList.add("front");
-    // Auto-resize font
+    // Kecilin font kalo kepanjangan
     if (item.content.length > 8) front.style.fontSize = "0.75rem";
     else front.style.fontSize = "1rem";
 
@@ -205,10 +204,10 @@ function setupBoard(cardsArray) {
 }
 
 function flipCard() {
-  if (lockBoard || isFlashing) return; // Cegah klik saat flash
+  if (lockBoard || isFlashing) return; // Gabisa klik pas lagi flash
   if (this === firstCard) return;
 
-  // Buka kartu (Hapus class card-closed agar 3D rotate bekerja)
+  // Buka kartu
   this.classList.remove("card-closed");
 
   if (typeof AudioManager !== "undefined") AudioManager.playClick();
@@ -257,9 +256,9 @@ function resetBoard() {
   [firstCard, secondCard] = [null, null];
 }
 
-// 5. GAME SELESAI
+// 5. MENANG!
 function gameWon() {
-  // 🔧 FIX: Clear any active flash timer to prevent memory leak
+  // Matiin flash biar ga bocor
   isFlashing = false;
 
   const baseScore = 100;
@@ -268,14 +267,14 @@ function gameWon() {
 
   if (finalScoreEl) finalScoreEl.innerText = finalScore;
 
-  // Sembunyikan Game, Munculkan Modal
+  // Umpetin Game, Munculin Modal
   document.getElementById("game-screen").style.display = "none";
 
   if (winScreen) {
-    winScreen.style.display = "flex"; // Flex agar center
+    winScreen.style.display = "flex"; // Flex biar tengah
   }
 
-  // Reset Menu agar saat user kembali, menu sudah siap
+  // Reset Menu biar pas balik udah siap
   document.getElementById("start-screen").style.display = "flex";
 
   if (typeof AudioManager !== "undefined") AudioManager.playWin();
@@ -287,7 +286,7 @@ function gameWon() {
   });
 }
 
-// 6. FUNGSI FLASH START (Addictive Feature)
+// 6. FLASHING (Ngasih liat kartu bentar)
 function startFlashSequence() {
   isFlashing = true; // Kunci board
   const allCards = document.querySelectorAll(".card");
@@ -295,11 +294,11 @@ function startFlashSequence() {
   // A. Buka Semua Kartu
   allCards.forEach((card) => card.classList.remove("card-closed"));
 
-  // B. Tampilkan Countdown di Header
+  // B. Hitung mundur
   const titleEl = document.querySelector("h1");
   const originalTitle = titleEl.innerText;
 
-  // 🔧 FIX: Adjust flash time based on difficulty
+  // Waktu flash beda2
   let timeLeft = 3;
   if (selectedDifficulty === "sedang") timeLeft = 4;
   if (selectedDifficulty === "sulit") timeLeft = 6;

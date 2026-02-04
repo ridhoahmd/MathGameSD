@@ -1,9 +1,9 @@
 /* ============================================
-   TOKO KAMU - PREMIUM VISUAL DESIGN (HYBRID)
-   Glassmorphism + Theme Adaptive
+   TOKO KAMU - DESAIN VISUAL PREMIUM (HYBRID)
+   Glassmorphism + Tema Adaptif
    ============================================ */
 
-/* === CSS VARIABLES FOR THEMING === */
+/* === VARIABEL CSS UNTUK TEMA === */
 :root {
   --shop-accent: #00f2ff;
   --shop-accent-rgb: 0, 242, 255;
@@ -15,7 +15,7 @@
   --shop-text-muted: #aaa;
 }
 
-/* === BASE STYLES === */
+/* === STYLE DASAR === */
 body {
   font-family: "Poppins", sans-serif;
   margin: 0;
@@ -27,7 +27,7 @@ body {
   color: var(--shop-text);
   overflow-x: hidden;
 
-  /* Premium animated background */
+  /* Animasi background premium */
   background:
     radial-gradient(ellipse at top, rgba(43, 16, 85, 0.8), transparent 50%),
     radial-gradient(
@@ -39,7 +39,7 @@ body {
   background-attachment: fixed;
 }
 
-/* Animated background overlay */
+/* Overlay animasi background */
 body::before {
   content: "";
   position: fixed;
@@ -72,7 +72,7 @@ body::before {
   }
 }
 
-/* === PARTICLE CANVAS === */
+/* === KANVAS PARTIKEL === */
 #particles-canvas {
   position: fixed;
   top: 0;
@@ -83,7 +83,7 @@ body::before {
   z-index: 0;
 }
 
-/* === MAIN CONTAINER === */
+/* === KONTAINER UTAMA === */
 .container {
   position: relative;
   z-index: 1;
@@ -92,7 +92,7 @@ body::before {
   padding: 30px 20px;
 }
 
-/* === GLASSMORPHISM HEADER === */
+/* === HEADER GLASSMORPHISM === */
 .header-shop {
   display: flex;
   justify-content: space-between;
@@ -146,7 +146,7 @@ body::before {
   border: 1px solid rgba(255, 235, 59, 0.2);
 }
 
-/* === TITLE === */
+/* === JUDUL === */
 h1 {
   font-family: "Orbitron", sans-serif;
   font-size: 2.5rem;
@@ -183,7 +183,7 @@ h1 {
   font-size: 1.1rem;
 }
 
-/* === PREMIUM TAB NAVIGATION === */
+/* === NAVIGASI TAB PREMIUM === */
 .shop-tabs {
   display: flex;
   justify-content: center;
@@ -248,14 +248,14 @@ h1 {
   transform: scale(1.02);
 }
 
-/* === SHOP GRID === */
+/* === GRID TOKO === */
 .shop-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 25px;
 }
 
-/* === PREMIUM SHOP CARD === */
+/* === KARTU TOKO PREMIUM === */
 .shop-card {
   background: var(--shop-bg-card);
   backdrop-filter: blur(10px);
@@ -269,7 +269,7 @@ h1 {
   overflow: hidden;
 }
 
-/* Shine effect overlay */
+/* Overlay efek kilau */
 .shop-card::before {
   content: "";
   position: absolute;
@@ -302,7 +302,7 @@ h1 {
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* === PREVIEW BOX (FRAMES) === */
+/* === BOX PREVIEW (BINGKAI) === */
 .preview-box {
   width: 90px;
   height: 90px;
@@ -323,7 +323,7 @@ h1 {
   object-fit: cover;
 }
 
-/* === BADGE PREVIEW === */
+/* === PREVIEW BADGE === */
 .badge-preview {
   width: 90px;
   height: 90px;
@@ -357,7 +357,7 @@ h1 {
   transform: scale(1.15) rotate(-5deg);
 }
 
-/* === FRAME STYLES === */
+/* === GAYA BINGKAI === */
 .frame-default {
   border: 3px solid #555;
 }
@@ -400,7 +400,7 @@ h1 {
   }
 }
 
-/* === ITEM INFO === */
+/* === INFO ITEM === */
 .item-name {
   font-weight: 700;
   font-size: 1.1rem;
@@ -422,7 +422,7 @@ h1 {
   font-weight: 600;
 }
 
-/* === PREMIUM BUTTONS === */
+/* === TOMBOL PREMIUM === */
 button {
   width: 100%;
   padding: 12px 20px;
@@ -493,7 +493,7 @@ button:hover::before {
   cursor: not-allowed;
 }
 
-/* === LOADING STATE === */
+/* === STATE LOADING === */
 .loading-msg {
   text-align: center;
   font-style: italic;
@@ -502,7 +502,7 @@ button:hover::before {
   font-size: 1.1rem;
 }
 
-/* Shimmer loading animation */
+/* Animasi loading shimmer */
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -524,10 +524,10 @@ button:hover::before {
 }
 
 /* ============================================
-   THEME ADAPTATIONS
+   ADAPTASI TEMA
    ============================================ */
 
-/* FOREST THEME */
+/* TEMA HUTAN */
 body.theme-forest {
   --shop-accent: #71b280;
   --shop-accent-rgb: 113, 178, 128;
@@ -538,7 +538,7 @@ body.theme-forest {
     linear-gradient(180deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
 }
 
-/* OCEAN THEME */
+/* TEMA LAUT */
 body.theme-ocean {
   --shop-accent: #26d0ce;
   --shop-accent-rgb: 38, 208, 206;
@@ -553,7 +553,7 @@ body.theme-ocean {
     linear-gradient(180deg, #1a2980 0%, #26d0ce 100%);
 }
 
-/* HACKER THEME */
+/* TEMA HACKER */
 body.theme-hacker {
   --shop-accent: #00ff41;
   --shop-accent-rgb: 0, 255, 65;
@@ -577,7 +577,7 @@ body.theme-hacker .item-name {
   letter-spacing: 2px;
 }
 
-/* CRIMSON THEME */
+/* TEMA CRIMSON */
 body.theme-crimson {
   --shop-accent: #ff3333;
   --shop-accent-rgb: 255, 51, 51;
@@ -591,7 +591,7 @@ body.theme-crimson {
     linear-gradient(180deg, #1a0000 0%, #000000 100%);
 }
 
-/* ROYAL THEME */
+/* TEMA ROYAL */
 body.theme-royal {
   --shop-accent: #ffd700;
   --shop-accent-rgb: 255, 215, 0;
@@ -616,7 +616,7 @@ body.theme-royal h1 {
   font-family: "Cinzel", "Orbitron", serif;
 }
 
-/* OBSIDIAN THEME */
+/* TEMA OBSIDIAN */
 body.theme-obsidian {
   --shop-accent: #ffffff;
   --shop-accent-rgb: 255, 255, 255;
@@ -648,7 +648,7 @@ body.theme-obsidian .shop-card:hover {
 }
 
 /* ============================================
-   RESPONSIVE
+   RESPONSIF
    ============================================ */
 @media (max-width: 768px) {
   .container {

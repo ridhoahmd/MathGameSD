@@ -1,6 +1,6 @@
 /* ============================================
    TANGKAP BINTANG - GAME STYLING
-   REDESIGNED FOR CENTERED LAYOUT
+   Desain Baru layout tengah
    ============================================ */
 
 * {
@@ -17,7 +17,7 @@ body {
   color: #fff;
 }
 
-/* ========== TOP BAR (CENTERED) ========== */
+/* ========== TOP BAR (TENGAH) ========== */
 .top-bar {
   position: fixed;
   top: 0;
@@ -30,7 +30,7 @@ body {
   padding: 15px 20px;
 }
 
-/* Back Button */
+/* Tombol Kembali */
 .btn-back {
   position: absolute;
   left: 15px;
@@ -51,7 +51,7 @@ body {
   transform: translateX(-3px);
 }
 
-/* ========== GAME HUD (CENTERED) ========== */
+/* ========== HUD GAME (TENGAH) ========== */
 #game-hud {
   display: flex;
   justify-content: center;
@@ -86,7 +86,7 @@ body {
   text-shadow: 0 0 10px rgba(255, 235, 59, 0.5);
 }
 
-/* ========== QUESTION CONTAINER ========== */
+/* ========== WADAH SOAL ========== */
 #question-container {
   position: fixed;
   top: 70px;
@@ -113,7 +113,7 @@ body {
   text-shadow: 0 0 15px rgba(0, 242, 255, 0.5);
 }
 
-/* ========== GAME CONTAINER (TRUE CENTER) ========== */
+/* ========== AREA GAME (BENAR-BENAR TENGAH) ========== */
 #game-container {
   position: fixed;
   top: 0;
@@ -131,7 +131,7 @@ body {
   box-shadow: 0 0 50px rgba(0, 242, 255, 0.2);
 }
 
-/* ========== MODAL ========== */
+/* ========== POP-UP MODAL ========== */
 .modal {
   position: fixed;
   top: 0;
@@ -174,7 +174,7 @@ body {
   margin-bottom: 25px;
 }
 
-/* Difficulty Buttons */
+/* Pilihan Tingkat Kesulitan */
 .difficulty-options {
   display: flex;
   flex-direction: column;

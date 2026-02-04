@@ -1,7 +1,7 @@
 /**
- * Leveling & XP System
- * Track player progression and calculate levels
- * NOW SYNCED WITH SERVER DATABASE (not localStorage)
+ * Sistem Level & XP
+ * Pantau progress pemain dan hitung level
+ * SEKARANG TERHUBUNG KE SERVER DATABASE (bukan localStorage lagi)
  */
 
 class LevelingSystem {
@@ -10,22 +10,22 @@ class LevelingSystem {
     this.currentLevel = 0;
     this.isLoaded = false;
 
-    // Listen for profile updates from server
+    // Dengerin update profil
     this.setupSocketListeners();
   }
 
   /**
-   * Setup socket listeners for XP sync
-   * Waits for socket to be available with retries
+   * Setup listener socket buat sinkronisasi XP
+   * Nunggu soket siap dengan coba ulang
    */
   setupSocketListeners() {
-    // Try to setup immediately if socket exists
+    // Cek socket langsung
     if (window.socket) {
       this._attachSocketListeners();
       return;
     }
 
-    // Otherwise wait and retry (socket may be created later by dashboard.js)
+    // Tunggu socket
     let retries = 0;
     const maxRetries = 20; // 2 seconds total
     const checkInterval = setInterval(() => {
@@ -44,13 +44,13 @@ class LevelingSystem {
   }
 
   /**
-   * Attach socket event listeners
+   * Pasang listener event socket
    */
   _attachSocketListeners() {
-    if (this._listenersAttached) return; // Prevent duplicate listeners
+    if (this._listenersAttached) return; // Jangan double listener
     this._listenersAttached = true;
 
-    // Load XP/Level when profile is received
+    // Load XP pas profil masuk
     window.socket.on("updateProfil", (data) => {
       if (data.xp !== undefined) {
         const oldLevel = this.currentLevel;
@@ -59,14 +59,14 @@ class LevelingSystem {
         this.isLoaded = true;
         this.updateXPDisplay();
 
-        // Check for level up (if level increased since last known)
+        // Cek naik level
         if (oldLevel > 0 && this.currentLevel > oldLevel) {
           this.onLevelUp(oldLevel, this.currentLevel);
         }
       }
     });
 
-    // Update XP when score is saved
+    // Update XP pas save
     window.socket.on("skorTersimpan", (data) => {
       if (data.xp !== undefined) {
         const oldLevel = this.currentLevel;
@@ -74,7 +74,7 @@ class LevelingSystem {
         this.currentLevel = data.level || this.calculateLevel(data.xp);
         this.updateXPDisplay();
 
-        // Show XP gained notification
+        // Notif dapet XP
         if (data.xpGained && typeof AnimationUtils !== "undefined") {
           AnimationUtils.showTooltip(
             document.body,
@@ -92,8 +92,8 @@ class LevelingSystem {
   }
 
   /**
-   * Calculate level from XP
-   * Formula: Level = floor(sqrt(XP / 100))
+   * Hitung level dari XP
+   * Rumus: Level = floor(sqrt(XP / 100))
    */
   calculateLevel(xp) {
     return Math.floor(Math.sqrt(xp / 100));
@@ -147,7 +147,7 @@ class LevelingSystem {
   }
 
   /**
-   * Show level up notification
+   * Notif naik level
    */
   showLevelUpNotification(level) {
     const notification = document.createElement("div");
@@ -300,7 +300,7 @@ class LevelingSystem {
   }
 
   /**
-   * Update XP bar in sidebar
+   * Update tampilan XP
    */
   updateXPDisplay() {
     let xpEl = document.getElementById("xp-display");

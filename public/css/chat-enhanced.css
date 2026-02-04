@@ -1,8 +1,8 @@
 /* ==============================================
-   ENHANCED CHAT UI - Modern Glassmorphism Design
+   UI CHAT KEREN - Desain Glassmorphism Modern
    ============================================== */
 
-/* Main Chat Container - Glass Effect */
+/* Wadah Chat Utama - Efek Kaca */
 #chat-container {
   position: fixed;
   bottom: 20px;
@@ -46,7 +46,7 @@
   border-radius: 20px;
 }
 
-/* Chat Header - Premium Gradient */
+/* Header Chat - Gradien Premium */
 .chat-header {
   background: linear-gradient(
     135deg,
@@ -66,7 +66,7 @@
   overflow: hidden;
 }
 
-/* Animated gradient overlay on header */
+/* Animasi kilau di header */
 .chat-header::before {
   content: "";
   position: absolute;
@@ -102,7 +102,7 @@
   z-index: 1;
 }
 
-/* Online indicator dot */
+/* Indikator online */
 .chat-header span::after {
   content: "";
   width: 8px;
@@ -125,7 +125,7 @@
   }
 }
 
-/* Header Control Buttons */
+/* Tombol Kontrol Header */
 .chat-controls {
   display: flex;
   gap: 8px;
@@ -156,7 +156,7 @@
   box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
 }
 
-/* Messages Container */
+/* Area Pesan */
 .chat-messages {
   flex: 1;
   padding: 15px;
@@ -173,7 +173,7 @@
   );
 }
 
-/* Custom Scrollbar */
+/* Scrollbar Kustom */
 .chat-messages::-webkit-scrollbar {
   width: 6px;
 }
@@ -188,7 +188,7 @@
   border-radius: 10px;
 }
 
-/* Message Bubbles */
+/* Bubbles Pesan */
 .msg-bubble {
   background: linear-gradient(
     135deg,
@@ -217,7 +217,7 @@
   }
 }
 
-/* My Messages - Special Styling */
+/* Pesanku - Gaya Spesial */
 .msg-me {
   background: linear-gradient(135deg, #00f2ff 0%, #00c8ff 50%, #0099ff 100%);
   color: #000;
@@ -230,7 +230,7 @@
     0 0 30px rgba(0, 242, 255, 0.1);
 }
 
-/* Sender Name */
+/* Nama Pengirim */
 .msg-name {
   font-size: 0.7rem;
   color: #00f2ff;
@@ -244,7 +244,7 @@
   display: none;
 }
 
-/* Message Time */
+/* Waktu Pesan */
 .msg-time {
   display: block;
   font-size: 0.65rem;
@@ -257,7 +257,7 @@
   color: rgba(0, 0, 0, 0.5);
 }
 
-/* Welcome Message */
+/* Pesan Selamat Datang */
 .chat-welcome {
   text-align: center;
   color: rgba(255, 255, 255, 0.4);
@@ -291,7 +291,7 @@
   }
 }
 
-/* Input Area */
+/* Area Input */
 .chat-input-area {
   padding: 15px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -304,7 +304,7 @@
   );
 }
 
-/* Chat Input Field */
+/* Kolom Input Chat */
 .chat-input {
   flex: 1;
   padding: 12px 18px;
@@ -329,7 +329,7 @@
     0 0 20px rgba(0, 242, 255, 0.1);
 }
 
-/* Send Button */
+/* Tombol Kirim */
 .chat-send {
   background: linear-gradient(135deg, #00f2ff 0%, #00c8ff 100%);
   border: none;
@@ -357,14 +357,14 @@
   transform: scale(0.95);
 }
 
-/* Chat Button in Sidebar - Enhanced */
+/* Tombol Chat di Sidebar */
 .btn-menu:has(#chat-notif),
 button[onclick*="toggleChat"] {
   position: relative;
   overflow: hidden;
 }
 
-/* Chat Notification Badge */
+/* Badge Notifikasi */
 #chat-notif {
   display: none;
   color: #00ff88;
@@ -428,7 +428,7 @@ button[onclick*="toggleChat"] {
   }
 }
 
-/* Very Small Screens */
+/* Layar Kecil Banget */
 @media (max-width: 400px) {
   #chat-container {
     width: calc(100% - 20px);

@@ -2,23 +2,20 @@ const prisma = require("../config/prisma");
 const { askAI } = require("../services/aiService");
 const { getFallbackData } = require("../config/fallbackData");
 
-// --- PROMPT STRATEGIES (MOVED FROM LOCAL REQUIRE) ---
-// Simplified version, ideally this should be imported if complex
-// But for now we will assume basic prompt strategy or move it to a service if it grows.
-// For now, I will keep the fallback logic within the handler as it was in server.js but cleaner.
+// --- STRATEGI PROMPT ---
+// Versi simpel, idealnya dipisah kalau makin kompleks.
+// Anggap ini strategi dasar.
 
 module.exports = (socket, io) => {
-  // PROMPT STRATEGY LOADING
+  // LOAD STRATEGI PROMPT
   let PROMPT_STRATEGIES = {};
   try {
-    // Assuming existing prompts folder is still at root, need to adjust path relative to this file
-    // server.js was at root, src/sockets/gameHandler.js is 2 levels deep
     const path = require("path");
     PROMPT_STRATEGIES = require(
       path.join(process.cwd(), "prompts", "gamePrompts"),
     );
   } catch (e) {
-    // console.log("ℹ️ Menggunakan Fallback Strategy (gamePrompts tidak ditemukan)");
+    // console.log("ℹ️ Pake Strategi Cadangan (gamePrompts ga ketemu)");
   }
 
   socket.on("mulaiGame", (kategori) => {
@@ -35,7 +32,7 @@ module.exports = (socket, io) => {
     let finalData = [];
 
     try {
-      // 1. SETUP LEVEL DWI-BAHASA
+      // 1. SETTING LEVEL DWI-BAHASA
       let levelAlt = levelRequest;
       if (levelRequest.toLowerCase() === "mudah") levelAlt = "Easy";
       else if (levelRequest.toLowerCase() === "sedang") levelAlt = "Medium";
@@ -54,11 +51,11 @@ module.exports = (socket, io) => {
             },
           ],
         },
-        select: { content: true }, // Optimization: Only fetch JSON content
+        select: { content: true }, // Ambil isinya aja biar irit
         take: 200,
       });
 
-      // Logika Darurat jika level spesifik kosong
+      // Logika Darurat buat Zuma kalo level spesifik kosong
       if ((!questions || questions.length === 0) && kategori === "zuma") {
         questions = await prisma.gameQuestion.findMany({
           where: { category: { equals: "zuma", mode: "insensitive" } },
@@ -73,9 +70,9 @@ module.exports = (socket, io) => {
         // --- KELOMPOK 1: CONFIG GAME (Zuma, Labirin, Piano) ---
         if (["zuma", "labirin", "piano"].includes(kategori)) {
           if (kategori === "piano" && (!questions || questions.length === 0)) {
-            // Generate dynamic piano sequence if DB is empty
+            // Generate nada piano dinamis jika DB kosong
             const randomSeq = [];
-            const len = 3 + Math.floor(Math.random() * 3); // 3-5 notes
+            const len = 3 + Math.floor(Math.random() * 3); // 3-5 nada
             for (let i = 0; i < len; i++)
               randomSeq.push(Math.floor(Math.random() * 8) + 1);
             finalData = { sequence: randomSeq };
@@ -84,7 +81,7 @@ module.exports = (socket, io) => {
             finalData = rawContent[randomIndex];
           }
         }
-        // --- KELOMPOK 2: GAME TAJWID (SMART GROUPING) ---
+        // --- KELOMPOK 2: GAME TAJWID (PENGELOMPOKAN PINTAR) ---
         else if (kategori === "tajwid") {
           const refRow =
             rawContent[Math.floor(Math.random() * rawContent.length)];
@@ -137,7 +134,7 @@ module.exports = (socket, io) => {
       console.error("❌ DB ERROR:", err.message);
     }
 
-    // 4. FALLBACK
+    // 4. FALLBACK (CADANGAN)
     if (
       !finalData ||
       (Array.isArray(finalData) && finalData.length === 0) ||
@@ -145,10 +142,10 @@ module.exports = (socket, io) => {
     ) {
       finalData = getFallbackData(kategori);
 
-      // Special Dynamic Fallback for Piano if static fallback is too boring
+      // Fallback Piano Dinamis biar ga bosen
       if (kategori === "piano") {
         const randomSeq = [];
-        const len = 4 + Math.floor(Math.random() * 4); // 4-8 notes
+        const len = 4 + Math.floor(Math.random() * 4); // 4-8 nada
         for (let i = 0; i < len; i++)
           randomSeq.push(Math.floor(Math.random() * 8) + 1);
         finalData = { sequence: randomSeq };
@@ -195,7 +192,7 @@ module.exports = (socket, io) => {
     }
   });
 
-  // ROOM LOGIC
+  // LOGIKA ROOM
   socket.on("joinRoom", (data) => {
     if (!data.room) return;
     socket.join(data.room);
@@ -206,11 +203,10 @@ module.exports = (socket, io) => {
     if (data.room) socket.to(data.room).emit("updateSkorLawan", data.skor);
   });
 
-  // MATH DUEL LOGIC
+  // LOGIKA MATH DUEL
   socket.on("joinMathDuel", async (data) => {
     const room = data.room;
-    // NOTE: In socket.io v3+, access to rooms is different, but for compatibility
-    // we use io.sockets.adapter.rooms.get(room) which returns a Set
+    // Pake adapter.rooms.get biar kompatibel socket.io v3+
     const roomInstance = io.sockets.adapter.rooms.get(room);
     const playerCount = roomInstance ? roomInstance.size : 0;
     if (playerCount >= 2) {
@@ -218,10 +214,7 @@ module.exports = (socket, io) => {
       return;
     }
 
-    // Double check after small delay to reduce race if necessary,
-    // but Node is single threaded, so synchronous check is usually fine.
-    // We will just proceed.
-
+    // Node itu single threaded, jadi aman langsung
     socket.join(room);
 
     if (playerCount === 0) {

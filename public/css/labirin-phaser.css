@@ -1,6 +1,6 @@
 /* ============================================
-   LABIRIN ILMU PHASER - PREMIUM STYLING
-   Maze game with neon cyberpunk theme
+   LABIRIN ILMU PHASER - GAYA PREMIUM
+   Tema Neon Cyberpunk
    ============================================ */
 
 * {
@@ -71,7 +71,7 @@ body {
   text-shadow: 0 0 10px rgba(255, 200, 0, 0.5);
 }
 
-/* ========== GAME CONTAINER ========== */
+/* ========== WADAH GAME ========== */
 #game-container {
   position: fixed;
   top: 70px;
@@ -92,7 +92,7 @@ body {
   max-height: 100%;
 }
 
-/* ========== D-PAD CONTROLS ========== */
+/* ========== KONTROL D-PAD (HP) ========== */
 .game-controls {
   position: fixed;
   bottom: 0;
@@ -146,7 +146,7 @@ body {
   grid-row: 2;
 }
 
-/* ========== MODALS ========== */
+/* ========== MODAL ========== */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -278,7 +278,7 @@ body {
   cursor: not-allowed;
 }
 
-/* ========== QUIZ MODAL ========== */
+/* ========== MODAL KUIS ========== */
 .quiz-box h2 {
   font-family: "Orbitron", sans-serif;
   font-size: 1.5rem;
@@ -329,7 +329,7 @@ body {
   box-shadow: 0 5px 20px rgba(255, 0, 204, 0.4);
 }
 
-/* ========== TUTOR OVERLAY ========== */
+/* ========== OVERLAY TUTOR ========== */
 .tutor-overlay {
   position: fixed;
   top: 0;

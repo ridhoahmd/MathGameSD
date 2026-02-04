@@ -1,7 +1,7 @@
 import { GameEngine } from "./classes/GameEngine.js";
 import { UI } from "./utils/ui.js";
 
-// Extends Generic Engine for Math Specific Logic
+// Kalo ini khusus logika Matematika
 class MathGame extends GameEngine {
   constructor() {
     super("math");
@@ -58,7 +58,7 @@ class MathGame extends GameEngine {
     });
   }
 
-  // Called when socket receives data (We need to wire this up externally or here)
+  // Dipanggil pas data socket masuk
   onDataReceived(data) {
     let rawData = data.data || data;
     if (Array.isArray(rawData)) this.questionList = rawData;
@@ -69,7 +69,7 @@ class MathGame extends GameEngine {
       return;
     }
 
-    // Hide Login, Show Game
+    // Umpetin login, tampilin game
     UI.showScreen("game-screen");
     this.startGame();
     this.currentIdx = 0;
@@ -110,7 +110,7 @@ class MathGame extends GameEngine {
     );
 
     if (val.toLowerCase() === correct.toLowerCase()) {
-      // COMBO LOGIC
+      // Logika Combo biar seru
       let multiplier = 1;
       if (typeof ComboManager !== "undefined")
         multiplier = ComboManager.addStreak();
@@ -124,7 +124,7 @@ class MathGame extends GameEngine {
       document.body.classList.add("wrong-anim");
       setTimeout(() => document.body.classList.remove("wrong-anim"), 500);
 
-      // Visual feedback in placeholder
+      // Kasih tau jawaban bener di placeholder
       input.value = "";
       input.placeholder = `Jawab: ${correct}`;
       setTimeout(() => (input.placeholder = "Ketik jawaban..."), 1500);
@@ -135,11 +135,11 @@ class MathGame extends GameEngine {
   }
 }
 
-// SETUP INSTANCE
+// Bikin game nya
 const game = new MathGame();
 game.init();
 
-// WIRE SOCKET EVENTS - 🔧 FIX: Handle socket initialization race condition
+// Sambungin socket (tunggu ready dulu)
 function wireSocketEvents() {
   if (window.socket) {
     window.socket.on("soalDariAI", (data) => {
@@ -149,13 +149,13 @@ function wireSocketEvents() {
     });
     console.log("✅ Math game socket listener registered");
   } else {
-    // Retry after short delay if socket not ready
-    console.log("⏳ Waiting for socket connection...");
+    // Coba lagi bentar lagi
+    console.log("⏳ Nunggu socket...");
     setTimeout(wireSocketEvents, 100);
   }
 }
 
-// Ensure DOM is ready before wiring
+// Pastiin HTML udah siap
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", wireSocketEvents);
 } else {

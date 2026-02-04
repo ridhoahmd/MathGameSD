@@ -1,6 +1,6 @@
 /* ==============================================
-   🏆 LEADERBOARD CSS - ENHANCED VERSION
-   Tampilan Premium untuk Top 50 Global Ranking
+   🏆 GAYA LEADERBOARD - VERSI SULTAN
+   Tampilan Premium buat Top 50 Pemain Global
    ============================================== */
 
 /* 1. BACKGROUND & BODY */
@@ -18,7 +18,7 @@ body {
   box-sizing: border-box;
 }
 
-/* Animated background particles effect */
+/* Efek partikel animasi di background */
 body::before {
   content: "";
   position: fixed;
@@ -46,11 +46,11 @@ body::before {
   z-index: -1;
 }
 
-/* 2. MAIN CONTAINER */
+/* 2. KONTAINER UTAMA */
 .leaderboard-container {
   width: 100%;
   max-width: 900px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08); /* Transparan dikit */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 24px;
@@ -74,7 +74,7 @@ body::before {
   }
 }
 
-/* 3. HEADER / TITLE */
+/* 3. JUDUL DI ATAS */
 h1 {
   text-align: center;
   margin-bottom: 10px;
@@ -97,7 +97,7 @@ h1 {
   }
 }
 
-/* Subtitle / Stats Summary */
+/* Sub-judul / Ringkasan Statistik */
 .leaderboard-stats {
   display: flex;
   justify-content: center;
@@ -125,7 +125,7 @@ h1 {
   color: #00f2ff;
 }
 
-/* 4. BACK BUTTON */
+/* 4. TOMBOL BALIK */
 .back-btn {
   display: inline-flex;
   align-items: center;
@@ -156,7 +156,7 @@ h1 {
   box-shadow: 0 5px 20px rgba(138, 43, 226, 0.3);
 }
 
-/* 5. TABLE STYLING */
+/* 5. GAYA TABEL */
 .rank-table {
   width: 100%;
   border-collapse: separate;
@@ -194,7 +194,7 @@ h1 {
   text-align: right;
 }
 
-/* 6. TABLE ROWS */
+/* 6. BARIS TABEL */
 .rank-table tbody tr {
   background: rgba(255, 255, 255, 0.05);
   transition: all 0.3s ease;
@@ -219,8 +219,8 @@ h1 {
   border-radius: 0 12px 12px 0;
 }
 
-/* 7. TOP 3 SPECIAL STYLING */
-/* Rank 1 - Gold Champion */
+/* 7. PERINGKAT 3 BESAR (SPESIAL) */
+/* Rank 1 - Emas */
 .row-rank-1 {
   background: linear-gradient(
     135deg,
@@ -241,7 +241,7 @@ h1 {
   }
 }
 
-/* Rank 2 - Silver */
+/* Rank 2 - Perak */
 .row-rank-2 {
   background: linear-gradient(
     135deg,
@@ -251,7 +251,7 @@ h1 {
   border: 1px solid rgba(192, 192, 192, 0.3);
 }
 
-/* Rank 3 - Bronze */
+/* Rank 3 - Perunggu */
 .row-rank-3 {
   background: linear-gradient(
     135deg,
@@ -261,12 +261,12 @@ h1 {
   border: 1px solid rgba(205, 127, 50, 0.3);
 }
 
-/* Top 10 gets subtle highlight */
+/* Top 10 ada highlight tipis */
 .row-top10 {
   border-left: 3px solid #7c3aed;
 }
 
-/* 8. RANK CELL / MEDAL */
+/* 8. SEL PERINGKAT / MEDALI */
 .rank-cell {
   text-align: center;
   font-weight: 700;
@@ -300,7 +300,7 @@ h1 {
   }
 }
 
-/* Rank number for non-medal */
+/* Nomor peringkat biasa */
 .rank-number {
   display: inline-flex;
   align-items: center;
@@ -313,7 +313,7 @@ h1 {
   font-weight: 600;
 }
 
-/* 9. PLAYER INFO */
+/* 9. INFO PEMAIN */
 .player-info {
   display: flex;
   align-items: center;
@@ -358,7 +358,7 @@ h1 {
   color: #ff6b6b;
 }
 
-/* 10. SCORE CELL */
+/* 10. SEL SKOR */
 .total-score {
   text-align: right;
   font-weight: 700;
@@ -381,7 +381,7 @@ h1 {
   margin-top: 4px;
 }
 
-/* 11. PROGRESS BAR FOR SCORE */
+/* 11. BAR PROGRES SKOR */
 .score-bar-container {
   width: 100%;
   height: 4px;
@@ -398,7 +398,7 @@ h1 {
   transition: width 0.5s ease;
 }
 
-/* 12. EMPTY STATE */
+/* 12. STATE KOSONG */
 .empty-msg {
   text-align: center;
   padding: 50px 20px;
@@ -434,7 +434,7 @@ h1 {
   }
 }
 
-/* 14. REFRESH BUTTON */
+/* 14. TOMBOL REFRESH */
 .refresh-btn {
   display: inline-flex;
   align-items: center;
@@ -459,7 +459,7 @@ h1 {
   transform: scale(0.98);
 }
 
-/* 15. FOOTER INFO */
+/* 15. INFO FOOTER */
 .leaderboard-footer {
   margin-top: 25px;
   text-align: center;
@@ -471,7 +471,7 @@ h1 {
   color: #888;
 }
 
-/* 16. MOBILE RESPONSIVE */
+/* 16. RESPONSIVE HP */
 @media (max-width: 768px) {
   .leaderboard-container {
     padding: 20px 15px;
@@ -557,7 +557,7 @@ h1 {
   }
 }
 
-/* 17. ANIMATIONS FOR ROWS */
+/* 17. ANIMASI BARIS */
 .rank-table tbody tr {
   animation: rowSlideIn 0.3s ease-out backwards;
 }

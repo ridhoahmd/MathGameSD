@@ -1,17 +1,17 @@
 /**
- * Animation Utilities
- * Helper functions for smooth animations and micro-interactions
+ * Animasi Utility
+ * Kumpulan fungsi animasi biar smooth
  */
 
 const AnimationUtils = {
   /**
-   * Animate counter from start to end
-   * @param {HTMLElement} element - Target element
-   * @param {number} start - Starting number
-   * @param {number} end - Ending number
-   * @param {number} duration - Animation duration in ms
-   * @param {string} prefix - Optional prefix (e.g., "$")
-   * @param {string} suffix - Optional suffix (e.g., " pts")
+   * Animasi angka (counter)
+   * @param {HTMLElement} element - Target elemen
+   * @param {number} start - Mulai dari
+   * @param {number} end - Sampai ke
+   * @param {number} duration - Durasi ms
+   * @param {string} prefix - Awalan (opsional)
+   * @param {string} suffix - Akhiran (opsional)
    */
   animateCounter(
     element,
@@ -47,7 +47,7 @@ const AnimationUtils = {
   },
 
   /**
-   * Add class temporarily
+   * Tambah kelas sementara
    * @param {HTMLElement} element
    * @param {string} className
    * @param {number} duration
@@ -62,10 +62,10 @@ const AnimationUtils = {
   },
 
   /**
-   * Show score increment feedback (+10, +50, etc.)
-   * @param {HTMLElement} containerparent - Parent element
-   * @param {number} points - Points to show
-   * @param {object} options - Position and style options
+   * Tampilkan efek nambah poin (+10)
+   * @param {HTMLElement} container - Elemen pembungkus
+   * @param {number} points - Jumlah poin
+   * @param {object} options - Opsi posisi
    */
   showScoreIncrement(container, points, options = {}) {
     const {
@@ -98,9 +98,9 @@ const AnimationUtils = {
   },
 
   /**
-   * Create ripple effect on click
-   * @param {Event} event - Click event
-   * @param {HTMLElement} element - Target element
+   * Efek riak air pas klik
+   * @param {Event} event - Event click
+   * @param {HTMLElement} element - Target
    */
   createRipple(event, element) {
     const rect = element.getBoundingClientRect();
@@ -131,9 +131,9 @@ const AnimationUtils = {
   },
 
   /**
-   * Smooth scroll to element
-   * @param {string|HTMLElement} target - Selector or element
-   * @param {number} offset - Offset from top
+   * Scroll halus ke elemen
+   * @param {string|HTMLElement} target
+   * @param {number} offset
    */
   scrollTo(target, offset = 0) {
     const element =
@@ -151,10 +151,10 @@ const AnimationUtils = {
   },
 
   /**
-   * Stagger animation for multiple elements
-   * @param {NodeList|Array} elements - Elements to animate
-   * @param {string} className - Animation class
-   * @param {number} delay - Delay between each element (ms)
+   * Animasi berurutan (stagger)
+   * @param {NodeList|Array} elements
+   * @param {string} className
+   * @param {number} delay
    */
   staggerAnimation(elements, className, delay = 100) {
     elements.forEach((el, index) => {
@@ -165,7 +165,7 @@ const AnimationUtils = {
   },
 
   /**
-   * Shake element (for errors)
+   * Efek goyang (untuk error)
    * @param {HTMLElement} element
    */
   shake(element) {
@@ -174,7 +174,7 @@ const AnimationUtils = {
   },
 
   /**
-   * Bounce element
+   * Efek membal
    * @param {HTMLElement} element
    */
   bounce(element) {
@@ -183,7 +183,7 @@ const AnimationUtils = {
   },
 
   /**
-   * Pulse element
+   * Efek denyut
    * @param {HTMLElement} element
    * @param {string} type - 'success' or 'error'
    */
@@ -194,7 +194,7 @@ const AnimationUtils = {
   },
 
   /**
-   * Fade in element
+   * Fade in
    * @param {HTMLElement} element
    * @param {number} duration
    */
@@ -219,7 +219,7 @@ const AnimationUtils = {
   },
 
   /**
-   * Fade out element
+   * Fade out
    * @param {HTMLElement} element
    * @param {number} duration
    * @param {Function} callback
@@ -244,7 +244,7 @@ const AnimationUtils = {
   },
 
   /**
-   * Create typing indicator
+   * Indikator ngetik
    * @returns {HTMLElement}
    */
   createTypingIndicator() {
@@ -255,10 +255,10 @@ const AnimationUtils = {
   },
 
   /**
-   * Show tooltip
-   * @param {HTMLElement} element - Element to show tooltip near
-   * @param {string} text - Tooltip text
-   * @param {number} duration - Auto-hide duration (0 = manual)
+   * Tooltip sederhana
+   * @param {HTMLElement} element
+   * @param {string} text
+   * @param {number} duration
    */
   showTooltip(element, text, duration = 2000) {
     if (!element) return;
@@ -320,7 +320,7 @@ const AnimationUtils = {
   },
 
   /**
-   * Check if element is in viewport
+   * Cek elemen masuk layar
    * @param {HTMLElement} element
    * @param {number} offset
    * @returns {boolean}
@@ -341,10 +341,10 @@ const AnimationUtils = {
   },
 
   /**
-   * Animate element on scroll into view
-   * @param {string} selector - Elements to observe
-   * @param {string} className - Class to add when visible
-   * @param {object} options - IntersectionObserver options
+   * Animasi pas scroll
+   * @param {string} selector
+   * @param {string} className
+   * @param {object} options
    */
   animateOnScroll(selector, className = "animate-fadeInUp", options = {}) {
     const elements = document.querySelectorAll(selector);

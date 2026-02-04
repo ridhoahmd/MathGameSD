@@ -1,10 +1,10 @@
-/* GLOBAL SETTINGS */
-/* GLOBAL SETTINGS */
+/* PENGATURAN GLOBAL */
+/* PENGATURAN GLOBAL */
 body {
   margin: 0;
   padding: 0;
   font-family: "Poppins", sans-serif;
-  /* THEME: DESERT NIGHT / MIDNIGHT JOURNEY */
+  /* TEMA: MALAM GURUN / PERJALANAN MALAM */
   background-color: var(--islamic-blue, #1a237e);
   background-image:
     radial-gradient(
@@ -18,7 +18,7 @@ body {
       rgba(255, 255, 255, 0.02) 0px,
       transparent 1px,
       transparent 40px
-    ); /* Starry/Vertical lines */
+    ); /* Garis vertikal/bintang */
   color: #fff;
   min-height: 100dvh;
   width: 100vw;
@@ -73,7 +73,7 @@ body {
   /* --- Layout & Desain --- */
   width: 90%;
   max-width: 700px;
-  max-height: 85vh; /* Pakai max-height agar responsif */
+  max-height: 85vh; /* Pake max-height biar responsif */
 
   display: flex;
   flex-direction: column;
@@ -131,7 +131,7 @@ body {
   justify-content: center;
   gap: 15px;
   margin-bottom: 15px;
-  flex-shrink: 0; /* Mencegah header mengecil gepeng */
+  flex-shrink: 0; /* Biar header gak kepencet */
 }
 .stat-box {
   background: rgba(255, 255, 255, 0.05);
@@ -162,7 +162,7 @@ body {
   }
 }
 
-/* LOADING / START SCREEN */
+/* LAYAR LOADING / MULAI */
 .intro-text {
   font-style: italic;
   color: #aaa;
@@ -211,7 +211,7 @@ body {
   margin-bottom: 10px;
 }
 
-/* GAMEPLAY UI - PERBAIKAN RESPONSIF */
+/* UI GAMEPLAY - PERBAIKAN RESPONSIF */
 .progress-bar {
   width: 100%;
   height: 6px;
@@ -234,7 +234,7 @@ body {
   border-radius: 12px;
   margin-bottom: 20px;
   border-left: 4px solid #ffd700;
-  text-align: left; /* Teks soal rata kiri agar lebih enak dibaca */
+  text-align: left; /* Teks rata kiri biar enak dibaca */
 }
 .q-number {
   font-size: 0.75rem;
@@ -245,7 +245,7 @@ body {
 }
 
 #question-text {
-  /* Gunakan ukuran font responsif */
+  /* Ukuran font responsif */
   font-size: 1.1rem;
   line-height: 1.6;
   margin: 0;
@@ -299,7 +299,7 @@ body {
   color: white;
 }
 
-/* RESULT SCREEN */
+/* LAYAR HASIL */
 .final-score-box {
   margin: 20px 0;
   padding: 15px;
@@ -328,7 +328,7 @@ body {
   color: #ccc;
 }
 
-/* MEDIA QUERY UNTUK HP KECIL (RESPONSIF) */
+/* MEDIA QUERY BUAT HP KECIL */
 @media (max-height: 700px) {
   .title-glow {
     font-size: 1.5rem;
@@ -364,7 +364,7 @@ body {
   }
 }
 
-/* AI TUTOR MODAL STYLES (New)               */
+/* GAYA MODAL AI TUTOR (Baru) */
 
 .tutor-overlay {
   display: none; /* Default sembunyi */

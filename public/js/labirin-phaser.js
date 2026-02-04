@@ -1,9 +1,9 @@
 // ============================================
-// LABIRIN ILMU - PHASER VERSION (Hybrid)
-// Maze Game with Phaser 3
+// LABIRIN ILMU - VERSI PHASER
+// Game Maze pake Phaser 3
 // ============================================
 
-// === SOCKET & STATE (Keep from original) ===
+// State & Socket
 const socket = window.socket;
 let playerName = localStorage.getItem("playerName") || "Guest";
 let level = "mudah";
@@ -17,17 +17,17 @@ let score = 0;
 let gameActive = false;
 let finishNode;
 
-// AI Tutor
+// Variabel AI Tutor
 let tutorUsageCount = 0;
 const MAX_TUTOR_USAGE = 3;
 
-// === DOM ELEMENTS ===
+// Elemen HTML
 const tutorOverlay = document.getElementById("tutor-overlay");
 const tutorText = document.getElementById("tutor-text");
 const loadingScreen = document.getElementById("loading-screen");
 const quizModal = document.getElementById("quiz-modal");
 
-// === PHASER CONFIG ===
+// Config Phaser
 const config = {
   type: Phaser.AUTO,
   width: 600,
@@ -45,7 +45,7 @@ const config = {
   },
 };
 
-// === PHASER GAME VARIABLES ===
+// Variabel Game Phaser
 let game;
 let mazeGraphics;
 let playerSprite;
@@ -54,7 +54,7 @@ let questionMarkers = [];
 let cursors;
 let moveCooldown = false;
 
-// === DIFFICULTY BUTTONS ===
+// Tombol Level
 document.querySelectorAll(".btn-difficulty").forEach((btn) => {
   btn.addEventListener("click", () => {
     document
@@ -65,7 +65,7 @@ document.querySelectorAll(".btn-difficulty").forEach((btn) => {
   });
 });
 
-// === AI TUTOR LISTENER ===
+// Dengerin AI Tutor
 if (socket) {
   socket.on("penjelasanTutor", (data) => {
     const textEl = document.getElementById("tutor-text");
@@ -86,7 +86,7 @@ window.tutupTutorLabirin = function () {
   if (quizModal) quizModal.style.display = "flex";
 };
 
-// === REQUEST GAME FROM SERVER ===
+// Minta Game ke Server
 window.requestGame = function () {
   if (socket) {
     socket.emit("mulaiGame", "labirin");
@@ -111,7 +111,7 @@ window.requestGame = function () {
     kodeAkses: kodeAkses,
   });
 
-  // Failsafe timeout
+  // Jaga-jaga kalo timeout
   setTimeout(() => {
     if (
       !gameActive &&
@@ -127,7 +127,7 @@ window.requestGame = function () {
   }, 10000);
 };
 
-// === SOCKET DATA HANDLER ===
+// Pas data masuk
 if (socket) {
   socket.on("soalDariAI", (response) => {
     if (loadingScreen) loadingScreen.style.display = "none";
@@ -140,8 +140,7 @@ if (socket) {
       rows = info.maze_size || 10;
       questions = info.soal_list || [];
 
-      // Calculate cell size based on available space
-      // Use logical width/height (minus headers/footers)
+      // Itung ukuran kotak biar muat layar
       const isMobile = window.innerWidth <= 768;
       const headerHeight = 70;
       const footerHeight = isMobile ? 180 : 40; // Space for D-Pad
@@ -153,7 +152,7 @@ if (socket) {
         Math.min(availableWidth / cols, availableHeight / rows),
       );
 
-      // Minimum size for playability
+      // Ukuran minimal biar enak
       if (size < 25) size = 25;
 
       // Update Phaser config size
@@ -169,7 +168,7 @@ if (socket) {
   });
 }
 
-// === DYNAMIC RESIZE ===
+// Resize Dinamis
 let resizeTimeout;
 window.addEventListener("resize", () => {
   if (!gameActive) return;
@@ -199,7 +198,7 @@ window.addEventListener("resize", () => {
   }, 500);
 });
 
-// === PHASER INITIALIZATION ===
+// Mulai Phaser
 function initPhaserGame() {
   if (game) {
     game.destroy(true);
@@ -213,12 +212,10 @@ function initPhaserGame() {
   gameActive = true;
 }
 
-// === PHASER PRELOAD ===
-function preload() {
-  // No external assets needed
-}
+// Preload (kosong gapapa)
+function preload() {}
 
-// === PHASER CREATE ===
+// Bikin Scene Phaser
 function create() {
   const scene = this;
 
@@ -239,37 +236,37 @@ function create() {
   // Create graphics for maze
   mazeGraphics = this.add.graphics();
 
-  // Generate maze
+  // Bikin Labirin (Algoritma DFS)
   generateMaze();
 
-  // Draw maze
+  // Gambar Labirin
   drawMaze(mazeGraphics);
 
-  // Create player
+  // Bikin Player
   createPlayer(scene);
 
-  // Create finish point
+  // Bikin Finish
   createFinish(scene);
 
-  // Create question markers
+  // Bikin Penanda Soal
   createQuestionMarkers(scene);
 
   // Input handling
   cursors = this.input.keyboard.createCursorKeys();
 
-  // WASD support
+  // Dukungan WASD
   this.input.keyboard.on("keydown-W", () => movePlayer(0, -1, scene));
   this.input.keyboard.on("keydown-A", () => movePlayer(-1, 0, scene));
   this.input.keyboard.on("keydown-S", () => movePlayer(0, 1, scene));
   this.input.keyboard.on("keydown-D", () => movePlayer(1, 0, scene));
 
-  // Arrow keys
+  // Tombol Panah
   this.input.keyboard.on("keydown-UP", () => movePlayer(0, -1, scene));
   this.input.keyboard.on("keydown-LEFT", () => movePlayer(-1, 0, scene));
   this.input.keyboard.on("keydown-DOWN", () => movePlayer(0, 1, scene));
   this.input.keyboard.on("keydown-RIGHT", () => movePlayer(1, 0, scene));
 
-  // Touch/swipe handling
+  // Swipe buat HP
   let touchStartX = 0;
   let touchStartY = 0;
 
@@ -297,7 +294,7 @@ function create() {
   this.gameScene = scene;
 }
 
-// === PHASER UPDATE ===
+// Update loop Phaser
 function update() {
   if (!gameActive) return;
 
@@ -316,12 +313,12 @@ function update() {
   });
 }
 
-// === MAZE GENERATION (DFS Algorithm) ===
+// Bikin Labirin (Algoritma DFS)
 function generateMaze() {
   grid = [];
   stack = [];
 
-  // Create cells
+  // Bikin kotak-kotaknya
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
       grid.push({
@@ -335,7 +332,7 @@ function generateMaze() {
     }
   }
 
-  // DFS maze generation
+  // Jalanin DFS
   current = grid[0];
   current.visited = true;
   finishNode = grid[grid.length - 1];
@@ -355,7 +352,7 @@ function generateMaze() {
     }
   }
 
-  // Place questions randomly
+  // Taro soal secara acak
   let qIndex = 0;
   const shuffledIndices = Array.from({ length: grid.length }, (_, i) => i).sort(
     () => Math.random() - 0.5,
@@ -371,7 +368,7 @@ function generateMaze() {
     }
   }
 
-  // Reset current to start
+  // Balik ke awal
   current = grid[0];
 }
 

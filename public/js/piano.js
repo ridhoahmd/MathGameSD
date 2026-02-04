@@ -14,7 +14,7 @@ let playerSequence = [];
 let level = "mudah";
 let playerName = localStorage.getItem("playerName") || "Guest";
 
-// --- AUDIO CONTEXT ---
+// Setup Audio Context
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const notes = {
   1: 261.63, // C4
@@ -30,7 +30,7 @@ const notes = {
 };
 
 function playTone(num) {
-  // 🔧 FIX: Resume audio context globally
+  // Paksa audio nyala
   if (audioCtx.state === "suspended") audioCtx.resume();
 
   const osc = audioCtx.createOscillator();
@@ -52,7 +52,7 @@ function playTone(num) {
   }
 }
 
-// --- PILIH LEVEL --- 🔧 FIX: Standardized to .btn-difficulty
+// Pilih Level
 document.querySelectorAll(".btn-difficulty").forEach((btn) => {
   btn.addEventListener("click", () => {
     document
@@ -63,7 +63,7 @@ document.querySelectorAll(".btn-difficulty").forEach((btn) => {
   });
 });
 
-// --- MULAI GAME ---
+// Mulai Game
 window.startGameSession = function () {
   if (window.socket) {
     console.log("⏱️ Start Piano");
@@ -78,10 +78,10 @@ window.startGameSession = function () {
   timerEl.innerText = timeLeft;
   gameActive = true;
 
-  // Reset Timer Lama jika ada
+  // Reset Timer lama
   if (timerInterval) clearInterval(timerInterval);
 
-  // Mulai Timer Baru
+  // Timer jalan
   timerInterval = setInterval(() => {
     timeLeft--;
     timerEl.innerText = timeLeft;
@@ -204,11 +204,11 @@ function flashScreen(color) {
   }, 200);
 }
 
-// --- GAME OVER ---
+// Game Over
 function endGame() {
   gameActive = false;
 
-  // 🔧 FIX: Clear timer to prevent memory leak
+  // Matiin timer
   clearInterval(timerInterval);
 
   document.getElementById("final-score").innerText = score;

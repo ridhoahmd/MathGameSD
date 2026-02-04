@@ -1,6 +1,6 @@
 /**
- * Achievement System
- * Unlock badges and track milestones
+ * Sistem Achievement
+ * Buka lencana dan pantau pencapaian
  */
 
 class AchievementSystem {
@@ -10,23 +10,23 @@ class AchievementSystem {
   }
 
   /**
-   * Define all available achievements
+   * Daftar achievement
    */
   defineAchievements() {
     return {
-      // Beginner Achievements
+      // Achievement Pemula
       first_game: {
         id: "first_game",
-        title: "🎮 First Steps",
-        description: "Play your first game",
+        title: "🎮 Langkah Awal",
+        description: "Mainkan game pertamamu",
         icon: "🎮",
         points: 10,
         category: "beginner",
       },
       first_win: {
         id: "first_win",
-        title: "🏆 First Victory",
-        description: "Win your first game",
+        title: "🏆 Kemenangan Pertama",
+        description: "Menangkan game pertamamu",
         icon: "🏆",
         points: 20,
         category: "beginner",
@@ -34,17 +34,17 @@ class AchievementSystem {
       scorer_100: {
         id: "scorer_100",
         title: "💯 Century",
-        description: "Score 100 points in a single game",
+        description: "Dapatkan 100 poin dalam satu game",
         icon: "💯",
         points: 15,
         category: "scorer",
       },
 
-      // Game-Specific Achievements
+      // Achievement Game
       math_whiz: {
         id: "math_whiz",
-        title: "🧮 Math Whiz",
-        description: "Score 500+ in Math Battle",
+        title: "🧮 Jago Matematika",
+        description: "Skor 500+ di Math Battle",
         icon: "🧮",
         points: 30,
         category: "games",
@@ -52,8 +52,8 @@ class AchievementSystem {
       },
       zuma_master: {
         id: "zuma_master",
-        title: "☄️ Zuma Master",
-        description: "Score 1000+ in Zuma",
+        title: "☄️ Master Zuma",
+        description: "Skor 1000+ di Zuma",
         icon: "☄️",
         points: 50,
         category: "games",
@@ -61,80 +61,80 @@ class AchievementSystem {
       },
       memory_genius: {
         id: "memory_genius",
-        title: "🧠 Memory Genius",
-        description: "Complete Memory Lab in under 60 seconds",
+        title: "🧠 Jenius Memori",
+        description: "Selesaikan Memory Lab di bawah 60 detik",
         icon: "🧠",
         points: 40,
         category: "games",
       },
 
-      // Streak Achievements
+      // Achievement Streak
       streak_3: {
         id: "streak_3",
-        title: "🔥 Hot Streak",
-        description: "Login for 3 consecutive days",
+        title: "🔥 Makin Panas",
+        description: "Login 3 hari berturut-turut",
         icon: "🔥",
         points: 25,
         category: "streak",
       },
       streak_7: {
         id: "streak_7",
-        title: "⭐ Dedicated",
-        description: "Login for 7 consecutive days",
+        title: "⭐ Berdedikasi",
+        description: "Login 7 hari berturut-turut",
         icon: "⭐",
         points: 50,
         category: "streak",
       },
       streak_30: {
         id: "streak_30",
-        title: "👑 Legend",
-        description: "Login for 30 consecutive days",
+        title: "👑 Legenda",
+        description: "Login 30 hari berturut-turut",
         icon: "👑",
         points: 100,
         category: "streak",
       },
 
-      // Combo Achievements
+      // Achievement Combo
       combo_5: {
         id: "combo_5",
-        title: "🎯 Combo Starter",
-        description: "Get a 5x combo",
+        title: "🎯 Mulai Combo",
+        description: "Dapatkan 5x combo",
         icon: "🎯",
         points: 20,
         category: "combo",
       },
       combo_10: {
         id: "combo_10",
-        title: "⚡ Combo Master",
-        description: "Get a 10x combo",
+        title: "⚡ Raja Combo",
+        description: "Dapatkan 10x combo",
         icon: "⚡",
         points: 40,
         category: "combo",
       },
 
-      // Collection Achievements
+      // Achievement Koleksi
       all_rounder: {
         id: "all_rounder",
-        title: "🌟 All Rounder",
-        description: "Play all 9 games",
+        title: "🌟 Serba Bisa",
+        description: "Mainkan semua 9 game",
         icon: "🌟",
         points: 60,
         category: "collection",
       },
       theme_collector: {
         id: "theme_collector",
-        title: "🎨 Style Master",
-        description: "Unlock 5 themes",
+        title: "🎨 Kolektor Gaya",
+        description: "Buka 5 tema",
         icon: "🎨",
         points: 35,
         category: "collection",
       },
 
-      // Social/Leaderboard
+      // Achievement Leaderboard
       top_10: {
         id: "top_10",
         title: "🥉 Top 10",
-        description: "Reach top 10 in leaderboard",
+        description: "Masuk 10 besar leaderboard",
         icon: "🥉",
         points: 50,
         category: "leaderboard",
@@ -142,41 +142,41 @@ class AchievementSystem {
       top_3: {
         id: "top_3",
         title: "🥈 Podium Finish",
-        description: "Reach top 3 in leaderboard",
+        description: "Masuk 3 besar leaderboard",
         icon: "🥈",
         points: 75,
         category: "leaderboard",
       },
       number_1: {
         id: "number_1",
-        title: "🥇 Champion",
-        description: "Reach #1 in leaderboard",
+        title: "🥇 Sang Juara",
+        description: "Jadi juara 1 di leaderboard",
         icon: "🥇",
         points: 100,
         category: "leaderboard",
       },
 
-      // Total Score Milestones
+      // Milestone Skor
       scorer_1000: {
         id: "scorer_1000",
-        title: "🎖️ Thousand Club",
-        description: "Reach 1,000 total score",
+        title: "🎖️ Klub Seribu",
+        description: "Capai total skor 1,000",
         icon: "🎖️",
         points: 30,
         category: "milestone",
       },
       scorer_5000: {
         id: "scorer_5000",
-        title: "💎 Diamond Tier",
-        description: "Reach 5,000 total score",
+        title: "💎 Tier Berlian",
+        description: "Capai total skor 5,000",
         icon: "💎",
         points: 60,
         category: "milestone",
       },
       scorer_10000: {
         id: "scorer_10000",
-        title: "🚀 Elite Player",
-        description: "Reach 10,000 total score",
+        title: "🚀 Pemain Elit",
+        description: "Capai total skor 10,000",
         icon: "🚀",
         points: 100,
         category: "milestone",
@@ -203,14 +203,14 @@ class AchievementSystem {
   }
 
   /**
-   * Check if achievement is unlocked
+   * Cek apa udah kebuka
    */
   isUnlocked(achievementId) {
     return this.unlocked.includes(achievementId);
   }
 
   /**
-   * Unlock achievement
+   * Buka achievement
    * @returns {Object|null} Achievement data if newly unlocked, null if already unlocked
    */
   unlock(achievementId) {
@@ -243,7 +243,7 @@ class AchievementSystem {
   }
 
   /**
-   * Show achievement unlock notification
+   * Notifikasi achievement
    */
   showAchievementToast(achievement) {
     const toast = document.createElement("div");
@@ -361,7 +361,7 @@ class AchievementSystem {
   }
 
   /**
-   * Check game score for achievements
+   * Cek achievement game
    */
   checkGameAchievements(game, score) {
     const unlocked = [];

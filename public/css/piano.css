@@ -9,7 +9,7 @@ body {
 }
 
 /* =========================================
-   PIANO.CSS - GLASS SYNTH EDITON 🎹
+   PIANO.CSS - EDISI SYNTH KACA 🎹
    ========================================= */
 
 body {
@@ -28,7 +28,7 @@ body {
   user-select: none;
 }
 
-/* BACKGROUND EQUALIZER ANIMATION (CSS ONLY) */
+/* ANIMASI EQUALIZER BACKGROUND (Cuma CSS) */
 body::before {
   content: "";
   position: absolute;
@@ -116,7 +116,7 @@ body::before {
   box-sizing: border-box;
 }
 
-/* KEYS (TUTS PIANO KACA) */
+/* TUTSI (KEYS) PIANO KACA */
 .key {
   flex: 1;
   height: 250px; /* Lebih tinggi */
@@ -174,7 +174,7 @@ body::before {
   text-shadow: none;
 }
 
-/* ANIMASI NADA KELUAR (Visual Feedback) */
+/* ANIMASI NADA KELUAR (Umpan Balik Visual) */
 .note-bubble {
   position: absolute;
   bottom: 100%;
@@ -264,7 +264,7 @@ body::before {
 }
 
 /* ========================================= */
-/* GAME OVER MODAL STYLES (Moved from HTML)  */
+/* GAYA MODAL GAME OVER (Pindahan dari HTML) */
 /* ========================================= */
 
 .modal-title {

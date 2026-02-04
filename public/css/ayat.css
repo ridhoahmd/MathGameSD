@@ -1,9 +1,9 @@
-/* GLOBAL SETTINGS */
+/* PENGATURAN GLOBAL */
 body {
   margin: 0;
   padding: 0;
   font-family: "Poppins", sans-serif;
-  /* THEME: MASJID NIGHT / DEEP REFLECTION */
+  /* TEMA: MASJID MALAM */
   background-color: #004d40;
   background-image:
     linear-gradient(135deg, #00251a 0%, #004d40 100%),
@@ -11,7 +11,7 @@ body {
       circle at 50% 0%,
       rgba(255, 255, 255, 0.1) 0%,
       transparent 50%
-    ); /* Cahaya Kubah dari atas */
+    ); /* Efek cahaya kubah */
   color: #fff;
   min-height: 100dvh;
   display: flex;
@@ -57,13 +57,12 @@ body {
   font-size: 0.9rem;
 }
 
-/* CONTAINER UTAMA (GLASS) */
-/* CONTAINER UTAMA (GLASS) */
+/* KONTAINER UTAMA (GLASS) */
 .game-container {
   width: 90%;
   max-width: 600px;
   max-height: 90vh;
-  /* Glassmorphism Effect */
+  /* Efek Kaca */
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 30px;
@@ -77,25 +76,6 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes popIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@media (max-width: 480px) {
-  .game-container {
-    width: 95%;
-    padding: 20px;
-    border-radius: 20px;
-  }
 }
 
 @keyframes popIn {
@@ -170,7 +150,7 @@ body {
   }
 }
 
-/* START SCREEN */
+/* LAYAR MULAI */
 .icon-big {
   font-size: 4rem;
   margin-bottom: 10px;
@@ -212,7 +192,7 @@ body {
   box-shadow: 0 5px 15px rgba(22, 160, 133, 0.4);
 }
 
-/* GAMEPLAY */
+/* AREA MAIN */
 .progress-bar {
   width: 100%;
   height: 8px;
@@ -244,8 +224,8 @@ body {
 }
 
 /* =========================================
-   AYAT.CSS - FINAL MERGE
-   (Arab Besar + Latin + AI Tutor Tajwid Style)
+   AYAT.CSS - SETELAN AKHIR
+   (Arab Besar + Latin + Gaya AI Tutor)
    ========================================= */
 
 /* --- 1. TEKS ARAB (Ukuran Pas & Rapi) --- */
@@ -311,7 +291,7 @@ body {
   animation: shake 0.4s;
 }
 
-/* --- 3. FITUR LATIN (Style Anda) --- */
+/* --- 3. FITUR LATIN --- */
 .btn-toggle-latin {
   background: #f39c12;
   border: none;
@@ -349,7 +329,7 @@ body {
 /* ========================================= */
 
 .tutor-overlay {
-  display: none; /* JS akan ubah ini jadi 'flex' */
+  display: none; /* JS yang atur jadi 'flex' */
   position: fixed;
   top: 0;
   left: 0;

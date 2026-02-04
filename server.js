@@ -6,16 +6,24 @@ const path = require("path");
 const helmet = require("helmet");
 const compression = require("compression");
 
-// Modules
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+const express = require("express");
+const http = require("http");
+const path = require("path");
+const helmet = require("helmet");
+const compression = require("compression");
+
+// Import module butuh apa aja
 const initSocket = require("./src/sockets/socketManager");
 const { apiLimiter } = require("./src/utils/rateLimit");
 const { askAI } = require("./src/services/aiService");
 
-// Init App
+// Bikin aplikasi express & server
 const app = express();
 const server = http.createServer(app);
 
-// 1. MIDDLEWARES
+// Middleware dasar
 app.use(compression());
 app.use(
   helmet({
@@ -27,7 +35,7 @@ app.use(
 );
 app.use(express.json());
 
-// Cache Control
+// Biar ga nyimpen cache aneh-aneh
 app.use((req, res, next) => {
   res.set(
     "Cache-Control",
@@ -38,63 +46,62 @@ app.use((req, res, next) => {
   next();
 });
 
-// 2. SOCKET.IO MANANGER
+// Jalanin socket.io
 initSocket(server);
 
-// 3. API ROUTES
+// Limit request API biar ga spam
 app.use("/api/ask-ai", apiLimiter);
 
-// Secret Key Validation
+// Cek JWT Secret ada apa ngga
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
-  console.error(
-    "❌ FATAL: JWT_SECRET belum diset di .env! Server menolak start.",
-  );
+  console.error("❌ Ga bisa jalan bos, JWT_SECRET belom di set di .env!");
   process.exit(1);
 }
 
-// Route: Login Guru (Protected with Rate Limit)
+// Login buat guru
 app.post("/api/login-guru", apiLimiter, (req, res) => {
   const { kode } = req.body;
   const passwordBenar = process.env.GURU_PASSWORD;
 
   if (!passwordBenar) {
-    console.error("❌ FATAL: GURU_PASSWORD belum diset di .env!");
+    console.error("❌ Waduh, GURU_PASSWORD lupa di set di .env");
     return res.status(500).json({
       success: false,
-      message: "Server Misconfiguration: Password not set.",
+      message: "Server config error: Password belum diset.",
     });
   }
 
   const inputKode = kode ? String(kode).trim() : "";
   if (inputKode === passwordBenar) {
-    // Generate Token
+    // Bikin token sejam aja
     const token = jwt.sign({ role: "guru", username: "admin" }, JWT_SECRET, {
       expiresIn: "1h",
     });
     return res.json({ success: true, role: "guru", token });
   } else {
-    return res.status(401).json({ success: false, message: "Kode Salah" });
+    return res.status(401).json({ success: false, message: "Password salah!" });
   }
 });
 
-// Route: Manual AI Request (if needed via HTTP)
+// API buat nanya AI
 app.post("/api/ask-ai", async (req, res) => {
   try {
     const { prompt } = req.body;
-    if (!prompt) return res.status(400).json({ error: "Prompt missing" });
+    if (!prompt) return res.status(400).json({ error: "Mau nanya apa?" });
 
     const answer = await askAI(prompt);
     res.json({ answer });
   } catch (e) {
-    console.error("API AI Error:", e.message);
-    res.status(500).json({ error: "AI Service Error" });
+    console.error("Error AI:", e.message);
+    res.status(500).json({ error: "Lagi pusing AInya" });
   }
 });
 
-// 4. STATIC FILES
+// Serve file statis (frontend)
 app.use(express.static(path.join(__dirname, "public")));
 
+// Handle route lain, balikin ke index (SPA like behavior)
 app.get(/.*/, (req, res) => {
   if (req.url.startsWith("/api/") || req.url.startsWith("/socket.io/")) {
     return res.status(404).json({ error: "Not found" });
@@ -102,8 +109,8 @@ app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// 5. START SERVER
+// Gas server!
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`🚀 Server Videa Class (Modular) Siap di Port ${PORT}`);
+  console.log(`🚀 Server jalan di Port ${PORT}`);
 });

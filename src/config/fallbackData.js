@@ -1,5 +1,5 @@
-// Fallback Data Configuration
-// Digunakan saat Database tidak merespon atau kosong
+// Konfigurasi Data Cadangan
+// Dipakai kalau Database lagi ngambek atau kosong
 
 const fallbacks = {
   math: [
@@ -112,7 +112,7 @@ const fallbacks = {
     palet_warna: ["#f00", "#0f0", "#00f", "#ff0"],
     speed: "sedang",
   },
-  piano: { sequence: [1, 3, 5, 8] }, // Basic fallback, dynamic handled below
+  piano: { sequence: [1, 3, 5, 8] }, // Fallback dasar
   tajwid: {
     kategori_kiri: "Izhar",
     kategori_kanan: "Ikhfa",

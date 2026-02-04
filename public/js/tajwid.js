@@ -1,4 +1,4 @@
-// --- 1. SETUP UI & DATA ---
+// 1. Setup Data
 const ui = {
   start: document.getElementById("start-screen"),
   game: document.getElementById("game-screen"),
@@ -10,7 +10,7 @@ const ui = {
   lblLeft: document.getElementById("label-left"),
   lblRight: document.getElementById("label-right"),
   overlay: document.getElementById("feedback-overlay"),
-  // Elemen Tutor
+  // Tutor UI
   tutorOverlay: document.getElementById("tutor-overlay"),
   tutorText: document.getElementById("tutor-text"),
 };
@@ -27,7 +27,7 @@ let selectedLevel = "mudah";
 let tutorUsageCount = 0;
 const MAX_TUTOR_USAGE = 3;
 
-// --- 2. LISTENER TOMBOL DIFFICULTY --- 🔧 FIX: Standardized to .btn-difficulty
+// 2. Pilihan Level
 document.addEventListener("DOMContentLoaded", () => {
   const diffButtons = document.querySelectorAll(".btn-difficulty");
   diffButtons.forEach((btn) => {
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Init Auto-Connect Tombol Start disini juga
+  // Sambungin tombol start
   initStartButton();
 });
 
@@ -52,26 +52,26 @@ function initStartButton() {
   }
 }
 
-// --- 3. FUNGSI START GAME ---
+// 3. Mulai Game
 function startGame() {
   const btnStart = document.querySelector(".btn-start");
 
-  // A. ANTI-CHEAT START
+  // A. Lapor server
   if (window.socket) {
     console.log("⏱️ Start Tajwid: Lapor Server...");
     window.socket.emit("mulaiGame", "tajwid");
   }
 
-  // B. UI Loading
+  // B. Loading text
   if (btnStart) {
     btnStart.innerText = "⏳ Menyusun Huruf...";
     btnStart.disabled = true;
   }
 
-  // C. Audio
+  // C. Siapin Audio
   if (typeof AudioManager !== "undefined") AudioManager.init();
 
-  // D. Request Soal
+  // D. Minta Soal
   if (window.socket) {
     window.socket.emit("mintaSoalAI", {
       kategori: "tajwid",
@@ -80,14 +80,14 @@ function startGame() {
   }
 }
 
-// --- 4. TERIMA DATA SERVER  ---
+// 4. Data masuk dari server
 if (window.socket) {
   window.socket.on("soalDariAI", (response) => {
     const btnStart = document.querySelector(".btn-start");
 
-    // 1. VALIDASI DATA - 🔧 FIX: Better error handling
+    // Cek data valid ga
     if (!response || !response.data) {
-      console.error("Tajwid game: No data from server");
+      console.error("Tajwid game: Data server error");
       alert("Gagal memuat soal. Silakan coba lagi.");
 
       if (btnStart) {
@@ -104,7 +104,7 @@ if (window.socket) {
 
     let incomingData = response.data;
 
-    // 2. LOGIKA LABEL
+    // Label kategori
     if (incomingData.kategori_kiri && incomingData.kategori_kanan) {
       namaKategoriKiri = incomingData.kategori_kiri;
       namaKategoriKanan = incomingData.kategori_kanan;
@@ -132,7 +132,7 @@ if (window.socket) {
 
     if (!queue || queue.length === 0) return; // Cegah array kosong
 
-    // 3. LOGIKA MULAI GAME (Tetap Sama)
+    // Mulai sesi
     score = 0;
     if (ui.score) ui.score.innerText = "0";
 
@@ -150,7 +150,7 @@ if (window.socket) {
   });
 }
 
-// --- 5. GAMEPLAY LOGIC ---
+// 5. Gameplay
 function nextCard() {
   if (queue.length === 0) {
     endGame();
@@ -167,19 +167,19 @@ function nextCard() {
   }
 }
 
-// [REVISI] Fungsi Answer dengan Visual Feedback
+// Fungsi jawab + efek visual
 function answer(side) {
   // Validasi
   if (!currentItem) return;
   const isCorrect = side === currentItem.hukum;
 
-  // Elemen Kartu untuk efek kedip
+  // Kartu kedip-kedip
   const cardElement = document.getElementById("card");
 
   if (isCorrect) {
-    // --- JAWABAN BENAR ---
+    // JAWABAN BENAR
 
-    // COMBO
+    // Logic Combo
     let multiplier = 1;
     if (typeof ComboManager !== "undefined")
       multiplier = ComboManager.addStreak();
@@ -191,28 +191,28 @@ function answer(side) {
       AudioManager.playCorrect();
     } catch (e) {}
 
-    // 1. Efek Kedip Hijau di Kartu
+    // 1. Kedip Hijau
     if (cardElement) {
       cardElement.classList.add("correct-flash"); // Pastikan CSS .correct-flash ada
       setTimeout(() => cardElement.classList.remove("correct-flash"), 500);
     }
 
-    // 2. Animasi Overlay (Lama)
+    // 2. Animasi Overlay
     showFeedback(true);
 
-    // 3. Animasi Geser Kartu (Swipe)
+    // 3. Geser Kartu
     animateSwipe(side);
 
-    // 4. Lanjut Soal
+    // 4. Lanjut
     setTimeout(nextCard, 300);
   } else {
-    // --- JAWABAN SALAH ---
+    // JAWABAN SALAH
     if (typeof ComboManager !== "undefined") ComboManager.reset();
     try {
       AudioManager.playWrong();
     } catch (e) {}
 
-    // 1. Efek Kedip Merah di Kartu
+    // 1. Kedip Merah
     if (cardElement) {
       cardElement.classList.add("wrong-flash");
       setTimeout(() => cardElement.classList.remove("wrong-flash"), 500);
@@ -221,7 +221,7 @@ function answer(side) {
     // 2. Animasi Overlay
     showFeedback(false);
 
-    // 3. Panggil Tutor
+    // 3. Panggil Guru
     setTimeout(() => {
       let teksJawabanUser =
         side === "kiri" ? namaKategoriKiri : namaKategoriKanan;
@@ -248,7 +248,7 @@ function showFeedback(isWin) {
   }, 500);
 }
 
-// --- 6. AI TUTOR LOGIC ---
+// 6. Logika AI Tutor
 function panggilTutor(soal, jawabUser, jawabBenar) {
   if (tutorUsageCount >= MAX_TUTOR_USAGE) return;
   tutorUsageCount++;
@@ -289,7 +289,7 @@ window.tutupTutor = function () {
   nextCard(); // Lanjut main setelah tutup tutor
 };
 
-// --- 7. GAME OVER & SAVE ---
+// 7. Selesai & Simpan
 function endGame() {
   if (ui.game) {
     ui.game.classList.remove("active");
@@ -324,7 +324,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 // ==========================================
-// [FIX] JEMBATAN UNTUK HTML (WAJIB ADA)
+// Buat tombol HTML
 // ==========================================
 // Agar onclick="handleInput('kiri')" di HTML bisa jalan
 window.handleInput = function (side) {
@@ -333,14 +333,14 @@ window.handleInput = function (side) {
 };
 
 // ==========================================
-// [BARU] LOGIKA TOUCH SWIPE (HP)
+// Fitur Swipe di HP
 // ==========================================
 const cardElement = document.getElementById("card");
 let startX = 0;
 let isDragging = false;
 
 if (cardElement) {
-  // 1. Saat jari menyentuh layar
+  // 1. Pas disentuh
   cardElement.addEventListener(
     "touchstart",
     (e) => {
@@ -351,7 +351,7 @@ if (cardElement) {
     { passive: true },
   );
 
-  // 2. Saat jari bergerak (Visual Feedback)
+  // 2. Pas digeser
   cardElement.addEventListener(
     "touchmove",
     (e) => {
@@ -366,7 +366,7 @@ if (cardElement) {
     { passive: true },
   );
 
-  // 3. Saat jari dilepas (Eksekusi Jawaban)
+  // 3. Pas dilepas
   cardElement.addEventListener("touchend", (e) => {
     if (!isDragging) return;
     isDragging = false;

@@ -78,14 +78,14 @@ h1 {
   padding: 10px;
 }
 
-/* Base Table Style */
+/* Gaya Tabel Dasar */
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
 }
 
-/* Default TH/TD */
+/* TH/TD Default */
 th,
 td {
   padding: 15px;
@@ -176,7 +176,7 @@ select.role-select:disabled {
   gap: 15px;
   margin-bottom: 20px;
   align-items: center;
-  flex-wrap: wrap; /* Agar responsif di layar kecil */
+  flex-wrap: wrap; /* biar responsif */
 }
 
 .input-row label {
@@ -205,8 +205,6 @@ input[type="text"].soal-input {
   color: white;
 }
 
-
-
 table {
   font-size: 0.85rem;
 }
@@ -232,7 +230,7 @@ th.agama {
 }
 
 /* =========================================
-   PEMBERSIHAN INLINE STYLE (Tambahan Baru)
+   PEMBERSIHAN GAYA INLINE (Baru Ditambah)
    ========================================= */
 
 /* 1. Header Kedua (Tombol Buka Panel) */
@@ -243,7 +241,7 @@ th.agama {
   justify-content: flex-start;
 }
 
-/* 2. Wrapper Input Group */
+/* 2. Pembungkus Input Group */
 .input-group-wrapper {
   margin-bottom: 15px;
 }
@@ -256,7 +254,7 @@ th.agama {
   margin-bottom: 5px;
 }
 
-/* 4. Input dengan Border Orange */
+/* 4. Input dengan Border Oren */
 .input-border-orange {
   border: 1px solid #ff9800 !important;
 }
@@ -278,7 +276,7 @@ th.agama {
   margin-top: 20px;
 }
 
-/* 8. Container Prioritas (Border Orange) */
+/* 8. Container Prioritas (Border Oren) */
 .container-priority {
   margin-top: 30px;
   padding: 15px;
@@ -292,13 +290,13 @@ th.agama {
   margin-bottom: 10px;
 }
 
-/* 10. Label Orange */
+/* 10. Label Oren */
 .label-orange {
   color: #ff9800;
   font-weight: 600;
 }
 
-/* 11. Status Display (Current Setting) */
+/* 11. Tampilan Status (Setting Sekarang) */
 .status-display {
   font-size: 0.85rem;
   color: #00f2ff;
@@ -313,30 +311,30 @@ th.agama {
   flex-wrap: wrap;
 }
 
-/* --- CLASS KHUSUS JAVASCRIPT INJECTION --- */
-/* (Class ini dipakai di dalam string JS) */
+/* --- CLASS KHUSUS INJEKSI JS --- */
+/* (Dipakai di dalam string JS) */
 
 .error-msg {
-  color: red; 
+  color: red;
   margin-top: 20px;
 }
 
 .flex-align-center {
-  display: flex; 
+  display: flex;
   align-items: center;
 }
 
 .text-teal-bold {
-  color: #16a085; 
+  color: #16a085;
   font-weight: bold;
 }
 
 .text-red-bold {
-  color: #ef473a; 
-  font-weight: bold; /* Digunakan juga untuk ADMIN */
+  color: #ef473a;
+  font-weight: bold; /* Juga buat ADMIN */
 }
 
 .text-green-bold {
   color: #38ef7d;
-  border-color: #38ef7d; /* Digunakan untuk GURU */
+  border-color: #38ef7d; /* Buat GURU */
 }
