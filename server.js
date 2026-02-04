@@ -6,14 +6,6 @@ const path = require("path");
 const helmet = require("helmet");
 const compression = require("compression");
 
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
-const express = require("express");
-const http = require("http");
-const path = require("path");
-const helmet = require("helmet");
-const compression = require("compression");
-
 // Import module butuh apa aja
 const initSocket = require("./src/sockets/socketManager");
 const { apiLimiter } = require("./src/utils/rateLimit");
