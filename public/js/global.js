@@ -1,5 +1,10 @@
 // 1. KONEKSI SOCKET UTAMA
-window.socket = io();
+try {
+  window.socket = typeof io !== "undefined" ? io() : null;
+} catch (e) {
+  console.error("⚠️ Socket.io gagal dimuat. Server mungkin down.", e);
+  window.socket = null;
+}
 
 // 2. NAMA PLAYER
 window.playerName = localStorage.getItem("playerName") || "Guest";

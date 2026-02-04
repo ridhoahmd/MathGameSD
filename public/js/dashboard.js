@@ -1,7 +1,7 @@
 // Dashboard Utama (Lengkap + Aman)
 
 // Pake socket global biar ga dobel koneksi
-const socket = window.socket || io();
+const socket = window.socket || (typeof io !== "undefined" ? io() : null);
 
 // Setup Firebase buat Login Google
 const provider = new firebase.auth.GoogleAuthProvider();
