@@ -37,6 +37,20 @@ class MathGame extends GameEngine {
         if (e.key === "Enter" && this.gameActive) this.checkAnswer();
       });
     }
+
+    // FIX: Wire "TEMBAK JAWABAN" button
+    const actionBtn = document.getElementById("action-btn");
+    if (actionBtn) {
+      actionBtn.addEventListener("click", () => {
+        if (this.gameActive) this.checkAnswer();
+      });
+    }
+
+    // FIX: Wire "SELESAI & SIMPAN SKOR" button
+    const finishBtn = document.getElementById("btn-finish");
+    if (finishBtn) {
+      finishBtn.addEventListener("click", () => this.endGame());
+    }
   }
 
   requestGame() {
