@@ -911,8 +911,8 @@ function initGame() {
 
 // === SOCKET LISTENERS ===
 document.addEventListener("DOMContentLoaded", () => {
-  // Tombol Start
-  window.startGameMultiplayer = () => {
+  // Tombol Start dengan Anti-Spam Protection
+  const rawStartFunction = () => {
     // Cegah klik ganda
     const btn = document.querySelector(".btn-start");
     if (btn) btn.disabled = true;
@@ -951,6 +951,16 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   };
+
+  // Anti-spam wrapper (500ms cooldown)
+  if (window.GameUtils) {
+    window.startGameMultiplayer = GameUtils.createClickGuard(
+      rawStartFunction,
+      500,
+    );
+  } else {
+    window.startGameMultiplayer = rawStartFunction;
+  }
 });
 
 // Update Difficulty Button

@@ -405,3 +405,57 @@ textarea {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 242, 255, 0.3) rgba(255, 255, 255, 0.05);
 }
+
+/* ============================================
+   UNIVERSAL GAME CANVAS CENTERING
+   Untuk semua game berbasis Phaser/Canvas
+   ============================================ */
+
+/* Game Canvas Wrapper - Universal Centering */
+.game-canvas-wrapper,
+#game-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: calc(100vh - 120px); /* Space untuk header/HUD */
+  padding: 20px;
+}
+
+.game-canvas-wrapper canvas,
+#game-container canvas {
+  max-width: 100%;
+  max-height: calc(100vh - 140px);
+  object-fit: contain;
+  border-radius: 15px;
+  box-shadow: 0 0 50px rgba(0, 242, 255, 0.2);
+}
+
+/* Mobile Optimization */
+@media (max-width: 768px) {
+  .game-canvas-wrapper,
+  #game-container {
+    min-height: calc(100vh - 80px);
+    padding: 10px;
+  }
+
+  .game-canvas-wrapper canvas,
+  #game-container canvas {
+    max-height: calc(100vh - 100px);
+    border-radius: 10px;
+  }
+}
+
+/* Portrait Mode - Extra tight layout */
+@media (max-width: 480px) and (orientation: portrait) {
+  .game-canvas-wrapper,
+  #game-container {
+    padding: 5px;
+    min-height: calc(100vh - 60px);
+  }
+
+  .game-canvas-wrapper canvas,
+  #game-container canvas {
+    max-height: calc(100vh - 80px);
+  }
+}

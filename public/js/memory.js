@@ -30,8 +30,14 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// 2. MULAI GAME
+// 1. Mulai Game (Manggil dari HTML)
 function initGame() {
+  // CRITICAL: Reset flags to prevent race conditions
+  isFlashing = false;
+  lockBoard = false;
+  hasFlippedCard = false;
+
+  // Reset variabel
   if (window.socket) {
     console.log("⏱️ Start Memory");
     window.socket.emit("mulaiGame", "memory");
@@ -261,9 +267,15 @@ function gameWon() {
   // Matiin flash biar ga bocor
   isFlashing = false;
 
+  // IMPROVED: Reward efficiency instead of penalizing extra moves
   const baseScore = 100;
-  let penalty = Math.max(0, (moves - totalPairs) * 2);
-  let finalScore = Math.max(10, baseScore - penalty);
+  const optimalMoves = totalPairs; // Perfect score = jumlah pairs
+  const extraMoves = Math.max(0, moves - optimalMoves);
+
+  // Bonus untuk efficient play (tapi tidak minus)
+  let bonus = Math.max(0, (optimalMoves - extraMoves) * 5);
+
+  let finalScore = baseScore + bonus;
 
   if (finalScoreEl) finalScoreEl.innerText = finalScore;
 

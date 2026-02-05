@@ -41,7 +41,7 @@ const config = {
   },
   scale: {
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.NO_CENTER,
+    autoCenter: Phaser.Scale.CENTER_BOTH, // FIXED: Center canvas
   },
 };
 
@@ -152,8 +152,9 @@ if (socket) {
         Math.min(availableWidth / cols, availableHeight / rows),
       );
 
-      // Ukuran minimal biar enak
-      if (size < 25) size = 25;
+      // IMPROVED: Add max/min constraints
+      size = Math.min(size, 80); // Max 80px per cell
+      size = Math.max(size, 20); // Min 20px per cell
 
       // Update Phaser config size
       config.width = cols * size;
@@ -630,6 +631,12 @@ function movePlayer(dx, dy, scene) {
       current = next;
       moveCooldown = true;
 
+      // CRITICAL: Safety timeout untuk unlock
+      clearTimeout(moveTimeout);
+      moveTimeout = setTimeout(() => {
+        moveCooldown = false; // Force unlock after 1s
+      }, 1000);
+
       const targetX = current.i * size + size / 2;
       const targetY = current.j * size + size / 2;
 
@@ -640,6 +647,7 @@ function movePlayer(dx, dy, scene) {
         duration: 150,
         ease: "Power2",
         onComplete: () => {
+          clearTimeout(moveTimeout); // Clear safety timeout
           moveCooldown = false;
           checkFinish();
         },
@@ -649,9 +657,16 @@ function movePlayer(dx, dy, scene) {
 }
 
 // === QUIZ FUNCTIONS ===
+let moveTimeout = null; // Safety timeout
+
 function openQuiz(node) {
   gameActive = false;
   pendingNode = node;
+
+  // CRITICAL: Pause Phaser scene
+  if (game && game.scene.scenes[0]) {
+    game.scene.scenes[0].scene.pause();
+  }
 
   if (quizModal) {
     quizModal.style.display = "flex";
@@ -734,6 +749,14 @@ window.checkQuiz = function () {
       });
 
       gameActive = true;
+
+      // Resume scene after quiz
+      setTimeout(() => {
+        if (game && game.scene.scenes[0]) {
+          game.scene.scenes[0].scene.resume();
+        }
+      }, 1500);
+
       checkFinish();
     }, 1000);
   } else {

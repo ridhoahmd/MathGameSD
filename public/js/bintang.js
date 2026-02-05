@@ -110,6 +110,7 @@ function create() {
   timeLeft = 60;
   combo = 0;
   gameOver = false;
+  window.gameEndingBintang = false; // Reset anti-spam flag
   updateUI();
 
   // Bikin background gradasi biar keren
@@ -474,6 +475,10 @@ function updateTimer() {
 }
 
 function endGame(scene) {
+  // ANTI-SPAM: Prevent multiple calls
+  if (window.gameEndingBintang) return;
+  window.gameEndingBintang = true;
+
   gameOver = true;
   if (timerEvent) timerEvent.remove();
   if (starSpawnTimer) starSpawnTimer.remove();
@@ -481,7 +486,7 @@ function endGame(scene) {
   finalScoreEl.innerText = score;
   gameOverModal.classList.remove("hidden");
 
-  // Kirim skor ke server
+  // Kirim skor ke server (sekali saja)
   if (socket) {
     socket.emit("simpanSkor", {
       nama: username,
