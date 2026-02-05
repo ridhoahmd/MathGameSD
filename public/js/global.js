@@ -1,6 +1,22 @@
 // 1. KONEKSI SOCKET UTAMA
 try {
-  window.socket = typeof io !== "undefined" ? io() : null;
+  if (typeof io !== "undefined") {
+    // Check for auth token (untuk GURU/ADMIN yang login)
+    const authToken = localStorage.getItem("authToken");
+
+    if (authToken) {
+      // Authenticated connection dengan token
+      window.socket = io({
+        auth: { token: authToken },
+      });
+      console.log("✅ Socket connected dengan autentikasi");
+    } else {
+      // Guest connection (siswa biasa)
+      window.socket = io();
+    }
+  } else {
+    window.socket = null;
+  }
 } catch (e) {
   console.error("⚠️ Socket.io gagal dimuat. Server mungkin down.", e);
   window.socket = null;

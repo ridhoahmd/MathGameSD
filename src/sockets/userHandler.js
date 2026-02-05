@@ -67,9 +67,13 @@ module.exports = (socket, io) => {
           !socket.isAuth ||
           (socket.decoded && socket.decoded.role !== "guru")
         ) {
-          console.warn(
-            `⚠️ Unauthorized access to ADMIN account ${username}. Downgrading to SISWA.`,
-          );
+          // Hanya log WARNING sekali per socket session
+          if (!socket.downgradedWarningShown) {
+            console.warn(
+              `⚠️ Unauthorized access to ADMIN account ${username}. Downgrading to SISWA.`,
+            );
+            socket.downgradedWarningShown = true; // Flag agar ga spam log
+          }
           // Paksa jadi siswa sesi ini
           effectiveRole = "siswa";
         }
