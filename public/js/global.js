@@ -100,8 +100,9 @@ function createOfflineUI() {
   document.body.appendChild(overlay);
 }
 
-// Bikin UI offline pas diload
-createOfflineUI();
+// EMERGENCY FIX: DO NOT create overlay on page load!
+// Only create when actually disconnected
+// createOfflineUI(); // REMOVED - was causing production outage
 
 // 4. DETEKSI PUTUS/NYAMBUNG
 let isReconnecting = false;
@@ -110,8 +111,13 @@ if (window.socket) {
   window.socket.on("disconnect", (reason) => {
     console.log("⚠️ Putus koneksi:", reason);
     isReconnecting = true;
-    const overlay = document.getElementById("connection-overlay");
 
+    // Create overlay if not exists
+    if (!document.getElementById("connection-overlay")) {
+      createOfflineUI();
+    }
+
+    const overlay = document.getElementById("connection-overlay");
     // Tampilkan overlay
     if (overlay) overlay.style.display = "flex";
   });
