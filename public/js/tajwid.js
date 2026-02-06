@@ -71,7 +71,12 @@ function startGame() {
   // C. Siapin Audio
   if (typeof AudioManager !== "undefined") AudioManager.init();
 
-  // D. Minta Soal
+  // D. Reset Hint System
+  if (typeof HintSystem !== "undefined") {
+    HintSystem.reset();
+  }
+
+  // E. Minta Soal
   if (window.socket) {
     window.socket.emit("mintaSoalAI", {
       kategori: "tajwid",
@@ -200,10 +205,20 @@ function answer(side) {
     // 2. Animasi Overlay
     showFeedback(true);
 
-    // 3. Geser Kartu
+    // 3. Particle Effects
+    if (typeof ParticleManager !== "undefined") {
+      ParticleManager.triggerFromCard("burst");
+
+      // Extra combo effect untuk streak tinggi
+      if (multiplier > 1) {
+        ParticleManager.triggerFromCard("combo", multiplier);
+      }
+    }
+
+    // 4. Geser Kartu
     animateSwipe(side);
 
-    // 4. Lanjut
+    // 5. Lanjut
     setTimeout(nextCard, 300);
   } else {
     // JAWABAN SALAH

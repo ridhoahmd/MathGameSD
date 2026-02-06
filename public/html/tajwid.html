@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="../css/style.css?v=fix_ui_1" />
     <link rel="stylesheet" href="../css/tajwid.css?v=fix_ui_1" />
     <link rel="stylesheet" href="../css/visual-enhancements.css" />
+    <link rel="stylesheet" href="../css/streak-effects.css" />
   </head>
   <body>
     <!-- === TOP BAR === -->
@@ -40,6 +41,11 @@
 
       <!-- === LAYAR MAIN (SORTIR KARTU) === -->
       <div id="game-screen" class="panel hidden">
+        <!-- Hint Button -->
+        <button id="hint-btn" class="hint-button" onclick="useHint()">
+          💡 Petunjuk <span id="hint-count">2/2</span>
+        </button>
+
         <!-- Area Keranjang (Kiri/Kanan) -->
         <div class="buckets-area">
           <div
@@ -127,6 +133,9 @@
     <script src="../js/gamification/streaks.js"></script>
     <script src="../js/gamification/leveling.js"></script>
     <script src="../js/utils/comboManager.js"></script>
+    <!-- NEW: Optimizations -->
+    <script src="../js/utils/particleEffects.js"></script>
+    <script src="../js/utils/hintSystem.js"></script>
     <script src="../js/tajwid.js?v=fix_ui_1"></script>
   </body>
 </html>

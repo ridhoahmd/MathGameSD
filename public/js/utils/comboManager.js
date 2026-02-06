@@ -81,13 +81,28 @@ const ComboManager = {
 
     if (this.currentStreak > 1) {
       const span = document.createElement("span");
-      span.innerText = `${this.currentStreak}x COMBO!`;
-      span.style.fontSize = `${2 + this.currentStreak * 0.2}rem`; // Tambah besar
+
+      // Icon based on streak level
+      let icon = "";
+      let extraClass = "";
+
+      if (this.currentStreak >= 10) {
+        // Mega combo - Lightning + Rainbow
+        icon = ' <span class="combo-lightning">⚡</span>';
+        extraClass = "combo-rainbow combo-glow";
+      } else if (this.currentStreak >= 5) {
+        // High combo - Flame
+        icon = ' <span class="combo-flame">🔥</span>';
+        extraClass = "combo-glow";
+      }
+
+      span.innerHTML = `${this.currentStreak}x COMBO!${icon}`;
+      span.style.fontSize = `${2 + this.currentStreak * 0.2}rem`;
       span.style.fontWeight = "bold";
       span.style.color = this.getComboColor();
       span.style.textShadow = "0 0 10px rgba(0,0,0,0.5)";
       span.style.display = "block";
-      span.className = "combo-anim"; // Pastikan ada CSS animasi nanti atau inline
+      span.className = `combo-anim ${extraClass}`;
 
       // Inline animation
       span.animate(
@@ -105,11 +120,49 @@ const ComboManager = {
 
       this.comboContainer.appendChild(span);
 
+      // Check for milestones
+      if (
+        this.currentStreak === 5 ||
+        this.currentStreak === 10 ||
+        this.currentStreak === 15 ||
+        this.currentStreak === 20
+      ) {
+        this.showMilestoneEffect(this.currentStreak);
+      }
+
       // Remove after animation
       setTimeout(() => {
         if (span.parentNode) span.parentNode.removeChild(span);
       }, 800);
     }
+  },
+
+  showMilestoneEffect: function (streak) {
+    // Screen shake
+    const gameWrapper = document.querySelector(".game-wrapper");
+    if (gameWrapper) {
+      gameWrapper.classList.add("screen-shake");
+      setTimeout(() => {
+        gameWrapper.classList.remove("screen-shake");
+      }, 500);
+    }
+
+    // Milestone burst text
+    const burst = document.createElement("div");
+    burst.className = "milestone-burst";
+    burst.innerText = `🎉 ${streak}X STREAK! 🎉`;
+    document.body.appendChild(burst);
+
+    // Trigger confetti from particle system
+    if (typeof ParticleManager !== "undefined") {
+      ParticleManager.confettiRain(60);
+    }
+
+    setTimeout(() => {
+      if (burst.parentNode) {
+        burst.parentNode.removeChild(burst);
+      }
+    }, 1000);
   },
 
   showComboBreak: function () {
@@ -143,7 +196,7 @@ const ComboManager = {
   getComboColor: function () {
     if (this.currentStreak < 5) return "#00e676"; // Green
     if (this.currentStreak < 10) return "#ffd600"; // Yellow/Gold
-    return "#ff1744"; // Red/Fire
+    return "#ff1744"; // Red/Fire (rainbow handled by CSS)
   },
 };
 
