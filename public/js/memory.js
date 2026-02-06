@@ -20,7 +20,7 @@ let isFlashing = false; // Flag buat flash
 
 // 1. Tombol Ganti Level
 document.addEventListener("DOMContentLoaded", () => {
-  const buttons = document.querySelectorAll(".btn-difficulty");
+  const buttons = document.querySelectorAll(".btn-diff");
   buttons.forEach((button) => {
     button.addEventListener("click", () => {
       buttons.forEach((btn) => btn.classList.remove("active"));
