@@ -80,18 +80,25 @@ body {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: calc(100vh - 150px); /* 70px header + 80px footer max */
+  min-height: calc(100vh - 150px); /* 70px header + 80px footer max */
   margin: 0 auto;
   padding-top: 70px; /* Space untuk header */
-  padding-bottom: 10px; /* Minimal bottom padding */
+  padding-bottom: 220px; /* Increased untuk D-Pad space di mobile */
   z-index: 1;
+}
+
+/* Mobile-specific padding adjustment */
+@media (min-width: 769px) {
+  #game-container {
+    padding-bottom: 20px; /* Desktop tidak butuh banyak space */
+  }
 }
 
 #game-container canvas {
   display: block; /* CRITICAL: Required for margin auto centering */
   margin: 0 auto; /* Horizontal centering */
   max-width: 90vw; /* Prevent overflow */
-  max-height: 70vh; /* Prevent bottom cutoff */
+  max-height: 60vh; /* REDUCED untuk kasih space D-Pad */
   border-radius: 10px;
   box-shadow: 0 0 50px rgba(0, 242, 255, 0.3);
 }
@@ -105,15 +112,24 @@ body {
   padding: 15px;
   display: flex;
   justify-content: center;
-  z-index: 100;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  align-items: center;
+  z-index: 100; /* Above canvas */
+  background: linear-gradient(
+    to top,
+    rgba(10, 10, 26, 0.95),
+    rgba(10, 10, 26, 0.7)
+  );
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(0, 242, 255, 0.3);
 }
 
 .d-pad {
   display: grid;
-  grid-template-columns: repeat(3, 50px);
-  grid-template-rows: repeat(3, 50px);
-  gap: 5px;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 10px;
+  width: 180px;
+  height: 180px;
 }
 
 .btn-ctrl {
@@ -515,9 +531,19 @@ body {
     max-width: 85%;
   }
 
-  /* Mobile game container adjustments */
+  /* Mobile canvas adjustments - prevent D-Pad overlap */
   #game-container {
-    min-height: calc(100vh - 250px); /* More space for D-pad */
-    padding-bottom: 5px;
+    padding-bottom: 230px; /* Extra space untuk D-Pad */
+  }
+
+  #game-container canvas {
+    max-height: 50vh; /* Smaller di mobile untuk kasih ruang D-Pad */
+  }
+}
+
+@media (max-width: 768px) and (min-width: 481px) {
+  /* Tablet portrait */
+  #game-container canvas {
+    max-height: 55vh;
   }
 }
