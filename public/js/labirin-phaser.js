@@ -21,6 +21,11 @@ let finishNode;
 let tutorUsageCount = 0;
 const MAX_TUTOR_USAGE = 3;
 
+// Variabel Auto-Skip (Week 2 Bugfix)
+let wrongAttempts = 0;
+const MAX_WRONG_ATTEMPTS = 3;
+const SKIP_PENALTY = 10; // points penalty untuk auto-skip
+
 // Elemen HTML
 const tutorOverlay = document.getElementById("tutor-overlay");
 const tutorText = document.getElementById("tutor-text");
@@ -663,6 +668,9 @@ function openQuiz(node) {
   gameActive = false;
   pendingNode = node;
 
+  // RESET wrong attempts untuk quiz baru
+  wrongAttempts = 0;
+
   // CRITICAL: Pause Phaser scene
   if (game && game.scene.scenes[0]) {
     game.scene.scenes[0].scene.pause();
@@ -815,6 +823,80 @@ window.checkQuiz = function () {
     }
   }
 };
+
+// === AUTO-SKIP OBSTACLE FUNCTION (Week 2 Bugfix) ===
+function autoSkipObstacle() {
+  // Apply penalty
+  score = Math.max(0, score - SKIP_PENALTY);
+  const scoreEl = document.getElementById("score");
+  if (scoreEl) scoreEl.innerText = score;
+
+  // Show skip notification
+  showTemporaryNotification(
+    `⚠️ Rintangan Dilewati<br>-${SKIP_PENALTY} Poin<br><small>Setelah ${MAX_WRONG_ATTEMPTS}x salah</small>`,
+    "warning",
+  );
+
+  // Reset counter
+  wrongAttempts = 0;
+
+  // Close modals
+  if (quizModal) quizModal.style.display = "none";
+  if (tutorOverlay) tutorOverlay.style.display = "none";
+
+  // Mark obstacle sebagai passed
+  if (pendingNode) {
+    pendingNode.isQuestion = false;
+
+    // Remove marker
+    const markerToRemove = questionMarkers.find(
+      (m) => m.cellIndex === index(pendingNode.i, pendingNode.j),
+    );
+    if (markerToRemove) {
+      markerToRemove.destroy();
+      if (markerToRemove.textObj) markerToRemove.textObj.destroy();
+    }
+
+    // Move player
+    current = pendingNode;
+
+    const scene = game.scene.scenes[0];
+    const targetX = current.i * size + size / 2;
+    const targetY = current.j * size + size / 2;
+
+    scene.tweens.add({
+      targets: playerSprite,
+      x: targetX,
+      y: targetY,
+      duration: 150,
+      ease: "Power2",
+    });
+  }
+
+  // Resume game
+  gameActive = true;
+  setTimeout(() => {
+    if (game && game.scene.scenes[0]) {
+      game.scene.scenes[0].scene.resume();
+    }
+  }, 500);
+
+  checkFinish();
+}
+
+// Helper untuk notification
+function showTemporaryNotification(message, type = "info") {
+  const notification = document.createElement("div");
+  notification.className = `skip-notification ${type}`;
+  notification.innerHTML = message;
+  document.body.appendChild(notification);
+
+  // Auto-remove
+  setTimeout(() => {
+    notification.classList.add("fade-out");
+    setTimeout(() => notification.remove(), 500);
+  }, 2500);
+}
 
 // === CHECK FINISH ===
 function checkFinish() {
