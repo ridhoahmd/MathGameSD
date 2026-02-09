@@ -26,6 +26,10 @@ let wrongAttempts = 0;
 const MAX_WRONG_ATTEMPTS = 3;
 const SKIP_PENALTY = 10; // points penalty untuk auto-skip
 
+// Variabel Obstacle Completion (Finish Control)
+let totalObstacles = 0;
+let clearedObstacles = 0;
+
 // Elemen HTML
 const tutorOverlay = document.getElementById("tutor-overlay");
 const tutorText = document.getElementById("tutor-text");
@@ -371,11 +375,16 @@ function generateMaze() {
     () => Math.random() - 0.5,
   );
 
+  // Reset obstacle counter
+  totalObstacles = 0;
+  clearedObstacles = 0;
+
   for (const i of shuffledIndices) {
     if (i > 0 && i < grid.length - 1 && qIndex < questions.length) {
       if (Math.random() < 0.3) {
         grid[i].isQuestion = true;
         grid[i].questionData = questions[qIndex];
+        totalObstacles++; // Track total obstacles
         qIndex++;
       }
     }
@@ -748,6 +757,9 @@ window.checkQuiz = function () {
       const scoreEl = document.getElementById("score");
       if (scoreEl) scoreEl.innerText = score;
 
+      // Increment cleared obstacles counter
+      clearedObstacles++;
+
       current = pendingNode;
 
       // Move player
@@ -864,6 +876,9 @@ function autoSkipObstacle() {
       if (markerToRemove.textObj) markerToRemove.textObj.destroy();
     }
 
+    // Increment cleared obstacles (meski di-skip)
+    clearedObstacles++;
+
     // Move player
     current = pendingNode;
 
@@ -891,6 +906,17 @@ function autoSkipObstacle() {
   checkFinish();
 }
 
+// Konfirmasi manual skip (tombol Exit)
+window.confirmSkipObstacle = function () {
+  const confirmed = confirm(
+    `Lewati rintangan ini?\n\nPenalty: -${SKIP_PENALTY} poin\n\nAnda yakin?`,
+  );
+
+  if (confirmed) {
+    autoSkipObstacle();
+  }
+};
+
 // Helper untuk notification
 function showTemporaryNotification(message, type = "info") {
   const notification = document.createElement("div");
@@ -908,10 +934,21 @@ function showTemporaryNotification(message, type = "info") {
 // === CHECK FINISH ===
 function checkFinish() {
   if (current === finishNode) {
+    // CRITICAL FIX: Only finish if all obstacles cleared
+    if (clearedObstacles < totalObstacles) {
+      // Show warning message
+      showTemporaryNotification(
+        `⚠️ Selesaikan Rintangan!<br><small>${clearedObstacles}/${totalObstacles} Selesai</small>`,
+        "warning",
+      );
+      return; // Don't finish yet
+    }
+
+    // All obstacles cleared, game complete!
     try {
       AudioManager.playWin();
     } catch (e) {}
-    score += 50;
+    score += 50; // Add bonus score for finishing
     gameActive = false;
 
     socket.emit("simpanSkor", {
@@ -920,13 +957,17 @@ function checkFinish() {
       game: "labirin",
     });
 
+    if (game && game.scene.scenes[0]) {
+      game.scene.scenes[0].scene.pause();
+    }
+
     if (quizModal) {
       quizModal.style.display = "flex";
 
       const title = document.querySelector("#quiz-modal h2");
       if (title) {
-        title.innerText = "🏆 MISI SELESAI!";
-        title.style.color = "#00f2ff";
+        title.innerText = "🎯 MISI SELESAI!";
+        title.style.color = "#00ff00";
       }
 
       const qText = document.getElementById("q-text");
@@ -942,6 +983,10 @@ function checkFinish() {
           window.location.href = "/";
         };
       }
+
+      // Hide skip button di game over
+      const skipBtn = document.querySelector(".btn-skip-quiz");
+      if (skipBtn) skipBtn.style.display = "none";
     }
   }
 }
