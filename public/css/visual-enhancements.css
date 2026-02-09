@@ -119,6 +119,15 @@
   }
 }
 
+/* Shake effect untuk input fields (Math Battle) */
+.wrong-shake,
+input.wrong-shake,
+#answer-input.wrong-shake {
+  animation: wrongShake 0.5s ease-out;
+  border-color: #ff1744 !important;
+  box-shadow: 0 0 15px rgba(255, 23, 68, 0.4) !important;
+}
+
 /* ========================================
    3. ENHANCED LOADING SPINNER
    ======================================== */

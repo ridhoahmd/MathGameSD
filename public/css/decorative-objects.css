@@ -1,0 +1,397 @@
+/**
+ * 🎨 DECORATIVE OBJECTS - MATH BATTLE
+ * Floating numbers di background untuk visual richness
+ */
+
+/* Background Container untuk decorative objects */
+.math-background-decor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Floating Numbers */
+.floating-number {
+  position: absolute;
+  font-family: "Orbitron", monospace;
+  font-weight: 700;
+  font-size: 3rem;
+  color: rgba(0, 242, 255, 0.08);
+  text-shadow: 0 0 20px rgba(0, 242, 255, 0.15);
+  animation: floatUpSlow var(--float-duration) linear infinite;
+  opacity: 0;
+}
+
+/* Variasi animasi untuk natural movement */
+.floating-number:nth-child(1) {
+  left: 10%;
+  --float-duration: 15s;
+  animation-delay: 0s;
+  font-size: 4rem;
+}
+
+.floating-number:nth-child(2) {
+  left: 25%;
+  --float-duration: 18s;
+  animation-delay: -3s;
+  font-size: 2.5rem;
+}
+
+.floating-number:nth-child(3) {
+  left: 45%;
+  --float-duration: 20s;
+  animation-delay: -7s;
+  font-size: 3.5rem;
+}
+
+.floating-number:nth-child(4) {
+  left: 65%;
+  --float-duration: 16s;
+  animation-delay: -5s;
+  font-size: 3rem;
+}
+
+.floating-number:nth-child(5) {
+  left: 80%;
+  --float-duration: 19s;
+  animation-delay: -10s;
+  font-size: 2.8rem;
+}
+
+.floating-number:nth-child(6) {
+  left: 90%;
+  --float-duration: 17s;
+  animation-delay: -2s;
+  font-size: 4.5rem;
+}
+
+/* Float animation */
+@keyframes floatUpSlow {
+  0% {
+    bottom: -10%;
+    opacity: 0;
+    transform: translateX(0) rotate(0deg);
+  }
+  10% {
+    opacity: 0.4;
+  }
+  90% {
+    opacity: 0.4;
+  }
+  100% {
+    bottom: 110%;
+    opacity: 0;
+    transform: translateX(30px) rotate(15deg);
+  }
+}
+
+/* Rocket trail particles (subtle) */
+.rocket-particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: radial-gradient(circle, #00f2ff, transparent);
+  border-radius: 50%;
+  animation: rocketTrail 3s ease-out infinite;
+  opacity: 0;
+}
+
+.rocket-particle:nth-child(7) {
+  left: 15%;
+  animation-delay: 0s;
+}
+
+.rocket-particle:nth-child(8) {
+  left: 50%;
+  animation-delay: 1.5s;
+}
+
+.rocket-particle:nth-child(9) {
+  left: 85%;
+  animation-delay: 3s;
+}
+
+@keyframes rocketTrail {
+  0% {
+    bottom: -5%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-200px) translateX(20px);
+  }
+  100% {
+    bottom: 100%;
+    opacity: 0;
+    transform: translateY(-400px) translateX(50px);
+  }
+}
+
+/* Mobile: Reduce particle count */
+@media (max-width: 768px) {
+  .floating-number:nth-child(n + 4) {
+    display: none; /* Hide some numbers di mobile */
+  }
+
+  .floating-number {
+    font-size: 2rem !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .floating-number,
+  .rocket-particle {
+    animation: none;
+    opacity: 0.1;
+  }
+}
+
+/* ============================================
+   PIANO - SOUND WAVE RINGS
+   ============================================ */
+
+/* Sound wave container */
+.piano-sound-waves {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Sound wave rings emanating from keys */
+.sound-wave-ring {
+  position: absolute;
+  border: 2px solid rgba(0, 242, 255, 0.3);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  bottom: 25%;
+  opacity: 0;
+  animation: soundWaveExpand 2s ease-out infinite;
+}
+
+.sound-wave-ring:nth-child(1) {
+  left: 20%;
+  animation-delay: 0s;
+}
+
+.sound-wave-ring:nth-child(2) {
+  left: 50%;
+  animation-delay: 0.7s;
+}
+
+.sound-wave-ring:nth-child(3) {
+  left: 80%;
+  animation-delay: 1.4s;
+}
+
+@keyframes soundWaveExpand {
+  0% {
+    width: 50px;
+    height: 50px;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.4;
+  }
+  100% {
+    width: 400px;
+    height: 400px;
+    opacity: 0;
+  }
+}
+
+/* Musical notes floating up */
+.musical-note {
+  position: absolute;
+  font-size: 2rem;
+  opacity: 0;
+  animation: noteFloat 4s ease-out infinite;
+}
+
+.musical-note:nth-child(4) {
+  left: 30%;
+  animation-delay: 0s;
+}
+
+.musical-note:nth-child(5) {
+  left: 60%;
+  animation-delay: 2s;
+}
+
+.musical-note:nth-child(6) {
+  left: 75%;
+  animation-delay: 3s;
+}
+
+@keyframes noteFloat {
+  0% {
+    bottom: 20%;
+    opacity: 0;
+    transform: translateY(0) rotate(0deg);
+  }
+  20% {
+    opacity: 0.3;
+  }
+  80% {
+    opacity: 0.3;
+  }
+  100% {
+    bottom: 90%;
+    opacity: 0;
+    transform: translateY(-100px) rotate(15deg);
+  }
+}
+
+/* ============================================
+   TANGKAP BINTANG - STAR TWINKLE
+   ============================================ */
+
+/* Star twinkle background */
+.star-twinkle-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Individual twinkling stars */
+.twinkle-star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
+  animation: starTwinkle var(--twinkle-duration) ease-in-out infinite;
+  opacity: 0;
+}
+
+/* Create varied star positions */
+.twinkle-star:nth-child(1) {
+  left: 10%;
+  top: 20%;
+  --twinkle-duration: 3s;
+  animation-delay: 0s;
+}
+.twinkle-star:nth-child(2) {
+  left: 25%;
+  top: 40%;
+  --twinkle-duration: 4s;
+  animation-delay: 1s;
+}
+.twinkle-star:nth-child(3) {
+  left: 45%;
+  top: 15%;
+  --twinkle-duration: 3.5s;
+  animation-delay: 0.5s;
+}
+.twinkle-star:nth-child(4) {
+  left: 60%;
+  top: 50%;
+  --twinkle-duration: 4.5s;
+  animation-delay: 2s;
+}
+.twinkle-star:nth-child(5) {
+  left: 75%;
+  top: 30%;
+  --twinkle-duration: 3.2s;
+  animation-delay: 1.5s;
+}
+.twinkle-star:nth-child(6) {
+  left: 85%;
+  top: 60%;
+  --twinkle-duration: 4.2s;
+  animation-delay: 0.8s;
+}
+.twinkle-star:nth-child(7) {
+  left: 15%;
+  top: 70%;
+  --twinkle-duration: 3.8s;
+  animation-delay: 2.5s;
+}
+.twinkle-star:nth-child(8) {
+  left: 35%;
+  top: 80%;
+  --twinkle-duration: 3.3s;
+  animation-delay: 1.2s;
+}
+.twinkle-star:nth-child(9) {
+  left: 55%;
+  top: 90%;
+  --twinkle-duration: 4.8s;
+  animation-delay: 0.3s;
+}
+.twinkle-star:nth-child(10) {
+  left: 90%;
+  top: 10%;
+  --twinkle-duration: 3.6s;
+  animation-delay: 2.2s;
+}
+
+@keyframes starTwinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+}
+
+/* Comet trails (occasional) */
+.comet-trail {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255, 235, 59, 0.8), transparent);
+  box-shadow: 0 0 5px rgba(255, 235, 59, 0.8);
+  opacity: 0;
+  animation: cometPass 8s linear infinite;
+}
+
+.comet-trail:nth-child(11) {
+  top: 20%;
+  animation-delay: 0s;
+}
+
+.comet-trail:nth-child(12) {
+  top: 60%;
+  animation-delay: 4s;
+}
+
+@keyframes cometPass {
+  0% {
+    left: -10%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    left: 110%;
+    opacity: 0;
+  }
+}
