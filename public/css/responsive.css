@@ -459,3 +459,72 @@ textarea {
     max-height: calc(100vh - 80px);
   }
 }
+
+/* ============================================
+   UNIVERSAL GAME OVER BUTTONS FIX
+   Applies to all game modals - Phase 3 Implementation
+   ============================================ */
+
+/* Button containers */
+.modal-buttons,
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 400px;
+  margin: 15px auto 0;
+}
+
+/* All game over buttons - Touch-friendly sizing */
+.btn-restart,
+.btn-retry,
+.btn-home,
+.btn-action.btn-retry,
+.btn-action.btn-home,
+button[onclick*="reload"],
+button[onclick*="location.href"] {
+  min-width: 140px;
+  min-height: 48px; /* WCAG touch target minimum */
+  padding: 12px 24px;
+  margin: 5px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Mobile: Stack buttons vertically untuk eliminate overlap */
+@media (max-width: 480px) {
+  .modal-buttons,
+  .action-buttons {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .btn-restart,
+  .btn-retry,
+  .btn-home,
+  .btn-action.btn-retry,
+  .btn-action.btn-home,
+  button[onclick*="reload"],
+  button[onclick*="location.href"] {
+    width: 100%; /* Full width di mobile */
+    max-width: 280px; /* Limit untuk readability */
+    margin: 0; /* Remove individual margins */
+    min-height: 50px; /* Slightly larger untuk easy tapping */
+  }
+}
+
+/* Tablet: Side by side dengan good spacing */
+@media (min-width: 481px) and (max-width: 768px) {
+  .btn-restart,
+  .btn-retry,
+  .btn-home {
+    flex: 1 1 45%; /* Each button takes roughly half */
+    max-width: 180px;
+  }
+}

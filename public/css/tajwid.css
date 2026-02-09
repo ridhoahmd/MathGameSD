@@ -495,3 +495,40 @@ body {
   animation: flashRed 0.5s ease-out;
   color: white !important;
 }
+
+/* ============================================
+   FIX: Arabic Font Size untuk HP Kecil - Phase 5
+   ============================================ */
+
+@media (max-width: 360px) {
+  .flashcard {
+    width: 200px;
+    height: 200px;
+    font-size: 2.8rem; /* Reduce dari 3.5rem */
+  }
+
+  .buckets-area {
+    gap: 12px; /* Slightly reduce gap */
+  }
+}
+
+/* Extra small screens (iPhone 5 - 320px) */
+@media (max-width: 320px) {
+  .flashcard {
+    width: 180px;
+    height: 180px;
+    font-size: 2.3rem; /* Further reduction */
+  }
+
+  .buckets-area {
+    gap: 10px; /* Reduce gap untuk save space */
+  }
+
+  .bucket {
+    padding: 10px 3px; /* Tighter padding */
+  }
+
+  .bucket-name {
+    font-size: 0.8rem;
+  }
+}

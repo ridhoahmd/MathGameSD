@@ -98,13 +98,17 @@ body::before {
   letter-spacing: 2px;
 }
 
-/* PIANO CONTAINER */
+/* PIANO CONTAINER - CENTERED & RESPONSIVE */
 .piano-container {
   display: flex;
+  justify-content: center; /* ✅ CENTER KEYS HORIZONTALLY */
+  align-items: center;
+  flex-wrap: nowrap; /* Keep keys in one row di desktop */
   gap: 8px; /* Jarak antar tuts */
   padding: 15px;
   width: 95%;
-  max-width: 800px;
+  max-width: 800px; /* Limit width untuk desktop */
+  margin: 0 auto; /* ✅ CENTER CONTAINER ITSELF */
   background: rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   box-shadow:
@@ -308,23 +312,51 @@ body::before {
   transform: scale(1.02);
 }
 
+/* MOBILE RESPONSIVE */
 @media (max-width: 480px) {
   .piano-container {
     width: 98%;
-    padding: 2px;
+    max-width: 100%; /* Allow full width di mobile */
+    padding: 8px;
+    gap: 4px; /* Reduce gap untuk save space */
   }
+
   .key {
     height: 120px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+    min-width: 28px; /* Ensure minimum touch target */
+    flex: 0 1 auto; /* Don't grow beyond content */
   }
-  .btn-level {
-    padding: 5px 10px;
+
+  .btn-level,
+  .btn-diff {
+    padding: 6px 12px;
     font-size: 0.8rem;
     margin: 2px;
   }
+
   .hud {
     flex-direction: column;
     align-items: center;
     gap: 5px;
+    padding: 10px 15px;
+  }
+
+  .question-box {
+    font-size: 2rem; /* Smaller question di mobile */
+  }
+}
+
+/* Extra small screens (320px) */
+@media (max-width: 360px) {
+  .piano-container {
+    gap: 2px;
+    padding: 5px;
+  }
+
+  .key {
+    min-width: 25px;
+    height: 100px;
+    font-size: 0.75rem;
   }
 }

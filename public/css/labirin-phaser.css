@@ -71,25 +71,22 @@ body {
   text-shadow: 0 0 10px rgba(255, 200, 0, 0.5);
 }
 
-/* ========== WADAH GAME ========== */
+/* ========== WADAH GAME (UNIVERSAL CENTERING) ========== */
+/* FIX: Remove fixed positioning to allow universal centering from responsive.css */
 #game-container {
-  position: fixed;
-  top: 70px;
-  left: 0;
-  right: 0;
-  bottom: 80px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  /* Universal centering sudah di-handle oleh responsive.css line 416-432 */
+  /* Hanya override yang specific untuk Labirin */
+  position: relative; /* Changed from fixed */
+  flex: 1; /* Fill available space */
+  margin-top: 70px; /* Space untuk header */
+  margin-bottom: 80px; /* Space untuk D-pad di mobile */
   z-index: 1;
 }
 
 #game-container canvas {
   border-radius: 10px;
   box-shadow: 0 0 50px rgba(0, 242, 255, 0.3);
-  margin: auto;
-  max-width: 100%;
-  max-height: 100%;
+  /* max-width & max-height sudah di-handle responsive.css */
 }
 
 /* ========== KONTROL D-PAD (HP) ========== */
@@ -439,25 +436,8 @@ body {
   }
 
   #game-container {
-    top: 60px;
-    bottom: 100px;
-  }
-
-  .modal-content {
-    padding: 30px 20px;
-  }
-
-  .modal-title {
-    font-size: 1.5rem;
-  }
-
-  .buttons-row {
-    flex-wrap: wrap;
-  }
-
-  .btn-difficulty {
-    padding: 8px 15px;
-    font-size: 0.85rem;
+    margin-top: 60px; /* Reduce top margin di mobile */
+    margin-bottom: 100px; /* More space untuk D-pad yang lebih besar */
   }
 }
 
@@ -467,6 +447,6 @@ body {
   }
 
   #game-container {
-    bottom: 20px;
+    margin-bottom: 20px; /* Less margin di desktop (no D-pad) */
   }
 }

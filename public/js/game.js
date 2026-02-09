@@ -124,6 +124,7 @@ class MathGame extends GameEngine {
     );
 
     if (val.toLowerCase() === correct.toLowerCase()) {
+      // ✅ CORRECT ANSWER
       // Logika Combo biar seru
       let multiplier = 1;
       if (typeof ComboManager !== "undefined")
@@ -132,11 +133,24 @@ class MathGame extends GameEngine {
       this.addScore(Math.round(10 * multiplier));
       document.body.classList.add("correct-anim");
       setTimeout(() => document.body.classList.remove("correct-anim"), 500);
+
+      // 🎉 PARTICLE BURST EFFECT (Phase 4)
+      if (typeof ParticleManager !== "undefined") {
+        const inputRect = input.getBoundingClientRect();
+        const x = inputRect.left + inputRect.width / 2;
+        const y = inputRect.top + inputRect.height / 2;
+        ParticleManager.burst(x, y, 25, "#00e676"); // Green particles
+      }
     } else {
+      // ❌ WRONG ANSWER
       if (typeof ComboManager !== "undefined") ComboManager.reset();
       this.playSound("wrong");
       document.body.classList.add("wrong-anim");
       setTimeout(() => document.body.classList.remove("wrong-anim"), 500);
+
+      // 🔴 SHAKE INPUT FIELD (Phase 4)
+      input.classList.add("wrong-shake");
+      setTimeout(() => input.classList.remove("wrong-shake"), 500);
 
       // Kasih tau jawaban bener di placeholder
       input.value = "";
