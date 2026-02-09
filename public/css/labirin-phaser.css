@@ -88,9 +88,10 @@ body {
 }
 
 #game-container canvas {
+  display: block; /* CRITICAL: Required for margin auto centering */
+  margin: 0 auto; /* Horizontal centering */
   border-radius: 10px;
   box-shadow: 0 0 50px rgba(0, 242, 255, 0.3);
-  /* max-width & max-height sudah di-handle responsive.css */
 }
 
 /* ========== KONTROL D-PAD (HP) ========== */
@@ -438,19 +439,83 @@ body {
     padding: 8px 12px;
     font-size: 0.85rem;
   }
-
-  #game-container {
-    margin-top: 60px; /* Reduce top margin di mobile */
-    margin-bottom: 100px; /* More space untuk D-pad yang lebih besar */
-  }
 }
 
 @media (min-width: 769px) {
   .game-controls {
     display: none;
   }
+}
 
+/* ============================================
+   SKIP NOTIFICATION (Week 2 Bugfix)
+   ============================================ */
+
+.skip-notification {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5000;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 87, 34, 0.95),
+    rgba(244, 67, 54, 0.95)
+  );
+  border: 2px solid #ff5722;
+  border-radius: 15px;
+  padding: 25px 45px;
+  text-align: center;
+  color: white;
+  font-family: "Orbitron", sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  box-shadow:
+    0 0 40px rgba(255, 87, 34, 0.6),
+    0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: slideInDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  line-height: 1.6;
+}
+
+.skip-notification small {
+  font-size: 0.75rem;
+  opacity: 0.85;
+  font-weight: 400;
+}
+
+.skip-notification.fade-out {
+  animation: fadeOutUp 0.5s ease-out forwards;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -65%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes fadeOutUp {
+  to {
+    opacity: 0;
+    transform: translate(-50%, -65%) scale(0.9);
+  }
+}
+
+/* Mobile responsiveness untuk notification */
+@media (max-width: 480px) {
+  .skip-notification {
+    font-size: 1rem;
+    padding: 20px 30px;
+    max-width: 85%;
+  }
+
+  /* Mobile game container adjustments */
   #game-container {
-    margin-bottom: 20px; /* Less margin di desktop (no D-pad) */
+    min-height: calc(100vh - 250px); /* More space for D-pad */
+    padding-bottom: 5px;
   }
 }
