@@ -72,33 +72,30 @@ body {
 }
 
 /* ========== WADAH GAME (UNIVERSAL CENTERING) ========== */
-/* FIX: Remove fixed positioning to allow universal centering from responsive.css */
 #game-container {
-  /* Universal centering sudah di-handle oleh responsive.css line 416-432 */
-  /* Hanya override yang specific untuk Labirin */
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: calc(100vh - 150px); /* 70px header + 80px footer max */
+  min-height: calc(100vh - 150px);
   margin: 0 auto;
-  padding-top: 70px; /* Space untuk header */
-  padding-bottom: 220px; /* Increased untuk D-Pad space di mobile */
+  padding-top: 70px;
+  padding-bottom: 10px; /* REVERTED: Minimal padding */
   z-index: 1;
 }
 
-/* Mobile-specific padding adjustment */
+/* Desktop: no D-Pad, less padding */
 @media (min-width: 769px) {
   #game-container {
-    padding-bottom: 20px; /* Desktop tidak butuh banyak space */
+    padding-bottom: 20px;
   }
 }
 
 #game-container canvas {
-  display: block; /* CRITICAL: Required for margin auto centering */
-  margin: 0 auto; /* Horizontal centering */
-  max-width: 90vw; /* Prevent overflow */
-  max-height: 60vh; /* REDUCED untuk kasih space D-Pad */
+  display: block;
+  margin: 0 auto;
+  max-width: 90vw;
+  max-height: 65vh; /* REVERTED: Balanced height */
   border-radius: 10px;
   box-shadow: 0 0 50px rgba(0, 242, 255, 0.3);
 }
@@ -109,27 +106,26 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 15px;
+  padding: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 100; /* Above canvas */
+  z-index: 100;
   background: linear-gradient(
     to top,
-    rgba(10, 10, 26, 0.95),
-    rgba(10, 10, 26, 0.7)
+    rgba(10, 10, 26, 0.85),
+    rgba(10, 10, 26, 0.4)
   );
-  backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(0, 242, 255, 0.3);
+  backdrop-filter: blur(5px);
 }
 
 .d-pad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  gap: 10px;
-  width: 180px;
-  height: 180px;
+  gap: 8px;
+  width: 160px;
+  height: 160px;
 }
 
 .btn-ctrl {
@@ -523,27 +519,11 @@ body {
   }
 }
 
-/* Mobile responsiveness untuk notification */
+/* Mobile responsiveness */
 @media (max-width: 480px) {
   .skip-notification {
     font-size: 1rem;
     padding: 20px 30px;
     max-width: 85%;
-  }
-
-  /* Mobile canvas adjustments - prevent D-Pad overlap */
-  #game-container {
-    padding-bottom: 230px; /* Extra space untuk D-Pad */
-  }
-
-  #game-container canvas {
-    max-height: 50vh; /* Smaller di mobile untuk kasih ruang D-Pad */
-  }
-}
-
-@media (max-width: 768px) and (min-width: 481px) {
-  /* Tablet portrait */
-  #game-container canvas {
-    max-height: 55vh;
   }
 }
