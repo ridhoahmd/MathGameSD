@@ -80,7 +80,7 @@ body {
   min-height: calc(100vh - 150px);
   margin: 0 auto;
   padding-top: 70px;
-  padding-bottom: 10px; /* REVERTED: Minimal padding */
+  padding-bottom: 10px;
   z-index: 1;
 }
 
@@ -94,8 +94,16 @@ body {
 #game-container canvas {
   display: block;
   margin: 0 auto;
-  max-width: 90vw;
-  max-height: 65vh; /* REVERTED: Balanced height */
+
+  /* CRITICAL: Aspect ratio control untuk proportional display */
+  aspect-ratio: 1 / 1; /* Square maze */
+  object-fit: contain;
+
+  /* Max dimensions */
+  max-width: min(90vw, 700px); /* Limit width di desktop */
+  max-height: min(65vh, 700px); /* Limit height, maintain square */
+
+  /* Visual */
   border-radius: 10px;
   box-shadow: 0 0 50px rgba(0, 242, 255, 0.3);
 }

@@ -183,7 +183,8 @@ function checkInput() {
   }
 
   if (playerSequence.length === currentSequence.length) {
-    score += 10 * currentSequence.length;
+    // REBALANCED: Reduced from 10 to 8 (line 186)
+    score += 8 * currentSequence.length;
     scoreEl.innerText = score;
 
     flashScreen("#003300");

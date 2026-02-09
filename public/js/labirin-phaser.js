@@ -24,11 +24,16 @@ const MAX_TUTOR_USAGE = 3;
 // Variabel Auto-Skip (Week 2 Bugfix)
 let wrongAttempts = 0;
 const MAX_WRONG_ATTEMPTS = 3;
-const SKIP_PENALTY = 10; // points penalty untuk auto-skip
+const SKIP_PENALTY = 25; // REBALANCED: was 10
 
 // Variabel Obstacle Completion (Finish Control)
 let totalObstacles = 0;
 let clearedObstacles = 0;
+
+// Point System (REBALANCED for fairness)
+const POINTS_PER_OBSTACLE = 80; // was 20 → 4x increase
+const FINISH_BONUS = 150; // was 50 → 3x increase
+const TIME_BONUS_PER_30S = 30; // NEW: reward fast completion
 
 // Elemen HTML
 const tutorOverlay = document.getElementById("tutor-overlay");
@@ -53,6 +58,8 @@ const config = {
     autoCenter: Phaser.Scale.CENTER_BOTH,
     width: 600,
     height: 600,
+    // Maintain aspect ratio
+    expandParent: false,
   },
 };
 
@@ -753,7 +760,7 @@ window.checkQuiz = function () {
       );
       if (markerToRemove) markerToRemove.destroy();
 
-      score += 20;
+      score += POINTS_PER_OBSTACLE; // REBALANCED: was hardcoded 20
       const scoreEl = document.getElementById("score");
       if (scoreEl) scoreEl.innerText = score;
 
@@ -846,7 +853,7 @@ window.checkQuiz = function () {
 // === AUTO-SKIP OBSTACLE FUNCTION (Week 2 Bugfix) ===
 function autoSkipObstacle() {
   // Apply penalty
-  score = Math.max(0, score - SKIP_PENALTY);
+  score = Math.max(0, score - SKIP_PENALTY); // REBALANCED: was 10
   const scoreEl = document.getElementById("score");
   if (scoreEl) scoreEl.innerText = score;
 
@@ -948,7 +955,12 @@ function checkFinish() {
     try {
       AudioManager.playWin();
     } catch (e) {}
-    score += 50; // Add bonus score for finishing
+
+    // REBALANCED: Calculate time bonus (reward fast completion)
+    const timeRemaining = Math.max(0, timeLeft || 0);
+    const timeBonus = Math.floor(timeRemaining / 30) * TIME_BONUS_PER_30S;
+
+    score += FINISH_BONUS + timeBonus; // REBALANCED: was 50, now 150 + time bonus
     gameActive = false;
 
     socket.emit("simpanSkor", {
@@ -971,7 +983,12 @@ function checkFinish() {
       }
 
       const qText = document.getElementById("q-text");
-      if (qText) qText.innerText = `Skor Akhir: ${score}`;
+      if (qText) {
+        qText.innerText = `Skor Akhir: ${score}`;
+        if (timeBonus > 0) {
+          qText.innerText += `\n⏱️ Bonus Waktu: +${timeBonus}`;
+        }
+      }
 
       const input = document.getElementById("q-input");
       if (input) input.style.display = "none";

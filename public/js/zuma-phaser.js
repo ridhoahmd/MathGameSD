@@ -715,7 +715,8 @@ class ZumaScene extends Phaser.Scene {
     // Cek Kena
     if (bullet.value === marble.value) {
       // HIT BENAR
-      this.score += 10;
+      // REBALANCED: Increased from 10 to 15 (line 718)
+      this.score += 15;
       this.destroyMarble(marble);
       this.destroyBullet(bullet);
 

@@ -368,7 +368,11 @@ function collectStar(player, star) {
 
   if (value === correctAnswer) {
     // BENAR!
-    score += 10 + combo * 5; // Bonus Combo
+    // REBALANCED: Cap combo bonus to prevent farming (was unlimited 5x per combo)
+    const basePoints = 8; // Reduced from 10
+    const comboBonus = Math.min(combo * 3, 20); // Cap at +20 max (was unlimited combo * 5)
+    score += basePoints + comboBonus;
+
     combo++;
     if (combo > maxCombo) maxCombo = combo;
 
@@ -382,18 +386,14 @@ function collectStar(player, star) {
       scene,
       player.x,
       player.y - 50,
-      `+${10 + combo * 5}`,
+      `+${basePoints + comboBonus}`,
       0x38ef7d,
     );
 
     if (combo > 1) {
-      showFeedback(
-        scene,
-        player.x,
-        player.y - 80,
-        `${combo}x COMBO!`,
-        0xffeb3b,
-      );
+      const comboText =
+        comboBonus >= 20 ? `${combo}x MAX COMBO!` : `${combo}x COMBO!`;
+      showFeedback(scene, player.x, player.y - 80, comboText, 0xffeb3b);
     }
 
     // Partikel meledak

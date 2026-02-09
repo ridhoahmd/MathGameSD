@@ -189,7 +189,8 @@ function answer(side) {
     if (typeof ComboManager !== "undefined")
       multiplier = ComboManager.addStreak();
 
-    score += Math.round(10 * multiplier);
+    // REBALANCED: Increased from 10 to 12 (line 192)
+    score += Math.round(12 * multiplier);
     if (ui.score) ui.score.innerText = score;
 
     try {

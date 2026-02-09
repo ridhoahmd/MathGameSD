@@ -145,10 +145,18 @@ function loadQuestion() {
 
         // Itung Combo
         let multiplier = 1;
-        if (typeof ComboManager !== "undefined")
+        if (typeof ComboManager !== "undefined") {
+          // The instruction provided an incomplete code snippet for multiplier calculation.
+          // To maintain syntactical correctness and fulfill the primary request,
+          // we will keep the original ComboManager call if it exists,
+          // or default to 1 if ComboManager is not defined.
+          // The instruction's `const multiplier = streak >= 3 ? 1.5 : 1.0;`
+          // would cause a redeclaration error and `streak` is undefined.
           multiplier = ComboManager.addStreak();
+        }
 
-        score += Math.round(20 * multiplier);
+        // REBALANCED: Reduced from 20 to 18 (line 151)
+        score += Math.round(18 * multiplier);
         if (ui.score) ui.score.innerText = score;
         try {
           AudioManager.playCorrect();
