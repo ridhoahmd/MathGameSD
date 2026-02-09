@@ -76,10 +76,14 @@ body {
 #game-container {
   /* Universal centering sudah di-handle oleh responsive.css line 416-432 */
   /* Hanya override yang specific untuk Labirin */
-  position: relative; /* Changed from fixed */
-  flex: 1; /* Fill available space */
-  margin-top: 70px; /* Space untuk header */
-  margin-bottom: 80px; /* Space untuk D-pad di mobile */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: calc(100vh - 150px); /* 70px header + 80px footer max */
+  margin: 0 auto;
+  padding-top: 70px; /* Space untuk header */
+  padding-bottom: 10px; /* Minimal bottom padding */
   z-index: 1;
 }
 

@@ -148,7 +148,7 @@ if (socket) {
       // Itung ukuran kotak biar muat layar
       const isMobile = window.innerWidth <= 768;
       const headerHeight = 70;
-      const footerHeight = isMobile ? 180 : 40; // Space for D-Pad
+      const footerHeight = isMobile ? 200 : 80; // Increased untuk safety margin
 
       const availableWidth = window.innerWidth - 40; // 20px padding each side
       const availableHeight = window.innerHeight - headerHeight - footerHeight;
@@ -184,7 +184,7 @@ window.addEventListener("resize", () => {
     const info = { maze_size: cols }; // Re-use current cols
     const isMobile = window.innerWidth <= 768;
     const headerHeight = 70;
-    const footerHeight = isMobile ? 180 : 40;
+    const footerHeight = isMobile ? 200 : 80; // Match initial calculation
     const availableWidth = window.innerWidth - 40;
     const availableHeight = window.innerHeight - headerHeight - footerHeight;
 
