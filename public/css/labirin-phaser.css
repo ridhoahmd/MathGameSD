@@ -90,6 +90,8 @@ body {
 #game-container canvas {
   display: block; /* CRITICAL: Required for margin auto centering */
   margin: 0 auto; /* Horizontal centering */
+  max-width: 90vw; /* Prevent overflow */
+  max-height: 70vh; /* Prevent bottom cutoff */
   border-radius: 10px;
   box-shadow: 0 0 50px rgba(0, 242, 255, 0.3);
 }

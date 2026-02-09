@@ -46,7 +46,9 @@ const config = {
   },
   scale: {
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH, // FIXED: Center canvas
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: 600,
+    height: 600,
   },
 };
 
@@ -145,12 +147,12 @@ if (socket) {
       rows = info.maze_size || 10;
       questions = info.soal_list || [];
 
-      // Itung ukuran kotak biar muat layar
+      // Itung ukuran kotak biar muat layar dengan SAFE MARGINS
       const isMobile = window.innerWidth <= 768;
-      const headerHeight = 70;
-      const footerHeight = isMobile ? 200 : 80; // Increased untuk safety margin
+      const headerHeight = 80; // Increased safety margin
+      const footerHeight = isMobile ? 220 : 100; // More conservative
 
-      const availableWidth = window.innerWidth - 40; // 20px padding each side
+      const availableWidth = window.innerWidth - 60; // More padding
       const availableHeight = window.innerHeight - headerHeight - footerHeight;
 
       size = Math.floor(
@@ -158,12 +160,14 @@ if (socket) {
       );
 
       // IMPROVED: Add max/min constraints
-      size = Math.min(size, 80); // Max 80px per cell
+      size = Math.min(size, 60); // Reduced max from 80 to 60
       size = Math.max(size, 20); // Min 20px per cell
 
       // Update Phaser config size
-      config.width = cols * size;
-      config.height = rows * size;
+      config.width = Math.min(cols * size, 800); // Max width 800px
+      config.height = Math.min(rows * size, 800); // Max height 800px
+      config.scale.width = config.width;
+      config.scale.height = config.height;
 
       // Initialize Phaser game
       initPhaserGame();
@@ -183,15 +187,18 @@ window.addEventListener("resize", () => {
     // Recalculate size
     const info = { maze_size: cols }; // Re-use current cols
     const isMobile = window.innerWidth <= 768;
-    const headerHeight = 70;
-    const footerHeight = isMobile ? 200 : 80; // Match initial calculation
-    const availableWidth = window.innerWidth - 40;
+    const headerHeight = 80;
+    const footerHeight = isMobile ? 220 : 100; // Match initial
+    const availableWidth = window.innerWidth - 60;
     const availableHeight = window.innerHeight - headerHeight - footerHeight;
 
     let newSize = Math.floor(
       Math.min(availableWidth / cols, availableHeight / rows),
     );
-    if (newSize < 25) newSize = 25;
+
+    // Apply same constraints
+    newSize = Math.min(newSize, 60);
+    newSize = Math.max(newSize, 20);
 
     // Determine if significant change
     if (Math.abs(newSize - size) > 2) {
