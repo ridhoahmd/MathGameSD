@@ -27,6 +27,15 @@ let selectedLevel = "mudah";
 let tutorUsageCount = 0;
 const MAX_TUTOR_USAGE = 3;
 
+// ENDLESS MODE: Timer system
+let timeLeft = 25;
+let timerInterval;
+
+// ENDLESS MODE: Auto-request system
+let isRequestingQuestions = false;
+let lastRequestTime = 0;
+const REQUEST_COOLDOWN = 5000;
+
 // 2. Pilihan Level
 document.addEventListener("DOMContentLoaded", () => {
   const diffButtons = document.querySelectorAll(".btn-diff");
@@ -157,10 +166,20 @@ if (window.socket) {
 
 // 5. Gameplay
 function nextCard() {
+  // ENDLESS MODE: Check if need more cards
+  if (queue.length <= 2) {
+    requestMoreCards();
+  }
+
+  // If truly out of cards, show loading
   if (queue.length === 0) {
-    endGame();
+    showLoadingMessage();
     return;
   }
+
+  // Auto-save check
+  checkAutoSave();
+
   currentItem = queue.shift();
 
   if (ui.text) ui.text.innerText = currentItem.teks || "Error";
@@ -170,10 +189,16 @@ function nextCard() {
     ui.card.style.transform = "translateX(0) rotate(0deg)";
     ui.card.style.transition = "none";
   }
+
+  // ENDLESS MODE: Start 25-second timer
+  startCardTimer();
 }
 
 // Fungsi jawab + efek visual
 function answer(side) {
+  // ENDLESS MODE: Stop timer when answering
+  clearInterval(timerInterval);
+
   // Validasi
   if (!currentItem) return;
   const isCorrect = side === currentItem.hukum;
@@ -402,3 +427,174 @@ if (cardElement) {
     }
   });
 }
+
+// ==========================================
+// ENDLESS MODE FUNCTIONS
+// ==========================================
+
+// Timer functions
+function startCardTimer() {
+  clearInterval(timerInterval);
+  timeLeft = 25; // 25 seconds for Tajwid
+  updateTimerUI();
+  
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerUI();
+    
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      handleTimeout();
+    }
+  }, 1000);
+}
+
+function updateTimerUI() {
+  const timerEl = document.getElementById('timer');
+  if (timerEl) timerEl.textContent = timeLeft;
+}
+
+function handleTimeout() {
+  if (!currentItem) return; // No card to skip
+  
+  try {
+    AudioManager.playWrong();
+  } catch (e) {}
+  
+  // Show which side was correct with quick flash
+  const cardElement = document.getElementById('card');
+  if (cardElement) {
+    if (currentItem.hukum === 'kiri') {
+      cardElement.style.background = 'rgba(231, 76, 60, 0.3)'; // Red flash
+    } else {
+      cardElement.style.background = 'rgba(231, 76, 60, 0.3)';
+    }
+    
+    setTimeout(() => {
+      cardElement.style.background = '';
+      nextCard();
+    }, 1000);
+  } else {
+    nextCard();
+  }
+}
+
+// Auto-request more cards
+function requestMoreCards() {
+  // Rate limiting
+  const now = Date.now();
+  if (isRequestingQuestions || (now - lastRequestTime < REQUEST_COOLDOWN)) {
+    console.log('⏳ Request cooldown active');
+    return;
+  }
+  
+  isRequestingQuestions = true;
+  lastRequestTime = now;
+  
+  console.log('📥 Requesting more cards...');
+  
+  if (window.socket) {
+    window.socket.emit('mintaSoalAI', {
+      kategori: 'tajwid',
+      tingkat: selectedLevel,
+      mode: 'endless'
+    });
+  }
+}
+
+function showLoadingMessage() {
+  if (ui.text) {
+    ui.text.innerText = '⏳ Memuat kartu berikutnya...';
+  }
+  // Retry after delay
+  setTimeout(() => {
+    if (queue.length > 0) {
+      nextCard();
+    } else {
+      requestMoreCards();
+    }
+  }, 2000);
+}
+
+// Auto-save system
+let cardCount = 0; // Track total cards answered
+function checkAutoSave() {
+  cardCount++;
+  if (cardCount > 0 && cardCount % 5 === 0) {
+    autoSaveProgress();
+  }
+}
+
+function autoSaveProgress() {
+  console.log('💾 Auto-saving progress...');
+  
+  if (window.socket) {
+    window.socket.emit('simpanProgress', {
+      nama: playerName,
+      game: 'tajwid',
+      skor: score,
+      soalDijawab: cardCount,
+      timestamp: Date.now()
+    });
+  }
+  
+  // Visual feedback
+  showToast('💾 Progress tersimpan');
+}
+
+// Save and exit
+window.saveAndExit = function() {
+  // Confirmation
+  const confirmMsg = `Yakin ingin menyimpan dan keluar?\n\n` +
+    `✅ Skor: ${score}\n` +
+    `📝 Kartu terjawab: ${cardCount}`;
+  
+  if (!confirm(confirmMsg)) return;
+  
+  // Stop timer
+  clearInterval(timerInterval);
+  
+  // Save score
+  if (window.socket) {
+    window.socket.emit('simpanSkor', {
+      nama: playerName,
+      skor: score,
+      game: 'tajwid',
+      soalDijawab: cardCount,
+      mode: 'endless'
+    });
+  }
+  
+  // Show result
+  endGame();
+};
+
+// Toast notification
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'toast-notification';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => toast.classList.add('show'), 10);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 2000);
+}
+
+// Auto-save on page close (emergency backup)
+window.addEventListener('beforeunload', (e) => {
+  if (score > 0 && cardCount > 0) {
+    // Quick sync save attempt
+    if (navigator.sendBeacon && window.socket) {
+      const data = JSON.stringify({
+        nama: playerName,
+        game: 'tajwid',
+        skor: score,
+        soalDijawab: cardCount
+      });
+      navigator.sendBeacon('/api/quick-save', data);
+    }
+  }
+});

@@ -92,31 +92,65 @@ if (window.socket) {
           screens.start.classList.remove("hidden");
           screens.start.classList.add("active");
         }
+
+        isRequestingQuestions = false; // Reset flag
         return;
       }
 
-      questions = response.data;
+      // ENDLESS MODE: Determine if initial load or append
+      const isInitialLoad = questions.length === 0;
 
-      currentIndex = 0;
-      score = 0;
-      if (ui.score) ui.score.innerText = "0";
-      if (ui.qTotal) ui.qTotal.innerText = questions.length;
+      if (isInitialLoad) {
+        // Original behavior - first load
+        questions = response.data;
 
-      screens.start.classList.remove("active");
-      screens.start.classList.add("hidden");
-      screens.game.classList.remove("hidden");
-      screens.game.classList.add("active");
+        currentIndex = 0;
+        score = 0;
+        if (ui.score) ui.score.innerText = "0";
+        if (ui.qTotal) ui.qTotal.innerText = questions.length;
 
-      loadQuestion();
+        screens.start.classList.remove("active");
+        screens.start.classList.add("hidden");
+        screens.game.classList.remove("hidden");
+        screens.game.classList.add("active");
+
+        loadQuestion();
+      } else {
+        // ENDLESS MODE: Append new questions
+        const prevLength = questions.length;
+        questions.push(...response.data);
+        isRequestingQuestions = false;
+
+        console.log(
+          `✅ Added ${response.data.length} questions. Total: ${questions.length}`,
+        );
+
+        // Visual feedback
+        showToast(`📥 +${response.data.length} soal baru dimuat`);
+
+        // If waiting for questions, continue
+        if (currentIndex >= prevLength) {
+          loadQuestion();
+        }
+      }
     }
   });
 }
 
 function loadQuestion() {
+  // ENDLESS MODE: Check if need more questions
+  if (currentIndex >= questions.length - 2) {
+    requestMoreQuestions();
+  }
+
+  // If truly out of questions, show loading
   if (currentIndex >= questions.length) {
-    endGame();
+    showLoadingMessage();
     return;
   }
+
+  // Auto-save check
+  checkAutoSave();
   const q = questions[currentIndex];
   if (ui.questionText) ui.questionText.innerText = q.tanya;
   if (ui.qCurrent) ui.qCurrent.innerText = currentIndex + 1;
@@ -134,7 +168,7 @@ function loadQuestion() {
       ui.optionsContainer.appendChild(btn);
     });
   }
-  startTimer(20);
+  startTimer(25); // ENDLESS MODE: 25 seconds per question
 }
 
 function startTimer(seconds) {
@@ -290,3 +324,131 @@ function endGame() {
     });
   }
 }
+
+// ==========================================
+// ENDLESS MODE FUNCTIONS
+// ==========================================
+
+// Auto-request more questions
+let isRequestingQuestions = false;
+let lastRequestTime = 0;
+const REQUEST_COOLDOWN = 5000; // 5 seconds
+
+function requestMoreQuestions() {
+  // Rate limiting
+  const now = Date.now();
+  if (isRequestingQuestions || now - lastRequestTime < REQUEST_COOLDOWN) {
+    console.log("⏳ Request cooldown active");
+    return;
+  }
+
+  isRequestingQuestions = true;
+  lastRequestTime = now;
+
+  console.log("📥 Requesting more questions...");
+
+  if (window.socket) {
+    window.socket.emit("mintaSoalAI", {
+      kategori: "nabi",
+      tingkat: currentLevel,
+      mode: "endless",
+    });
+  }
+}
+
+function showLoadingMessage() {
+  if (ui.questionText) {
+    ui.questionText.innerText = "⏳ Memuat soal berikutnya...";
+  }
+  // Retry after delay
+  setTimeout(() => {
+    if (currentIndex < questions.length) {
+      loadQuestion();
+    } else {
+      requestMoreQuestions();
+    }
+  }, 2000);
+}
+
+// Auto-save system
+function checkAutoSave() {
+  if (currentIndex > 0 && currentIndex % 5 === 0) {
+    autoSaveProgress();
+  }
+}
+
+function autoSaveProgress() {
+  console.log("💾 Auto-saving progress...");
+
+  if (window.socket) {
+    window.socket.emit("simpanProgress", {
+      nama: playerName,
+      game: "nabi",
+      skor: score,
+      soalDijawab: currentIndex,
+      timestamp: Date.now(),
+    });
+  }
+
+  // Visual feedback
+  showToast("💾 Progress tersimpan");
+}
+
+// Save and exit
+window.saveAndExit = function () {
+  // Confirmation
+  const confirmMsg =
+    `Yakin ingin menyimpan dan keluar?\n\n` +
+    `✅ Skor: ${score}\n` +
+    `📝 Soal terjawab: ${currentIndex}`;
+
+  if (!confirm(confirmMsg)) return;
+
+  // Stop timer
+  clearInterval(timerInterval);
+
+  // Save score
+  if (window.socket) {
+    window.socket.emit("simpanSkor", {
+      nama: playerName,
+      skor: score,
+      game: "nabi",
+      soalDijawab: currentIndex,
+      mode: "endless",
+    });
+  }
+
+  // Show result
+  endGame();
+};
+
+// Toast notification
+function showToast(message) {
+  const toast = document.createElement("div");
+  toast.className = "toast-notification";
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  setTimeout(() => toast.classList.add("show"), 10);
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300);
+  }, 2000);
+}
+
+// Auto-save on page close (emergency backup)
+window.addEventListener("beforeunload", (e) => {
+  if (score > 0 && currentIndex > 0) {
+    // Quick sync save attempt
+    if (navigator.sendBeacon && window.socket) {
+      const data = JSON.stringify({
+        nama: playerName,
+        game: "nabi",
+        skor: score,
+        soalDijawab: currentIndex,
+      });
+      // Note: This endpoint needs to be implemented server-side
+      navigator.sendBeacon("/api/quick-save", data);
+    }
+  }
+});

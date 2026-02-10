@@ -134,12 +134,14 @@ body {
   flex-shrink: 0; /* Biar header gak kepencet */
 }
 .stat-box {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 8px 15px;
-  border-radius: 8px;
+  background: rgba(255, 215, 0, 0.15);
+  padding: 10px 18px;
+  border-radius: 10px;
   font-family: "Orbitron", sans-serif;
-  font-size: 0.9rem;
-  border-bottom: 2px solid #ffd700;
+  font-size: 1rem;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-bottom: 3px solid #ffd700;
+  box-shadow: 0 2px 10px rgba(255, 215, 0, 0.2);
 }
 
 /* PANEL */
@@ -214,18 +216,20 @@ body {
 /* UI GAMEPLAY - PERBAIKAN RESPONSIF */
 .progress-bar {
   width: 100%;
-  height: 6px;
-  background: #333;
-  border-radius: 3px;
+  height: 8px;
+  background: rgba(51, 51, 51, 0.8);
+  border-radius: 4px;
   margin-bottom: 15px;
   overflow: hidden;
   flex-shrink: 0;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 .progress-fill {
   height: 100%;
   width: 0%;
-  background: #ffd700;
-  transition: width 0.5s;
+  background: linear-gradient(90deg, #ffd700, #ffed4e);
+  transition: width 0.5s ease;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
 .question-card {
@@ -237,11 +241,13 @@ body {
   text-align: left; /* Teks rata kiri biar enak dibaca */
 }
 .q-number {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: #ffd700;
   text-transform: uppercase;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   display: block;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 #question-text {
@@ -453,5 +459,130 @@ body {
   }
   100% {
     transform: translateY(0px);
+  }
+}
+
+/* ==========================================
+   ENDLESS MODE UI STYLES - JEJAK NABI THEME
+   ========================================== */
+/* Save & Exit Button - Islamic Gold Theme */
+.btn-save-exit {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  // removed
+
+  /* Islamic Gold Gradient */
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #c0a062 100%);
+  color: #0f2027;
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  padding: 10px 20px;
+  border-radius: 50px;
+
+  /* Typography */
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-family: "Cinzel", serif;
+
+  /* Effects */
+  cursor: pointer;
+  box-shadow:
+    0 8px 25px rgba(255, 215, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 999;
+
+  /* Subtle Animation */
+  animation: golden-pulse 3s ease-in-out infinite;
+}
+
+.btn-save-exit:hover {
+  transform: translateY(0) translateY(-3px) scale(1.05);
+  box-shadow:
+    0 12px 35px rgba(255, 215, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border-color: #ffd700;
+}
+
+.btn-save-exit:active {
+  transform: translateY(0) translateY(-1px) scale(1.02);
+  box-shadow:
+    0 5px 15px rgba(255, 215, 0, 0.5),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes golden-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 8px 25px rgba(255, 215, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 8px 30px rgba(255, 215, 0, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+}
+
+/* Toast Notifications */
+.toast-notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  opacity: 0;
+  transform: translateX(400px);
+  transition: all 0.3s ease;
+  z-index: 999;
+  border-left: 4px solid #00f2ff;
+}
+
+.toast-notification.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .btn-save-exit {
+    top: 10px;
+    right: 10px;
+    padding: 10px 18px;
+    font-size: 12px;
+  }
+
+  .toast-notification {
+    top: 70px;
+    right: 10px;
+    font-size: 12px;
+    padding: 10px 16px;
+  }
+}
+
+/* Mobile responsiveness for save button */
+@media (max-height: 700px) {
+  .btn-save-exit {
+    bottom: 10px;
+    right: 10px;
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-save-exit {
+    bottom: 15px;
+    right: 15px;
+    padding: 10px 20px;
+    font-size: 13px;
+    min-width: 44px;
+    min-height: 44px;
   }
 }

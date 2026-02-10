@@ -31,6 +31,15 @@ const MAX_TUTOR_USAGE = 3;
 let currentLevel = "mudah";
 let playerName = localStorage.getItem("playerName") || "Guest";
 
+// ENDLESS MODE: Timer system
+let timeLeft = 30;
+let timerInterval;
+
+// ENDLESS MODE: Auto-request system
+let isRequestingQuestions = false;
+let lastRequestTime = 0;
+const REQUEST_COOLDOWN = 5000;
+
 // --- 2. PILIH LEVEL ---
 document.querySelectorAll(".btn-diff").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -87,22 +96,48 @@ if (window.socket) {
         ui.start.classList.remove("hidden");
         ui.start.classList.add("active");
       }
+
+      isRequestingQuestions = false; // Reset flag
       return;
     }
-    questions = response.data;
-    currentIndex = 0;
-    score = 0;
-    isAnswering = false;
-    tutorUsageCount = 0;
 
-    if (ui.qTotal) ui.qTotal.innerText = questions.length;
-    if (ui.score) ui.score.innerText = "0";
+    // ENDLESS MODE: Determine if initial load or append
+    const isInitialLoad = questions.length === 0;
 
-    ui.start.classList.add("hidden");
-    ui.game.classList.remove("hidden");
-    ui.game.classList.add("active");
+    if (isInitialLoad) {
+      // Original behavior - first load
+      questions = response.data;
+      currentIndex = 0;
+      score = 0;
+      isAnswering = false;
+      tutorUsageCount = 0;
 
-    loadQuestion();
+      if (ui.qTotal) ui.qTotal.innerText = questions.length;
+      if (ui.score) ui.score.innerText = "0";
+
+      ui.start.classList.add("hidden");
+      ui.game.classList.remove("hidden");
+      ui.game.classList.add("active");
+
+      loadQuestion();
+    } else {
+      // ENDLESS MODE: Append new questions
+      const prevLength = questions.length;
+      questions.push(...response.data);
+      isRequestingQuestions = false;
+
+      console.log(
+        `✅ Added ${response.data.length} questions. Total: ${questions.length}`,
+      );
+
+      // Visual feedback
+      showToast(`📥 +${response.data.length} ayat baru dimuat`);
+
+      // If waiting for questions, continue
+      if (currentIndex >= prevLength) {
+        loadQuestion();
+      }
+    }
   });
 }
 
@@ -110,10 +145,19 @@ if (window.socket) {
 function loadQuestion() {
   isAnswering = false;
 
+  // ENDLESS MODE: Check if need more questions
+  if (currentIndex >= questions.length - 2) {
+    requestMoreQuestions();
+  }
+
+  // If truly out of questions, show loading
   if (currentIndex >= questions.length) {
-    endGame();
+    showLoadingMessage();
     return;
   }
+
+  // Auto-save check
+  checkAutoSave();
 
   const q = questions[currentIndex];
   if (ui.questionText) ui.questionText.innerText = q.tanya || q.soal;
@@ -136,6 +180,9 @@ function loadQuestion() {
     btn.onclick = () => {
       if (isAnswering) return;
       isAnswering = true;
+
+      // ENDLESS MODE: Stop timer when answering
+      clearInterval(timerInterval);
 
       const kunci = q.jawab || q.jawaban;
       const isCorrect = opt === kunci;
@@ -194,6 +241,58 @@ function loadQuestion() {
     };
     ui.optionsContainer.appendChild(btn);
   });
+
+  // ENDLESS MODE: Start 30-second timer
+  startQuestionTimer();
+}
+
+// ENDLESS MODE: Timer functions
+function startQuestionTimer() {
+  clearInterval(timerInterval);
+  timeLeft = 30; // 30 seconds for Sambung Ayat
+  updateTimerUI();
+
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerUI();
+
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      handleTimeout();
+    }
+  }, 1000);
+}
+
+function updateTimerUI() {
+  const timerEl = document.getElementById("timer");
+  if (timerEl) timerEl.textContent = timeLeft;
+}
+
+function handleTimeout() {
+  if (isAnswering) return; // Already answered
+
+  isAnswering = true;
+
+  try {
+    AudioManager.playWrong();
+  } catch (e) {}
+
+  // Disable all buttons
+  const buttons = document.querySelectorAll(".btn-option");
+  buttons.forEach((b) => (b.disabled = true));
+
+  // Show correct answer
+  const q = questions[currentIndex];
+  const kunci = q.jawab || q.jawaban;
+  buttons.forEach((b) => {
+    if (b.innerText === kunci) b.classList.add("correct");
+  });
+
+  // Move to next question
+  setTimeout(() => {
+    currentIndex++;
+    loadQuestion();
+  }, 2000);
 }
 
 // --- 6. TUTOR AI ---
@@ -277,5 +376,127 @@ document.addEventListener("DOMContentLoaded", () => {
     const newBtn = btnStart.cloneNode(true);
     btnStart.parentNode.replaceChild(newBtn, btnStart);
     newBtn.addEventListener("click", startGame);
+  }
+});
+
+// ==========================================
+// ENDLESS MODE FUNCTIONS
+// ==========================================
+
+// Auto-request more questions
+function requestMoreQuestions() {
+  // Rate limiting
+  const now = Date.now();
+  if (isRequestingQuestions || (now - lastRequestTime < REQUEST_COOLDOWN)) {
+    console.log('⏳ Request cooldown active');
+    return;
+  }
+  
+  isRequestingQuestions = true;
+  lastRequestTime = now;
+  
+  console.log('📥 Requesting more questions...');
+  
+  if (window.socket) {
+    window.socket.emit('mintaSoalAI', {
+      kategori: 'ayat',
+      tingkat: currentLevel,
+      mode: 'endless'
+    });
+  }
+}
+
+function showLoadingMessage() {
+  if (ui.questionText) {
+    ui.questionText.innerText = '⏳ Memuat ayat berikutnya...';
+  }
+  // Retry after delay
+  setTimeout(() => {
+    if (currentIndex < questions.length) {
+      loadQuestion();
+    } else {
+      requestMoreQuestions();
+    }
+  }, 2000);
+}
+
+// Auto-save system
+function checkAutoSave() {
+  if (currentIndex > 0 && currentIndex % 5 === 0) {
+    autoSaveProgress();
+  }
+}
+
+function autoSaveProgress() {
+  console.log('💾 Auto-saving progress...');
+  
+  if (window.socket) {
+    window.socket.emit('simpanProgress', {
+      nama: playerName,
+      game: 'ayat',
+      skor: score,
+      soalDijawab: currentIndex,
+      timestamp: Date.now()
+    });
+  }
+  
+  // Visual feedback
+  showToast('💾 Progress tersimpan');
+}
+
+// Save and exit
+window.saveAndExit = function() {
+  // Confirmation
+  const confirmMsg = `Yakin ingin menyimpan dan keluar?\n\n` +
+    `✅ Skor: ${score}\n` +
+    `�� Ayat terjawab: ${currentIndex}`;
+  
+  if (!confirm(confirmMsg)) return;
+  
+  // Stop timer
+  clearInterval(timerInterval);
+  
+  // Save score
+  if (window.socket) {
+    window.socket.emit('simpanSkor', {
+      nama: playerName,
+      skor: score,
+      game: 'ayat',
+      soalDijawab: currentIndex,
+      mode: 'endless'
+    });
+  }
+  
+  // Show result
+  endGame();
+};
+
+// Toast notification
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'toast-notification';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => toast.classList.add('show'), 10);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 2000);
+}
+
+// Auto-save on page close (emergency backup)
+window.addEventListener('beforeunload', (e) => {
+  if (score > 0 && currentIndex > 0) {
+    // Quick sync save attempt
+    if (navigator.sendBeacon && window.socket) {
+      const data = JSON.stringify({
+        nama: playerName,
+        game: 'ayat',
+        skor: score,
+        soalDijawab: currentIndex
+      });
+      navigator.sendBeacon('/api/quick-save', data);
+    }
   }
 });

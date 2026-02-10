@@ -55,31 +55,31 @@ class ZumaScene extends Phaser.Scene {
     this.difficulty = data.difficulty || selectedDifficulty || "mudah";
 
     let targetSpeed = 0.4;
-    let targetDelay = 1500;
+    let targetDelay = 2000; // SPACING FIX: Increased from 1500ms for better spacing
 
     switch (this.difficulty.toLowerCase()) {
       case "mudah":
         targetSpeed = 0.4; // Pelan banget (User Request)
-        targetDelay = 1500;
+        targetDelay = 2000; // SPACING FIX: Increased from 1500ms
         break;
       case "sedang":
         targetSpeed = 0.7; // Normal
-        targetDelay = 1200;
+        targetDelay = 1600; // SPACING FIX: Increased from 1200ms
         break;
       case "sulit":
         targetSpeed = 1.0; // Cepat
-        targetDelay = 1000;
+        targetDelay = 1400; // SPACING FIX: Increased from 1000ms
         break;
       default:
         targetSpeed = 0.4;
-        targetDelay = 1500;
+        targetDelay = 2000; // SPACING FIX: Increased from 1500ms
     }
 
     // Mode cepat
     const isFast = (this.levelData.speed || "").toLowerCase() === "cepat";
     if (isFast) {
       targetSpeed = 1.5;
-      targetDelay = 800;
+      targetDelay = 1000; // SPACING FIX: Increased from 800ms
     }
 
     this.gameSpeed = targetSpeed;
@@ -573,6 +573,29 @@ class ZumaScene extends Phaser.Scene {
     marble.textObject = textObj;
     this.spawnedCount++;
     this.updateUI();
+  }
+
+  // SPACING FIX: Find safe spawn position with minimum distance from existing marbles
+  findSafeSpawnProgress() {
+    const activeMarbles = this.marbles.getChildren().filter((m) => m.active);
+
+    // If no marbles exist, spawn at start
+    if (activeMarbles.length === 0) {
+      return 0;
+    }
+
+    // Find the frontmost (highest progress) marble
+    const frontMarble = activeMarbles.reduce((max, marble) => {
+      return marble.pathProgress > max.pathProgress ? marble : max;
+    }, activeMarbles[0]);
+
+    // Calculate safe spawn position: behind front marble by minimum distance
+    const safeProgress = Math.max(
+      0,
+      frontMarble.pathProgress - MARBLE_MIN_DISTANCE,
+    );
+
+    return safeProgress;
   }
 
   // 4. Penembak & Peluru
