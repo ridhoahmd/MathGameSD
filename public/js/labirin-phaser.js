@@ -30,6 +30,9 @@ const SKIP_PENALTY = 25; // REBALANCED: was 10
 let totalObstacles = 0;
 let clearedObstacles = 0;
 
+// Timer (for time bonus calculation - Labirin has no timer, default 0)
+let timeLeft = 0;
+
 // Point System (REBALANCED for fairness)
 const POINTS_PER_OBSTACLE = 80; // was 20 → 4x increase
 const FINISH_BONUS = 150; // was 50 → 3x increase

@@ -71,10 +71,8 @@
         <button onclick="startGame()" class="btn-start">BUKA KASIR</button>
       </div>
 
-      <!-- === LAYAR GAMEPLAY (STRUK BELANJA) === -->
       <div id="game-screen" class="panel hidden">
         <div class="receipt-paper">
-          <!-- Header Struk -->
           <div class="receipt-header">
             <h3>TOKO VIDEA</h3>
             <p>Jl. Pendidikan No. 1</p>
@@ -115,7 +113,6 @@
         </div>
       </div>
 
-      <!-- === LAYAR HASIL (TUTUP TOKO) === -->
       <div id="result-screen" class="panel hidden">
         <h2>TOKO TUTUP</h2>
         <div class="final-score-box">
@@ -133,15 +130,12 @@
       </div>
     </div>
 
-    <!-- === SCRIPTS === -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="../js/audio.js?v=final"></script>
     <script src="../js/global.js"></script>
-    <!-- Sistem Gamifikasi -->
     <script src="../js/gamification/achievements.js"></script>
     <script src="../js/gamification/streaks.js"></script>
     <script src="../js/gamification/leveling.js"></script>
-    <!-- Logic Kasir -->
     <script src="../js/kasir.js?v=final"></script>
   </body>
 </html>
