@@ -275,52 +275,193 @@ module.exports = (socket, io) => {
   socket.on("updateUserRole", async (data) => {
     const { targetUser, newRole } = data;
 
-    // 🛡️ SECURITY: CEK OTORITAS KETAT
-    if (!socket.isAuth || !socket.decoded || socket.decoded.role !== "guru") {
-      console.warn(`⚠️ Percobaan Update Role Ilegal oleh ${socket.id}`);
+    // 🛡️ ENHANCED SECURITY: Multi-layer validation
+
+    // 1. Authentication Check
+    if (!socket.isAuth || !socket.decoded) {
+      console.warn(`⚠️ Unauthenticated role update attempt from ${socket.id}`);
+      socket.emit("errorUpdate", "Unauthorized: Please login first");
+      return;
+    }
+
+    const requestorRole = socket.decoded.role;
+    const requestorUsername = socket.decoded.username;
+
+    // 2. Basic Permission Check
+    if (requestorRole !== "guru" && requestorRole !== "admin") {
+      console.warn(
+        `⚠️ Unauthorized role update attempt by ${requestorUsername} (${requestorRole})`,
+      );
       socket.emit(
         "errorUpdate",
-        "Akses Ditolak: Anda bukan Guru/Admin terverifikasi.",
+        "Akses Ditolak: Anda tidak memiliki izin untuk mengubah role.",
       );
       return;
     }
 
+    // 3. Validate newRole value
+    const validRoles = ["siswa", "guru", "admin"];
+    if (!validRoles.includes(newRole)) {
+      console.warn(
+        `⚠️ Invalid role value: ${newRole} from ${requestorUsername}`,
+      );
+      socket.emit("errorUpdate", "Role tidak valid");
+      return;
+    }
+
     try {
+      // 4. Get Target User Data
+      const targetUserData = await prisma.user.findUnique({
+        where: { username: targetUser },
+        select: { role: true, username: true },
+      });
+
+      if (!targetUserData) {
+        socket.emit("errorUpdate", "User tidak ditemukan");
+        return;
+      }
+
+      const currentTargetRole = targetUserData.role;
+
+      // 5. Role Hierarchy Definition
+      const ROLE_HIERARCHY = {
+        siswa: 1,
+        guru: 2,
+        admin: 3,
+      };
+
+      const requestorLevel = ROLE_HIERARCHY[requestorRole] || 0;
+      const targetLevel = ROLE_HIERARCHY[currentTargetRole] || 0;
+      const newRoleLevel = ROLE_HIERARCHY[newRole] || 0;
+
+      // 6. SECURITY RULE: Cannot edit yourself
+      if (requestorUsername === targetUser) {
+        console.warn(`⚠️ Self-edit attempt blocked: ${requestorUsername}`);
+        socket.emit(
+          "errorUpdate",
+          "⛔ Tidak bisa mengubah role sendiri untuk keamanan sistem",
+        );
+        return;
+      }
+
+      // 7. SECURITY RULE: Cannot edit users with equal or higher privilege
+      if (targetLevel >= requestorLevel) {
+        console.warn(
+          `⚠️ Privilege escalation blocked: ${requestorUsername} (${requestorRole}) ` +
+            `tried to edit ${targetUser} (${currentTargetRole})`,
+        );
+        socket.emit(
+          "errorUpdate",
+          "⛔ Tidak bisa mengubah role user dengan level sama atau lebih tinggi dari Anda",
+        );
+        return;
+      }
+
+      // 8. SECURITY RULE: Guru cannot promote anyone to admin
+      if (requestorRole === "guru" && newRole === "admin") {
+        console.warn(
+          `⚠️ Guru ${requestorUsername} tried to promote ${targetUser} to admin`,
+        );
+        socket.emit(
+          "errorUpdate",
+          "⛔ Guru tidak memiliki izin untuk promote user ke Admin. Hubungi Administrator.",
+        );
+        return;
+      }
+
+      // 9. SECURITY RULE: Only admin can manage admin role
+      if (newRole === "admin" && requestorRole !== "admin") {
+        console.warn(
+          `⚠️ Non-admin ${requestorUsername} tried to set admin role`,
+        );
+        socket.emit(
+          "errorUpdate",
+          "⛔ Hanya Admin yang dapat memberikan role Admin",
+        );
+        return;
+      }
+
+      // 10. Execute Role Update
       await prisma.user.update({
         where: { username: targetUser },
         data: { role: newRole },
       });
 
+      // 11. Security Logging (Enhanced)
+      console.log(
+        `✅ ROLE UPDATE SUCCESS:\n` +
+          `   Requestor: ${requestorUsername} (${requestorRole})\n` +
+          `   Target: ${targetUser}\n` +
+          `   Change: ${currentTargetRole} → ${newRole}\n` +
+          `   IP: ${socket.handshake.address}\n` +
+          `   Time: ${new Date().toISOString()}`,
+      );
+
+      // 12. Notify Success
+      socket.emit("roleUpdateSuccess", {
+        targetUser,
+        newRole,
+        message: `Role ${targetUser} berhasil diubah menjadi ${newRole}`,
+      });
+
+      // 13. Broadcast refresh to all admin/guru dashboards
       if (io) io.emit("refreshDataGuru");
     } catch (err) {
-      console.error("❌ Gagal update role:", err.message);
-      socket.emit("errorUpdate", "Gagal mengupdate database.");
+      console.error("❌ Failed to update role:", err.message);
+      socket.emit("errorUpdate", "Terjadi kesalahan database. Coba lagi.");
     }
   });
 
-  // ADMIN RESET SYSTEM
+  // ADMIN RESET SYSTEM (🛡️ Enhanced Security)
   socket.on("adminResetSystem", async (data) => {
     const passwordInput = typeof data === "object" ? data.password : "";
 
-    // 🛡️ SECURITY: CEK TOKEN JUGA
-    if (!socket.isAuth || !socket.decoded || socket.decoded.role !== "guru") {
-      console.warn(`⚠️ Unauthorized Reset Attempt by ${socket.id}`);
+    // 🛡️ SECURITY: Admin-only function
+    if (!socket.isAuth || !socket.decoded) {
+      console.warn(`⚠️ Unauthenticated reset attempt from ${socket.id}`);
       return;
     }
 
+    const requestorRole = socket.decoded.role;
+    const requestorUsername = socket.decoded.username;
+
+    // Only Admin can reset system (NOT guru!)
+    if (requestorRole !== "admin") {
+      console.warn(
+        `⚠️ UNAUTHORIZED RESET ATTEMPT:\n` +
+          `   User: ${requestorUsername} (${requestorRole})\n` +
+          `   IP: ${socket.handshake.address}\n` +
+          `   Time: ${new Date().toISOString()}`,
+      );
+      return;
+    }
+
+    // Password validation
     if (passwordInput !== process.env.GURU_PASSWORD) {
       console.warn(
-        `⚠️ Percobaan Reset Ilegal dari ${socket.id} (Password Salah)`,
+        `⚠️ WRONG PASSWORD FOR RESET:\n` +
+          `   Admin: ${requestorUsername}\n` +
+          `   IP: ${socket.handshake.address}`,
       );
       return;
     }
 
     try {
+      // TODO: Implement backup before reset
+      // const backupData = await prisma.score.findMany({ include: { user: true, game: true } });
+
       await prisma.score.deleteMany({});
       await prisma.user.updateMany({
         data: { coins: 0, totalScore: 0, inventory: ["default"] },
       });
-      console.log("⚠️ SYSTEM RESET OLEH ADMIN TERVALIDASI");
+
+      console.log(
+        `⚠️ SYSTEM RESET EXECUTED:\n` +
+          `   Admin: ${requestorUsername}\n` +
+          `   IP: ${socket.handshake.address}\n` +
+          `   Time: ${new Date().toISOString()}`,
+      );
+
       if (io) io.emit("forceRefresh");
     } catch (e) {
       console.error("Gagal Reset:", e);

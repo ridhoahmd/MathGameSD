@@ -158,21 +158,8 @@ if (socket) {
       rows = info.maze_size || 10;
       questions = info.soal_list || [];
 
-      // Itung ukuran kotak biar muat layar dengan SAFE MARGINS
-      const isMobile = window.innerWidth <= 768;
-      const headerHeight = 80; // Increased safety margin
-      const footerHeight = isMobile ? 220 : 100; // More conservative
-
-      const availableWidth = window.innerWidth - 60; // More padding
-      const availableHeight = window.innerHeight - headerHeight - footerHeight;
-
-      size = Math.floor(
-        Math.min(availableWidth / cols, availableHeight / rows),
-      );
-
-      // IMPROVED: Add max/min constraints
-      size = Math.min(size, 60); // Reduced max from 80 to 60
-      size = Math.max(size, 20); // Min 20px per cell
+      // ✅ ENHANCED: Calculate size dynamically
+      size = calculateOptimalSize();
 
       // Update Phaser config size
       config.width = Math.min(cols * size, 800); // Max width 800px
@@ -189,37 +176,117 @@ if (socket) {
   });
 }
 
+// ✅ ENHANCED SIZE CALCULATION FUNCTION
+/**
+ * Calculate optimal cell size for maze based on actual DOM layout
+ * @returns {number} Cell size in pixels
+ */
+function calculateOptimalSize() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  // 1. Detect actual UI elements (tidak hardcode!)
+  const header = document.querySelector(".game-header");
+  const controls = document.querySelector(".game-controls");
+
+  // Measure actual heights dengan fallback
+  const headerHeight = header ? header.offsetHeight : 70;
+  const controlsHeight = controls ? controls.offsetHeight : 100;
+
+  // 2. Device detection untuk adaptive constraints
+  const isMobile = vw < 640;
+  const isTablet = vw >= 640 && vw < 1024;
+  const deviceType = isMobile ? "mobile" : isTablet ? "tablet" : "desktop";
+
+  // 3. Safety margins (berbeda per device)
+  const margins = {
+    mobile: 20,
+    tablet: 30,
+    desktop: 40,
+  };
+  const margin = margins[deviceType];
+
+  // 4. Calculate available space
+  const availableWidth = vw - margin * 2;
+  const availableHeight = vh - headerHeight - controlsHeight - margin * 2;
+
+  // 5. Calculate cell size
+  let cellSize = Math.floor(
+    Math.min(availableWidth / cols, availableHeight / rows),
+  );
+
+  // 6. Device-adaptive constraints
+  const constraints = {
+    mobile: { min: 25, max: 50 },
+    tablet: { min: 30, max: 70 },
+    desktop: { min: 30, max: 80 },
+  };
+
+  const { min, max } = constraints[deviceType];
+  cellSize = Math.max(min, Math.min(cellSize, max));
+
+  // 7. Debug logging (helpful untuk troubleshooting)
+  console.log(`📐 Layout Calculation:
+    Viewport: ${vw}x${vh}
+    Device: ${deviceType}
+    Header: ${headerHeight}px
+    Controls: ${controlsHeight}px
+    Available: ${availableWidth}x${availableHeight}
+    Cell Size: ${cellSize}px
+    Canvas: ${cols * cellSize}x${rows * cellSize}`);
+
+  return cellSize;
+}
+
 // Resize Dinamis
 let resizeTimeout;
 window.addEventListener("resize", () => {
   if (!gameActive) return;
   clearTimeout(resizeTimeout);
   resizeTimeout = setTimeout(() => {
-    // Recalculate size
-    const info = { maze_size: cols }; // Re-use current cols
-    const isMobile = window.innerWidth <= 768;
-    const headerHeight = 80;
-    const footerHeight = isMobile ? 220 : 100; // Match initial
-    const availableWidth = window.innerWidth - 60;
-    const availableHeight = window.innerHeight - headerHeight - footerHeight;
+    // ✅ Re-use the same calculation function
+    const newSize = calculateOptimalSize();
 
-    let newSize = Math.floor(
-      Math.min(availableWidth / cols, availableHeight / rows),
-    );
-
-    // Apply same constraints
-    newSize = Math.min(newSize, 60);
-    newSize = Math.max(newSize, 20);
-
-    // Determine if significant change
+    // Determine if significant change (avoid unnecessary reloads)
     if (Math.abs(newSize - size) > 2) {
       size = newSize;
-      config.width = cols * size;
-      config.height = rows * size;
+      config.width = Math.min(cols * size, 800);
+      config.height = Math.min(rows * size, 800);
+      config.scale.width = config.width;
+      config.scale.height = config.height;
+
       // Restart Phaser game to apply new config
+      console.log("🔄 Reloading maze dengan ukuran baru...");
       initPhaserGame();
     }
   }, 500);
+});
+
+// ✅ ORIENTATION CHANGE SUPPORT (untuk mobile/tablet rotation)
+let orientationTimeout;
+window.addEventListener("orientationchange", () => {
+  console.log("📱 Orientation changed, recalculating layout...");
+
+  clearTimeout(orientationTimeout);
+
+  // Wait for orientation to fully complete (browser quirk)
+  orientationTimeout = setTimeout(() => {
+    if (!gameActive) return;
+
+    const newSize = calculateOptimalSize();
+
+    // Check if size changed significantly
+    if (Math.abs(newSize - size) > 5) {
+      size = newSize;
+      config.width = Math.min(cols * size, 800);
+      config.height = Math.min(rows * size, 800);
+      config.scale.width = config.width;
+      config.scale.height = config.height;
+
+      console.log("🔄 Reloading maze untuk orientasi baru...");
+      initPhaserGame();
+    }
+  }, 300); // Delay sedikit biar DOM selesai update
 });
 
 // Mulai Phaser
