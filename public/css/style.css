@@ -441,43 +441,113 @@ body.theme-crimson .stat-value {
   font-weight: 600;
 }
 
-/* TEMA: OBSIDIAN (Full Black Aesthetic) - PREMIUM */
+/* =========================================
+   TEMA: OBSIDIAN PREMIUM EDITION 🖤✨
+   Full Black Aesthetic with Living Depth
+   ========================================= */
+
 body.theme-obsidian {
-  background: #000000; /* Pure black */
+  /* Pure black with breathing ambient glow */
+  background: #000000;
   background-image:
+    /* Subtle blue ambient spot (bottom left) */
     radial-gradient(
       circle at 20% 80%,
-      rgba(255, 255, 255, 0.02) 0%,
+      rgba(100, 100, 255, 0.03) 0%,
       transparent 50%
     ),
+    /* Subtle purple ambient spot (top right) */
     radial-gradient(
-      circle at 80% 20%,
-      rgba(255, 255, 255, 0.015) 0%,
-      transparent 50%
-    );
+        circle at 80% 20%,
+        rgba(255, 100, 255, 0.02) 0%,
+        transparent 50%
+      ),
+    /* Subtle noise texture for depth */
+    repeating-radial-gradient(
+        circle at 50% 50%,
+        transparent 0,
+        rgba(255, 255, 255, 0.005) 1px,
+        transparent 2px,
+        transparent 40px
+      );
+
+  /* Breathing animation for ambient spots */
+  animation: obsidian-ambient-pulse 10s ease-in-out infinite alternate;
+
   color: #f5f5f5; /* Very light gray - excellent contrast */
 }
 
+/* Breathing animation keyframes */
+@keyframes obsidian-ambient-pulse {
+  from {
+    background-image:
+      radial-gradient(
+        circle at 20% 80%,
+        rgba(100, 100, 255, 0.03),
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 80% 20%,
+        rgba(255, 100, 255, 0.02),
+        transparent 50%
+      ),
+      repeating-radial-gradient(
+        circle at 50% 50%,
+        transparent 0,
+        rgba(255, 255, 255, 0.005) 1px,
+        transparent 2px,
+        transparent 40px
+      );
+  }
+  to {
+    background-image:
+      radial-gradient(
+        circle at 25% 75%,
+        rgba(100, 100, 255, 0.05),
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 75% 25%,
+        rgba(255, 100, 255, 0.04),
+        transparent 50%
+      ),
+      repeating-radial-gradient(
+        circle at 50% 50%,
+        transparent 0,
+        rgba(255, 255, 255, 0.005) 1px,
+        transparent 2px,
+        transparent 40px
+      );
+  }
+}
+
+/* HEADER: Premium minimal */
 body.theme-obsidian .main-header {
   background: rgba(0, 0, 0, 0.98);
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 2px 20px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(255, 255, 255, 0.02); /* Subtle ambient glow */
   backdrop-filter: blur(10px);
 }
 
+/* CONTAINER: Glass morphism subtle */
 body.theme-obsidian .dashboard-container {
-  background: #000000;
+  background: rgba(0, 0, 0, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
     0 0 1px rgba(255, 255, 255, 0.1),
-    0 8px 40px rgba(0, 0, 0, 0.8);
+    0 8px 40px rgba(0, 0, 0, 0.8),
+    inset 0 0 100px rgba(255, 255, 255, 0.01); /* Inner glow */
 }
 
+/* SIDEBAR: Refined divider */
 body.theme-obsidian .sidebar {
   background: rgba(0, 0, 0, 0.5);
   border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* GAME CARDS: Premium glossy with sweep effect */
 body.theme-obsidian .game-card {
   background: linear-gradient(145deg, #0a0a0a, #000000);
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -485,64 +555,109 @@ body.theme-obsidian .game-card {
     0 4px 12px rgba(0, 0, 0, 0.6),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden; /* CRITICAL for glossy sweep */
 }
 
+/* Glossy light sweep effect (inactive state) */
+body.theme-obsidian .game-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%; /* Start off-screen left */
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  transform: skewX(-25deg);
+  transition: left 0.7s ease;
+  pointer-events: none; /* Don't block clicks */
+  z-index: 1;
+}
+
+/* Hover state: Enhanced lift + glow */
 body.theme-obsidian .game-card:hover {
   border-color: rgba(255, 255, 255, 0.4);
   transform: translateY(-5px);
   box-shadow:
     0 12px 30px rgba(0, 0, 0, 0.8),
     0 0 40px rgba(255, 255, 255, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    /* Outer glow */ inset 0 1px 0 rgba(255, 255, 255, 0.1);
   background: linear-gradient(145deg, #121212, #050505);
 }
 
+/* Glossy sweep animation on hover */
+body.theme-obsidian .game-card:hover::before {
+  left: 125%; /* Sweep across to right */
+}
+
+/* TYPOGRAPHY: Premium shadows */
 body.theme-obsidian .game-title {
   color: #ffffff;
   font-weight: 500;
   letter-spacing: 1.5px;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  text-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(255, 255, 255, 0.1); /* Subtle glow */
 }
 
 body.theme-obsidian .portal-title {
   color: #ffffff;
   font-weight: 400;
   letter-spacing: 3px;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+  text-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.7),
+    0 0 30px rgba(255, 255, 255, 0.05);
 }
 
+/* BUTTONS: Refined interactions */
 body.theme-obsidian .btn-menu {
   background: linear-gradient(145deg, #0d0d0d, #000000);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #d0d0d0;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
+/* Button hover: Premium lift */
 body.theme-obsidian .btn-menu:hover {
   background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
   border-color: rgba(255, 255, 255, 0.3);
   color: #ffffff;
+  transform: translateY(-2px);
   box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
+/* Play button: High contrast */
 body.theme-obsidian .btn-play {
   background: #000000;
   border: 2px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body.theme-obsidian .btn-play:hover {
   background: #ffffff;
   border-color: #ffffff;
   color: #000000;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 0 20px rgba(255, 255, 255, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.5);
+  transform: scale(1.05);
 }
 
+/* SCROLLBAR: Premium minimal */
 body.theme-obsidian ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 4px;
+  transition: background 0.3s ease;
 }
 
 body.theme-obsidian ::-webkit-scrollbar-thumb:hover {
@@ -553,30 +668,61 @@ body.theme-obsidian ::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.03);
 }
 
+/* STATS & VALUES: Enhanced glow */
 body.theme-obsidian .stat-value {
   color: #ffffff;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+  text-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.8),
+    0 0 20px rgba(255, 255, 255, 0.1);
   font-weight: 500;
 }
 
 body.theme-obsidian h1,
 body.theme-obsidian h2 {
   color: #ffffff;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+  text-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.7),
+    0 0 25px rgba(255, 255, 255, 0.08);
   font-weight: 400;
 }
 
+/* CHAT HEADER: Consistent styling */
 body.theme-obsidian .chat-header {
   background: #000000;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* STATS BOX: Subtle depth */
 body.theme-obsidian .stats-box {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* --- END TEMA --- */
+/* PROFILE CARD: Premium glass effect */
+body.theme-obsidian .sidebar {
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 10, 0.5),
+    rgba(0, 0, 0, 0.5)
+  );
+  backdrop-filter: blur(5px);
+}
+
+/* AVATAR GLOW (Obsidian specific) */
+body.theme-obsidian .avatar {
+  box-shadow:
+    0 0 20px rgba(255, 255, 255, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.8);
+}
+
+/* MENU SECTIONS: Refined spacing */
+body.theme-obsidian .menu-section {
+  padding: 15px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* --- END OBSIDIAN PREMIUM EDITION --- */
 
 /* UTILITY CLASSES */
 .hidden {
