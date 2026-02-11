@@ -356,8 +356,13 @@ window.toggleLatin = function () {
 
 // --- 8. GAME SELESAI ---
 function endGame() {
+  // Stop timer
+  clearInterval(timerInterval);
+
+  ui.game.classList.remove("active");
   ui.game.classList.add("hidden");
   ui.result.classList.remove("hidden");
+  ui.result.classList.add("active");
   if (ui.finalScore) ui.finalScore.innerText = score;
 
   if (window.socket) {
@@ -387,28 +392,28 @@ document.addEventListener("DOMContentLoaded", () => {
 function requestMoreQuestions() {
   // Rate limiting
   const now = Date.now();
-  if (isRequestingQuestions || (now - lastRequestTime < REQUEST_COOLDOWN)) {
-    console.log('⏳ Request cooldown active');
+  if (isRequestingQuestions || now - lastRequestTime < REQUEST_COOLDOWN) {
+    console.log("⏳ Request cooldown active");
     return;
   }
-  
+
   isRequestingQuestions = true;
   lastRequestTime = now;
-  
-  console.log('📥 Requesting more questions...');
-  
+
+  console.log("📥 Requesting more questions...");
+
   if (window.socket) {
-    window.socket.emit('mintaSoalAI', {
-      kategori: 'ayat',
+    window.socket.emit("mintaSoalAI", {
+      kategori: "ayat",
       tingkat: currentLevel,
-      mode: 'endless'
+      mode: "endless",
     });
   }
 }
 
 function showLoadingMessage() {
   if (ui.questionText) {
-    ui.questionText.innerText = '⏳ Memuat ayat berikutnya...';
+    ui.questionText.innerText = "⏳ Memuat ayat berikutnya...";
   }
   // Retry after delay
   setTimeout(() => {
@@ -428,75 +433,76 @@ function checkAutoSave() {
 }
 
 function autoSaveProgress() {
-  console.log('💾 Auto-saving progress...');
-  
+  console.log("💾 Auto-saving progress...");
+
   if (window.socket) {
-    window.socket.emit('simpanProgress', {
+    window.socket.emit("simpanProgress", {
       nama: playerName,
-      game: 'ayat',
+      game: "ayat",
       skor: score,
       soalDijawab: currentIndex,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
-  
+
   // Visual feedback
-  showToast('💾 Progress tersimpan');
+  showToast("💾 Progress tersimpan");
 }
 
 // Save and exit
-window.saveAndExit = function() {
+window.saveAndExit = function () {
   // Confirmation
-  const confirmMsg = `Yakin ingin menyimpan dan keluar?\n\n` +
+  const confirmMsg =
+    `Yakin ingin menyimpan dan keluar?\n\n` +
     `✅ Skor: ${score}\n` +
     `�� Ayat terjawab: ${currentIndex}`;
-  
+
   if (!confirm(confirmMsg)) return;
-  
+
   // Stop timer
   clearInterval(timerInterval);
-  
+
   // Save score
   if (window.socket) {
-    window.socket.emit('simpanSkor', {
+    window.socket.emit("simpanSkor", {
       nama: playerName,
       skor: score,
-      game: 'ayat',
+      game: "ayat",
       soalDijawab: currentIndex,
-      mode: 'endless'
+      mode: "endless",
     });
   }
-  
+
   // Show result
   endGame();
 };
 
 // Toast notification
 function showToast(message) {
-  const toast = document.createElement('div');
-  toast.className = 'toast-notification';
+  const toast = document.createElement("div");
+  toast.className = "toast-notification";
   toast.textContent = message;
   document.body.appendChild(toast);
-  
-  setTimeout(() => toast.classList.add('show'), 10);
+
+  setTimeout(() => toast.classList.add("show"), 10);
   setTimeout(() => {
-    toast.classList.remove('show');
+    toast.classList.remove("show");
     setTimeout(() => toast.remove(), 300);
   }, 2000);
 }
 
 // Auto-save on page close (emergency backup)
-window.addEventListener('beforeunload', (e) => {
+window.addEventListener("beforeunload", (e) => {
   if (score > 0 && currentIndex > 0) {
     // Quick sync save attempt
     if (navigator.sendBeacon && window.socket) {
       const data = JSON.stringify({
         nama: playerName,
-        game: 'ayat',
+        game: "ayat",
         skor: score,
-        soalDijawab: currentIndex
+        soalDijawab: currentIndex,
       });
-      navigator.sendBeacon('/api/quick-save', data);
+      navigator.sendBeacon("/api/quick-save", data);
     }
   }
 });

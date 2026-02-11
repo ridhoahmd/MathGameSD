@@ -10,16 +10,17 @@
       href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Poppins:wght@400;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../css/style.css?v=fix_ui_1" />
-    <link rel="stylesheet" href="../css/tajwid.css?v=fix_ui_1" />
-    <link rel="stylesheet" href="../css/visual-enhancements.css" />
-    <link rel="stylesheet" href="../css/streak-effects.css" />
+    <link rel="stylesheet" href="../css/style.css?v=fix_ui_2" />
+    <link rel="stylesheet" href="../css/tajwid.css?v=fix_ui_2" />
+    <link rel="stylesheet" href="../css/visual-enhancements.css?v=fix_ui_2" />
+    <link rel="stylesheet" href="../css/streak-effects.css?v=fix_ui_2" />
   </head>
   <body>
     <!-- === TOP BAR === -->
     <div class="top-bar">
       <a href="/" class="btn-back">⬅ Kembali</a>
       <div class="score-badge">✨ Skor: <span id="score">0</span></div>
+      <div class="score-badge">⏳ <span id="timer">25</span></div>
     </div>
 
     <div class="game-wrapper">
@@ -89,23 +90,10 @@
 
       <!-- === LAYAR HASIL === -->
       <div id="result-screen" class="panel hidden glass-panel">
-        <h2
-          style="
-            font-family: &quot;Orbitron&quot;;
-            color: #00f2ff;
-            margin-bottom: 20px;
-          "
-        >
-          WAKTU HABIS!
-        </h2>
-        <div class="final-score-box" style="margin-bottom: 30px">
-          <p style="color: #aaa; margin: 0">Total Skor</p>
-          <h1
-            id="final-score"
-            style="font-size: 4rem; margin: 0; color: #ffd700"
-          >
-            0
-          </h1>
+        <h2 class="result-title">WAKTU HABIS!</h2>
+        <div class="final-score-box result-score-box">
+          <p class="result-label">Total Skor</p>
+          <h1 id="final-score" class="result-score-value">0</h1>
         </div>
         <div class="action-buttons">
           <button onclick="location.reload()" class="btn-retry">

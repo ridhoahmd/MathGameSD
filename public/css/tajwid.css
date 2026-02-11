@@ -29,7 +29,8 @@ body {
   color: #fff8e1; /* Cream Text */
   min-height: 100dvh;
   width: 100vw;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -39,7 +40,9 @@ body {
 @media (max-width: 480px) {
   .game-wrapper {
     width: 95%;
-    height: 90vh;
+    max-width: 100%;
+    min-height: auto;
+    max-height: 95vh;
   }
   .flashcard {
     width: 200px;
@@ -49,29 +52,44 @@ body {
   .bucket-icon {
     font-size: 1.2rem;
   }
+  #game-screen .hint-button {
+    top: 5px !important;
+    right: 0 !important;
+    padding: 5px 10px !important;
+    font-size: 0.7rem !important;
+  }
+  #game-screen {
+    padding-top: 55px;
+    padding-bottom: 60px;
+  }
 }
 
 /* CONTAINER TENGAH */
 .game-wrapper {
   width: 90%;
-  max-width: 450px; /* Ukuran pas HP */
-  height: 85vh;
+  max-width: 520px; /* Lebih lebar biar ga cramped di desktop */
+  min-height: 80vh;
+  max-height: 90vh;
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  overflow-y: auto; /* Scroll fallback kalau konten overflow */
 }
 
 /* UI HEADER */
 .top-bar {
   position: absolute;
   top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
   width: 90%;
   max-width: 600px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   z-index: 20;
+  gap: 8px;
 }
 .btn-back,
 .score-badge {
@@ -107,10 +125,7 @@ body {
   height: 100%; /* Pastikan memenuhi container */
 }
 
-/* Khusus Game Screen butuh space-evenly agar keranjang & kartu berjarak */
-#game-screen.active {
-  justify-content: space-evenly;
-}
+/* game-screen layout diatur di bawah (#game-screen) */
 
 /* --- GLASS CONTAINER (NEW) --- */
 .glass-panel {
@@ -249,11 +264,28 @@ body {
   display: none; /* di-handle JS */
   height: 100%;
   flex-direction: column;
-  justify-content: space-evenly; /* Bagi ruang secara rata */
+  justify-content: flex-start;
   align-items: center;
+  padding-top: 75px; /* Ruang untuk top-bar + hint */
+  padding-bottom: 80px; /* Ruang untuk save button */
+  gap: 20px;
+  position: relative; /* Agar hint button absolute relatif ke sini */
 }
 #game-screen.active {
   display: flex !important;
+}
+
+/* Override hint button untuk tajwid — pindah ke kanan atas, sejajar score */
+/* Pakai #game-screen .hint-button agar lebih kuat dari streak-effects.css */
+#game-screen .hint-button {
+  position: absolute !important;
+  top: 8px !important;
+  right: 0 !important;
+  left: auto !important;
+  transform: none !important;
+  z-index: 25;
+  padding: 8px 14px;
+  font-size: 0.8rem;
 }
 
 /* 1. BUCKETS (KERANJANG) */
@@ -261,7 +293,7 @@ body {
   display: flex;
   gap: 15px;
   width: 100%;
-  margin-top: 40px; /* Jarak dari top bar */
+  margin-top: 15px; /* Jarak lebih rapi dari hint button */
 }
 .bucket {
   flex: 1;
@@ -544,6 +576,30 @@ body {
 }
 
 /* ==========================================
+   RESULT SCREEN STYLES (moved from inline)
+   ========================================== */
+.result-title {
+  font-family: "Orbitron", sans-serif;
+  color: #00f2ff;
+  margin-bottom: 20px;
+}
+
+.result-score-box {
+  margin-bottom: 30px;
+}
+
+.result-label {
+  color: #aaa;
+  margin: 0;
+}
+
+.result-score-value {
+  font-size: clamp(2.5rem, 10vw, 4rem);
+  margin: 0;
+  color: #ffd700;
+}
+
+/* ==========================================
    ENDLESS MODE UI STYLES - TAJWID THEME
    ========================================== */
 
@@ -678,14 +734,13 @@ body {
 }
 
 @media (max-height: 700px) {
+  /* Compact for short screens — save button tetap di center */
   .btn-save-exit {
-    bottom: 10px;
-    right: 10px;
+    bottom: 8px;
     padding: 8px 14px;
     font-size: 11px;
   }
 
-  /* Compact for short screens */
   .flashcard {
     width: 200px;
     height: 200px;
@@ -693,6 +748,12 @@ body {
   }
 
   .buckets-area {
-    margin-top: 30px;
+    margin-top: 10px;
+  }
+
+  #game-screen {
+    padding-top: 60px;
+    padding-bottom: 55px;
+    gap: 8px;
   }
 }

@@ -470,7 +470,6 @@ body {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  // removed
 
   /* Islamic Gold Gradient */
   background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #c0a062 100%);
@@ -549,13 +548,15 @@ body {
   transform: translateX(0);
 }
 
-/* Mobile Responsive */
+/* Mobile Responsive - Consolidated */
 @media (max-width: 480px) {
   .btn-save-exit {
-    top: 10px;
-    right: 10px;
+    bottom: 15px;
+    right: 15px;
     padding: 10px 18px;
     font-size: 12px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .toast-notification {
@@ -566,23 +567,10 @@ body {
   }
 }
 
-/* Mobile responsiveness for save button */
+/* Short screen - compact sizing only */
 @media (max-height: 700px) {
   .btn-save-exit {
-    bottom: 10px;
-    right: 10px;
     padding: 8px 16px;
     font-size: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  .btn-save-exit {
-    bottom: 15px;
-    right: 15px;
-    padding: 10px 20px;
-    font-size: 13px;
-    min-width: 44px;
-    min-height: 44px;
   }
 }
