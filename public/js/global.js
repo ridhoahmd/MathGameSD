@@ -133,3 +133,25 @@ if (window.socket) {
 }
 
 console.log("✅ Sistem Global Siap (Socket & Offline UI & GameUtils)");
+
+// --- 8. GLOBAL THEME MANAGER (NEW: Default Royal) ---
+(function () {
+  try {
+    const DEFAULT_THEME = "royal"; // Royal Islamic - Premium
+    let currentTheme = localStorage.getItem("selectedTheme");
+
+    // If no theme set (First Visit), set default to Royal
+    if (!currentTheme) {
+      currentTheme = DEFAULT_THEME;
+      localStorage.setItem("selectedTheme", DEFAULT_THEME);
+      console.log("✨ Tema Default Diterapkan:", DEFAULT_THEME);
+    }
+
+    // Apply Theme Class
+    if (currentTheme && currentTheme !== "default") {
+      document.body.classList.add("theme-" + currentTheme);
+    }
+  } catch (e) {
+    console.error("Gagal load tema global:", e);
+  }
+})();
