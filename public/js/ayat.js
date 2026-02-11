@@ -119,6 +119,10 @@ if (window.socket) {
       ui.game.classList.remove("hidden");
       ui.game.classList.add("active");
 
+      // Show save button di stats-row
+      const btnSave = document.getElementById("btn-save-exit");
+      if (btnSave) btnSave.classList.remove("hidden");
+
       loadQuestion();
     } else {
       // ENDLESS MODE: Append new questions
@@ -364,6 +368,10 @@ function endGame() {
   ui.result.classList.remove("hidden");
   ui.result.classList.add("active");
   if (ui.finalScore) ui.finalScore.innerText = score;
+
+  // Hide save button
+  const btnSave = document.getElementById("btn-save-exit");
+  if (btnSave) btnSave.classList.add("hidden");
 
   if (window.socket) {
     window.socket.emit("simpanSkor", {

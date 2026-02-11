@@ -22,8 +22,8 @@
     />
 
     <!-- Ambil style global & style khusus game ini -->
-    <link rel="stylesheet" href="../css/style.css?v=final" />
-    <link rel="stylesheet" href="../css/ayat.css?v=final" />
+    <link rel="stylesheet" href="../css/style.css?v=save_v2" />
+    <link rel="stylesheet" href="../css/ayat.css?v=save_v2" />
     <link rel="stylesheet" href="../css/visual-enhancements.css" />
   </head>
   <body>
@@ -43,6 +43,13 @@
         <div class="stats-row">
           <div class="stat-box">✨ Skor: <span id="score">0</span></div>
           <div class="stat-box">⏳ Waktu: <span id="timer">00</span></div>
+          <button
+            id="btn-save-exit"
+            class="btn-save-exit hidden"
+            onclick="saveAndExit()"
+          >
+            💾 Simpan & Selesai
+          </button>
         </div>
       </div>
 
@@ -64,15 +71,6 @@
 
       <!-- 2. Layar Gameplay (Soal & Jawaban) -->
       <div id="game-screen" class="panel hidden">
-        <!-- ENDLESS MODE: Save Button -->
-        <button
-          id="btn-save-exit"
-          class="btn-save-exit"
-          onclick="saveAndExit()"
-        >
-          💾 SIMPAN & SELESAI
-        </button>
-
         <!-- Progress Bar (biar tau udah nomer berapa) -->
         <div class="progress-bar">
           <div class="progress-fill" id="progress"></div>
@@ -143,6 +141,6 @@
     <script src="../js/utils/comboManager.js"></script>
 
     <!-- Logic Game Sambung Ayat -->
-    <script src="../js/ayat.js?v=final"></script>
+    <script src="../js/ayat.js?v=save_v2"></script>
   </body>
 </html>

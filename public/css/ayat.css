@@ -455,41 +455,36 @@ body {
   }
 }
 
-/* ==========================================
-   ENDLESS MODE UI STYLES - SAMBUNG AYAT THEME
-   ========================================== */
-
-/* Save & Exit Button - Quranic Cyan Theme (Bottom-Right Floating) */
+/* Save & Exit Button - Islamic Green Theme (Inline di stats-row) */
 .btn-save-exit {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-
-  /* Quranic Cyan Gradient */
-  background: linear-gradient(135deg, #00d4ff 0%, #00a8cc 50%, #006d8a 100%);
+  /* Match stat-box style tapi lebih eye-catching */
+  background: linear-gradient(135deg, #1abc9c 0%, #16a085 50%, #0e7c61 100%);
   color: white;
-  border: 2px solid rgba(0, 212, 255, 0.4);
-  padding: 12px 24px;
-  border-radius: 20px;
+  border: 1px solid rgba(22, 160, 133, 0.5);
+  padding: 10px 18px;
+  border-radius: 10px;
+  border-bottom: 3px solid #0e7c61;
 
   /* Typography */
   font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.5px;
+  font-size: 0.85rem;
+  letter-spacing: 0.3px;
   font-family: "Poppins", sans-serif;
+  white-space: nowrap;
 
-  /* Islamic Border Pattern Effect */
-  box-shadow:
-    0 4px 20px rgba(0, 212, 255, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  /* Glow effect */
+  box-shadow: 0 2px 12px rgba(22, 160, 133, 0.35);
 
   /* Effects */
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 998;
 
   /* Breathing Animation */
   animation: ayat-breathe 4s ease-in-out infinite;
+}
+
+.btn-save-exit.hidden {
+  display: none !important;
 }
 
 .btn-save-exit::before {
@@ -502,21 +497,20 @@ body {
   background: linear-gradient(
     45deg,
     transparent,
-    rgba(0, 212, 255, 0.3),
+    rgba(26, 188, 156, 0.3),
     transparent
   );
-  border-radius: 20px;
+  border-radius: 10px;
   opacity: 0;
   transition: opacity 0.3s;
   z-index: -1;
 }
 
 .btn-save-exit:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow:
-    0 6px 25px rgba(0, 212, 255, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  border-color: #00d4ff;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 20px rgba(26, 188, 156, 0.5);
+  border-color: #1abc9c;
+  background: linear-gradient(135deg, #2ecc71 0%, #1abc9c 50%, #16a085 100%);
 }
 
 .btn-save-exit:hover::before {
@@ -524,20 +518,16 @@ body {
 }
 
 .btn-save-exit:active {
-  transform: translateY(-1px) scale(1.02);
+  transform: translateY(0) scale(1.02);
 }
 
 @keyframes ayat-breathe {
   0%,
   100% {
-    box-shadow:
-      0 4px 20px rgba(0, 212, 255, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 12px rgba(22, 160, 133, 0.35);
   }
   50% {
-    box-shadow:
-      0 4px 25px rgba(0, 212, 255, 0.6),
-      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    box-shadow: 0 2px 18px rgba(26, 188, 156, 0.5);
   }
 }
 
@@ -566,12 +556,8 @@ body {
 /* Mobile Responsive */
 @media (max-width: 480px) {
   .btn-save-exit {
-    bottom: 15px;
-    right: 15px;
-    padding: 10px 20px;
-    font-size: 13px;
-    min-width: 44px; /* Touch-friendly */
-    min-height: 44px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
   }
 
   /* Better stats on mobile */
@@ -603,10 +589,8 @@ body {
 
 @media (max-height: 700px) {
   .btn-save-exit {
-    bottom: 10px;
-    right: 10px;
-    padding: 8px 16px;
-    font-size: 12px;
+    padding: 7px 10px;
+    font-size: 0.7rem;
   }
 
   /* Compact layout for short screens */

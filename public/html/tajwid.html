@@ -10,20 +10,70 @@
       href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Poppins:wght@400;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../css/style.css?v=fix_ui_2" />
-    <link rel="stylesheet" href="../css/tajwid.css?v=fix_ui_2" />
-    <link rel="stylesheet" href="../css/visual-enhancements.css?v=fix_ui_2" />
-    <link rel="stylesheet" href="../css/streak-effects.css?v=fix_ui_2" />
+    <link rel="stylesheet" href="../css/style.css?v=scrollbar_fix2" />
+    <link rel="stylesheet" href="../css/tajwid.css?v=center_fix" />
+    <link
+      rel="stylesheet"
+      href="../css/visual-enhancements.css?v=theme_final"
+    />
+    <link rel="stylesheet" href="../css/streak-effects.css?v=scrollbar_fix2" />
+    <style>
+      /* NUCLEAR FIX: Force Purple Scrollbar & Layout */
+      html,
+      body {
+        overflow: hidden !important; /* Kill window scrollbar */
+        background: #0f5132;
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #a855f7, #7c3aed) !important;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #9333ea !important;
+      }
+      .game-wrapper {
+        overflow-y: auto !important; /* Ensure internal scrolling */
+        scrollbar-width: thin;
+        scrollbar-color: #a855f7 rgba(0, 0, 0, 0.1);
+      }
+    </style>
   </head>
   <body>
     <!-- === TOP BAR === -->
     <div class="top-bar">
       <a href="/" class="btn-back">⬅ Kembali</a>
-      <div class="score-badge">✨ Skor: <span id="score">0</span></div>
-      <div class="score-badge">⏳ <span id="timer">25</span></div>
+      <div class="level-badge">
+        Tajwid - <span id="difficulty-display">Mudah</span>
+      </div>
     </div>
 
     <div class="game-wrapper">
+      <!-- === GAME HEADER (Stats Row) === -->
+      <div class="game-header">
+        <h1 class="title-tajwid">⚖️ PILAH HUKUM</h1>
+        <div class="stats-row">
+          <div class="stat-box">✨ Skor: <span id="score">0</span></div>
+          <div class="stat-box">⏳ <span id="timer">25</span></div>
+          <button id="hint-btn" class="stat-box stat-hint" onclick="useHint()">
+            💡 Petunjuk <span id="hint-count">2/2</span>
+          </button>
+          <button
+            id="btn-save-exit"
+            class="btn-save-exit hidden"
+            onclick="saveAndExit()"
+          >
+            💾 Simpan & Selesai
+          </button>
+        </div>
+      </div>
+
       <!-- === LAYAR START === -->
       <div id="start-screen" class="panel active glass-panel">
         <div class="game-logo">⚖️</div>
@@ -42,20 +92,6 @@
 
       <!-- === LAYAR MAIN (SORTIR KARTU) === -->
       <div id="game-screen" class="panel hidden">
-        <!-- Hint Button -->
-        <button id="hint-btn" class="hint-button" onclick="useHint()">
-          💡 Petunjuk <span id="hint-count">2/2</span>
-        </button>
-
-        <!-- ENDLESS MODE: Save Button -->
-        <button
-          id="btn-save-exit"
-          class="btn-save-exit"
-          onclick="saveAndExit()"
-        >
-          💾 SIMPAN & SELESAI
-        </button>
-
         <!-- Area Keranjang (Kiri/Kanan) -->
         <div class="buckets-area">
           <div
@@ -133,6 +169,6 @@
     <!-- NEW: Optimizations -->
     <script src="../js/utils/particleEffects.js"></script>
     <script src="../js/utils/hintSystem.js"></script>
-    <script src="../js/tajwid.js?v=fix_ui_1"></script>
+    <script src="../js/tajwid.js?v=theme_final"></script>
   </body>
 </html>
