@@ -20,12 +20,23 @@ const ui = {
 };
 
 let currentLevel = "mudah";
+let currentGameMode = "solo"; // "solo" or "versus"
 let questions = [];
 let currentIndex = 0;
 let score = 0;
 let timeLeft = 0;
 let timerInterval;
 let playerName = localStorage.getItem("playerName") || "Guest";
+
+// 0. Mode Selector
+window.selectMode = function (mode) {
+  currentGameMode = mode;
+  document.querySelectorAll(".btn-mode").forEach((btn) => {
+    btn.classList.remove("active");
+    if (btn.dataset.mode === mode) btn.classList.add("active");
+  });
+  console.log("Mode selected:", mode);
+};
 
 // Batas Tutor
 let tutorUsageCount = 0;
@@ -103,6 +114,16 @@ if (window.socket) {
       if (isInitialLoad) {
         // Original behavior - first load
         questions = response.data;
+
+        // CHECK MODE
+        if (currentGameMode === "versus") {
+          if (typeof VersusNabi !== "undefined") {
+            VersusNabi.init(questions);
+          } else {
+            alert("Versus module not loaded!");
+          }
+          return; // Stop Solo logic
+        }
 
         currentIndex = 0;
         score = 0;

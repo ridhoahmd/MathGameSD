@@ -13,12 +13,14 @@ const ui = {
   // Tutor UI
   tutorOverlay: document.getElementById("tutor-overlay"),
   tutorText: document.getElementById("tutor-text"),
+  vContainer: document.getElementById("versus-container"), // Versus Container
 };
 
 let queue = [];
 let currentItem = null;
 let score = 0;
 let playerName = localStorage.getItem("playerName") || "Guest";
+let currentGameMode = "solo"; // "solo" or "versus"
 
 let namaKategoriKiri = "Kiri";
 let namaKategoriKanan = "Kanan";
@@ -60,6 +62,16 @@ function initStartButton() {
     console.log("✅ Tajwid.js: Tombol Start Siap!");
   }
 }
+
+// Mode Selection
+window.selectMode = function (mode) {
+  currentGameMode = mode;
+  document.querySelectorAll(".btn-mode").forEach((btn) => {
+    btn.classList.remove("active");
+    if (btn.dataset.mode === mode) btn.classList.add("active");
+  });
+  console.log("Mode selected:", mode);
+};
 
 // 3. Mulai Game
 function startGame() {
@@ -117,6 +129,16 @@ if (window.socket) {
     }
 
     let incomingData = response.data;
+
+    // --- CHECK VERSUS MODE ---
+    if (currentGameMode === "versus") {
+      if (typeof VersusTajwid !== "undefined") {
+        VersusTajwid.init(incomingData);
+      } else {
+        alert("Versus module not loaded!");
+      }
+      return;
+    }
 
     // Label kategori
     if (incomingData.kategori_kiri && incomingData.kategori_kanan) {

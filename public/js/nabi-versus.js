@@ -1,0 +1,232 @@
+/**
+ * Logic Mode Versus (1v1 Split Screen) - Jejak Nabi
+ * Isolated from nabi.js to ensure zero-risk to solo mode.
+ */
+
+const VersusNabi = (() => {
+  // --- State ---
+  let state = {
+    isActive: false,
+    questions: [],
+    currentIndex: 0,
+    p1: { score: 0, ready: false },
+    p2: { score: 0, ready: false },
+    isRotated: false,
+  };
+
+  const ui = {
+    container: document.getElementById("versus-container"),
+    resultScreen: document.getElementById("versus-result"),
+    p1: {
+      score: document.getElementById("v-score-p1"),
+      question: document.getElementById("v-q-p1"),
+      options: document.getElementById("v-opts-p1"),
+    },
+    p2: {
+      score: document.getElementById("v-score-p2"),
+      question: document.getElementById("v-q-p2"),
+      options: document.getElementById("v-opts-p2"),
+    },
+  };
+
+  // --- Public Methods ---
+
+  function init(allQuestions) {
+    state.isActive = true;
+    state.questions = shuffleArray([...allQuestions]).slice(0, 10); // Ambil 10 soal acak
+    state.currentIndex = 0;
+
+    // Reset Scores
+    state.p1.score = 0;
+    state.p2.score = 0;
+    updateScoreUI();
+
+    // Show UI
+    document.getElementById("start-screen").classList.remove("active");
+    document.getElementById("start-screen").classList.add("hidden");
+    ui.container.classList.remove("hidden");
+    ui.resultScreen.classList.add("hidden");
+
+    // Start Game
+    loadQuestion();
+  }
+
+  function toggleRotation() {
+    state.isRotated = !state.isRotated;
+    const p2Area = document.getElementById("p2-area");
+    if (state.isRotated) {
+      p2Area.classList.add("rotated");
+    } else {
+      p2Area.classList.remove("rotated");
+    }
+  }
+
+  function exitVersus() {
+    state.isActive = false;
+    ui.container.classList.add("hidden");
+    ui.resultScreen.classList.add("hidden");
+
+    // Show Start Screen
+    document.getElementById("start-screen").classList.remove("hidden");
+    document.getElementById("start-screen").classList.add("active");
+  }
+
+  function rematch() {
+    // Request new questions logic similar to init
+    // For now, reload to get fresh questions via socket if needed,
+    // or just re-shuffle current ones?
+    // Best approach: Re-init with same questions but re-shuffled
+    init(state.questions);
+  }
+
+  // --- Private Game Logic ---
+
+  function loadQuestion() {
+    if (state.currentIndex >= state.questions.length) {
+      endGame();
+      return;
+    }
+
+    const q = state.questions[state.currentIndex];
+
+    // Render P1
+    renderPlayerUI(ui.p1, q, "p1");
+
+    // Render P2
+    renderPlayerUI(ui.p2, q, "p2");
+  }
+
+  function renderPlayerUI(playerUI, q, playerId) {
+    playerUI.question.innerText = q.tanya;
+    playerUI.options.innerHTML = "";
+
+    q.opsi.forEach((opt) => {
+      const btn = document.createElement("button");
+      btn.className = "btn-option";
+      btn.innerText = opt;
+
+      // Touchstart for faster reaction
+      btn.addEventListener(
+        "touchstart",
+        (e) => {
+          e.preventDefault(); // Prevent ghost clicks
+          handleAnswer(playerId, opt, q.jawab, btn);
+        },
+        { passive: false },
+      );
+
+      // Click fallback for non-touch
+      btn.addEventListener("click", () => {
+        handleAnswer(playerId, opt, q.jawab, btn);
+      });
+
+      playerUI.options.appendChild(btn);
+    });
+  }
+
+  function handleAnswer(playerId, selected, correct, btnElement) {
+    if (!state.isActive) return;
+
+    // Disable buttons for this player immediately
+    const playerUI = ui[playerId];
+    const buttons = playerUI.options.querySelectorAll(".btn-option");
+    buttons.forEach((b) => (b.disabled = true));
+
+    const clean = (str) => str.trim().toLowerCase();
+    const isCorrect =
+      clean(selected) === clean(correct) ||
+      clean(selected).includes(clean(correct));
+
+    if (isCorrect) {
+      btnElement.classList.add("correct");
+      state[playerId].score += 10;
+      try {
+        AudioManager.playCorrect();
+      } catch (e) {}
+    } else {
+      btnElement.classList.add("wrong");
+      try {
+        AudioManager.playWrong();
+      } catch (e) {}
+      // Show correct answer
+      buttons.forEach((b) => {
+        if (clean(b.innerText).includes(clean(correct))) {
+          b.classList.add("correct");
+        }
+      });
+    }
+
+    updateScoreUI();
+
+    // Check if both answered (For Independent Logic: No need. We advance when ONE answers?
+    // Or wait for both?
+    // Independent Logic with SAME question stream:
+    // Idea: Keep them on same question. If P1 answers, P1 waits?
+    // Better: "First Correct" gets point -> Next Question.
+    // OR "Independent": Both answer. If P1 right, +10. If P2 right, +10. Next question after both answer or timeout?
+    // Let's go with: "First Correct Wins the Round" (Adrenaline).
+
+    // VERSUS MODE LOGIC: "First Correct Advances All"
+    if (isCorrect) {
+      setTimeout(() => {
+        state.currentIndex++;
+        loadQuestion();
+      }, 1000);
+    } else {
+      // If wrong, wait for other player or short delay?
+      // If both wrong?
+      // Let's separate "Answered" state.
+      state[playerId].ready = true;
+      checkRoundComplete();
+    }
+  }
+
+  function checkRoundComplete() {
+    // If both answered wrong -> Next
+    if (state.p1.ready && state.p2.ready) {
+      setTimeout(() => {
+        state.currentIndex++;
+        loadQuestion();
+        state.p1.ready = false;
+        state.p2.ready = false;
+      }, 1000);
+    }
+  }
+
+  function updateScoreUI() {
+    ui.p1.score.innerText = state.p1.score;
+    ui.p2.score.innerText = state.p2.score;
+  }
+
+  function endGame() {
+    ui.container.classList.add("hidden");
+    ui.resultScreen.classList.remove("hidden");
+
+    document.getElementById("end-score-p1").innerText = state.p1.score;
+    document.getElementById("end-score-p2").innerText = state.p2.score;
+
+    let winnerText = "SERI!";
+    if (state.p1.score > state.p2.score) winnerText = "PEMENANG: PLAYER 1! 🏆";
+    if (state.p2.score > state.p1.score) winnerText = "🏆 PEMENANG: PLAYER 2!";
+
+    document.getElementById("v-winner-text").innerText = winnerText;
+    try {
+      AudioManager.playWin();
+    } catch (e) {}
+  }
+
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  return {
+    init,
+    toggleRotation,
+    exitVersus,
+    rematch,
+  };
+})();

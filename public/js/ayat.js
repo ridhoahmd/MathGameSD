@@ -30,6 +30,7 @@ let tutorUsageCount = 0;
 const MAX_TUTOR_USAGE = 3;
 let currentLevel = "mudah";
 let playerName = localStorage.getItem("playerName") || "Guest";
+let currentGameMode = "solo"; // "solo" or "versus"
 
 // ENDLESS MODE: Timer system
 let timeLeft = 30;
@@ -51,8 +52,22 @@ document.querySelectorAll(".btn-diff").forEach((btn) => {
   });
 });
 
+// --- 2.5 PILIH MODE ---
+window.selectMode = function (mode) {
+  currentGameMode = mode;
+  // Update UI buttons
+  document.querySelectorAll(".btn-mode").forEach((btn) => {
+    btn.classList.remove("active");
+    if (btn.dataset.mode === mode) btn.classList.add("active");
+  });
+  console.log("Mode selected:", mode);
+};
+
 // --- 3. MULAI GAME ---
 function startGame() {
+  console.log("🚀 Starting game. Mode:", currentGameMode);
+  // alert("Debug: Mode is " + currentGameMode); // Uncomment for extreme debug
+
   const btnStart = document.querySelector(".btn-start");
   if (btnStart) {
     btnStart.innerText = "⏳ Membuka Mushaf...";
@@ -101,12 +116,33 @@ if (window.socket) {
       return;
     }
 
+    // --- CHECK VERSUS MODE FIRST ---
+    if (currentGameMode === "versus") {
+      if (typeof VersusAyat !== "undefined") {
+        VersusAyat.init(response.data);
+      } else {
+        alert("Versus module not loaded!");
+      }
+      return; // Stop Solo logic completely
+    }
+
     // ENDLESS MODE: Determine if initial load or append
     const isInitialLoad = questions.length === 0;
 
     if (isInitialLoad) {
       // Original behavior - first load
       questions = response.data;
+
+      // CHECK MODE
+      if (currentGameMode === "versus") {
+        if (typeof VersusAyat !== "undefined") {
+          VersusAyat.init(questions);
+        } else {
+          alert("Versus module not loaded!");
+        }
+        return; // Stop Solo logic
+      }
+
       currentIndex = 0;
       score = 0;
       isAnswering = false;

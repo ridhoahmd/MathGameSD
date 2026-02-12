@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="../css/style.css?v=save_v2" />
     <link rel="stylesheet" href="../css/ayat.css?v=save_v2" />
     <link rel="stylesheet" href="../css/visual-enhancements.css" />
+    <link rel="stylesheet" href="../css/ayat-versus.css" />
   </head>
   <body>
     <!-- === TOP BAR === -->
@@ -58,6 +59,29 @@
         <div class="icon-big">📖</div>
         <p class="intro-text">"Bacalah dengan (menyebut) nama Tuhanmu..."</p>
         <p class="sub-text">Lanjutkan potongan ayat berikut ini.</p>
+
+        <!-- Pilihan Mode -->
+        <div class="mode-selector" style="margin-bottom: 20px">
+          <div
+            class="mode-buttons"
+            style="display: flex; gap: 15px; justify-content: center"
+          >
+            <button
+              class="btn-mode active"
+              data-mode="solo"
+              onclick="selectMode('solo')"
+            >
+              👤 TAHFIDZ SENDIRI
+            </button>
+            <button
+              class="btn-mode"
+              data-mode="versus"
+              onclick="selectMode('versus')"
+            >
+              ⚔️ TAHFIDZ DUEL
+            </button>
+          </div>
+        </div>
 
         <!-- Pilihan Tingkat Kesulitan -->
         <div class="difficulty-selector">
@@ -141,6 +165,90 @@
     <script src="../js/utils/comboManager.js"></script>
 
     <!-- Logic Game Sambung Ayat -->
+    <!-- Logic Game Sambung Ayat -->
     <script src="../js/ayat.js?v=save_v2"></script>
+
+    <!-- 4. Layar Versus (Split Screen) -->
+    <div id="versus-mode-container" class="panel hidden">
+      <div class="versus-controls">
+        <button
+          class="btn-ctrl-v"
+          onclick="VersusAyat.toggleRotation()"
+          title="Putar Layar Kanan"
+        >
+          🔄
+        </button>
+        <button
+          class="btn-ctrl-v"
+          onclick="VersusAyat.exitVersus()"
+          title="Keluar"
+        >
+          ❌
+        </button>
+      </div>
+      <div class="player-area left-side" id="p1-area">
+        <div class="v-score-container">
+          <span class="v-score-label">SKOR</span>
+          <div class="v-score" id="v-score-p1">0</div>
+        </div>
+        <div class="question-card" style="margin-bottom: 10px">
+          <h2 id="v-q-p1" class="v-question-text">...</h2>
+        </div>
+        <div class="options-grid" id="v-opts-p1"></div>
+      </div>
+      <div class="player-area right-side" id="p2-area">
+        <div class="v-score-container">
+          <span class="v-score-label">SKOR</span>
+          <div class="v-score" id="v-score-p2">0</div>
+        </div>
+        <div class="question-card" style="margin-bottom: 10px">
+          <h2 id="v-q-p2" class="v-question-text">...</h2>
+        </div>
+        <div class="options-grid" id="v-opts-p2"></div>
+      </div>
+    </div>
+
+    <!-- 5. Layar Hasil Versus -->
+    <div id="versus-result" class="panel hidden">
+      <!-- ... content ... -->
+      <h1 id="v-winner-text" style="color: #1abc9c; margin-bottom: 30px">
+        PEMENANG: PLAYER 1!
+      </h1>
+      <div
+        class="result-scores"
+        style="
+          display: flex;
+          gap: 50px;
+          margin-bottom: 40px;
+          justify-content: center;
+        "
+      >
+        <div class="p-score" style="text-align: center">
+          <h2>PLAYER 1</h2>
+          <span id="end-score-p1" style="font-size: 3rem; font-weight: bold"
+            >0</span
+          >
+        </div>
+        <div class="p-score" style="text-align: center">
+          <h2>PLAYER 2</h2>
+          <span id="end-score-p2" style="font-size: 3rem; font-weight: bold"
+            >0</span
+          >
+        </div>
+      </div>
+      <button class="btn-start" onclick="VersusAyat.rematch()">
+        MAIN LAGI
+      </button>
+      <button
+        class="btn-retry"
+        onclick="VersusAyat.exitVersus()"
+        style="margin-top: 10px"
+      >
+        KEMBALI KE MENU
+      </button>
+    </div>
+
+    <!-- MOVED SCRIPT HERE -->
+    <script src="../js/ayat-versus.js?v=debug_fix_dom"></script>
   </body>
 </html>

@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="../css/style.css?v=final" />
     <link rel="stylesheet" href="../css/nabi.css?v=final" />
     <link rel="stylesheet" href="../css/visual-enhancements.css" />
+    <link rel="stylesheet" href="../css/nabi-versus.css?v=1" />
   </head>
   <body>
     <!-- === TOP BAR === -->
@@ -50,8 +51,31 @@
       <div id="start-screen" class="panel active">
         <p class="intro-text">"Sampaikanlah dariku walau hanya satu ayat."</p>
         <p class="sub-text">
-          Pilih tingkat kesulitan untuk memulai petualangan sejarah.
+          Pilih mode dan tingkat kesulitan untuk memulai petualangan sejarah.
         </p>
+
+        <!-- Mode Selection -->
+        <div class="mode-selector" style="margin-bottom: 20px">
+          <div
+            class="mode-buttons"
+            style="display: flex; gap: 15px; justify-content: center"
+          >
+            <button
+              class="btn-mode active"
+              data-mode="solo"
+              onclick="selectMode('solo')"
+            >
+              👤 SOLO
+            </button>
+            <button
+              class="btn-mode"
+              data-mode="versus"
+              onclick="selectMode('versus')"
+            >
+              ⚔️ VERSUS
+            </button>
+          </div>
+        </div>
 
         <div class="difficulty-selector">
           <button class="btn-diff active" data-level="mudah">Mudah</button>
@@ -107,6 +131,109 @@
       </div>
     </div>
 
+    <!-- 4. Layar Versus (Split Screen) - MOVED OUTSIDE GAME-CONTAINER -->
+    <div id="versus-container" class="panel hidden">
+      <div class="versus-controls">
+        <button
+          class="btn-ctrl-v"
+          onclick="VersusNabi.toggleRotation()"
+          title="Putar Layar Kanan"
+        >
+          🔄
+        </button>
+        <button
+          class="btn-ctrl-v"
+          onclick="VersusNabi.exitVersus()"
+          title="Keluar"
+        >
+          ❌
+        </button>
+      </div>
+      <div class="player-area left-side" id="p1-area">
+        <div class="v-score-container" style="margin-bottom: 10px">
+          <span class="v-score-label" style="font-size: 0.8rem; color: #aaa"
+            >SKOR</span
+          >
+          <div
+            class="v-score"
+            id="v-score-p1"
+            style="font-size: 2rem; color: #ffd700"
+          >
+            0
+          </div>
+        </div>
+        <div class="question-card" style="width: 90%; margin: 0 auto 15px auto">
+          <h2 id="v-q-p1" style="font-size: 1rem; margin: 0">Siap?</h2>
+        </div>
+        <div
+          class="options-grid"
+          id="v-opts-p1"
+          style="width: 90%; max-height: 50vh; overflow-y: auto"
+        ></div>
+      </div>
+      <div class="player-area right-side" id="p2-area">
+        <div class="v-score-container" style="margin-bottom: 10px">
+          <span class="v-score-label" style="font-size: 0.8rem; color: #aaa"
+            >SKOR</span
+          >
+          <div
+            class="v-score"
+            id="v-score-p2"
+            style="font-size: 2rem; color: #ffd700"
+          >
+            0
+          </div>
+        </div>
+        <div class="question-card" style="width: 90%; margin: 0 auto 15px auto">
+          <h2 id="v-q-p2" style="font-size: 1rem; margin: 0">Siap?</h2>
+        </div>
+        <div
+          class="options-grid"
+          id="v-opts-p2"
+          style="width: 90%; max-height: 50vh; overflow-y: auto"
+        ></div>
+      </div>
+    </div>
+
+    <!-- 5. Layar Hasil Versus -->
+    <div id="versus-result" class="panel hidden">
+      <h1 id="v-winner-text" style="color: #f1c40f; margin-bottom: 30px">
+        PEMENANG: PLAYER 1!
+      </h1>
+      <div
+        class="result-scores"
+        style="
+          display: flex;
+          gap: 50px;
+          margin-bottom: 40px;
+          justify-content: center;
+        "
+      >
+        <div class="p-score" style="text-align: center">
+          <h2>PLAYER 1</h2>
+          <span id="end-score-p1" style="font-size: 3rem; font-weight: bold"
+            >0</span
+          >
+        </div>
+        <div class="p-score" style="text-align: center">
+          <h2>PLAYER 2</h2>
+          <span id="end-score-p2" style="font-size: 3rem; font-weight: bold"
+            >0</span
+          >
+        </div>
+      </div>
+      <button class="btn-start" onclick="VersusNabi.rematch()">
+        MAIN LAGI
+      </button>
+      <button
+        class="btn-retry"
+        onclick="VersusNabi.exitVersus()"
+        style="margin-top: 10px"
+      >
+        KEMBALI KE MENU
+      </button>
+    </div>
+
     <!-- === TUTOR AI OVERLAY === -->
     <div id="tutor-overlay" class="tutor-overlay">
       <div class="tutor-icon">🤖</div>
@@ -136,5 +263,6 @@
     <script src="../js/gamification/leveling.js"></script>
     <script src="../js/utils/comboManager.js"></script>
     <script src="../js/nabi.js?v=final"></script>
+    <script src="../js/nabi-versus.js?v=1"></script>
   </body>
 </html>

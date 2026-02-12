@@ -80,6 +80,52 @@
         <h1 class="title">PILAH HUKUM</h1>
         <p class="desc">Geser kartu Arab ke keranjang hukum yang benar!</p>
 
+        <!-- Mode Selection -->
+        <div
+          class="mode-selector"
+          style="
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            z-index: 50;
+            position: relative;
+          "
+        >
+          <button
+            class="btn-mode active"
+            onclick="selectMode('solo')"
+            data-mode="solo"
+            style="
+              flex: 1;
+              padding: 15px;
+              border-radius: 15px;
+              border: 2px solid transparent;
+              background: rgba(0, 0, 0, 0.2);
+              color: white;
+              font-weight: bold;
+            "
+          >
+            👤 PILAH SENDIRI
+          </button>
+          <button
+            class="btn-mode"
+            onclick="selectMode('versus')"
+            data-mode="versus"
+            style="
+              flex: 1;
+              padding: 15px;
+              border-radius: 15px;
+              border: 2px solid transparent;
+              background: rgba(0, 0, 0, 0.2);
+              color: white;
+              font-weight: bold;
+            "
+          >
+            ⚔️ PILAH DUEL
+          </button>
+        </div>
+
         <div class="difficulty-label">Pilih Tingkat Kesulitan:</div>
         <div class="difficulty-selector">
           <button class="btn-diff active" data-level="mudah">Mudah</button>
@@ -157,6 +203,85 @@
       </div>
     </div>
 
+    <!-- === LAYAR VERSUS (Moved outside game-wrapper) === -->
+    <div id="versus-container" class="hidden">
+      <!-- Player 2 (Top - Rotated) -->
+      <div class="player-area p2-area">
+        <div class="v-hud">
+          <div class="v-score-box">
+            <p class="v-score-label">SKOR P2</p>
+            <h1 id="v-p2-score" class="v-score-value">0</h1>
+          </div>
+        </div>
+        <div id="v-p2-card-area" class="v-card-area">
+          <!-- Card injected by JS -->
+        </div>
+        <div class="v-buckets-container">
+          <div
+            class="v-bucket left"
+            onclick="VersusTajwid.handleInput(2, 'kiri')"
+          >
+            KIRI
+          </div>
+          <div
+            class="v-bucket right"
+            onclick="VersusTajwid.handleInput(2, 'kanan')"
+          >
+            KANAN
+          </div>
+        </div>
+      </div>
+
+      <!-- Timer Center -->
+      <div id="v-timer" class="v-timer">60</div>
+
+      <!-- Player 1 (Bottom) -->
+      <div class="player-area p1-area">
+        <div class="v-hud">
+          <div class="v-score-box">
+            <p class="v-score-label">SKOR P1</p>
+            <h1 id="v-p1-score" class="v-score-value">0</h1>
+          </div>
+        </div>
+        <div id="v-p1-card-area" class="v-card-area">
+          <!-- Card injected by JS -->
+        </div>
+        <div class="v-buckets-container">
+          <div
+            class="v-bucket left"
+            onclick="VersusTajwid.handleInput(1, 'kiri')"
+          >
+            KIRI
+          </div>
+          <div
+            class="v-bucket right"
+            onclick="VersusTajwid.handleInput(1, 'kanan')"
+          >
+            KANAN
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- === LAYAR HASIL VERSUS === -->
+    <div id="versus-result" class="hidden">
+      <h1 id="v-winner-text" class="v-winner">🏆 PEMAIN 1 MENANG!</h1>
+      <div class="v-final-scores">
+        <div class="v-score-final">
+          <h3>P1</h3>
+          <span id="v-final-p1">0</span>
+        </div>
+        <div class="v-score-final">
+          <h3>P2</h3>
+          <span id="v-final-p2">0</span>
+        </div>
+      </div>
+      <button onclick="location.reload()" class="btn-retry">MAIN LAGI</button>
+      <button onclick="window.location.href = '/'" class="btn-home">
+        MENU UTAMA
+      </button>
+    </div>
+
     <!-- === SCRIPTS === -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="../js/audio.js?v=fix_ui_1"></script>
@@ -169,6 +294,8 @@
     <!-- NEW: Optimizations -->
     <script src="../js/utils/particleEffects.js"></script>
     <script src="../js/utils/hintSystem.js"></script>
+    <link rel="stylesheet" href="../css/tajwid-versus.css?v=2" />
     <script src="../js/tajwid.js?v=theme_final"></script>
+    <script src="../js/tajwid-versus.js?v=2"></script>
   </body>
 </html>
