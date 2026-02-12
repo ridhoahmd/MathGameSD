@@ -58,7 +58,7 @@ const config = {
   },
   scale: {
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
+    autoCenter: Phaser.Scale.CENTER_HORIZONTALLY,
     width: 600,
     height: 600,
     // Maintain aspect ratio
@@ -203,8 +203,8 @@ function calculateOptimalSize() {
 
   // 3. Safety margins (berbeda per device)
   const margins = {
-    mobile: 20,
-    tablet: 30,
+    mobile: 60, // INCREASED: Was 20
+    tablet: 80, // INCREASED: Was 30
     desktop: 40,
   };
   const margin = margins[deviceType];

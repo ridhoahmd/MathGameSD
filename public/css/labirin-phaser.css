@@ -74,19 +74,22 @@ body {
 /* ========== WADAH GAME (UNIVERSAL CENTERING) ========== */
 #game-container {
   display: flex;
-  align-items: center;
+  /* FIX: Align start supaya gak di-center ke bawah nabrak D-Pad di HP */
+  align-items: flex-start;
   justify-content: center;
   width: 100%;
   min-height: calc(100vh - 150px);
   margin: 0 auto;
-  padding-top: 70px;
-  padding-bottom: 10px;
+  padding-top: 90px; /* Tambahin dikit biar ga nempel header */
+  padding-bottom: 200px; /* Reserve space buat D-Pad */
   z-index: 1;
 }
 
-/* Desktop: no D-Pad, less padding */
+/* Desktop: balik ke center, no D-Pad */
 @media (min-width: 769px) {
   #game-container {
+    align-items: center;
+    padding-top: 70px;
     padding-bottom: 20px;
   }
 }
@@ -101,7 +104,15 @@ body {
 
   /* Max dimensions */
   max-width: min(90vw, 700px); /* Limit width di desktop */
-  max-height: min(65vh, 700px); /* Limit height, maintain square */
+
+  /* UPDATE: Dynamic height lebih agresif untuk hindari overlap */
+  /* Hitungan: 100vh - Header(~70px) - DPad(~180px) - Padding/Buffer(~100px) = ~350px buffer */
+  max-height: calc(100vh - 350px) !important;
+
+  /* Fallback aman buat layar landscape/desktop yang gak pake D-pad overlay */
+  @media (min-width: 769px) {
+    max-height: min(65vh, 700px) !important;
+  }
 
   /* Visual */
   border-radius: 10px;
