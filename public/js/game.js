@@ -148,6 +148,10 @@ class MathGame extends GameEngine {
       document.body.classList.add("wrong-anim");
       setTimeout(() => document.body.classList.remove("wrong-anim"), 500);
 
+      // FUN FACTOR: Screen shake on wrong answer
+      document.body.classList.add("shake-active");
+      setTimeout(() => document.body.classList.remove("shake-active"), 400);
+
       // 🔴 SHAKE INPUT FIELD (Phase 4)
       input.classList.add("wrong-shake");
       setTimeout(() => input.classList.remove("wrong-shake"), 500);

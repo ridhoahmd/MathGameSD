@@ -72,47 +72,38 @@ body {
 }
 
 /* ========== WADAH GAME (UNIVERSAL CENTERING) ========== */
-#game-container {
+/* ========== WADAH GAME (UNIVERSAL CENTERING) ========== */
+/* Replaces #game-container */
+#versus-container {
   display: flex;
-  /* FIX: Align start supaya gak di-center ke bawah nabrak D-Pad di HP */
-  align-items: flex-start;
+  align-items: center; /* Center correctly */
   justify-content: center;
   width: 100%;
-  min-height: calc(100vh - 150px);
-  margin: 0 auto;
-  padding-top: 90px; /* Tambahin dikit biar ga nempel header */
-  padding-bottom: 200px; /* Reserve space buat D-Pad */
+  height: 100vh; /* Fill screen */
+  padding-top: 90px; /* Increased Header Space to avoid overlap */
+  padding-bottom: 200px; /* D-Pad Space */
   z-index: 1;
+  overflow: hidden; /* Prevent scroll */
+  gap: 10px; /* Gap for split screen */
 }
 
-/* Desktop: balik ke center, no D-Pad */
+/* Desktop override */
 @media (min-width: 769px) {
-  #game-container {
-    align-items: center;
-    padding-top: 70px;
+  #versus-container {
     padding-bottom: 20px;
   }
 }
 
-#game-container canvas {
+/* Target canvas inside the container's children */
+#versus-container canvas {
   display: block;
   margin: 0 auto;
 
-  /* CRITICAL: Aspect ratio control untuk proportional display */
-  aspect-ratio: 1 / 1; /* Square maze */
-  object-fit: contain;
-
-  /* Max dimensions */
-  max-width: min(90vw, 700px); /* Limit width di desktop */
-
-  /* UPDATE: Dynamic height lebih agresif untuk hindari overlap */
-  /* Hitungan: 100vh - Header(~70px) - DPad(~180px) - Padding/Buffer(~100px) = ~350px buffer */
-  max-height: calc(100vh - 350px) !important;
-
-  /* Fallback aman buat layar landscape/desktop yang gak pake D-pad overlay */
-  @media (min-width: 769px) {
-    max-height: min(65vh, 700px) !important;
-  }
+  /* Max dimensions - Relaxed but contained */
+  max-width: 100%;
+  max-height: 100%;
+  width: auto; /* Let aspect ratio decide */
+  height: auto;
 
   /* Visual */
   border-radius: 10px;
@@ -120,63 +111,79 @@ body {
 }
 
 /* ========== KONTROL D-PAD (HP) ========== */
+/* ========== KONTROL D-PAD (HP) ========== */
 .game-controls {
   position: fixed;
-  bottom: 0;
+  bottom: 20px;
   left: 0;
   right: 0;
-  padding: 10px;
+  padding: 0 20px;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: space-between; /* Split P1 and P2 */
+  align-items: flex-end;
+  pointer-events: none; /* Let clicks pass through empty space */
   z-index: 100;
-  background: linear-gradient(
-    to top,
-    rgba(10, 10, 26, 0.85),
-    rgba(10, 10, 26, 0.4)
-  );
-  backdrop-filter: blur(5px);
 }
 
 .d-pad {
+  pointer-events: auto; /* Re-enable clicks on buttons */
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  gap: 8px;
-  width: 160px;
-  height: 160px;
+  grid-template-columns: repeat(3, 50px);
+  grid-template-rows: repeat(2, 50px);
+  gap: 5px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  border-radius: 20px;
+  backdrop-filter: blur(5px);
+}
+
+.d-pad-p1 {
+  /* Aligned Left by parent flex */
+  border: 1px solid rgba(0, 242, 255, 0.3);
+}
+
+.d-pad-p2 {
+  /* Aligned Right by parent flex */
+  border: 1px solid rgba(255, 0, 255, 0.3);
 }
 
 .btn-ctrl {
   width: 50px;
   height: 50px;
-  border: 2px solid rgba(0, 242, 255, 0.5);
-  background: rgba(0, 0, 0, 0.7);
-  color: #00f2ff;
-  font-size: 1.5rem;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  color: white;
+  font-size: 1.2rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .btn-ctrl:active {
-  background: rgba(0, 242, 255, 0.3);
+  background: rgba(255, 255, 255, 0.3);
   transform: scale(0.95);
 }
 
-.btn-up {
+/* Mapping Grid Areas for Arrow Layout */
+.btn-up-p1,
+.btn-up-p2 {
   grid-column: 2;
   grid-row: 1;
 }
-.btn-left {
+.btn-left-p1,
+.btn-left-p2 {
   grid-column: 1;
   grid-row: 2;
 }
-.btn-down {
+.btn-down-p1,
+.btn-down-p2 {
   grid-column: 2;
-  grid-row: 3;
+  grid-row: 2;
 }
-.btn-right {
+.btn-right-p1,
+.btn-right-p2 {
   grid-column: 3;
   grid-row: 2;
 }

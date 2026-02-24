@@ -1,1096 +1,1196 @@
+// LABIRIN ILMU - VERSI PHASER (REFACTORED & ENHANCED)
+// Game Maze pake Phaser 3 dengan Class Architecture
 // ============================================
-// LABIRIN ILMU - VERSI PHASER
-// Game Maze pake Phaser 3
-// ============================================
 
-// State & Socket
-const socket = window.socket;
-let playerName = localStorage.getItem("playerName") || "Guest";
-let level = "mudah";
-let cols, rows;
-let size = 30;
-let grid = [];
-let current;
-let stack = [];
-let questions = [];
-let score = 0;
-let gameActive = false;
-let finishNode;
+console.log("✅ Labirin Phaser Script Loading...");
 
-// Variabel AI Tutor
-let tutorUsageCount = 0;
-const MAX_TUTOR_USAGE = 3;
+// ==========================================
+// 1. CLASS DEFINITION: LabirinScene
+// ==========================================
+class LabirinScene extends Phaser.Scene {
+  constructor() {
+    super({ key: "LabirinScene" });
 
-// Variabel Auto-Skip (Week 2 Bugfix)
-let wrongAttempts = 0;
-const MAX_WRONG_ATTEMPTS = 3;
-const SKIP_PENALTY = 25; // REBALANCED: was 10
+    // STATE: Validasi variabel global pindah ke sini
+    this.grid = [];
+    this.stack = [];
+    this.players = { p1: null, p2: null };
+    this.score = { p1: 0, p2: 0 };
+    this.config = { cols: 10, rows: 10, size: 30 };
+    this.isVersus = false;
+    this.level = "mudah";
+    this.questions = [];
 
-// Variabel Obstacle Completion (Finish Control)
-let totalObstacles = 0;
-let clearedObstacles = 0;
+    // Game objects
+    this.mazeGraphics = null;
+    this.finishNode = null;
+    this.finishSprite = null;
+    this.questionMarkers = [];
 
-// Timer (for time bonus calculation - Labirin has no timer, default 0)
-let timeLeft = 0;
+    // Helper state
+    this.moveCooldown = { p1: false, p2: false };
 
-// Point System (REBALANCED for fairness)
-const POINTS_PER_OBSTACLE = 80; // was 20 → 4x increase
-const FINISH_BONUS = 150; // was 50 → 3x increase
-const TIME_BONUS_PER_30S = 30; // NEW: reward fast completion
-
-// Elemen HTML
-const tutorOverlay = document.getElementById("tutor-overlay");
-const tutorText = document.getElementById("tutor-text");
-const loadingScreen = document.getElementById("loading-screen");
-const quizModal = document.getElementById("quiz-modal");
-
-// Config Phaser
-const config = {
-  type: Phaser.AUTO,
-  width: 600,
-  height: 600,
-  parent: "game-container",
-  backgroundColor: "#0a0a1a",
-  scene: {
-    preload: preload,
-    create: create,
-    update: update,
-  },
-  scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_HORIZONTALLY,
-    width: 600,
-    height: 600,
-    // Maintain aspect ratio
-    expandParent: false,
-  },
-};
-
-// Variabel Game Phaser
-let game;
-let mazeGraphics;
-let playerSprite;
-let finishSprite;
-let questionMarkers = [];
-let cursors;
-let moveCooldown = false;
-
-// Tombol Level
-document.querySelectorAll(".btn-difficulty").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document
-      .querySelectorAll(".btn-difficulty")
-      .forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    level = btn.dataset.level;
-  });
-});
-
-// Dengerin AI Tutor
-if (socket) {
-  socket.on("penjelasanTutor", (data) => {
-    const textEl = document.getElementById("tutor-text");
-    if (!textEl) return;
-
-    const content = data.penjelasan || data.teks;
-    textEl.innerHTML = content;
-    textEl.style.opacity = 0;
-    textEl.style.transition = "opacity 0.5s ease-in";
-    setTimeout(() => {
-      textEl.style.opacity = 1;
-    }, 50);
-  });
-}
-
-window.tutupTutorLabirin = function () {
-  if (tutorOverlay) tutorOverlay.style.display = "none";
-  if (quizModal) quizModal.style.display = "flex";
-};
-
-// Minta Game ke Server
-window.requestGame = function () {
-  if (socket) {
-    socket.emit("mulaiGame", "labirin");
+    // Game Logic State
+    this.wrongAttempts = 0;
+    this.maxWrongAttempts = 3;
+    this.skipPenalty = 25;
+    this.pointsPerObstacle = 80;
+    this.finishBonus = 150;
   }
 
+  init(data) {
+    console.log("Scene Init with data:", data);
+
+    // Dependency Injection & Configuration
+    this.isVersus = data.mode === "versus";
+    this.config.cols = data.cols || 10;
+    this.config.rows = data.cols || 10; // Square maze usually
+    this.config.size = data.size || 30;
+    this.level = data.level || "mudah";
+    this.questions = data.questions || [];
+
+    // Reset state
+    this.score = { p1: 0, p2: 0 };
+    this.grid = [];
+    this.moveCooldown = { p1: false, p2: false };
+    this.wrongAttempts = 0;
+
+    // Emit State Awal
+    this.updateScoreUI();
+    console.log(
+      `[LabirinScene] Init. Level: ${this.level}. Questions: ${this.questions.length}. Cols: ${this.config.cols}`,
+    );
+  }
+
+  create() {
+    // 1. Generate Logic
+    this.generateMaze();
+
+    // 2. Setup Camera & World
+    this.setupWorld();
+
+    // 3. Draw Maze
+    this.mazeGraphics = this.add.graphics();
+    this.drawMaze();
+
+    // 4. Create Players
+    this.createPlayers();
+
+    // 5. Create Objects (Finish line, Coins/Questions)
+    this.createObjects();
+
+    // 6. Setup Inputs
+    this.setupInputs();
+
+    // 7. Setup Cameras (Split screen if versus)
+    this.setupCameras();
+
+    // 8. Handle Resize
+    this.scale.on("resize", this.handleResize, this);
+  }
+
+  setupWorld() {
+    const width = this.config.cols * this.config.size;
+    const height = this.config.rows * this.config.size;
+
+    // Set physics bounds (if using arcade physics, but we are using grid implementation)
+    this.cameras.main.setBounds(0, 0, width, height);
+
+    // Background Grid (Visual Aid)
+    this.add.grid(
+      width / 2,
+      height / 2,
+      width,
+      height,
+      this.config.size,
+      this.config.size,
+      0x000000,
+      0,
+      0x1f4068,
+      0.3,
+    );
+  }
+
+  // ==========================================
+  // LOGIC: GENERATE MAZE (DFS Algorithm)
+  // ==========================================
+  generateMaze() {
+    const { cols, rows } = this.config;
+    this.grid = [];
+    this.stack = [];
+
+    // Create Grid
+    for (let j = 0; j < rows; j++) {
+      for (let i = 0; i < cols; i++) {
+        this.grid.push({
+          i: i,
+          j: j,
+          walls: [true, true, true, true], // top, right, bottom, left
+          visited: false,
+          isQuestion: false,
+          questionData: null,
+        });
+      }
+    }
+
+    // DFS
+    let current = this.grid[0];
+    current.visited = true;
+    this.finishNode = this.grid[this.grid.length - 1];
+
+    let processing = true;
+    while (processing) {
+      const next = this.checkNeighbors(current);
+      if (next) {
+        next.visited = true;
+        this.stack.push(current);
+        this.removeWalls(current, next);
+        current = next;
+      } else if (this.stack.length > 0) {
+        current = this.stack.pop();
+      } else {
+        processing = false;
+      }
+    }
+
+    // Add Questions/Obstacles
+    this.placeObstacles();
+  }
+
+  checkNeighbors(cell) {
+    const neighbors = [];
+    const index = (i, j) => {
+      if (
+        i < 0 ||
+        j < 0 ||
+        i > this.config.cols - 1 ||
+        j > this.config.rows - 1
+      )
+        return -1;
+      return i + j * this.config.cols;
+    };
+
+    const top = this.grid[index(cell.i, cell.j - 1)];
+    const right = this.grid[index(cell.i + 1, cell.j)];
+    const bottom = this.grid[index(cell.i, cell.j + 1)];
+    const left = this.grid[index(cell.i - 1, cell.j)];
+
+    if (top && !top.visited) neighbors.push(top);
+    if (right && !right.visited) neighbors.push(right);
+    if (bottom && !bottom.visited) neighbors.push(bottom);
+    if (left && !left.visited) neighbors.push(left);
+
+    if (neighbors.length > 0) {
+      return neighbors[Math.floor(Math.random() * neighbors.length)];
+    }
+    return undefined;
+  }
+
+  removeWalls(a, b) {
+    const x = a.i - b.i;
+    if (x === 1) {
+      a.walls[3] = false;
+      b.walls[1] = false;
+    }
+    if (x === -1) {
+      a.walls[1] = false;
+      b.walls[3] = false;
+    }
+
+    const y = a.j - b.j;
+    if (y === 1) {
+      a.walls[0] = false;
+      b.walls[2] = false;
+    }
+    if (y === -1) {
+      a.walls[2] = false;
+      b.walls[0] = false;
+    }
+  }
+
+  placeObstacles() {
+    let qIndex = 0;
+    const shuffledIndices = Array.from(
+      { length: this.grid.length },
+      (_, i) => i,
+    ).sort(() => Math.random() - 0.5);
+
+    for (const i of shuffledIndices) {
+      // Avoid start and finish
+      if (i > 0 && i < this.grid.length - 1 && qIndex < this.questions.length) {
+        if (Math.random() < 0.3) {
+          this.grid[i].isQuestion = true;
+          this.grid[i].questionData = this.questions[qIndex];
+          qIndex++;
+        }
+      }
+    }
+  }
+
+  // ==========================================
+  // VISUALS: DRAW
+  // ==========================================
+  drawMaze() {
+    const g = this.mazeGraphics;
+    const size = this.config.size;
+
+    g.clear();
+
+    // Neon Glow
+    g.lineStyle(size / 3, 0x00f2ff, 0.5);
+    this._drawWalls(g);
+
+    // Bright Core
+    g.lineStyle(2, 0xffffff, 1);
+    this._drawWalls(g);
+  }
+
+  _drawWalls(graphics) {
+    const size = this.config.size;
+    for (const cell of this.grid) {
+      const x = cell.i * size;
+      const y = cell.j * size;
+
+      graphics.beginPath();
+      if (cell.walls[0]) {
+        graphics.moveTo(x, y);
+        graphics.lineTo(x + size, y);
+      }
+      if (cell.walls[1]) {
+        graphics.moveTo(x + size, y);
+        graphics.lineTo(x + size, y + size);
+      }
+      if (cell.walls[2]) {
+        graphics.moveTo(x + size, y + size);
+        graphics.lineTo(x, y + size);
+      }
+      if (cell.walls[3]) {
+        graphics.moveTo(x, y + size);
+        graphics.lineTo(x, y);
+      }
+      graphics.strokePath();
+    }
+  }
+
+  createPlayers() {
+    // Player 1
+    this.players.p1 = this._createOnePlayer(1, this.grid[0], 0x00ffff);
+
+    // Player 2 (Only if versus)
+    if (this.isVersus) {
+      this.players.p2 = this._createOnePlayer(2, this.grid[0], 0xff00ff);
+    }
+  }
+
+  _createOnePlayer(id, startNode, color) {
+    const size = this.config.size;
+    const x = startNode.i * size + size / 2;
+    const y = startNode.j * size + size / 2;
+    const key = `player${id}`;
+
+    // Generate texture if not exists
+    if (!this.textures.exists(key)) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(color, 0.4);
+      g.fillCircle(size / 2, size / 2, size / 2.5);
+      g.fillStyle(0xffffff, 1);
+      g.fillCircle(size / 2, size / 2, size / 4);
+      g.generateTexture(key, size, size);
+    }
+
+    const sprite = this.add.sprite(x, y, key).setDepth(10);
+    sprite.gridPos = { ...startNode }; // Copy position
+
+    // Trail effect
+    this.add.particles(0, 0, key, {
+      speed: 10,
+      scale: { start: 0.5, end: 0 },
+      blendMode: "ADD",
+      lifespan: 200,
+      frequency: 50,
+      follow: sprite,
+    });
+
+    return sprite;
+  }
+
+  createObjects() {
+    const size = this.config.size;
+
+    // 1. Finish Line
+    const fx = this.finishNode.i * size + size / 2;
+    const fy = this.finishNode.j * size + size / 2;
+
+    // Texture
+    if (!this.textures.exists("finish")) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(0x00ff00, 0.3);
+      g.fillCircle(size / 2, size / 2, size / 2.2);
+      g.lineStyle(2, 0x00ff00, 1);
+      g.strokeCircle(size / 2, size / 2, size / 2.2);
+      g.generateTexture("finish", size, size);
+    }
+
+    this.finishSprite = this.add.sprite(fx, fy, "finish").setDepth(5);
+    this.add
+      .text(fx, fy, "🏁", { fontSize: size / 2 + "px" })
+      .setOrigin(0.5)
+      .setDepth(6);
+
+    this.tweens.add({
+      targets: this.finishSprite,
+      angle: 360,
+      duration: 3000,
+      repeat: -1,
+    });
+
+    // 2. Question Markers
+    this.questionMarkers = [];
+    this.grid.forEach((cell) => {
+      if (cell.isQuestion) {
+        const qx = cell.i * size + size / 2;
+        const qy = cell.j * size + size / 2;
+        const qKey = `q_${cell.i}_${cell.j}`;
+
+        if (!this.textures.exists(qKey)) {
+          const g = this.make.graphics({ x: 0, y: 0, add: false });
+          g.lineStyle(2, 0xff00cc, 1);
+          g.fillStyle(0xff00cc, 0.5);
+          g.strokeRect(size * 0.25, size * 0.25, size * 0.5, size * 0.5);
+          g.fillRect(size * 0.25, size * 0.25, size * 0.5, size * 0.5);
+          g.generateTexture(qKey, size, size);
+        }
+
+        const marker = this.add.sprite(qx, qy, qKey).setDepth(5);
+        marker.cell = cell; // Link to data
+
+        this.tweens.add({
+          targets: marker,
+          angle: 360,
+          duration: 2000,
+          repeat: -1,
+        });
+
+        this.questionMarkers.push(marker);
+      }
+    });
+  }
+
+  // ==========================================
+  // CAMERAS & SPLIT SCREEN
+  // ==========================================
+  setupCameras() {
+    // Ukuran total layar
+    const width = this.scale.width;
+    const height = this.scale.height;
+
+    // We defer the positioning logic to handleResize to keep it DRY (Don't Repeat Yourself)
+
+    // Create Camera 2 if Versus Mode
+    if (this.isVersus) {
+      // Check if cam2 exists, if not add it
+      if (!this.camP2) {
+        // Initialize with rough right-side viewport to ensure visibility even if resize fails
+        this.camP2 = this.cameras.add(width / 2, 0, width / 2, height);
+        this.camP2.setName("CamP2");
+        this.camP2.startFollow(this.players.p2);
+        this.camP2.setBackgroundColor("#1a0a0a");
+      }
+
+      // Separator
+      if (!this.separator) {
+        this.separator = this.add
+          .rectangle(0, 0, 4, 0, 0xffffff)
+          .setScrollFactor(0)
+          .setDepth(9999);
+      }
+    }
+
+    // Apply Logic
+    this.handleResize(this.scale.gameSize);
+  }
+
+  // ==========================================
+  // INPUTS & MOVEMENT
+  // ==========================================
+  setupInputs() {
+    // Keyboard mapping
+    // P1: Arrows
+    this.input.keyboard.on("keydown-UP", () => this.tryMove("p1", 0, -1));
+    this.input.keyboard.on("keydown-DOWN", () => this.tryMove("p1", 0, 1));
+    this.input.keyboard.on("keydown-LEFT", () => this.tryMove("p1", -1, 0));
+    this.input.keyboard.on("keydown-RIGHT", () => this.tryMove("p1", 1, 0));
+
+    // P2: WASD
+    if (this.isVersus) {
+      this.input.keyboard.on("keydown-W", () => this.tryMove("p2", 0, -1));
+      this.input.keyboard.on("keydown-S", () => this.tryMove("p2", 0, 1));
+      this.input.keyboard.on("keydown-A", () => this.tryMove("p2", -1, 0));
+      this.input.keyboard.on("keydown-D", () => this.tryMove("p2", 1, 0));
+    }
+
+    // Add onscreen control listeners (touch)
+    // Note: These buttons are in HTML, not Phaser.
+    // Logic needs to bridge HTML buttons to Phaser functions.
+    // We can expose a global method or use the EventBus pattern.
+    window.movePhaserPlayer = (playerKey, x, y) => {
+      console.log(
+        `[Input] movePhaserPlayer called for ${playerKey}: ${x},${y}`,
+      );
+      this.tryMove(playerKey, x, y);
+    };
+  }
+
+  tryMove(playerKey, dx, dy) {
+    // Move Logic
+    if (this.moveCooldown[playerKey] || this.isQuizActive) return; // Prevent move if quiz active
+
+    const player = this.players[playerKey];
+    if (!player) return; // Player not active (e.g. P2 inactive in solo)
+
+    const currentGridPos = player.gridPos;
+    const currentIndex = currentGridPos.i + currentGridPos.j * this.config.cols;
+    const currentCell = this.grid[currentIndex];
+
+    // Check walls
+    let blocked = false;
+    if (dy === -1 && currentCell.walls[0]) blocked = true;
+    if (dx === 1 && currentCell.walls[1]) blocked = true;
+    if (dy === 1 && currentCell.walls[2]) blocked = true;
+    if (dx === -1 && currentCell.walls[3]) blocked = true;
+
+    if (blocked) {
+      this.cameras.main.shake(100, 0.005); // Subtle shake feedback
+      return;
+    }
+
+    // Logic coordinate update
+    const nextI = currentCell.i + dx;
+    const nextJ = currentCell.j + dy;
+    const nextIndex = nextI + nextJ * this.config.cols;
+    const nextCell = this.grid[nextIndex];
+
+    // Move Animation
+    const size = this.config.size;
+    const nextX = nextI * size + size / 2;
+    const nextY = nextJ * size + size / 2;
+
+    this.moveCooldown[playerKey] = true;
+
+    this.tweens.add({
+      targets: player,
+      x: nextX,
+      y: nextY,
+      duration: 150,
+      onComplete: () => {
+        this.moveCooldown[playerKey] = false;
+        player.gridPos = { i: nextI, j: nextJ };
+
+        // CHECK LOGIC: Collision with objects
+        this.checkCollision(playerKey, nextCell);
+
+        // Sound Effect: Move (Click)
+        if (window.safePlayClick) window.safePlayClick();
+      },
+    });
+  }
+
+  checkCollision(playerKey, cell) {
+    // 1. Finish Line
+    if (cell === this.finishNode) {
+      this.handleFinish(playerKey);
+      return;
+    }
+
+    // 2. Questions/Obstacles
+    if (cell.isQuestion) {
+      console.log(
+        `[Collision] Player ${playerKey} hit question at ${cell.i},${cell.j}`,
+      );
+      this.triggerQuestion(playerKey, cell);
+    }
+  }
+
+  triggerQuestion(playerKey, cell) {
+    console.log("[Trigger] Emitting showQuestion", cell.questionData);
+    // Reset wrong attempts for new question
+    this.wrongAttempts = 0;
+    this.isQuizActive = true; // Lock movement
+    this.lastQuestionData = cell.questionData; // Store for AI Tutor
+
+    this.events.emit("showQuestion", {
+      player: playerKey,
+      question: cell.questionData,
+      callback: (isCorrect, isSkip) => {
+        if (isCorrect) {
+          this.isQuizActive = false; // Unlock only if resolved
+          const marker = this.questionMarkers.find((m) => m.cell === cell);
+          if (marker) marker.destroy();
+          cell.isQuestion = false; // Mark as cleared
+
+          this.addScore(playerKey, this.pointsPerObstacle);
+          if (window.safePlayCorrect) window.safePlayCorrect(); // Sound Correct
+        } else if (isSkip) {
+          this.isQuizActive = false; // Unlock
+          const marker = this.questionMarkers.find((m) => m.cell === cell);
+          if (marker) marker.destroy();
+          cell.isQuestion = false;
+
+          this.addScore(playerKey, -this.skipPenalty); // Penalty
+        } else {
+          // Wrong answer logic - Handle attempts or bounce back
+          // Do NOT unlock movement yet
+          if (window.safePlayWrong) window.safePlayWrong(); // Sound Wrong
+          this.handleWrongAnswer(playerKey);
+        }
+      },
+    });
+  }
+
+  handleWrongAnswer(playerKey) {
+    this.wrongAttempts++;
+    if (this.wrongAttempts >= this.maxWrongAttempts) {
+      // Trigger AI Tutor
+      // Trigger AI Tutor
+      if (socket && this.lastQuestionData) {
+        // Show Loading Overlay Immediately
+        const tutorOverlay = document.getElementById("tutor-overlay");
+        const textEl = document.getElementById("tutor-text");
+        if (tutorOverlay && textEl) {
+          tutorOverlay.style.display = "flex";
+          textEl.innerHTML = "🤖 Sedang memanggil Guru Videa...";
+        }
+
+        // FIX: Match server event 'mintaPenjelasan'
+        // Payload: { soal, jawabanBenar, jawabanUser, kategori }
+        const qData = this.lastQuestionData;
+        socket.emit("mintaPenjelasan", {
+          soal: qData.pertanyaan || qData.tanya || qData.soal,
+          jawabanBenar: qData.jawaban || qData.jawab,
+          jawabanUser: "",
+          kategori: qData.topik || "Umum",
+        });
+      }
+      // Reset trigger to avoid spam
+      this.wrongAttempts = 0;
+      // Reset trigger to avoid spam
+      this.wrongAttempts = 0;
+    } else {
+      // Optional: Shake effect or alert
+      alert(
+        `Jawaban Salah! Kesempatan: ${this.maxWrongAttempts - this.wrongAttempts}`,
+      );
+    }
+  }
+
+  handleFinish(playerKey) {
+    this.addScore(playerKey, this.finishBonus);
+
+    // Sound Win
+    if (window.safePlayWin) window.safePlayWin();
+
+    this.events.emit("gameFinished", {
+      winner: playerKey,
+      score: this.score,
+      isVersus: this.isVersus,
+    });
+
+    // Celebrate
+    const player = this.players[playerKey];
+    this.tweens.add({
+      targets: player,
+      scale: 2,
+      alpha: 0,
+      duration: 1000,
+      yoyo: true,
+    });
+  }
+
+  addScore(playerKey, points) {
+    this.score[playerKey] += points;
+    this.updateScoreUI();
+  }
+
+  updateScoreUI() {
+    this.events.emit("updateScore", this.score);
+
+    // Direct DOM Update for redundancy
+    const scoreEl = document.getElementById("score");
+    if (scoreEl) {
+      if (this.isVersus) {
+        scoreEl.innerText = `P1: ${this.score.p1} | P2: ${this.score.p2}`;
+      } else {
+        scoreEl.innerText = this.score.p1;
+      }
+    }
+  }
+
+  handleResize(gameSize) {
+    const width = gameSize.width;
+    const height = gameSize.height;
+
+    // Reset Default Viewport
+    this.cameras.main.setViewport(0, 0, width, height);
+
+    if (this.isVersus) {
+      // --- VERSUS SPLIT SCREEN ---
+      const halfWidth = Math.floor(width / 2);
+      const remainingWidth = width - halfWidth; // Ensure total width is filled
+
+      const mazeWidth = this.config.cols * this.config.size;
+      const mazeHeight = this.config.rows * this.config.size;
+
+      // Calculate Smart Zoom that guarantees full visibility
+      // Add padding (e.g. 40px)
+      const zoomX = (halfWidth - 40) / mazeWidth;
+      const zoomY = (height - 40) / mazeHeight;
+      let smartZoom = Math.min(zoomX, zoomY);
+
+      // Safety Clamp: Don't let it be 0 or infinite
+      smartZoom = Math.max(0.1, smartZoom);
+
+      // Camera 1 (Left - P1)
+      this.cameras.main.setViewport(0, 0, halfWidth, height);
+      this.cameras.main.setZoom(smartZoom);
+      this.cameras.main.stopFollow(); // STOP FOLLOW to ensure it's static
+      this.cameras.main.centerOn(mazeWidth / 2, mazeHeight / 2);
+      this.cameras.main.setBackgroundColor("#0a0a1a");
+      this.cameras.main.removeBounds();
+
+      // Camera 2 (Right - P2)
+      // Use direct reference if available, else try lookup
+      const cam2 = this.camP2 || this.cameras.getCamera("CamP2");
+
+      if (cam2) {
+        cam2.setViewport(halfWidth, 0, remainingWidth, height);
+        cam2.setZoom(smartZoom);
+        cam2.stopFollow(); // STOP FOLLOW to ensure it's static
+        cam2.centerOn(mazeWidth / 2, mazeHeight / 2);
+        cam2.setBackgroundColor("#1a0a2a");
+        cam2.removeBounds();
+      } else {
+        console.warn("⚠️ Camera P2 not found during resize!");
+      }
+
+      // Show P2 D-Pad
+      const dpadP2 = document.querySelector(".d-pad-p2");
+      if (dpadP2) dpadP2.style.display = "grid";
+
+      // Separator Line
+      if (this.separator) {
+        this.separator.setVisible(true);
+        // Position exactly between cams
+        this.separator.setPosition(halfWidth, height / 2);
+        this.separator.height = height;
+        this.separator.width = 4;
+        this.separator.setFillStyle(0x00f2ff); // Neon Cyan
+        this.separator.setDepth(9999);
+      }
+    } else {
+      // --- SOLO SMART CAMERA ---
+      this.cameras.main.setViewport(0, 0, width, height);
+
+      const mazeWidth = this.config.cols * this.config.size;
+      const mazeHeight = this.config.rows * this.config.size;
+
+      const zoomX = (width - 50) / mazeWidth;
+      const zoomY = (height - 50) / mazeHeight;
+      let smartZoom = Math.min(zoomX, zoomY);
+
+      // Clamp zoom for Solo
+      smartZoom = Math.max(0.6, Math.min(smartZoom, 2.0));
+
+      this.cameras.main.setZoom(smartZoom);
+
+      // Center it
+      this.cameras.main.stopFollow();
+      this.cameras.main.removeBounds();
+      this.cameras.main.centerOn(mazeWidth / 2, mazeHeight / 2);
+
+      // Hide separator
+      if (this.separator) this.separator.setVisible(false);
+
+      // Disable P2 Cam if exists
+      if (this.camP2) {
+        // You ideally might want to hide it, but Phaser cams don't have 'visible'.
+        // We can set its viewport to 0,0,0,0
+        this.camP2.setViewport(0, 0, 0, 0);
+      }
+
+      // Hide P2 D-Pad
+      const dpadP2 = document.querySelector(".d-pad-p2");
+      if (dpadP2) dpadP2.style.display = "none";
+    }
+  }
+}
+
+// ==========================================
+// GAME INIT & GLOBAL INTERFACE
+// ==========================================
+
+let phaserGameInstance = null;
+const socket = window.socket; // Global Socket
+
+// Initialize Game (Called from Server Response)
+// Initialize Game (Called from Server Response)
+window.requestGame = function () {
+  console.log("🚀 Requesting Game V3 (Fixing RefError)...");
   const btn = document.querySelector(".btn-start-game");
   if (btn) {
     btn.innerText = "⏳ MENGHUBUNGI SERVER...";
     btn.disabled = true;
   }
 
-  tutorUsageCount = 0;
-
+  // Clean inputs
   const inputKodeKelas = document.getElementById("inputKodeKelas");
   const kodeAkses = inputKodeKelas
     ? inputKodeKelas.value.trim().toUpperCase()
     : "";
 
-  socket.emit("mintaSoalAI", {
-    kategori: "labirin",
-    tingkat: level,
-    kodeAkses: kodeAkses,
-  });
+  // Robust Level Detection
+  let level = "mudah";
+  const activeLevelBtn = document.querySelector(
+    ".buttons-row .btn-difficulty.active",
+  );
+  if (activeLevelBtn) {
+    level = activeLevelBtn.getAttribute("data-level") || "mudah";
+  }
 
-  // Jaga-jaga kalo timeout
-  setTimeout(() => {
-    if (
-      !gameActive &&
-      loadingScreen &&
-      loadingScreen.style.display !== "none"
-    ) {
-      if (btn) {
-        btn.innerText = "🚀 MULAI MISI (RETRY)";
-        btn.disabled = false;
-      }
-      alert("Server sedang sibuk. Silakan coba lagi.");
+  // Robust Mode Detection
+  let mode = window.currentMode || "solo";
+
+  console.log(
+    `📡 Sending Params: Level=${level}, Mode=${mode}, Kode=${kodeAkses}`,
+  );
+
+  // TIMEOUT FALLBACK (5 Detik)
+  // We capture 'level' and 'mode' in this closure.
+  const serverTimeout = setTimeout(() => {
+    console.warn("⚠️ Server Timeout! Menggunakan Data Lokal. Level:", level);
+    const fallbackCols = level === "sulit" ? 20 : level === "sedang" ? 15 : 10;
+
+    // START FALLBACK GAME
+    startPhaserGame({
+      cols: fallbackCols,
+      rows: fallbackCols,
+      questions: getFallbackQuestions(),
+      mode: mode,
+      level: level,
+    });
+
+    // Reset UI
+    if (btn) {
+      btn.innerText = "🚀 MULAI MISI (OFFLINE MODE)";
+      btn.disabled = false;
+      setTimeout(() => (btn.innerText = "🚀 MULAI MISI"), 2000);
     }
-  }, 10000);
+  }, 5000);
+
+  if (socket) {
+    // Listener one-time untuk clear timeout jika sukses
+    // Define handler separately to allow removal
+    const responseHandler = (response) => {
+      // Clear timeout immediately
+      clearTimeout(serverTimeout);
+      socket.off("soalDariAI", responseHandler); // Cleanup listener
+
+      const loadingScreen = document.getElementById("loading-screen");
+      if (loadingScreen) loadingScreen.style.display = "none";
+
+      if (response && response.kategori === "labirin") {
+        let info = response.data;
+        if (Array.isArray(info)) info = info[0];
+
+        // OVERRIDE based on level (Server might be static, so we force client size)
+        let mazeCols = info.maze_size || 10;
+        if (level === "sedang") mazeCols = 15;
+        if (level === "sulit") mazeCols = 20;
+
+        startPhaserGame({
+          cols: mazeCols,
+          rows: mazeCols,
+          questions: info.soal_list || [],
+          mode: window.currentMode || "solo",
+          level: level,
+        });
+      } else {
+        alert(response.error || "Gagal memuat soal.");
+        location.reload();
+      }
+    };
+
+    // Attach Listener
+    socket.on("soalDariAI", responseHandler);
+
+    // Emit Request
+    socket.emit("mintaSoalAI", {
+      kategori: "labirin",
+      tingkat: level,
+      kodeAkses: kodeAkses,
+      mode: mode,
+    });
+  } else {
+    // No socket at all? Fallback immediately
+    console.warn("⚠️ No Socket Connection! Starting Offline.");
+    clearTimeout(serverTimeout);
+    const fallbackCols = level === "sulit" ? 20 : level === "sedang" ? 15 : 10;
+    startPhaserGame({
+      cols: fallbackCols,
+      rows: fallbackCols,
+      questions: getFallbackQuestions(),
+      mode: mode,
+      level: level,
+    });
+  }
 };
 
-// Pas data masuk
+// Fallback Data Generator
+function getFallbackQuestions() {
+  return [
+    { pertanyaan: "1 + 1 = ?", jawaban: "2", topik: "Matematika Dasar" },
+    { pertanyaan: "Ibukota Indonesia?", jawaban: "Jakarta", topik: "Geografi" },
+    { pertanyaan: "5 x 5 = ?", jawaban: "25", topik: "Perkalian" },
+    { pertanyaan: "Warna langit cerah?", jawaban: "Biru", topik: "Umum" },
+    {
+      pertanyaan: "Hewan berkaki 4 yang mengeong?",
+      jawaban: "Kucing",
+      topik: "Biologi",
+    },
+  ];
+}
+
 if (socket) {
-  socket.on("soalDariAI", (response) => {
-    if (loadingScreen) loadingScreen.style.display = "none";
+  // Global listener cleanup (moved logic inside requestGame to handle timeout)
+  // We keep AI Tutor listener here as it is passive
+  socket.on("penjelasanTutor", (data) => {
+    const textEl = document.getElementById("tutor-text");
+    const tutorOverlay = document.getElementById("tutor-overlay");
+    const quizModal = document.getElementById("quiz-modal");
 
-    if (response && response.kategori === "labirin") {
-      let info = response.data;
-      if (Array.isArray(info)) info = info[0];
-
-      cols = info.maze_size || 10;
-      rows = info.maze_size || 10;
-      questions = info.soal_list || [];
-
-      // ✅ ENHANCED: Calculate size dynamically
-      size = calculateOptimalSize();
-
-      // Update Phaser config size
-      config.width = Math.min(cols * size, 800); // Max width 800px
-      config.height = Math.min(rows * size, 800); // Max height 800px
-      config.scale.width = config.width;
-      config.scale.height = config.height;
-
-      // Initialize Phaser game
-      initPhaserGame();
-    } else {
-      alert(response.error || "Gagal memuat soal. Coba lagi.");
-      location.reload();
+    if (textEl && tutorOverlay) {
+      if (quizModal) quizModal.style.display = "none";
+      tutorOverlay.style.display = "flex";
+      textEl.innerHTML = data.penjelasan || data.teks;
+      if (phaserGameInstance) {
+        const scene = phaserGameInstance.scene.getScene("LabirinScene");
+        if (scene) scene.isQuizActive = true;
+      }
     }
   });
 }
 
-// ✅ ENHANCED SIZE CALCULATION FUNCTION
-/**
- * Calculate optimal cell size for maze based on actual DOM layout
- * @returns {number} Cell size in pixels
- */
-function calculateOptimalSize() {
+// Global: Close Tutor
+window.tutupTutorLabirin = function () {
+  const tutorOverlay = document.getElementById("tutor-overlay");
+  if (tutorOverlay) tutorOverlay.style.display = "none";
+
+  // Resume Game / Unlock
+  if (phaserGameInstance) {
+    const scene = phaserGameInstance.scene.getScene("LabirinScene");
+    if (scene) scene.isQuizActive = false;
+  }
+};
+
+// Global variable for mode selection
+window.currentMode = "solo";
+window.selectMode = function (mode) {
+  window.currentMode = mode;
+  document.querySelectorAll("[data-mode]").forEach((b) => {
+    b.classList.remove("active");
+    if (b.dataset.mode === mode) b.classList.add("active");
+  });
+};
+
+// Difficulty Selection Logic
+document.querySelectorAll("[data-level]").forEach((btn) => {
+  btn.addEventListener("click", function () {
+    // Remove active from all level buttons
+    document
+      .querySelectorAll("[data-level]")
+      .forEach((b) => b.classList.remove("active"));
+    // Add active to clicked
+    this.classList.add("active");
+  });
+});
+
+function startPhaserGame(gameConfig) {
+  // 1. Calculate Size (Only for Grid/Maze generation reference)
+  // We still need a base size for the maze cells
+  const cellSize = calculateOptimalSize(gameConfig.cols);
+  gameConfig.size = cellSize;
+
+  // 2. Phaser Config with RESIZE
+  const config = {
+    type: Phaser.AUTO,
+    parent: "game-container-p1", // Single container
+    backgroundColor: "#0a0a1a",
+    scale: {
+      mode: Phaser.Scale.RESIZE, // KUNCI UTAMA
+      width: "100%",
+      height: "100%",
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+    },
+    scene: [LabirinScene],
+    physics: {
+      default: "arcade",
+      arcade: { debug: false },
+    },
+  };
+
+  // 3. Destroy Old Game (Only if exists)
+  if (phaserGameInstance) {
+    phaserGameInstance.destroy(true);
+  }
+
+  // 4. Create New Game
+  phaserGameInstance = new Phaser.Game(config);
+
+  // 5. Start with data
+  phaserGameInstance.registry.set("gameData", gameConfig);
+  phaserGameInstance.scene.start("LabirinScene", gameConfig);
+
+  // 6. Setup Event Listeners
+  phaserGameInstance.events.once("ready", () => {
+    const scene = phaserGameInstance.scene.getScene("LabirinScene");
+    if (scene) setupUIListeners(scene);
+    else {
+      phaserGameInstance.events.once("step", () => {
+        const s = phaserGameInstance.scene.getScene("LabirinScene");
+        if (s) setupUIListeners(s);
+      });
+    }
+  });
+}
+
+// Global: Reset Mode when needed (e.g. Back button)
+window.resetGameMode = function () {
+  window.currentMode = "solo";
+  document.querySelectorAll("[data-mode]").forEach((b) => {
+    b.classList.remove("active");
+    if (b.dataset.mode === "solo") b.classList.add("active");
+  });
+};
+
+// Bind Back Button
+document.querySelector(".btn-back")?.addEventListener("click", () => {
+  window.resetGameMode();
+  if (phaserGameInstance) phaserGameInstance.destroy(true);
+  document.getElementById("tutor-overlay").style.display = "none";
+  document.getElementById("quiz-modal").style.display = "none";
+});
+
+// UI HELPERS & EVENT LISTENERS
+function setupUIListeners(scene) {
+  console.log("✅ UI Listening to Game Events");
+
+  scene.events.on("updateScore", (scores) => {
+    const scoreEl = document.getElementById("score");
+    if (scoreEl) {
+      scoreEl.innerText = scene.isVersus
+        ? `P1: ${scores.p1} | P2: ${scores.p2}`
+        : scores.p1;
+    }
+  });
+
+  scene.events.on("showQuestion", (data) => {
+    showQuizModal(data);
+  });
+
+  scene.events.on("gameFinished", (data) => {
+    // Show Modal instead of alert
+    const modal = document.getElementById("game-over-modal");
+    if (modal) {
+      modal.style.display = "flex";
+
+      const title = document.getElementById("go-title");
+      const winnerText = document.getElementById("go-winner");
+      const scoreP1 = document.getElementById("go-score-p1");
+      const scoreP2Container = document.getElementById("go-score-p2-container");
+      const scoreP2 = document.getElementById("go-score-p2");
+
+      if (data.isVersus) {
+        title.innerText = "⚔️ DUEL SELESAI!";
+        winnerText.innerText =
+          data.winner === "p1" ? "🎉 PLAYER 1 MENANG!" : "🎉 PLAYER 2 MENANG!";
+        winnerText.style.color = data.winner === "p1" ? "cyan" : "magenta";
+
+        scoreP2Container.style.display = "block";
+        scoreP2.innerText = data.score.p2;
+      } else {
+        title.innerText = "🏁 MISI SELESAI!";
+        winnerText.innerText = "Selamat! Kamu berhasil.";
+        winnerText.style.color = "#00f2ff";
+        scoreP2Container.style.display = "none";
+      }
+
+      scoreP1.innerText = data.score.p1;
+    }
+  });
+}
+
+function showQuizModal(data) {
+  console.log("[UI] showQuizModal triggered", data);
+  const modal = document.getElementById("quiz-modal");
+  const qText = document.getElementById("q-text");
+  const qInput = document.getElementById("q-input");
+
+  if (!modal) console.error("[UI] Error: #quiz-modal not found!");
+  if (!qText) console.error("[UI] Error: #q-text not found!");
+
+  if (modal && qText) {
+    modal.style.display = "flex";
+
+    // Normalize Data (Handle DB 'pertanyaan' vs Fallback 'tanya'/'soal')
+    const qContent = data.question;
+    const text =
+      qContent.pertanyaan ||
+      qContent.tanya ||
+      qContent.soal ||
+      "Pertanyaan ???";
+    qText.innerText = text;
+
+    if (qInput) {
+      qInput.value = "";
+      qInput.focus();
+    }
+
+    // Callback stored globally for HTML button access
+    window.currentQuizCallback = data.callback;
+    window.currentQuizAnswer = qContent.jawaban || qContent.jawab;
+
+    // Store full data for AI Tutor context if needed
+    window.currentQuestionData = data.question;
+  }
+}
+
+// Global handler for HTML button
+// Global handler for HTML button
+window.checkQuiz = function () {
+  const inputEl = document.getElementById("q-input");
+  const feedbackEl = document.getElementById("quiz-feedback");
+  const input = inputEl.value.trim();
+  const correct = window.currentQuizAnswer; // Normalized in showQuizModal
+
+  if (!inputEl) {
+    console.error("❌ Error: Element #q-input tidak ditemukan!");
+    return;
+  }
+  if (!feedbackEl) {
+    console.error("❌ Error: Element #quiz-feedback tidak ditemukan!");
+    return;
+  }
+
+  // Reset State
+  inputEl.classList.remove("correct", "wrong");
+  feedbackEl.innerText = "";
+  feedbackEl.style.color = "white";
+
+  if (input.toLowerCase() === correct.toLowerCase()) {
+    // Correct!
+    inputEl.classList.add("correct");
+    feedbackEl.innerText = "Benar! 🎉";
+    feedbackEl.style.color = "#00ff00";
+
+    if (window.safePlayCorrect) window.safePlayCorrect();
+
+    // Delay Closing
+    setTimeout(() => {
+      document.getElementById("quiz-modal").style.display = "none";
+      if (window.currentQuizCallback) window.currentQuizCallback(true, false);
+
+      // Cleanup UI for next time
+      inputEl.classList.remove("correct");
+      feedbackEl.innerText = "";
+      inputEl.value = "";
+    }, 1000);
+  } else {
+    // Wrong!
+    inputEl.classList.add("wrong");
+    feedbackEl.innerText = "Salah! Coba lagi.";
+    feedbackEl.style.color = "#ff0000";
+
+    if (window.safePlayWrong) window.safePlayWrong();
+
+    // Remove wrong class after animation
+    setTimeout(() => {
+      inputEl.classList.remove("wrong");
+    }, 500);
+
+    if (window.currentQuizCallback) window.currentQuizCallback(false, false);
+  }
+};
+
+window.confirmSkipObstacle = function () {
+  if (confirm("Yakin lewati? Poin dikurangi 25.")) {
+    document.getElementById("quiz-modal").style.display = "none";
+    if (window.currentQuizCallback) window.currentQuizCallback(false, true); // isSkip = true
+  }
+};
+
+window.tutupTutorLabirin = function () {
+  document.getElementById("tutor-overlay").style.display = "none";
+  // Resume Game / Unlock
+  if (phaserGameInstance) {
+    const scene = phaserGameInstance.scene.getScene("LabirinScene");
+    if (scene) scene.isQuizActive = false;
+  }
+};
+
+// UI HELPER: Calculate Size (Advanced)
+function calculateOptimalSize(cols) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
-  // 1. Detect actual UI elements (tidak hardcode!)
   const header = document.querySelector(".game-header");
   const controls = document.querySelector(".game-controls");
 
-  // Measure actual heights dengan fallback
   const headerHeight = header ? header.offsetHeight : 70;
   const controlsHeight = controls ? controls.offsetHeight : 100;
 
-  // 2. Device detection untuk adaptive constraints
   const isMobile = vw < 640;
-  const isTablet = vw >= 640 && vw < 1024;
-  const deviceType = isMobile ? "mobile" : isTablet ? "tablet" : "desktop";
+  const margin = isMobile ? 20 : 40;
 
-  // 3. Safety margins (berbeda per device)
-  const margins = {
-    mobile: 60, // INCREASED: Was 20
-    tablet: 80, // INCREASED: Was 30
-    desktop: 40,
-  };
-  const margin = margins[deviceType];
-
-  // 4. Calculate available space
   const availableWidth = vw - margin * 2;
   const availableHeight = vh - headerHeight - controlsHeight - margin * 2;
 
-  // 5. Calculate cell size
   let cellSize = Math.floor(
-    Math.min(availableWidth / cols, availableHeight / rows),
+    Math.min(availableWidth / cols, availableHeight / cols),
   );
 
-  // 6. Device-adaptive constraints
   const constraints = {
     mobile: { min: 25, max: 50 },
-    tablet: { min: 30, max: 70 },
     desktop: { min: 30, max: 80 },
   };
 
-  const { min, max } = constraints[deviceType];
-  cellSize = Math.max(min, Math.min(cellSize, max));
-
-  // 7. Debug logging (helpful untuk troubleshooting)
-  console.log(`📐 Layout Calculation:
-    Viewport: ${vw}x${vh}
-    Device: ${deviceType}
-    Header: ${headerHeight}px
-    Controls: ${controlsHeight}px
-    Available: ${availableWidth}x${availableHeight}
-    Cell Size: ${cellSize}px
-    Canvas: ${cols * cellSize}x${rows * cellSize}`);
-
-  return cellSize;
+  const { min, max } = isMobile ? constraints.mobile : constraints.desktop;
+  return Math.max(min, Math.min(cellSize, max));
 }
 
-// Resize Dinamis
-let resizeTimeout;
-window.addEventListener("resize", () => {
-  if (!gameActive) return;
-  clearTimeout(resizeTimeout);
-  resizeTimeout = setTimeout(() => {
-    // ✅ Re-use the same calculation function
-    const newSize = calculateOptimalSize();
-
-    // Determine if significant change (avoid unnecessary reloads)
-    if (Math.abs(newSize - size) > 2) {
-      size = newSize;
-      config.width = Math.min(cols * size, 800);
-      config.height = Math.min(rows * size, 800);
-      config.scale.width = config.width;
-      config.scale.height = config.height;
-
-      // Restart Phaser game to apply new config
-      console.log("🔄 Reloading maze dengan ukuran baru...");
-      initPhaserGame();
-    }
-  }, 500);
-});
-
-// ✅ ORIENTATION CHANGE SUPPORT (untuk mobile/tablet rotation)
-let orientationTimeout;
-window.addEventListener("orientationchange", () => {
-  console.log("📱 Orientation changed, recalculating layout...");
-
-  clearTimeout(orientationTimeout);
-
-  // Wait for orientation to fully complete (browser quirk)
-  orientationTimeout = setTimeout(() => {
-    if (!gameActive) return;
-
-    const newSize = calculateOptimalSize();
-
-    // Check if size changed significantly
-    if (Math.abs(newSize - size) > 5) {
-      size = newSize;
-      config.width = Math.min(cols * size, 800);
-      config.height = Math.min(rows * size, 800);
-      config.scale.width = config.width;
-      config.scale.height = config.height;
-
-      console.log("🔄 Reloading maze untuk orientasi baru...");
-      initPhaserGame();
-    }
-  }, 300); // Delay sedikit biar DOM selesai update
-});
-
-// Mulai Phaser
-function initPhaserGame() {
-  if (game) {
-    game.destroy(true);
-  }
-
-  score = 0;
-  const scoreEl = document.getElementById("score");
-  if (scoreEl) scoreEl.innerText = score;
-
-  game = new Phaser.Game(config);
-  gameActive = true;
-}
-
-// Preload (kosong gapapa)
-function preload() {}
-
-// Bikin Scene Phaser
-function create() {
-  const scene = this;
-
-  // Background Grid matching maze cells
-  this.add.grid(
-    config.width / 2,
-    config.height / 2,
-    config.width,
-    config.height,
-    size,
-    size,
-    0x000000,
-    0,
-    0x1f4068,
-    0.3,
-  );
-
-  // Create graphics for maze
-  mazeGraphics = this.add.graphics();
-
-  // Bikin Labirin (Algoritma DFS)
-  generateMaze();
-
-  // Gambar Labirin
-  drawMaze(mazeGraphics);
-
-  // Bikin Player
-  createPlayer(scene);
-
-  // Bikin Finish
-  createFinish(scene);
-
-  // Bikin Penanda Soal
-  createQuestionMarkers(scene);
-
-  // Input handling
-  cursors = this.input.keyboard.createCursorKeys();
-
-  // Dukungan WASD
-  this.input.keyboard.on("keydown-W", () => movePlayer(0, -1, scene));
-  this.input.keyboard.on("keydown-A", () => movePlayer(-1, 0, scene));
-  this.input.keyboard.on("keydown-S", () => movePlayer(0, 1, scene));
-  this.input.keyboard.on("keydown-D", () => movePlayer(1, 0, scene));
-
-  // Tombol Panah
-  this.input.keyboard.on("keydown-UP", () => movePlayer(0, -1, scene));
-  this.input.keyboard.on("keydown-LEFT", () => movePlayer(-1, 0, scene));
-  this.input.keyboard.on("keydown-DOWN", () => movePlayer(0, 1, scene));
-  this.input.keyboard.on("keydown-RIGHT", () => movePlayer(1, 0, scene));
-
-  // Swipe buat HP
-  let touchStartX = 0;
-  let touchStartY = 0;
-
-  this.input.on("pointerdown", (pointer) => {
-    touchStartX = pointer.x;
-    touchStartY = pointer.y;
-  });
-
-  this.input.on("pointerup", (pointer) => {
-    const dx = pointer.x - touchStartX;
-    const dy = pointer.y - touchStartY;
-
-    if (Math.abs(dx) > Math.abs(dy)) {
-      if (Math.abs(dx) > 30) {
-        movePlayer(dx > 0 ? 1 : -1, 0, scene);
-      }
-    } else {
-      if (Math.abs(dy) > 30) {
-        movePlayer(0, dy > 0 ? 1 : -1, scene);
-      }
-    }
-  });
-
-  // Store scene reference
-  this.gameScene = scene;
-}
-
-// Update loop Phaser
-function update() {
-  if (!gameActive) return;
-
-  // Pulse effect for finish
-  if (finishSprite) {
-    const pulse = Math.sin(this.time.now / 200) * 0.1 + 1;
-    finishSprite.setScale(pulse);
-  }
-
-  // Pulse effect for question markers
-  questionMarkers.forEach((marker) => {
-    if (marker.active) {
-      const pulse = Math.sin(this.time.now / 300) * 0.1 + 1;
-      marker.setScale(pulse);
-    }
-  });
-}
-
-// Bikin Labirin (Algoritma DFS)
-function generateMaze() {
-  grid = [];
-  stack = [];
-
-  // Bikin kotak-kotaknya
-  for (let j = 0; j < rows; j++) {
-    for (let i = 0; i < cols; i++) {
-      grid.push({
-        i: i,
-        j: j,
-        walls: [true, true, true, true], // top, right, bottom, left
-        visited: false,
-        isQuestion: false,
-        questionData: null,
-      });
-    }
-  }
-
-  // Jalanin DFS
-  current = grid[0];
-  current.visited = true;
-  finishNode = grid[grid.length - 1];
-
-  let processing = true;
-  while (processing) {
-    const next = checkNeighbors(current);
-    if (next) {
-      next.visited = true;
-      stack.push(current);
-      removeWalls(current, next);
-      current = next;
-    } else if (stack.length > 0) {
-      current = stack.pop();
-    } else {
-      processing = false;
-    }
-  }
-
-  // Taro soal secara acak
-  let qIndex = 0;
-  const shuffledIndices = Array.from({ length: grid.length }, (_, i) => i).sort(
-    () => Math.random() - 0.5,
-  );
-
-  // Reset obstacle counter
-  totalObstacles = 0;
-  clearedObstacles = 0;
-
-  for (const i of shuffledIndices) {
-    if (i > 0 && i < grid.length - 1 && qIndex < questions.length) {
-      if (Math.random() < 0.3) {
-        grid[i].isQuestion = true;
-        grid[i].questionData = questions[qIndex];
-        totalObstacles++; // Track total obstacles
-        qIndex++;
-      }
-    }
-  }
-
-  // Balik ke awal
-  current = grid[0];
-}
-
-function index(i, j) {
-  if (i < 0 || j < 0 || i > cols - 1 || j > rows - 1) return -1;
-  return i + j * cols;
-}
-
-function checkNeighbors(cell) {
-  const neighbors = [];
-  const top = grid[index(cell.i, cell.j - 1)];
-  const right = grid[index(cell.i + 1, cell.j)];
-  const bottom = grid[index(cell.i, cell.j + 1)];
-  const left = grid[index(cell.i - 1, cell.j)];
-
-  if (top && !top.visited) neighbors.push(top);
-  if (right && !right.visited) neighbors.push(right);
-  if (bottom && !bottom.visited) neighbors.push(bottom);
-  if (left && !left.visited) neighbors.push(left);
-
-  if (neighbors.length > 0) {
-    return neighbors[Math.floor(Math.random() * neighbors.length)];
-  }
-  return undefined;
-}
-
-function removeWalls(a, b) {
-  const x = a.i - b.i;
-  if (x === 1) {
-    a.walls[3] = false;
-    b.walls[1] = false;
-  }
-  if (x === -1) {
-    a.walls[1] = false;
-    b.walls[3] = false;
-  }
-
-  const y = a.j - b.j;
-  if (y === 1) {
-    a.walls[0] = false;
-    b.walls[2] = false;
-  }
-  if (y === -1) {
-    a.walls[2] = false;
-    b.walls[0] = false;
-  }
-}
-
-// === DRAW MAZE ===
-// === DRAW MAZE ===
-function drawMaze(graphics) {
-  graphics.clear();
-
-  // 1. Draw Glow (Super Thick)
-  graphics.lineStyle(12, 0x00f2ff, 0.5);
-  drawWalls(graphics);
-
-  // 2. Draw Core (Thin, bright)
-  graphics.lineStyle(2, 0xffffff, 1);
-  drawWalls(graphics);
-}
-
-function drawWalls(graphics) {
-  for (const cell of grid) {
-    const x = cell.i * size;
-    const y = cell.j * size;
-
-    if (cell.walls[0]) {
-      // Top
-      graphics.beginPath();
-      graphics.moveTo(x, y);
-      graphics.lineTo(x + size, y);
-      graphics.strokePath();
-    }
-    if (cell.walls[1]) {
-      // Right
-      graphics.beginPath();
-      graphics.moveTo(x + size, y);
-      graphics.lineTo(x + size, y + size);
-      graphics.strokePath();
-    }
-    if (cell.walls[2]) {
-      // Bottom
-      graphics.beginPath();
-      graphics.moveTo(x + size, y + size);
-      graphics.lineTo(x, y + size);
-      graphics.strokePath();
-    }
-    if (cell.walls[3]) {
-      // Left
-      graphics.beginPath();
-      graphics.moveTo(x, y + size);
-      graphics.lineTo(x, y);
-      graphics.strokePath();
-    }
-  }
-}
-
-// === CREATE PLAYER ===
-// === CREATE PLAYER ===
-function createPlayer(scene) {
-  const x = current.i * size + size / 2;
-  const y = current.j * size + size / 2;
-
-  // Particle Trail
-  const particles = scene.add.particles(0, 0, "player", {
-    speed: 10,
-    scale: { start: 0.5, end: 0 },
-    blendMode: "ADD",
-    lifespan: 200,
-    frequency: 50,
-    follow: null, // Will attach to sprite
-  });
-
-  // Create player texture (Glowing Orb)
-  const playerGraphics = scene.make.graphics({ x: 0, y: 0, add: false });
-  playerGraphics.fillStyle(0x00ffff, 0.4); // Glow
-  playerGraphics.fillCircle(size / 2, size / 2, size / 2.5);
-  playerGraphics.fillStyle(0xffffff, 1); // Core
-  playerGraphics.fillCircle(size / 2, size / 2, size / 4);
-  playerGraphics.generateTexture("player", size, size);
-
-  playerSprite = scene.add.sprite(x, y, "player");
-  playerSprite.setDepth(10);
-
-  particles.startFollow(playerSprite);
-
-  // Idle Animation (Pulse)
-  scene.tweens.add({
-    targets: playerSprite,
-    scale: { from: 1, to: 1.1 },
-    alpha: { from: 0.8, to: 1 },
-    duration: 600,
-    yoyo: true,
-    repeat: -1,
-  });
-}
-
-// === CREATE FINISH ===
-function createFinish(scene) {
-  const x = finishNode.i * size + size / 2;
-  const y = finishNode.j * size + size / 2;
-
-  // Finish Zone graphic
-  const finishGraphics = scene.make.graphics({ x: 0, y: 0, add: false });
-  finishGraphics.fillStyle(0x00ff00, 0.3);
-  finishGraphics.fillCircle(size / 2, size / 2, size / 2.2); // Outer ring
-  finishGraphics.lineStyle(2, 0x00ff00, 1);
-  finishGraphics.strokeCircle(size / 2, size / 2, size / 2.2);
-  finishGraphics.generateTexture("finish", size, size);
-
-  finishSprite = scene.add.sprite(x, y, "finish");
-  finishSprite.setDepth(5);
-
-  // Rotating 'Portal' effect
-  scene.tweens.add({
-    targets: finishSprite,
-    angle: 360,
-    duration: 3000,
-    repeat: -1,
-  });
-
-  // Flag Icon
-  scene.add
-    .text(x, y, "🏁", {
-      fontSize: size / 2 + "px",
-    })
-    .setOrigin(0.5)
-    .setDepth(6);
-}
-
-// === CREATE QUESTION MARKERS ===
-function createQuestionMarkers(scene) {
-  questionMarkers = [];
-
-  for (const cell of grid) {
-    if (cell.isQuestion) {
-      const x = cell.i * size + size / 2;
-      const y = cell.j * size + size / 2;
-
-      // Animated Square Shape (Modified)
-      const markerGraphics = scene.make.graphics({ x: 0, y: 0, add: false });
-      markerGraphics.lineStyle(2, 0xff00cc, 1);
-      markerGraphics.fillStyle(0xff00cc, 0.5);
-      markerGraphics.strokeRect(
-        size * 0.25,
-        size * 0.25,
-        size * 0.5,
-        size * 0.5,
-      );
-      markerGraphics.fillRect(size * 0.25, size * 0.25, size * 0.5, size * 0.5);
-      markerGraphics.generateTexture(
-        "question_" + cell.i + "_" + cell.j,
-        size,
-        size,
-      );
-
-      const marker = scene.add.sprite(
-        x,
-        y,
-        "question_" + cell.i + "_" + cell.j,
-      );
-      marker.setDepth(5);
-      marker.cellIndex = index(cell.i, cell.j);
-
-      // Rotating Animation
-      scene.tweens.add({
-        targets: marker,
-        angle: 360,
-        duration: 2000,
-        repeat: -1,
-      });
-
-      // Flashing "!"
-      const text = scene.add
-        .text(x, y, "!", {
-          fontFamily: "Arial",
-          fontSize: size / 2 + "px",
-          fontStyle: "bold",
-          color: "#fff",
-        })
-        .setOrigin(0.5)
-        .setDepth(6);
-
-      marker.textObj = text; // Link text to marker for cleanup
-      questionMarkers.push(marker);
-    }
-  }
-}
-
-// === MOVE PLAYER ===
-let pendingNode = null;
-
-function movePlayer(dx, dy, scene) {
-  if (!gameActive || moveCooldown) return;
-
-  let next;
-  let blocked = false;
-
-  if (dx === 1) {
-    if (current.walls[1]) blocked = true;
-    else next = grid[index(current.i + 1, current.j)];
-  } else if (dx === -1) {
-    if (current.walls[3]) blocked = true;
-    else next = grid[index(current.i - 1, current.j)];
-  } else if (dy === 1) {
-    if (current.walls[2]) blocked = true;
-    else next = grid[index(current.i, current.j + 1)];
-  } else if (dy === -1) {
-    if (current.walls[0]) blocked = true;
-    else next = grid[index(current.i, current.j - 1)];
-  }
-
-  if (!blocked && next) {
-    if (next.isQuestion) {
-      openQuiz(next);
-    } else {
-      // Move player
-      current = next;
-      moveCooldown = true;
-
-      // CRITICAL: Safety timeout untuk unlock
-      clearTimeout(moveTimeout);
-      moveTimeout = setTimeout(() => {
-        moveCooldown = false; // Force unlock after 1s
-      }, 1000);
-
-      const targetX = current.i * size + size / 2;
-      const targetY = current.j * size + size / 2;
-
-      scene.tweens.add({
-        targets: playerSprite,
-        x: targetX,
-        y: targetY,
-        duration: 150,
-        ease: "Power2",
-        onComplete: () => {
-          clearTimeout(moveTimeout); // Clear safety timeout
-          moveCooldown = false;
-          checkFinish();
-        },
-      });
-    }
-  }
-}
-
-// === QUIZ FUNCTIONS ===
-let moveTimeout = null; // Safety timeout
-
-function openQuiz(node) {
-  gameActive = false;
-  pendingNode = node;
-
-  // RESET wrong attempts untuk quiz baru
-  wrongAttempts = 0;
-
-  // CRITICAL: Pause Phaser scene
-  if (game && game.scene.scenes[0]) {
-    game.scene.scenes[0].scene.pause();
-  }
-
-  if (quizModal) {
-    quizModal.style.display = "flex";
-
-    const title = document.querySelector("#quiz-modal h2");
-    if (title) {
-      title.innerText = "RINTANGAN!";
-      title.style.color = "#ff00cc";
-    }
-
-    const qText = document.getElementById("q-text");
-    if (qText) {
-      qText.innerText = node.questionData.tanya;
-      qText.style.color = "white";
-    }
-
-    const input = document.getElementById("q-input");
-    if (input) {
-      input.value = "";
-      input.style.display = "block";
-      input.focus();
-    }
-
-    const submitBtn = document.querySelector(".btn-submit-answer");
-    if (submitBtn) {
-      submitBtn.innerText = "CEK JAWABAN";
-      submitBtn.onclick = checkQuiz;
-    }
-  }
-}
-
-window.checkQuiz = function () {
-  const userAns = document.getElementById("q-input").value.toLowerCase().trim();
-  const correct = pendingNode.questionData.jawab.toLowerCase().trim();
-
-  const title = document.querySelector("#quiz-modal h2");
-  const qText = document.getElementById("q-text");
-
-  if (
-    userAns === correct ||
-    (correct.includes(userAns) && userAns.length > 1)
-  ) {
-    try {
-      AudioManager.playCorrect();
-    } catch (e) {}
-
-    if (title) {
-      title.innerText = "✅ RINTANGAN HANCUR!";
-      title.style.color = "#00ff00";
-    }
-    if (qText) qText.innerText = "Jalan terbuka...";
-
-    setTimeout(() => {
-      if (quizModal) quizModal.style.display = "none";
-      pendingNode.isQuestion = false;
-
-      // Remove marker
-      const markerToRemove = questionMarkers.find(
-        (m) => m.cellIndex === index(pendingNode.i, pendingNode.j),
-      );
-      if (markerToRemove) markerToRemove.destroy();
-
-      score += POINTS_PER_OBSTACLE; // REBALANCED: was hardcoded 20
-      const scoreEl = document.getElementById("score");
-      if (scoreEl) scoreEl.innerText = score;
-
-      // Increment cleared obstacles counter
-      clearedObstacles++;
-
-      current = pendingNode;
-
-      // Move player
-      const scene = game.scene.scenes[0];
-      const targetX = current.i * size + size / 2;
-      const targetY = current.j * size + size / 2;
-
-      scene.tweens.add({
-        targets: playerSprite,
-        x: targetX,
-        y: targetY,
-        duration: 150,
-        ease: "Power2",
-      });
-
-      gameActive = true;
-
-      // Resume scene after quiz
-      setTimeout(() => {
-        if (game && game.scene.scenes[0]) {
-          game.scene.scenes[0].scene.resume();
-        }
-      }, 1500);
-
-      checkFinish();
-    }, 1000);
-  } else {
-    try {
-      AudioManager.playWrong();
-    } catch (e) {}
-
-    if (tutorUsageCount < MAX_TUTOR_USAGE) {
-      tutorUsageCount++;
-
-      if (quizModal) quizModal.style.display = "none";
-
-      if (tutorOverlay) {
-        tutorOverlay.style.display = "flex";
-        if (tutorText) {
-          tutorText.innerHTML = `
-            <div class="tutor-loading-box">
-              <div class="loader-spinner"></div>
-              <span class="loading-text">GURU SEDANG MEMBACA PETA...</span>
-              <div style="margin-top: 8px; font-size: 0.85rem; color: #ffd700;">
-                (Sisa Bantuan: ${MAX_TUTOR_USAGE - tutorUsageCount})
-              </div>
-            </div>
-          `;
-        }
-      }
-
-      socket.emit("mintaPenjelasan", {
-        game: "labirin",
-        soal: document.getElementById("q-text").innerText,
-        jawabanUser: userAns,
-        jawabanBenar: correct,
-      });
-    } else {
-      if (title) {
-        title.innerText = "❌ SALAH! (Bantuan Habis)";
-        title.style.color = "red";
-      }
-      if (qText) {
-        qText.style.color = "#ff6b6b";
-        qText.innerText = "Coba lagi ya...";
-      }
-
-      document.getElementById("q-input").value = "";
-
-      setTimeout(() => {
-        if (title) {
-          title.innerText = "RINTANGAN!";
-          title.style.color = "#ff00cc";
-        }
-        if (qText) {
-          qText.style.color = "white";
-          qText.innerText = pendingNode.questionData.tanya;
-        }
-      }, 1500);
-    }
-  }
-};
-
-// === AUTO-SKIP OBSTACLE FUNCTION (Week 2 Bugfix) ===
-function autoSkipObstacle() {
-  // Apply penalty
-  score = Math.max(0, score - SKIP_PENALTY); // REBALANCED: was 10
-  const scoreEl = document.getElementById("score");
-  if (scoreEl) scoreEl.innerText = score;
-
-  // Show skip notification
-  showTemporaryNotification(
-    `⚠️ Rintangan Dilewati<br>-${SKIP_PENALTY} Poin<br><small>Setelah ${MAX_WRONG_ATTEMPTS}x salah</small>`,
-    "warning",
-  );
-
-  // Reset counter
-  wrongAttempts = 0;
-
-  // Close modals
-  if (quizModal) quizModal.style.display = "none";
-  if (tutorOverlay) tutorOverlay.style.display = "none";
-
-  // Mark obstacle sebagai passed
-  if (pendingNode) {
-    pendingNode.isQuestion = false;
-
-    // Remove marker
-    const markerToRemove = questionMarkers.find(
-      (m) => m.cellIndex === index(pendingNode.i, pendingNode.j),
-    );
-    if (markerToRemove) {
-      markerToRemove.destroy();
-      if (markerToRemove.textObj) markerToRemove.textObj.destroy();
-    }
-
-    // Increment cleared obstacles (meski di-skip)
-    clearedObstacles++;
-
-    // Move player
-    current = pendingNode;
-
-    const scene = game.scene.scenes[0];
-    const targetX = current.i * size + size / 2;
-    const targetY = current.j * size + size / 2;
-
-    scene.tweens.add({
-      targets: playerSprite,
-      x: targetX,
-      y: targetY,
-      duration: 150,
-      ease: "Power2",
-    });
-  }
-
-  // Resume game
-  gameActive = true;
-  setTimeout(() => {
-    if (game && game.scene.scenes[0]) {
-      game.scene.scenes[0].scene.resume();
-    }
-  }, 500);
-
-  checkFinish();
-}
-
-// Konfirmasi manual skip (tombol Exit)
-window.confirmSkipObstacle = function () {
-  const confirmed = confirm(
-    `Lewati rintangan ini?\n\nPenalty: -${SKIP_PENALTY} poin\n\nAnda yakin?`,
-  );
-
-  if (confirmed) {
-    autoSkipObstacle();
-  }
-};
-
-// Helper untuk notification
-function showTemporaryNotification(message, type = "info") {
-  const notification = document.createElement("div");
-  notification.className = `skip-notification ${type}`;
-  notification.innerHTML = message;
-  document.body.appendChild(notification);
-
-  // Auto-remove
-  setTimeout(() => {
-    notification.classList.add("fade-out");
-    setTimeout(() => notification.remove(), 500);
-  }, 2500);
-}
-
-// === CHECK FINISH ===
-function checkFinish() {
-  if (current === finishNode) {
-    // CRITICAL FIX: Only finish if all obstacles cleared
-    if (clearedObstacles < totalObstacles) {
-      // Show warning message
-      showTemporaryNotification(
-        `⚠️ Selesaikan Rintangan!<br><small>${clearedObstacles}/${totalObstacles} Selesai</small>`,
-        "warning",
-      );
-      return; // Don't finish yet
-    }
-
-    // All obstacles cleared, game complete!
-    try {
-      AudioManager.playWin();
-    } catch (e) {}
-
-    // REBALANCED: Calculate time bonus (reward fast completion)
-    const timeRemaining = Math.max(0, timeLeft || 0);
-    const timeBonus = Math.floor(timeRemaining / 30) * TIME_BONUS_PER_30S;
-
-    score += FINISH_BONUS + timeBonus; // REBALANCED: was 50, now 150 + time bonus
-    gameActive = false;
-
-    socket.emit("simpanSkor", {
-      nama: playerName,
-      skor: score,
-      game: "labirin",
-    });
-
-    if (game && game.scene.scenes[0]) {
-      game.scene.scenes[0].scene.pause();
-    }
-
-    if (quizModal) {
-      quizModal.style.display = "flex";
-
-      const title = document.querySelector("#quiz-modal h2");
-      if (title) {
-        title.innerText = "🎯 MISI SELESAI!";
-        title.style.color = "#00ff00";
-      }
-
-      const qText = document.getElementById("q-text");
-      if (qText) {
-        qText.innerText = `Skor Akhir: ${score}`;
-        if (timeBonus > 0) {
-          qText.innerText += `\n⏱️ Bonus Waktu: +${timeBonus}`;
-        }
-      }
-
-      const input = document.getElementById("q-input");
-      if (input) input.style.display = "none";
-
-      const submitBtn = document.querySelector(".btn-submit-answer");
-      if (submitBtn) {
-        submitBtn.innerText = "KEMBALI KE MENU";
-        submitBtn.onclick = function () {
-          window.location.href = "/";
-        };
-      }
-
-      // Hide skip button di game over
-      const skipBtn = document.querySelector(".btn-skip-quiz");
-      if (skipBtn) skipBtn.style.display = "none";
-    }
-  }
-}
-
-// === CONTROL BUTTONS (Mobile) ===
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".btn-ctrl").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      if (!game || !game.scene.scenes[0]) return;
-      const scene = game.scene.scenes[0];
-      const direction = btn.innerText;
-
-      if (direction === "▲") movePlayer(0, -1, scene);
-      else if (direction === "▶") movePlayer(1, 0, scene);
-      else if (direction === "▼") movePlayer(0, 1, scene);
-      else if (direction === "◀") movePlayer(-1, 0, scene);
-    });
-  });
-});
+// D-PAD Bridge (Updated for P1 and P2)
+// P1 Controls
+document
+  .querySelector(".btn-up-p1")
+  ?.addEventListener("click", () => window.movePhaserPlayer("p1", 0, -1));
+document
+  .querySelector(".btn-down-p1")
+  ?.addEventListener("click", () => window.movePhaserPlayer("p1", 0, 1));
+document
+  .querySelector(".btn-left-p1")
+  ?.addEventListener("click", () => window.movePhaserPlayer("p1", -1, 0));
+document
+  .querySelector(".btn-right-p1")
+  ?.addEventListener("click", () => window.movePhaserPlayer("p1", 1, 0));
+
+// P2 Controls
+document
+  .querySelector(".btn-up-p2")
+  ?.addEventListener("click", () => window.movePhaserPlayer("p2", 0, -1));
+document
+  .querySelector(".btn-down-p2")
+  ?.addEventListener("click", () => window.movePhaserPlayer("p2", 0, 1));
+document
+  .querySelector(".btn-left-p2")
+  ?.addEventListener("click", () => window.movePhaserPlayer("p2", -1, 0));
+document
+  .querySelector(".btn-right-p2")
+  ?.addEventListener("click", () => window.movePhaserPlayer("p2", 1, 0));

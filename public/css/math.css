@@ -1,21 +1,27 @@
 /* GAYA KHUSUS MATH GAME */
 
+body {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
 /* CONTAINER KACA */
 .container {
-  background: var(--bg-overlay);
+  background: rgba(255, 255, 255, 0.08);
   padding: 30px;
-  border-radius: 20px;
+  border-radius: 24px;
   text-align: center;
   width: 90%;
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  margin: 80px auto 20px;
-  /* Jarak atas biar ga ketutup */
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
-  border: 1px solid var(--border-neon);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  margin: auto;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 
 /* TOMBOL KEMBALI */

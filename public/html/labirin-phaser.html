@@ -8,7 +8,6 @@
     />
     <title>Labirin Ilmu - Phaser Edition</title>
 
-    <!-- CSP Config yang aman buat Phaser -->
     <meta
       http-equiv="Content-Security-Policy"
       content="
@@ -31,34 +30,91 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   </head>
   <body>
-    <!-- === HEADER === -->
     <header class="game-header">
       <a href="/" class="btn-back">⬅ MENU</a>
       <h1 class="game-title">🌀 LABIRIN ILMU</h1>
       <div class="score-box">SKOR: <span id="score">0</span></div>
     </header>
 
-    <!-- Di sini game Phaser bakal dirender -->
-    <div id="game-container"></div>
+    <div id="versus-container">
+      <div
+        id="game-container-p1"
+        style="flex: 1; min-width: 0; position: relative"
+      ></div>
 
-    <!-- Tombol panah buat main di HP -->
+      <div
+        id="game-container-p2"
+        style="flex: 1; min-width: 0; position: relative; display: none"
+      ></div>
+    </div>
+
     <footer class="game-controls">
-      <div class="d-pad">
-        <button class="btn-ctrl btn-up">▲</button>
-        <button class="btn-ctrl btn-left">◀</button>
-        <button class="btn-ctrl btn-down">▼</button>
-        <button class="btn-ctrl btn-right">▶</button>
+      <!-- Player 1 D-Pad (Left) -->
+      <div class="d-pad d-pad-p1">
+        <button class="btn-ctrl btn-up-p1">▲</button>
+        <button class="btn-ctrl btn-left-p1">◀</button>
+        <button class="btn-ctrl btn-down-p1">▼</button>
+        <button class="btn-ctrl btn-right-p1">▶</button>
+      </div>
+
+      <!-- Player 2 D-Pad (Right - Versus Only) -->
+      <div class="d-pad d-pad-p2" style="display: none">
+        <button class="btn-ctrl btn-up-p2">▲</button>
+        <button class="btn-ctrl btn-left-p2">◀</button>
+        <button class="btn-ctrl btn-down-p2">▼</button>
+        <button class="btn-ctrl btn-right-p2">▶</button>
       </div>
     </footer>
 
-    <!-- === LAYAR LOADING / START SCREEN === -->
+    <!-- GAME OVER MODAL -->
+    <div id="game-over-modal" class="modal-overlay" style="display: none">
+      <div class="modal-content">
+        <h1 class="modal-title" id="go-title">🏆 JUARA BARU!</h1>
+        <p
+          id="go-winner"
+          style="font-size: 1.5rem; color: #00f2ff; margin-bottom: 20px"
+        >
+          Player 1 Menang!
+        </p>
+
+        <div
+          class="score-summary"
+          style="
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+          "
+        >
+          <p>Skor P1: <span id="go-score-p1" style="color: cyan">0</span></p>
+          <p id="go-score-p2-container" style="display: none">
+            Skor P2: <span id="go-score-p2" style="color: magenta">0</span>
+          </p>
+        </div>
+
+        <button onclick="location.reload()" class="btn-start-game">
+          🔄 MAIN LAGI
+        </button>
+        <button
+          onclick="window.location.href = '/'"
+          class="btn-back"
+          style="
+            margin-top: 10px;
+            background: transparent;
+            border: 1px solid #aaa;
+          "
+        >
+          🏠 MENU UTAMA
+        </button>
+      </div>
+    </div>
+
     <div id="loading-screen" class="modal-overlay">
       <div class="modal-content">
         <h1 class="modal-title">🌀 LABIRIN ILMU</h1>
         <p class="subtitle">Phaser Edition</p>
         <p>Temukan jalan keluar sambil belajar!</p>
 
-        <!-- Input Kode Kelas (Opsional) -->
         <div class="input-group">
           <input
             type="text"
@@ -68,7 +124,33 @@
           />
         </div>
 
-        <!-- Pilihan Kesulitan -->
+        <div
+          class="mode-selector"
+          style="
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            z-index: 50;
+            position: relative;
+          "
+        >
+          <button
+            class="btn-difficulty active"
+            onclick="selectMode('solo')"
+            data-mode="solo"
+          >
+            👤 SOLO
+          </button>
+          <button
+            class="btn-difficulty"
+            onclick="selectMode('versus')"
+            data-mode="versus"
+          >
+            ⚔️ DUEL
+          </button>
+        </div>
+
         <div class="difficulty-group">
           <p>Pilih Tingkat Kesulitan:</p>
           <div class="buttons-row">
@@ -86,8 +168,6 @@
       </div>
     </div>
 
-    <!-- === MODAL KUIS / RINTANGAN === -->
-    <!-- Muncul kalau nabrak musuh atau item kuis -->
     <div id="quiz-modal" class="modal-overlay" style="display: none">
       <div class="modal-content quiz-box">
         <h2 id="quiz-title">🚧 RINTANGAN!</h2>
@@ -99,6 +179,7 @@
           autocomplete="off"
           class="quiz-input"
         />
+        <p id="quiz-feedback" class="feedback-msg"></p>
         <button onclick="checkQuiz()" class="btn-submit-answer">JAWAB</button>
         <button onclick="confirmSkipObstacle()" class="btn-skip-quiz">
           ⏭️ Lewati (-10 Poin)
@@ -106,8 +187,6 @@
       </div>
     </div>
 
-    <!-- === TUTOR AI OVERLAY === -->
-    <!-- Muncul pas salah jawab kuis -->
     <div id="tutor-overlay" class="tutor-overlay" style="display: none">
       <div class="tutor-container">
         <div class="tutor-icon">🤖</div>
@@ -123,11 +202,10 @@
       </div>
     </div>
 
-    <!-- === SCRIPTS === -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="../js/audio.js?v=r3"></script>
     <script src="../js/global.js"></script>
-    <script src="../js/labirin-phaser.js?v=2"></script>
+    <script src="../js/labirin-phaser.js?v=7"></script>
   </body>
 </html>

@@ -284,6 +284,10 @@ function answer(side) {
       AudioManager.playWrong();
     } catch (e) {}
 
+    // FUN FACTOR: Screen shake
+    document.body.classList.add("shake-active");
+    setTimeout(() => document.body.classList.remove("shake-active"), 400);
+
     // 1. Kedip Merah
     if (cardElement) {
       cardElement.classList.add("wrong-flash");

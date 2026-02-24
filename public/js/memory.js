@@ -249,6 +249,11 @@ function disableCards() {
 
 function unflipCards() {
   lockBoard = true;
+
+  // FUN FACTOR: Screen shake on wrong match
+  document.body.classList.add("shake-active");
+  setTimeout(() => document.body.classList.remove("shake-active"), 400);
+
   setTimeout(() => {
     firstCard.classList.add("card-closed");
     secondCard.classList.add("card-closed");

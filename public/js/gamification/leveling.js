@@ -43,11 +43,8 @@ class LevelingSystem {
     }, 100);
   }
 
-  /**
-   * Pasang listener event socket
-   */
   _attachSocketListeners() {
-    if (this._listenersAttached) return; // Jangan double listener
+    if (this._listenersAttached) return;
     this._listenersAttached = true;
 
     // Load XP pas profil masuk
