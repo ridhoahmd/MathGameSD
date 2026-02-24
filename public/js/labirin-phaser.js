@@ -94,14 +94,14 @@ class LabirinScene extends Phaser.Scene {
     const height = this.config.rows * this.config.size;
 
     // Set physics bounds (if using arcade physics, but we are using grid implementation)
-    this.cameras.main.setBounds(0, 0, width, height);
+    this.cameras.main.setBounds(-width, -height, width * 3, height * 3);
 
-    // Background Grid (Visual Aid)
+    // Background Grid (Visual Aid) - Make it huge so the sharp border is off-screen
     this.add.grid(
       width / 2,
       height / 2,
-      width,
-      height,
+      width * 3,
+      height * 3,
       this.config.size,
       this.config.size,
       0x000000,
@@ -388,21 +388,12 @@ class LabirinScene extends Phaser.Scene {
 
     // Create Camera 2 if Versus Mode
     if (this.isVersus) {
-      // Check if cam2 exists, if not add it
       if (!this.camP2) {
         // Initialize with rough right-side viewport to ensure visibility even if resize fails
         this.camP2 = this.cameras.add(width / 2, 0, width / 2, height);
         this.camP2.setName("CamP2");
         this.camP2.startFollow(this.players.p2);
         this.camP2.setBackgroundColor("#1a0a0a");
-      }
-
-      // Separator
-      if (!this.separator) {
-        this.separator = this.add
-          .rectangle(0, 0, 4, 0, 0xffffff)
-          .setScrollFactor(0)
-          .setDepth(9999);
       }
     }
 
@@ -675,17 +666,6 @@ class LabirinScene extends Phaser.Scene {
       // Show P2 D-Pad
       const dpadP2 = document.querySelector(".d-pad-p2");
       if (dpadP2) dpadP2.style.display = "grid";
-
-      // Separator Line
-      if (this.separator) {
-        this.separator.setVisible(true);
-        // Position exactly between cams
-        this.separator.setPosition(halfWidth, height / 2);
-        this.separator.height = height;
-        this.separator.width = 4;
-        this.separator.setFillStyle(0x00f2ff); // Neon Cyan
-        this.separator.setDepth(9999);
-      }
     } else {
       // --- SOLO SMART CAMERA ---
       this.cameras.main.setViewport(0, 0, width, height);
@@ -706,9 +686,6 @@ class LabirinScene extends Phaser.Scene {
       this.cameras.main.stopFollow();
       this.cameras.main.removeBounds();
       this.cameras.main.centerOn(mazeWidth / 2, mazeHeight / 2);
-
-      // Hide separator
-      if (this.separator) this.separator.setVisible(false);
 
       // Disable P2 Cam if exists
       if (this.camP2) {
