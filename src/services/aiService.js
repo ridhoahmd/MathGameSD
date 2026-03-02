@@ -23,13 +23,32 @@ async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
         throw new Error(`AI API Error: ${response.status} - ${errorText}`);
       }
 
+      // FIX: Cek error JSON di 200 OK dari Zhipu API
+      // Karena method `.json()` cuma bisa dipanggil sekali, kita cloning stream-nya
+      const clonedResponse = response.clone();
+      try {
+        const data = await clonedResponse.json();
+        if (data.error) {
+          throw new Error(
+            `AI API JSON Error: ${data.error.message || "Unknown error"}`,
+          );
+        }
+      } catch (jsonErr) {
+        // Jika gagal di-parse sebagai JSON tapi response-nya OK, abaikan
+        if (jsonErr.message.includes("AI API JSON Error")) {
+          throw jsonErr;
+        }
+      }
+
       return response;
     } catch (err) {
       clearTimeout(timeout);
 
       const isLastAttempt = attempt === retries;
       const isRetryable =
-        err.name === "AbortError" || (err.message && err.message.includes("5")); // Error server (5xx)
+        err.name === "AbortError" ||
+        (err.message && err.message.includes("5")) ||
+        (err.message && err.message.includes("AI API JSON Error"));
 
       if (isLastAttempt || !isRetryable) {
         throw err;

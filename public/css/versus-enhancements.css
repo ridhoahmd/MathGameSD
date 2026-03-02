@@ -1,0 +1,236 @@
+/* =========================================
+   GLOBAL VERSUS MODE ENHANCEMENTS
+   Adds premium glassmorphism, laser dividers, and VS badges
+   SAFE VISUAL OVERLAY - No JS Logic Affected
+   ========================================= */
+
+/* 1. ANIMATED BACKGROUNDS FOR PLAYER AREAS */
+.player-area.left-side,
+.p1-area {
+  background: radial-gradient(
+    circle at center,
+    rgba(30, 41, 59, 1) 0%,
+    rgba(15, 23, 42, 1) 100%
+  ) !important;
+  position: relative;
+  overflow: hidden;
+}
+.player-area.right-side,
+.p2-area {
+  background: radial-gradient(
+    circle at center,
+    rgba(49, 46, 129, 1) 0%,
+    rgba(30, 27, 75, 1) 100%
+  ) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle moving glow in the background */
+.player-area::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.03) 0%,
+    transparent 50%
+  );
+  animation: bgPulse 10s infinite alternate linear;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes bgPulse {
+  0% {
+    transform: scale(0.8) translate(5%, 5%);
+  }
+  100% {
+    transform: scale(1.2) translate(-5%, -5%);
+  }
+}
+
+/* 2. GLOWING DIVIDER (NEON LASER) */
+/* Override default borders */
+.player-area.left-side {
+  border-right: none !important;
+  box-shadow: inset -5px 0 15px rgba(0, 0, 0, 0.5);
+}
+.p2-area {
+  border-bottom: none !important;
+  box-shadow: inset 0 -5px 15px rgba(0, 0, 0, 0.5);
+}
+
+/* The actual laser line */
+#versus-container::after,
+#versus-mode-container::after {
+  content: "";
+  position: absolute;
+  z-index: 1000;
+  pointer-events: none;
+  background: #00f2ff;
+  box-shadow:
+    0 0 10px #00f2ff,
+    0 0 20px #00f2ff,
+    0 0 30px #00f2ff;
+  animation: laserPulse 2s infinite alternate;
+}
+
+/* Vertical split (Portrait devices / landscape Nabi/Ayat) */
+@media (min-width: 768px) {
+  #versus-container::after,
+  #versus-mode-container::after {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 100%;
+  }
+}
+
+/* Horizontal split (Mobile / Portrait Tajwid) */
+@media (max-width: 767px) {
+  #versus-container::after,
+  #versus-mode-container::after {
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 100%;
+    height: 4px;
+  }
+}
+
+@keyframes laserPulse {
+  0% {
+    opacity: 0.7;
+    box-shadow:
+      0 0 5px #00f2ff,
+      0 0 10px #00f2ff;
+  }
+  100% {
+    opacity: 1;
+    box-shadow:
+      0 0 15px #00f2ff,
+      0 0 30px #00f2ff,
+      0 0 45px #00f2ff;
+  }
+}
+
+/* 3. DYNAMIC 'VS' BADGE */
+.vs-badge-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1001; /* Above laser */
+  pointer-events: none;
+}
+
+.vs-badge {
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, #111 0%, #333 100%);
+  border: 3px solid #ff0055;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 1.8rem;
+  font-style: italic;
+  box-shadow:
+    0 0 20px rgba(255, 0, 85, 0.6),
+    inset 0 0 15px rgba(255, 0, 85, 0.4);
+  text-shadow: 0 0 10px #ff0055;
+  animation: vsHeartbeat 1.5s infinite;
+}
+
+@keyframes vsHeartbeat {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(255, 0, 85, 0.6);
+  }
+  15% {
+    transform: scale(1.15);
+    box-shadow: 0 0 30px rgba(255, 0, 85, 0.9);
+  }
+  30% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(255, 0, 85, 0.6);
+  }
+  45% {
+    transform: scale(1.15);
+    box-shadow: 0 0 30px rgba(255, 0, 85, 0.9);
+  }
+  60% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(255, 0, 85, 0.6);
+  }
+}
+
+/* 4. GLASSMORPHISM UI BOILERPLATE */
+/* Apply to score boxes, question cards, options */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+  color: #fff !important;
+  position: relative;
+  z-index: 10;
+}
+
+.player-area.right-side .glass-panel,
+.p2-area .glass-panel {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Base modifications for options inside glass */
+.glass-panel.btn-option {
+  color: white !important;
+}
+.glass-panel.btn-option:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-2px);
+  border-color: #00f2ff !important;
+  box-shadow: 0 0 15px rgba(0, 242, 255, 0.4) !important;
+}
+
+/* Ensure text inside glass is visible */
+.glass-panel h2,
+.glass-panel .v-question-text {
+  color: #fff !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.glass-panel .v-score-label {
+  color: #a5b4fc !important;
+}
+.glass-panel .v-score {
+  color: #00f2ff !important;
+}
+.player-area.right-side .glass-panel .v-score,
+.p2-area .glass-panel .v-score,
+.p2-area .v-score-value {
+  color: #f43f5e !important;
+}
+
+/* Tajwid specific glass overrides */
+.v-card.glass-panel {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
+}
+
+.v-bucket.glass-panel {
+  background: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(8px) !important;
+}

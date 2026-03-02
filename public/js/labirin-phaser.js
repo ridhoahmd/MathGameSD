@@ -1028,7 +1028,7 @@ function showQuizModal(data) {
 
     if (qInput) {
       qInput.value = "";
-      qInput.focus();
+      setTimeout(() => qInput.focus(), 100); // 🚀 Quick Win UX
     }
 
     // Callback stored globally for HTML button access

@@ -155,3 +155,21 @@ console.log("✅ Sistem Global Siap (Socket & Offline UI & GameUtils)");
     console.error("Gagal load tema global:", e);
   }
 })();
+
+// ============================================
+// 🚀 QUICK WIN: Mencegah Backspace Keluar Game
+// ============================================
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Backspace" || e.keyCode === 8) {
+    // Biarkan backspace bekerja NORMAL jika sedang mengetik di input box
+    const tag = e.target.tagName.toLowerCase();
+    const isInput =
+      tag === "input" || tag === "textarea" || e.target.isContentEditable;
+
+    if (!isInput) {
+      // Jika di luar input, cegah browser melakukan aksi "Kembali ke hal sebelum"
+      e.preventDefault();
+      console.log("🛡️ Navigasi Backspace dicegah.");
+    }
+  }
+});

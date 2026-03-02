@@ -210,6 +210,12 @@ function handleTimeOut() {
   try {
     AudioManager.playWrong();
   } catch (e) {}
+
+  // FIX: Reset combo ketika waktu habis
+  if (typeof ComboManager !== "undefined") {
+    ComboManager.reset();
+  }
+
   const buttons = document.querySelectorAll(".btn-option");
   buttons.forEach((b) => (b.disabled = true));
   setTimeout(() => {
@@ -226,10 +232,8 @@ function checkAnswer(selectedRaw, correctRaw, btnElement) {
   const allButtons = document.querySelectorAll(".btn-option");
   allButtons.forEach((b) => (b.disabled = true));
 
-  const isCorrect =
-    selected === correct ||
-    selected.includes(correct) ||
-    correct.includes(selected);
+  // FIX: Menggunakan Exact Match (===) untuk Pilihan Ganda agar tidak bisa diakali
+  const isCorrect = selected === correct;
 
   if (isCorrect) {
     btnElement.classList.add("correct");
@@ -468,8 +472,9 @@ window.addEventListener("beforeunload", (e) => {
         skor: score,
         soalDijawab: currentIndex,
       });
+      const dataBlob = new Blob([data], { type: "application/json" });
       // Note: This endpoint needs to be implemented server-side
-      navigator.sendBeacon("/api/quick-save", data);
+      navigator.sendBeacon("/api/quick-save", dataBlob);
     }
   }
 });

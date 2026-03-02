@@ -17,6 +17,7 @@
       href="../css/visual-enhancements.css?v=theme_final"
     />
     <link rel="stylesheet" href="../css/streak-effects.css?v=scrollbar_fix2" />
+    <link rel="stylesheet" href="../css/versus-enhancements.css" />
     <style>
       /* NUCLEAR FIX: Force Purple Scrollbar & Layout */
       html,
@@ -208,7 +209,7 @@
       <!-- Player 2 (Top - Rotated) -->
       <div class="player-area p2-area">
         <div class="v-hud">
-          <div class="v-score-box">
+          <div class="v-score-box glass-panel">
             <p class="v-score-label">SKOR P2</p>
             <h1 id="v-p2-score" class="v-score-value">0</h1>
           </div>
@@ -218,13 +219,13 @@
         </div>
         <div class="v-buckets-container">
           <div
-            class="v-bucket left"
+            class="v-bucket left glass-panel"
             onclick="VersusTajwid.handleInput(2, 'kiri')"
           >
             KIRI
           </div>
           <div
-            class="v-bucket right"
+            class="v-bucket right glass-panel"
             onclick="VersusTajwid.handleInput(2, 'kanan')"
           >
             KANAN
@@ -232,13 +233,21 @@
         </div>
       </div>
 
-      <!-- Timer Center -->
-      <div id="v-timer" class="v-timer">60</div>
+      <!-- Center VS Badge & Timer -->
+      <div class="vs-badge-container" style="top: 50%; left: 30%">
+        <div
+          class="vs-badge"
+          style="width: 50px; height: 50px; font-size: 1.2rem"
+        >
+          VS
+        </div>
+      </div>
+      <div id="v-timer" class="v-timer glass-panel">60</div>
 
       <!-- Player 1 (Bottom) -->
       <div class="player-area p1-area">
         <div class="v-hud">
-          <div class="v-score-box">
+          <div class="v-score-box glass-panel">
             <p class="v-score-label">SKOR P1</p>
             <h1 id="v-p1-score" class="v-score-value">0</h1>
           </div>
@@ -248,13 +257,13 @@
         </div>
         <div class="v-buckets-container">
           <div
-            class="v-bucket left"
+            class="v-bucket left glass-panel"
             onclick="VersusTajwid.handleInput(1, 'kiri')"
           >
             KIRI
           </div>
           <div
-            class="v-bucket right"
+            class="v-bucket right glass-panel"
             onclick="VersusTajwid.handleInput(1, 'kanan')"
           >
             KANAN

@@ -13,9 +13,10 @@ let currentDifficulty = "mudah"; // pilihan: mudah, sedang, sulit
 let combo = 0;
 let maxCombo = 0;
 
-// Config dasar
-const GAME_WIDTH = 800;
-const GAME_HEIGHT = 600;
+// Config dasar: Cek resolusi layar (Mobile vs Desktop)
+const isMobile = window.innerWidth < window.innerHeight;
+const GAME_WIDTH = isMobile ? 600 : 800; // Layar potrait buat mobile
+const GAME_HEIGHT = isMobile ? 800 : 600;
 
 const config = {
   type: Phaser.AUTO,
@@ -47,6 +48,8 @@ let stars;
 let cursors;
 let score = 0;
 let lives = 3;
+let _shadowScore = 0; // Anti-cheat var
+let _shadowLives = 3; // Anti-cheat var
 let timeLeft = 60;
 let currentQuestion = null;
 let correctAnswer = null;
@@ -107,6 +110,8 @@ function create() {
   // Reset semua stats
   score = 0;
   lives = 3;
+  _shadowScore = 0;
+  _shadowLives = 3;
   timeLeft = 60;
   combo = 0;
   gameOver = false;
@@ -192,14 +197,20 @@ function create() {
   // Deteksi tabrakan player sama bintang
   this.physics.add.overlap(player, stars, collectStar, null, this);
 
-  // Input keyboard & mouse
+  // Input keyboard & mouse (FIX: Mobile UX Control)
   cursors = this.input.keyboard.createCursorKeys();
   this.input.on("pointermove", (pointer) => {
     if (!gameOver) {
-      // Skala pointer biar pas sama canvas
-      const scaleX = GAME_WIDTH / scene.scale.displaySize.width;
-      // Gerakin player ngikutin mouse (tapi dibatesin dikit)
-      player.x = Phaser.Math.Clamp(pointer.x, 40, GAME_WIDTH - 40);
+      if (pointer.pointerType === "touch" && !pointer.isDown) return;
+
+      if (pointer.pointerType === "touch") {
+        // Gerakan geser relatif agar jari tidak menutupi pesawat
+        player.x += pointer.x - pointer.prevPosition.x;
+      } else {
+        // Gerakan absolut untuk mouse PC
+        player.x = pointer.x;
+      }
+      player.x = Phaser.Math.Clamp(player.x, 40, GAME_WIDTH - 40);
     }
   });
 
@@ -337,7 +348,10 @@ function spawnStar() {
   const star = stars.create(x, -40, texture);
 
   const settings = difficultySettings[currentDifficulty];
-  const speed = Phaser.Math.Between(settings.speedMin, settings.speedMax);
+  // FIX: Standarisasi kecepatan layar (Speed Relatif ke GAME_HEIGHT)
+  const speed =
+    Phaser.Math.Between(settings.speedMin, settings.speedMax) *
+    (GAME_HEIGHT / 600);
 
   star.setData("value", value);
   star.setData("isCorrect", value === correctAnswer);
@@ -357,6 +371,10 @@ function spawnStar() {
 
 // Pas bintang diambil
 function collectStar(player, star) {
+  // FIX: Cegah Ghost Collecting dari overlap ganda (tabrakan ganda dlm 1 frame)
+  if (star.getData("collected")) return;
+  star.setData("collected", true);
+
   const isCorrect = star.getData("isCorrect");
   const value = star.getData("value");
   const text = star.getData("text");
@@ -372,6 +390,7 @@ function collectStar(player, star) {
     const basePoints = 8; // Reduced from 10
     const comboBonus = Math.min(combo * 3, 20); // Cap at +20 max (was unlimited combo * 5)
     score += basePoints + comboBonus;
+    _shadowScore += basePoints + comboBonus; // Anticheat set
 
     combo++;
     if (combo > maxCombo) maxCombo = combo;
@@ -414,7 +433,9 @@ function collectStar(player, star) {
     // SALAH!
     combo = 0; // Reset Combo
     score = Math.max(0, score - 5);
+    _shadowScore = score;
     lives--;
+    _shadowLives--;
 
     // Bunyi tetot
     try {
@@ -458,6 +479,14 @@ function showFeedback(scene, x, y, text, color) {
 }
 
 function updateUI() {
+  // FIX: Validasi Anti-Cheat Sederhana
+  if (lives > _shadowLives || score > _shadowScore) {
+    console.warn("Manipulasi Variabel Memory Terdeteksi!");
+    // Paksa reset
+    lives = _shadowLives;
+    score = _shadowScore;
+  }
+
   scoreDisplay.innerText = score;
   timeDisplay.innerText = timeLeft;
 

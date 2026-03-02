@@ -130,7 +130,7 @@ const VersusTajwid = (function () {
     // Create Card Element
     uiArea.innerHTML = ""; // Clear previous
     const card = document.createElement("div");
-    card.className = "v-card";
+    card.className = "v-card glass-panel";
     card.innerText = cardData.teks || "Error";
 
     // Setup Drag/Touch events specifically for this card

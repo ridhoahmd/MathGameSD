@@ -227,6 +227,12 @@ function nextCard() {
 
 // Fungsi jawab + efek visual
 function answer(side) {
+  // 🚀 QUICK WIN: Graceful Degradation jika koneksi putus
+  if (window.isReconnecting) {
+    showToast("⚠️ Tunggu koneksi pulih sebelum menjawab.");
+    return;
+  }
+
   // ENDLESS MODE: Stop timer when answering
   clearInterval(timerInterval);
 

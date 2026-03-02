@@ -212,13 +212,14 @@ function renderShop() {
 // 5. Fungsi Tombol
 
 // Belanja item
-window.buyItem = function (itemId, price) {
+window.buyItem = function (itemId, displayPrice) {
   if (typeof Swal === "undefined") {
-    if (confirm(`Yakin beli ${itemId} seharga ${price} koin?`)) {
+    if (confirm(`Yakin beli ${itemId} seharga ${displayPrice} koin?`)) {
       socket.emit("beliItem", {
         username: username,
         itemId: itemId,
-        harga: parseInt(price),
+        // FIX: Hapus pengiriman harga dari sisi client, karena rawan IDOR/manipulasi harga!
+        // Harga harus ditentukan absolute oleh server
       });
     }
     return;
@@ -226,7 +227,7 @@ window.buyItem = function (itemId, price) {
 
   Swal.fire({
     title: "Konfirmasi Pembelian",
-    text: `Yakin beli ${itemId} seharga ${price} koin?`,
+    text: `Yakin beli ${itemId} seharga ${displayPrice} koin?`,
     icon: "question",
     showCancelButton: true,
     confirmButtonText: "Ya, Beli!",
@@ -238,7 +239,7 @@ window.buyItem = function (itemId, price) {
       socket.emit("beliItem", {
         username: username,
         itemId: itemId,
-        harga: parseInt(price),
+        // FIX: Hapus pengiriman harga dari client
       });
     }
   });

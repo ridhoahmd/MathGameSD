@@ -149,7 +149,7 @@ function tampilkanSoal() {
   ui.screenText.innerText = "INPUT KEMBALIAN";
 
   ui.inputAnswer.value = "";
-  ui.inputAnswer.focus();
+  setTimeout(() => ui.inputAnswer.focus(), 100); // 🚀 Quick Win UX
   ui.feedback.innerText = "";
   ui.feedback.className = "feedback";
 

@@ -40,7 +40,13 @@ function createBypassPatterns(word) {
   for (const char of word.toLowerCase()) {
     // Bolehin pemisah (. - _)
     if (pattern) pattern += "[.\\s\\-_]*";
-    pattern += leetMap[char] || char;
+
+    // FIX: Escape regex special characters untuk mencegah Regex Injection Server Panic
+    if (/[.*+?^${}()|[\]\\]/.test(char)) {
+      pattern += `\\${char}`;
+    } else {
+      pattern += leetMap[char] || char;
+    }
   }
   return new RegExp(pattern, "gi");
 }
