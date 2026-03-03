@@ -278,6 +278,40 @@ html {
   transform: scale(1.05);
 }
 
+/* Mode Selector Styles */
+.mode-selector {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  z-index: 50;
+  position: relative;
+}
+.btn-mode {
+  flex: 1;
+  padding: 15px;
+  border-radius: 15px;
+  border: 2px solid transparent;
+  background: rgba(0, 0, 0, 0.2);
+  color: #ccc;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.btn-mode:hover {
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  transform: translateY(-2px);
+}
+.btn-mode.active {
+  background: linear-gradient(135deg, #a855f7, #8b5cf6) !important;
+  color: #fff;
+  border: none;
+  font-weight: bold;
+  box-shadow: 0 5px 15px rgba(168, 85, 247, 0.4) !important;
+  transform: scale(1.05);
+}
+
 .btn-start,
 .btn-retry {
   background: linear-gradient(135deg, #ffd700, #ffa500);

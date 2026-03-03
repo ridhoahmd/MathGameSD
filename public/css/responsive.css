@@ -413,7 +413,9 @@ textarea {
 
 /* Game Canvas Wrapper - Universal Centering */
 .game-canvas-wrapper,
-#game-container {
+#game-container,
+#game-container-p1,
+#game-container-p2 {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -423,7 +425,9 @@ textarea {
 }
 
 .game-canvas-wrapper canvas,
-#game-container canvas {
+#game-container canvas,
+#game-container-p1 canvas,
+#game-container-p2 canvas {
   max-width: 100%;
   max-height: calc(100vh - 140px);
   object-fit: contain;
@@ -434,13 +438,17 @@ textarea {
 /* Mobile Optimization */
 @media (max-width: 768px) {
   .game-canvas-wrapper,
-  #game-container {
+  #game-container,
+  #game-container-p1,
+  #game-container-p2 {
     min-height: calc(100vh - 80px);
     padding: 10px;
   }
 
   .game-canvas-wrapper canvas,
-  #game-container canvas {
+  #game-container canvas,
+  #game-container-p1 canvas,
+  #game-container-p2 canvas {
     max-height: calc(100vh - 100px);
     border-radius: 10px;
   }
@@ -449,13 +457,17 @@ textarea {
 /* Portrait Mode - Extra tight layout */
 @media (max-width: 480px) and (orientation: portrait) {
   .game-canvas-wrapper,
-  #game-container {
+  #game-container,
+  #game-container-p1,
+  #game-container-p2 {
     padding: 5px;
     min-height: calc(100vh - 60px);
   }
 
   .game-canvas-wrapper canvas,
-  #game-container canvas {
+  #game-container canvas,
+  #game-container-p1 canvas,
+  #game-container-p2 canvas {
     max-height: calc(100vh - 80px);
   }
 }

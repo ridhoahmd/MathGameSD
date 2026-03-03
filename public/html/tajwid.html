@@ -82,30 +82,11 @@
         <p class="desc">Geser kartu Arab ke keranjang hukum yang benar!</p>
 
         <!-- Mode Selection -->
-        <div
-          class="mode-selector"
-          style="
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            z-index: 50;
-            position: relative;
-          "
-        >
+        <div class="mode-selector">
           <button
             class="btn-mode active"
             onclick="selectMode('solo')"
             data-mode="solo"
-            style="
-              flex: 1;
-              padding: 15px;
-              border-radius: 15px;
-              border: 2px solid transparent;
-              background: rgba(0, 0, 0, 0.2);
-              color: white;
-              font-weight: bold;
-            "
           >
             👤 PILAH SENDIRI
           </button>
@@ -113,15 +94,6 @@
             class="btn-mode"
             onclick="selectMode('versus')"
             data-mode="versus"
-            style="
-              flex: 1;
-              padding: 15px;
-              border-radius: 15px;
-              border: 2px solid transparent;
-              background: rgba(0, 0, 0, 0.2);
-              color: white;
-              font-weight: bold;
-            "
           >
             ⚔️ PILAH DUEL
           </button>
