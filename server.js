@@ -39,7 +39,7 @@ app.use((req, res, next) => {
 });
 
 // Jalanin socket.io
-initSocket(server);
+const io = initSocket(server);
 
 // Limit request API biar ga spam
 app.use("/api/ask-ai", apiLimiter);
@@ -103,6 +103,10 @@ app.get(/.*/, (req, res) => {
 
 // Gas server!
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`🚀 Server jalan di Port ${PORT}`);
-});
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`🚀 Server jalan di Port ${PORT}`);
+  });
+}
+
+module.exports = { app, server, io };

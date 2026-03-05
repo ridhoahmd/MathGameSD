@@ -4,3 +4,6 @@
 # Ignore dependencies folder
 node_modules
 /generated/prisma
+
+# Ignore testing reports
+coverage/
