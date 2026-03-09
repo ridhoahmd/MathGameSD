@@ -117,6 +117,14 @@ function formatRupiah(angka) {
   return "Rp " + angka.toLocaleString("id-ID");
 }
 
+function formatRupiahInput(input) {
+  let value = input.value.replace(/[^0-9]/g, "");
+  if (value) {
+    value = parseInt(value, 10).toLocaleString("id-ID");
+  }
+  input.value = value;
+}
+
 function tampilkanSoal() {
   // 🔧 FIX: Add exit option for endless mode
   // Cek apakah soal habis?
@@ -186,8 +194,8 @@ function checkAnswer(isTimeOut = false) {
   clearInterval(timerInterval);
   isProcessing = true;
 
-  // 1. Ambil nilai mentah dari input box
-  let rawValue = ui.inputAnswer.value;
+  // 1. Ambil nilai mentah dari input box, hapus titik pemisah ribuan
+  let rawValue = ui.inputAnswer.value.replace(/\./g, "").replace(/[^0-9]/g, "");
   let userAnswer = Math.abs(Math.floor(parseFloat(rawValue))) || 0;
 
   const q = questions[currentIndex];

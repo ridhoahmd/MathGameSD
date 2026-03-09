@@ -101,9 +101,12 @@
           <div class="input-area">
             <span class="rp-prefix">Rp</span>
             <input
-              type="number"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
               id="input-answer"
               placeholder="0"
+              oninput="formatRupiahInput(this)"
               onkeypress="handleEnter(event)"
             />
             <button onclick="checkAnswer()" class="btn-enter">BAYAR</button>

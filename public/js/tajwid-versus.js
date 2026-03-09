@@ -199,9 +199,6 @@ const VersusTajwid = (function () {
       isDragging = true;
       card.style.transition = "none";
     });
-
-    // Global mouseup/move needed for robust drag
-    // Simplified for now: assume quick flicks
   }
 
   function handleAnswer(playerId, side) {

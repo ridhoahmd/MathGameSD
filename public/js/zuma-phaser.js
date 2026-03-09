@@ -363,8 +363,8 @@ class ZumaScene extends Phaser.Scene {
     // Pick random ammo from existing marbles or completely random
     const activeMarbles = this.marbles.getChildren().filter((m) => m.active);
 
-    // Prioritize existing colors (90% chance) to make game playable
-    if (activeMarbles.length > 0 && Math.random() < 0.9) {
+    // BUG FIX: ALWAYS pick from existing to avoid useless ammo (Audit UX)
+    if (activeMarbles.length > 0) {
       const target =
         activeMarbles[Phaser.Math.Between(0, activeMarbles.length - 1)];
       // Copy value/key

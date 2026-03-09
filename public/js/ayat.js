@@ -166,6 +166,19 @@ if (window.socket) {
       questions.push(...response.data);
       isRequestingQuestions = false;
 
+      // MEMORY OPTIMIZATION: Mencegah array bengkak di HP low-end
+      // Jika soal sudah banyak (> 30) dan user sudah jauh menjawab,
+      // kita potong (hapus) soal-soal lama yang sudah dijawab.
+      if (questions.length > 30 && currentIndex > 10) {
+        // Hapus 10 soal pertama yang sudah berlalu
+        const hapusCount = 10;
+        questions.splice(0, hapusCount);
+        currentIndex -= hapusCount; // Sesuaikan index saat ini
+        console.log(
+          `🧹 Memory Cleanup: Dihapus ${hapusCount} soal lama, Total kini: ${questions.length}`,
+        );
+      }
+
       console.log(
         `✅ Added ${response.data.length} questions. Total: ${questions.length}`,
       );
