@@ -37,8 +37,8 @@ const config = {
     update: update,
   },
   scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH, // Biar pas di tengah layar
+    mode: Phaser.Scale.RESIZE,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
   },
 };
 
@@ -238,6 +238,19 @@ function create() {
   for (let i = 0; i < 3; i++) {
     this.time.delayedCall(i * 500, spawnStar, [], this);
   }
+  
+  // Resize handler
+  this.scale.on('resize', handleResize, this);
+  this.events.on('shutdown', () => {
+    this.scale.off('resize', handleResize, this);
+  });
+}
+
+function handleResize(gameSize) {
+    const width = gameSize.width;
+    const height = gameSize.height;
+
+    this.cameras.main.setViewport(0, 0, width, height);
 }
 
 // Loop Utama (Update setiap frame)
@@ -252,7 +265,7 @@ function update() {
   }
 
   // Jaga player tetep dalem layar
-  player.x = Phaser.Math.Clamp(player.x, 40, GAME_WIDTH - 40);
+  player.x = Phaser.Math.Clamp(player.x, 40, this.scale.width - 40);
 
   // Gerakin bintang ke bawah
   stars.getChildren().forEach((star) => {
@@ -267,7 +280,7 @@ function update() {
     }
 
     // Hapus kalo udah lewat bawah layar
-    if (star.y > GAME_HEIGHT + 30) {
+    if (star.y > this.scale.height + 30) {
       if (text) text.destroy();
       star.destroy();
     }
@@ -333,7 +346,10 @@ function generateQuestion() {
 function spawnStar() {
   if (gameOver) return;
 
-  const x = Phaser.Math.Between(50, GAME_WIDTH - 50);
+  const w = game ? game.scale.width : GAME_WIDTH;
+  const h = game ? game.scale.height : GAME_HEIGHT;
+
+  const x = Phaser.Math.Between(50, w - 50);
   const isCorrect = Math.random() < 0.4; // 40% kemungkinan bener
 
   // Mencegah kebanyakan salah?
@@ -351,7 +367,7 @@ function spawnStar() {
   // FIX: Standarisasi kecepatan layar (Speed Relatif ke GAME_HEIGHT)
   const speed =
     Phaser.Math.Between(settings.speedMin, settings.speedMax) *
-    (GAME_HEIGHT / 600);
+    (h / 600);
 
   star.setData("value", value);
   star.setData("isCorrect", value === correctAnswer);
@@ -524,3 +540,26 @@ function endGame(scene) {
     });
   }
 }
+
+// FIX MEMORY LEAK: Destroy game instance
+window.destroyBintangGame = function () {
+  if (game) {
+    game.destroy(true); // Hapus seluruh canvas dan event listener dari RAM
+    game = null;
+  }
+  
+  if (timerEvent) {
+    timerEvent.remove();
+    timerEvent = null;
+  }
+  if (starSpawnTimer) {
+    starSpawnTimer.remove();
+    starSpawnTimer = null;
+  }
+  
+  // Bersihkan DOM
+  const container = document.getElementById("game-container");
+  if (container) container.innerHTML = "";
+  
+  gameActive = false;
+};

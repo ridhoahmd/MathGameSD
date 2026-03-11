@@ -89,7 +89,7 @@
 
     <!-- === HUD ATAS (Skor, Nyawa, Waktu) === -->
     <div class="top-bar">
-      <a href="/" class="btn-back">⬅ MENU</a>
+      <a href="#" onclick="destroyBintangGame(); window.location.href = '/'" class="btn-back">⬅ MENU</a>
 
       <div id="game-hud">
         <div class="hud-item">
@@ -122,10 +122,10 @@
         <p>Skor Akhir Kamu:</p>
         <div class="final-score" id="final-score">0</div>
         <div class="modal-buttons">
-          <button onclick="location.reload()" class="btn-restart">
+          <button onclick="destroyBintangGame(); location.reload()" class="btn-restart">
             🔄 MAIN LAGI
           </button>
-          <button onclick="window.location.href = '/'" class="btn-home">
+          <button onclick="destroyBintangGame(); window.location.href = '/'" class="btn-home">
             🏠 KEMBALI
           </button>
         </div>

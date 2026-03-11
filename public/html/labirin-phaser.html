@@ -31,7 +31,7 @@
   </head>
   <body>
     <header class="game-header">
-      <a href="/" class="btn-back">⬅ MENU</a>
+      <a href="#" onclick="destroyLabirinGame(); window.location.href = '/'" class="btn-back">⬅ MENU</a>
       <h1 class="game-title">🌀 LABIRIN ILMU</h1>
       <div class="score-box">SKOR: <span id="score">0</span></div>
     </header>
@@ -96,7 +96,7 @@
           🔄 MAIN LAGI
         </button>
         <button
-          onclick="window.location.href = '/'"
+          onclick="destroyLabirinGame(); window.location.href = '/'"
           class="btn-back"
           style="
             margin-top: 10px;

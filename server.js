@@ -90,8 +90,23 @@ app.post("/api/ask-ai", async (req, res) => {
   }
 });
 
-// Serve file statis (frontend)
-app.use(express.static(path.join(__dirname, "public")));
+// Serve file statis (frontend) dengan Caching Pintar untuk Media
+app.use(express.static(path.join(__dirname, "public"), {
+  setHeaders: (res, path) => {
+    // Jika ekstensi file adalah media/gambar/audio/font, simpan di cache browser murid selama 30 hari
+    if (path.match(/\.(png|jpe?g|gif|svg|webp|ico|mp3|wav|ogg|mp4|webm|woff|woff2|ttf|eot)$/i)) {
+      res.set("Cache-Control", "public, max-age=2592000"); // 30 hari
+      // Hapus no-cache bawaan sebelumnya diatas
+      res.removeHeader("Pragma");
+      res.removeHeader("Expires");
+    } else {
+      // Untuk script JS, CSS, dan HTML, paksa minta versi terbaru selalu
+      res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      res.set("Pragma", "no-cache");
+      res.set("Expires", "0");
+    }
+  }
+}));
 
 // Handle route lain, balikin ke index (SPA like behavior)
 app.get(/.*/, (req, res) => {

@@ -948,10 +948,20 @@ window.resetGameMode = function () {
   });
 };
 
+window.destroyLabirinGame = function () {
+  if (phaserGameInstance) {
+    phaserGameInstance.destroy(true);
+    phaserGameInstance = null;
+  }
+  
+  const container = document.getElementById("game-container-p1");
+  if (container) container.innerHTML = "";
+};
+
 // Bind Back Button
 document.querySelector(".btn-back")?.addEventListener("click", () => {
   window.resetGameMode();
-  if (phaserGameInstance) phaserGameInstance.destroy(true);
+  window.destroyLabirinGame();
   document.getElementById("tutor-overlay").style.display = "none";
   document.getElementById("quiz-modal").style.display = "none";
 });

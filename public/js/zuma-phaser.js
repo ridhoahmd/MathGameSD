@@ -10,8 +10,8 @@
 
 // Config Phaser
 const GAME_CONFIG = {
-  width: 800,
-  height: 600,
+  width: window.innerWidth,
+  height: window.innerHeight,
   parent: "game-container",
   backgroundColor: "#0a0a1a",
   physics: {
@@ -19,7 +19,7 @@ const GAME_CONFIG = {
     arcade: { debug: false },
   },
   scale: {
-    mode: Phaser.Scale.FIT,
+    mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
 };
@@ -175,10 +175,14 @@ class ZumaScene extends Phaser.Scene {
       document.addEventListener("mousemove", this.inputFallbackMove);
       document.addEventListener("mousedown", this.inputFallbackClick);
 
+      // Add Resize Event Listener
+      this.scale.on("resize", this.handleResize, this);
+
       // Bersihin event
       this.events.on("shutdown", () => {
         document.removeEventListener("mousemove", this.inputFallbackMove);
         document.removeEventListener("mousedown", this.inputFallbackClick);
+        this.scale.off("resize", this.handleResize, this);
       });
 
       this.input.keyboard.on("keydown-SPACE", () => this.swapAmmo());
@@ -439,8 +443,8 @@ class ZumaScene extends Phaser.Scene {
   createPath(pola) {
     this.pathGraphics = this.add.graphics();
     let points = [];
-    const w = 800,
-      h = 600;
+    const w = this.scale.width,
+      h = this.scale.height;
 
     // Determine Pattern Based on Level if 'auto' or unspecified
     // Logic:
@@ -601,7 +605,11 @@ class ZumaScene extends Phaser.Scene {
 
   // 4. Penembak & Peluru
   createTurret() {
-    this.turret = this.add.container(400, 550);
+    const w = this.scale.width;
+    const h = this.scale.height;
+    
+    // Position turret near the bottom center
+    this.turret = this.add.container(w / 2, h - 50);
     this.turret.setDepth(100);
 
     // 1. Laras (Barrel)
@@ -632,6 +640,24 @@ class ZumaScene extends Phaser.Scene {
     this.turret.add(this.ammoText);
 
     this.updateAmmoVisual();
+  }
+
+  handleResize(gameSize) {
+    const width = gameSize.width;
+    const height = gameSize.height;
+
+    // Reset Viewport
+    this.cameras.main.setViewport(0, 0, width, height);
+
+    // Reposition turret
+    if (this.turret) {
+      this.turret.setPosition(width / 2, height - 50);
+    }
+    
+    // Redraw Path (Optional, if you want the path to scale with screen)
+    if(this.pathGraphics && this.levelData) {
+        this.createPath(this.levelData.pola || "spiral");
+    }
   }
 
   updateAmmoVisual() {
@@ -917,6 +943,16 @@ window.nextLevelZuma = function () {
   if (!game) return;
   const scene = game.scene.getScene("ZumaScene");
   if (scene) scene.advanceLevel();
+};
+
+window.destroyZumaGame = function () {
+  if (currentGameInstance) {
+    currentGameInstance.destroy(true);
+    currentGameInstance = null;
+  }
+  
+  const container = document.getElementById("game-container");
+  if (container) container.innerHTML = "";
 };
 
 // === BOOTSTRAP GAME ===

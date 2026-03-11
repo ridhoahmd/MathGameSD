@@ -2,7 +2,7 @@ module.exports = {
   apps: [{
     name: "math-game-sd",
     script: "./server.js",
-    instances: "max",
+    instances: 1,
     exec_mode: "cluster",
     watch: false,
     max_memory_restart: "500M",
