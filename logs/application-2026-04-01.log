@@ -1,0 +1,8 @@
+2026-04-01 10:26:50 [info]: 🚀 Server jalan di Port 3000
+2026-04-01 10:30:14 [info]: [0mGET /html/zuma-phaser.html [32m200[0m 71.954 ms - -[0m
+2026-04-01 10:30:14 [info]: [0mGET /css/style.css?v=final [32m200[0m 23.198 ms - -[0m
+2026-04-01 10:30:14 [info]: [0mGET /css/zuma-phaser.css?v=2 [32m200[0m 20.151 ms - -[0m
+2026-04-01 10:30:15 [info]: [0mGET /js/audio.js?v=final [32m200[0m 11.899 ms - -[0m
+2026-04-01 10:30:16 [info]: [0mGET /js/global.js [32m200[0m 19.393 ms - -[0m
+2026-04-01 10:30:16 [info]: [0mGET /js/zuma-phaser.js?v=12 [32m200[0m 27.172 ms - -[0m
+2026-04-01 10:30:18 [info]: [0mGET /sw.js [32m200[0m 35.967 ms - -[0m

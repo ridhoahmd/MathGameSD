@@ -289,7 +289,7 @@ class ZumaScene extends Phaser.Scene {
       // ... (Existing bullet update)
       if (
         bullet.active &&
-        (bullet.x < 0 || bullet.x > 800 || bullet.y < 0 || bullet.y > 600)
+        (bullet.x < -100 || bullet.x > this.scale.width + 100 || bullet.y < -100 || bullet.y > this.scale.height + 100)
       ) {
         this.destroyBullet(bullet);
       }
