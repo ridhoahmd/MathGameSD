@@ -86,6 +86,8 @@ function startGame() {
 
 // 3. Terima Data
 if (window.socket) {
+  // Anti Memory-Leak
+  socket.off("soalDariAI");
   socket.on("soalDariAI", (response) => {
     if (response.kategori === "nabi") {
       // Cek error dulu
@@ -316,6 +318,7 @@ function panggilTutor(soal, jawabUser, jawabBenar) {
 
 // Terima jawaban tutor
 if (window.socket) {
+  socket.off("penjelasanTutor");
   socket.on("penjelasanTutor", (data) => {
     if (ui.tutorText) ui.tutorText.innerHTML = data.penjelasan || data.teks;
   });

@@ -150,6 +150,35 @@
           </tbody>
         </table>
       </div>
+
+      <!-- === MODAL RAPOR ANALITIK === -->
+      <div id="modal-rapor" class="container-input hidden" style="position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; max-width: 100%; border: none; border-radius: 0;">
+        <div style="background: #1a1a2e; padding: 25px; border-radius: 12px; border: 2px solid #00f2ff; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+          <h2 style="color: #00f2ff; text-align: center; margin-bottom: 20px;">📊 Kartu Rapor: <span id="rapor-nama">-</span></h2>
+          
+          <div style="display: flex; justify-content: space-around; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <div style="text-align: center;">
+              <span style="font-size: 2rem;">🌟</span><br>
+              <strong style="color: #ffeb3b" id="rapor-level">Lvl -</strong>
+            </div>
+            <div style="text-align: center;">
+              <span style="font-size: 2rem;">🏆</span><br>
+              <strong style="color: #00ff00" id="rapor-xp">- XP</strong>
+            </div>
+            <div style="text-align: center;">
+              <span style="font-size: 2rem;">💰</span><br>
+              <strong style="color: #ffd700" id="rapor-koin">- Koin</strong>
+            </div>
+          </div>
+
+          <h3 style="color: #ccc; font-size: 1.1rem; border-bottom: 1px solid #333; padding-bottom: 5px;">⚔️ Riwayat Duel Terakhir</h3>
+          <div id="rapor-versus" style="margin-bottom: 20px; font-size: 0.9rem;">
+            <p class="text-muted-small">Memuat histori duel...</p>
+          </div>
+
+          <button onclick="document.getElementById('modal-rapor').style.display='none'" style="width: 100%; padding: 12px; background: #00f2ff; color: #000; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px;">TUTUP RAPOR</button>
+        </div>
+      </div>
     </div>
 
     <!-- Script Logic Halaman Guru -->
@@ -243,23 +272,21 @@
                 : "";
 
             roleControl = `
-                        <select class="role-select" onchange="updateRole('${
-                          user.nama
-                        }', this.value)" ${isDisabled}>
-                            <option value="siswa" ${
-                              targetRole === "siswa" ? "selected" : ""
-                            }>Siswa</option>
-                            <option value="guru" ${
-                              targetRole === "guru" ? "selected" : ""
-                            }>Guru</option>
+                        <select class="role-select" onchange="updateRole('${user.nama}', this.value)" ${isDisabled}>
+                            <option value="banned" ${targetRole === "banned" ? "selected" : ""} style="color:red">🚫 Blokir</option>
+                            <option value="siswa" ${targetRole === "siswa" ? "selected" : ""}>Siswa</option>
+                            <option value="guru" ${targetRole === "guru" ? "selected" : ""}>Guru</option>
                             ${adminOption}
                         </select>`;
           }
 
-          // Append Baris
+          // Append Baris dengan Tombol Detail
           htmlContent += `
                     <tr>
-                        <td class="col-nama"><b>${user.nama}</b></td>
+                        <td class="col-nama">
+                          <b>${user.nama}</b>
+                          <button onclick="lihatDetailSiswa('${user.nama}')" style="background: none; border: none; cursor: pointer; padding: 0 5px;" title="Lihat Kartu Rapor">🔍</button>
+                        </td>
                         <td>${user.math}</td>
                         <td>${user.zuma}</td>
                         <td>${user.memory}</td>
@@ -364,30 +391,106 @@
         }
       };
 
-      // Placeholder untuk Save Content Source (Mencegah Error)
+      // --- 6. LOGIKA INPUT SOAL MANUAL & SETTING ---
+      // Render form kuis
+      function renderFormSingkat() {
+        const area = document.getElementById("soal-input-area");
+        area.innerHTML = `
+          <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <label>📝 Pertanyaan Soal:</label>
+            <textarea id="manual-soal" class="soal-input mb-10" rows="3" placeholder="Masukkan teks pertanyaan..."></textarea>
+            
+            <label>✨ Pilihan Jawaban (Pisahkan dengan koma):</label>
+            <input type="text" id="manual-opsi" class="soal-input mb-10" placeholder="Contoh: 10, 20, 30, 40" />
+            
+            <label>✅ Jawaban Benar (Ketik persis seperti salah satu opsi):</label>
+            <input type="text" id="manual-jawaban" class="soal-input mb-10" placeholder="Contoh: 20" />
+            
+            <label>💡 Penjelasan (Opsional):</label>
+            <textarea id="manual-penjelasan" class="soal-input" rows="2" placeholder="Penjelasan jawaban benar..."></textarea>
+          </div>
+        `;
+      }
+
+      // Event Listener saat game dipilih
+      document.getElementById("input-game").addEventListener("change", function() {
+        const game = this.value;
+        // Semua game kuis biasa menggunakan template yang sama seperti yang disetujui (Math, Nabi, Ayat, Kasir, Labirin)
+        renderFormSingkat();
+      });
+
+      // Panggil saat pertama kali load agar form muncul
+      document.addEventListener("DOMContentLoaded", () => {
+        renderFormSingkat();
+      });
+
+      // Simpan Pengaturan Prioritas Soal
       window.saveContentSource = function () {
-        console.log(
-          "Setting content source changed (Function pending implementation)",
-        );
-        // Anda bisa menambahkan logika socket.emit di sini nanti
+        const source = document.getElementById("content-source-selector").value;
+        socket.emit("ubahPrioritasSoal", source);
+        document.getElementById("current-setting-display").innerText = `(Current: ${source})`;
       };
 
-      // Placeholder untuk Save Manual Question (Mencegah Error)
+      // Simpan Soal Manual ke Server
       window.saveManualQuestion = function () {
-        const kodeKelas = document.getElementById(
-          "input-kode-kelas-manual",
-        ).value;
+        const kodeKelas = document.getElementById("input-kode-kelas-manual").value;
+        const game = document.getElementById("input-game").value;
+        const level = document.getElementById("input-level").value;
+        
         if (!kodeKelas) {
           Swal.fire("Error", "Kode Kelas Wajib Diisi!", "error");
           return;
         }
-        Swal.fire(
-          "Info",
-          "Logika penyimpanan soal belum terhubung ke Server.",
-          "info",
-          "info",
-        );
+
+        const soalStr = document.getElementById("manual-soal")?.value;
+        const opsiStr = document.getElementById("manual-opsi")?.value;
+        const jawabanStr = document.getElementById("manual-jawaban")?.value;
+        const penjelasanStr = document.getElementById("manual-penjelasan")?.value;
+
+        if (!soalStr || !opsiStr || !jawabanStr) {
+           Swal.fire("Error", "Pertanyaan, Opsi, dan Jawaban Benar wajib diisi!", "error");
+           return;
+        }
+
+        const OpsiArray = opsiStr.split(",").map(i => i.trim());
+        if (!OpsiArray.includes(jawabanStr.trim())) {
+           Swal.fire("Peringatan", "Jawaban benar harus sama persis dengan salah satu opsi!", "warning");
+           return;
+        }
+
+        const soalData = {
+          id: Date.now(),
+          soal: soalStr,
+          opsi: OpsiArray,
+          jawabanBenar: jawabanStr.trim(),
+          penjelasan: penjelasanStr || "Tidak ada penjelasan.",
+          kodeRef: kodeKelas // Untuk referensi khusus
+        };
+
+        socket.emit("simpanSoalManual", {
+           kategori: game,
+           level: level,
+           kodeKelas: kodeKelas,
+           soalData: soalData
+        });
+        
+        Swal.fire({
+          title: "Menyimpan...",
+          didOpen: () => Swal.showLoading()
+        });
       };
+
+      socket.on("adminResponse", (res) => {
+        if (res.success) {
+          Swal.fire("Sukses", res.message, "success");
+          document.getElementById("manual-soal").value = "";
+          document.getElementById("manual-opsi").value = "";
+          document.getElementById("manual-jawaban").value = "";
+          document.getElementById("manual-penjelasan").value = "";
+        } else {
+          Swal.fire("Gagal", res.message, "error");
+        }
+      });
 
       // 6. fngsi login guru
       window.cekLoginGuru = async function () {
@@ -420,6 +523,60 @@
           Swal.fire("Error", "Gagal menghubungi server", "error");
         }
       };
+
+      // 7. FUNGSI ANALITIK SISWA (RAPOR)
+      window.lihatDetailSiswa = function(namaSiswa) {
+        // Tampilkan modal loading
+        const modal = document.getElementById("modal-rapor");
+        modal.style.display = "flex";
+        
+        document.getElementById("rapor-nama").innerText = namaSiswa;
+        document.getElementById("rapor-level").innerText = "Lvl -";
+        document.getElementById("rapor-xp").innerText = "- XP";
+        document.getElementById("rapor-koin").innerText = "- Koin";
+        document.getElementById("rapor-versus").innerHTML = '<p class="text-center">Memuat data...</p>';
+        
+        socket.emit("mintaAnalitikSiswa", namaSiswa);
+      };
+
+      socket.on("analitikSiswaData", (data) => {
+        if (!data.success) {
+          document.getElementById("rapor-versus").innerHTML = '<p style="color:red">Gagal memuat detail siswa.</p>';
+          return;
+        }
+
+        document.getElementById("rapor-level").innerText = "Lvl " + data.level;
+        document.getElementById("rapor-xp").innerText = data.xp + " XP";
+        document.getElementById("rapor-koin").innerText = data.coins + " Koin";
+
+        const listVersus = document.getElementById("rapor-versus");
+        if (!data.versus || data.versus.length === 0) {
+          listVersus.innerHTML = '<p class="text-muted-small" style="text-align:center;">Belum pernah berduel di mode versus.</p>';
+          return;
+        }
+
+        let htmlVersus = "";
+        data.versus.forEach(match => {
+          let color = match.status === "Win" ? "#00ff00" : (match.status === "Lose" ? "#ff4444" : "#ffeb3b");
+          let icon = match.status === "Win" ? "🏆" : (match.status === "Lose" ? "💀" : "🤝");
+          const d = new Date(match.playedAt);
+          const tglStr = d.toLocaleDateString("id-ID") + " " + d.toLocaleTimeString("id-ID", {hour: '2-digit', minute:'2-digit'});
+          
+          htmlVersus += `
+            <div style="background: rgba(255,255,255,0.05); padding: 8px 12px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid ${color};">
+              <div style="flex: 1">
+                <strong style="color: #00f2ff">${match.game}</strong> vs ${match.p2Name}<br>
+                <span style="font-size: 0.75rem; color: #888">${tglStr}</span>
+              </div>
+              <div style="font-weight: bold; color: ${color}; text-align: right;">
+                ${icon} ${match.status.toUpperCase()} <br>
+                <span style="font-size: 0.8rem; color: #ccc">Skor: ${match.score}</span>
+              </div>
+            </div>
+          `;
+        });
+        listVersus.innerHTML = htmlVersus;
+      });
     </script>
   </body>
 </html>

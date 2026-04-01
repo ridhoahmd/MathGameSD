@@ -1,0 +1,12 @@
+2026-03-31 10:21:08 [error]: [Express Error] GET /api/simulate-error - Simulasi Error Fatal Server Database/Memori!
+Error: Simulasi Error Fatal Server Database/Memori!
+    at /home/ridho/Downloads/MathGameSD-main/server.js:105:8
+    at Layer.handleRequest (/home/ridho/Downloads/MathGameSD-main/node_modules/router/lib/layer.js:152:17)
+    at next (/home/ridho/Downloads/MathGameSD-main/node_modules/router/lib/route.js:157:13)
+    at Route.dispatch (/home/ridho/Downloads/MathGameSD-main/node_modules/router/lib/route.js:117:3)
+    at handle (/home/ridho/Downloads/MathGameSD-main/node_modules/router/index.js:435:11)
+    at Layer.handleRequest (/home/ridho/Downloads/MathGameSD-main/node_modules/router/lib/layer.js:152:17)
+    at /home/ridho/Downloads/MathGameSD-main/node_modules/router/index.js:295:15
+    at processParams (/home/ridho/Downloads/MathGameSD-main/node_modules/router/index.js:582:12)
+    at next (/home/ridho/Downloads/MathGameSD-main/node_modules/router/index.js:291:5)
+    at /home/ridho/Downloads/MathGameSD-main/server.js:48:3

@@ -10,6 +10,7 @@ const userHandler = require("./userHandler");
 const gameHandler = require("./gameHandler");
 const chatHandler = require("./chatHandler");
 const shopHandler = require("./shopHandler");
+const adminHandler = require("./adminHandler");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
@@ -64,6 +65,7 @@ module.exports = (httpServer) => {
     gameHandler(socket, io);
     chatHandler(socket, io);
     shopHandler(socket, io);
+    adminHandler(socket, io);
 
     socket.on("disconnect", () => {
       cleanUpSocketRateLimit(socket.id);

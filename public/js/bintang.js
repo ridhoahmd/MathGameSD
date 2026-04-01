@@ -544,7 +544,11 @@ function endGame(scene) {
 // FIX MEMORY LEAK: Destroy game instance
 window.destroyBintangGame = function () {
   if (game) {
-    game.destroy(true); // Hapus seluruh canvas dan event listener dari RAM
+    try {
+      game.destroy(true); // Hapus seluruh canvas dan event listener dari RAM
+    } catch(err) {
+      console.error("Gagal membersihkan Phaser:", err);
+    }
     game = null;
   }
   
@@ -563,3 +567,10 @@ window.destroyBintangGame = function () {
   
   gameActive = false;
 };
+
+// Pastikan memori dilepas saat anak SD menutup tab atau pindah halaman
+window.addEventListener("beforeunload", () => {
+  if (typeof window.destroyBintangGame === "function") {
+    window.destroyBintangGame();
+  }
+});

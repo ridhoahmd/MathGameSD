@@ -37,47 +37,67 @@ const VersusAyat = (() => {
   function init(allQuestions) {
     if (!ui.container) initUI();
 
-    console.log(
-      "VersusAyat.init called with",
-      allQuestions.length,
-      "questions",
-    );
-    state.isActive = true;
-    // Shuffle and take 10 questions
-    state.questions = shuffleArray([...allQuestions]).slice(0, 10);
-    state.currentIndex = 0;
-
-    console.log("⚔️ Questions ready:", state.questions);
-
-    // Reset Scores
-    state.p1.score = 0;
-    state.p2.score = 0;
-    updateScoreUI();
-
-    // Show UI
-    // Show UI
-
-    // Hide Solo Game Container
-    const soloGameContainer = document.querySelector(".game-container");
-    if (soloGameContainer) soloGameContainer.style.display = "none";
-
     const startScreen = document.getElementById("start-screen");
     if (startScreen) {
       startScreen.classList.remove("active");
       startScreen.classList.add("hidden");
     }
 
-    if (ui.container) {
-      ui.container.classList.remove("hidden");
-      ui.container.style.display = "flex"; // FORCE DISPLAY
-    } else {
-      console.error("Versus container not found during init");
-    }
+    Swal.fire({
+      title: "Masukkan Nama Lawan",
+      input: "text",
+      inputPlaceholder: "Nama Player 2 (Temanmu)",
+      showCancelButton: true,
+      confirmButtonText: "Mulai Duel",
+      cancelButtonText: "Batal",
+      allowOutsideClick: false,
+      background: "#1e1e2e",
+      color: "#fff"
+    }).then((result) => {
+      if (result.isDismissed) {
+        if (startScreen) {
+          startScreen.classList.remove("hidden");
+          startScreen.classList.add("active");
+        }
+        exitVersus();
+        return;
+      }
+      
+      state.p2.name = (result.value || "Guest").trim();
 
-    if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
+      console.log(
+        "VersusAyat.init called with",
+        allQuestions.length,
+        "questions",
+      );
+      state.isActive = true;
+      // Shuffle and take 10 questions
+      state.questions = shuffleArray([...allQuestions]).slice(0, 10);
+      state.currentIndex = 0;
 
-    // Start Game
-    loadQuestion();
+      console.log("⚔️ Questions ready:", state.questions);
+
+      // Reset Scores
+      state.p1.score = 0;
+      state.p2.score = 0;
+      updateScoreUI();
+
+      // Hide Solo Game Container
+      const soloGameContainer = document.querySelector(".game-container");
+      if (soloGameContainer) soloGameContainer.style.display = "none";
+
+      if (ui.container) {
+        ui.container.classList.remove("hidden");
+        ui.container.style.display = "flex"; // FORCE DISPLAY
+      } else {
+        console.error("Versus container not found during init");
+      }
+
+      if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
+
+      // Start Game
+      loadQuestion();
+    });
   }
 
   function toggleRotation() {
@@ -229,10 +249,29 @@ const VersusAyat = (() => {
     document.getElementById("end-score-p2").innerText = state.p2.score;
 
     let winnerText = "SERI!";
-    if (state.p1.score > state.p2.score) winnerText = "PEMENANG: PLAYER 1! 🏆";
-    if (state.p2.score > state.p1.score) winnerText = "🏆 PEMENANG: PLAYER 2!";
+    let finalStatus = "Draw";
+    
+    if (state.p1.score > state.p2.score) {
+      winnerText = "PEMENANG: PLAYER 1! 🏆";
+      finalStatus = "Win";
+    }
+    if (state.p2.score > state.p1.score) {
+      winnerText = `🏆 PEMENANG: ${state.p2.name ? state.p2.name.toUpperCase() : 'PLAYER 2'}!`;
+      finalStatus = "Lose";
+    }
 
     document.getElementById("v-winner-text").innerText = winnerText;
+    
+    // Kirim skor ke server
+    if (window.socket) {
+      window.socket.emit("laporSkorVersusLokal", {
+        game: "ayat",
+        status: finalStatus,
+        score: state.p1.score, 
+        p2Name: state.p2.name || "Guest"
+      });
+    }
+
     try {
       AudioManager.playWin();
     } catch (e) {}

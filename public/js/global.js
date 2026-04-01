@@ -173,3 +173,51 @@ document.addEventListener("keydown", function (e) {
     }
   }
 });
+
+// ============================================
+// 🚨 ADMIN & GURU REAL-TIME COMMANDS
+// ============================================
+if (window.socket) {
+  // 1. KICK / BANNED USER LOGIC
+  window.socket.on("kickUser", (bannedName) => {
+    const myName = localStorage.getItem("playerName");
+    if (myName === bannedName) {
+      document.body.innerHTML = `
+        <div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#1a1a1a;color:#ff4444;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:9999999;font-family:'Orbitron',sans-serif;">
+          <h1 style="font-size:3rem;text-align:center;">🚫 AKSES DIBLOKIR 🚫</h1>
+          <p style="font-size:1.2rem;color:white;text-align:center;margin-top:20px;">Akun Anda sementara telah ditangguhkan oleh Guru/Admin.</p>
+          <button onclick="location.href='/'" style="margin-top:30px;padding:10px 20px;background:#ff4444;color:white;border:none;border-radius:5px;font-weight:bold;cursor:pointer;">KEMBALI KE BERANDA</button>
+        </div>
+      `;
+      // Putuskan koneksi dari server secara paksa
+      window.socket.disconnect();
+      if (typeof auth !== "undefined") {
+         auth.signOut();
+      }
+    }
+  });
+
+  // 2. SOAL BARU REAL TIME NOTIFIKASI
+  window.socket.on("soalBaruTersedia", (data) => {
+    if (typeof Swal !== "undefined") {
+      const isDashboard = window.location.pathname === "/" || window.location.pathname.includes("index.html");
+      const inTargetGame = window.location.pathname.includes(data.game);
+      
+      if (isDashboard || inTargetGame) {
+        Swal.fire({
+          title: "📚 Tantangan Baru Tersedia!",
+          html: `Guru baru saja merilis/menyimpan soal khusus untuk game <strong style="color:#00f2ff">${data.game.toUpperCase()}</strong>! (Level: ${data.level})`,
+          icon: "info",
+          background: "#1e1e2e",
+          color: "#fff",
+          confirmButtonColor: "#00f2ff",
+          confirmButtonText: inTargetGame ? "Refresh Soal!" : "Mengerti"
+        }).then(() => {
+          if (inTargetGame) {
+            window.location.reload(); // Refresh halaman agar menyedot DB baru
+          }
+        });
+      }
+    }
+  });
+}

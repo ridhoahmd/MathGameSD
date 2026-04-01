@@ -174,6 +174,8 @@ game.init();
 // Sambungin socket (tunggu ready dulu)
 function wireSocketEvents() {
   if (window.socket) {
+    // Mencegah memory leak dari single-page-navigation: Unbind dulu sblm dengar
+    window.socket.off("soalDariAI");
     window.socket.on("soalDariAI", (data) => {
       if (data.kategori === "math") {
         game.onDataReceived(data);

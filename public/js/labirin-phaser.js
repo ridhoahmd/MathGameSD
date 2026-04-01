@@ -710,8 +710,40 @@ const socket = window.socket; // Global Socket
 
 // Initialize Game (Called from Server Response)
 // Initialize Game (Called from Server Response)
-window.requestGame = function () {
+window.requestGame = async function () {
   console.log("🚀 Requesting Game V3 (Fixing RefError)...");
+
+  // Robust Mode Detection
+  let mode = window.currentMode || "solo";
+
+  const loadingScreen = document.getElementById("loading-screen");
+
+  // Prompt if Versus
+  if (mode === "versus") {
+    // Hide start screen first so Swal is not blocked by z-index issues
+    if (loadingScreen) loadingScreen.style.display = "none";
+
+    const result = await Swal.fire({
+      title: "Masukkan Nama Lawan",
+      input: "text",
+      inputPlaceholder: "Nama Player 2 (Temanmu)",
+      showCancelButton: true,
+      confirmButtonText: "Mulai Balapan",
+      cancelButtonText: "Batal",
+      allowOutsideClick: false,
+      background: "#1e1e2e",
+      color: "#fff"
+    });
+    
+    if (result.isDismissed) {
+      if (window.resetGameMode) window.resetGameMode();
+      // Restore start screen if user skips/cancels
+      if (loadingScreen) loadingScreen.style.display = ""; 
+      return;
+    }
+    window.guestName = (result.value || "Guest").trim();
+  }
+
   const btn = document.querySelector(".btn-start-game");
   if (btn) {
     btn.innerText = "⏳ MENGHUBUNGI SERVER...";
@@ -732,9 +764,6 @@ window.requestGame = function () {
   if (activeLevelBtn) {
     level = activeLevelBtn.getAttribute("data-level") || "mudah";
   }
-
-  // Robust Mode Detection
-  let mode = window.currentMode || "solo";
 
   console.log(
     `📡 Sending Params: Level=${level}, Mode=${mode}, Kode=${kodeAkses}`,
@@ -797,6 +826,8 @@ window.requestGame = function () {
     };
 
     // Attach Listener
+    // Anti Memory Leak
+    socket.off("soalDariAI", responseHandler);
     socket.on("soalDariAI", responseHandler);
 
     // Emit Request
@@ -839,6 +870,7 @@ function getFallbackQuestions() {
 if (socket) {
   // Global listener cleanup (moved logic inside requestGame to handle timeout)
   // We keep AI Tutor listener here as it is passive
+  socket.off("penjelasanTutor");
   socket.on("penjelasanTutor", (data) => {
     const textEl = document.getElementById("tutor-text");
     const tutorOverlay = document.getElementById("tutor-overlay");
@@ -950,7 +982,11 @@ window.resetGameMode = function () {
 
 window.destroyLabirinGame = function () {
   if (phaserGameInstance) {
-    phaserGameInstance.destroy(true);
+    try {
+      phaserGameInstance.destroy(true);
+    } catch(err) {
+      console.error("Gagal membersihkan Phaser Labirin:", err);
+    }
     phaserGameInstance = null;
   }
   
@@ -996,18 +1032,48 @@ function setupUIListeners(scene) {
       const scoreP2 = document.getElementById("go-score-p2");
 
       if (data.isVersus) {
-        title.innerText = "⚔️ DUEL SELESAI!";
-        winnerText.innerText =
-          data.winner === "p1" ? "🎉 PLAYER 1 MENANG!" : "🎉 PLAYER 2 MENANG!";
-        winnerText.style.color = data.winner === "p1" ? "cyan" : "magenta";
+        title.innerText = "⚔️ BALAPAN SELESAI!";
+        
+        let finalStatus = "Draw";
+        if (data.score.p1 > data.score.p2 || data.winner === "p1") {
+            winnerText.innerText = "🎉 PLAYER 1 MENANG!";
+            winnerText.style.color = "cyan";
+            finalStatus = "Win";
+        } else if (data.score.p2 > data.score.p1 || data.winner === "p2") {
+            winnerText.innerText = `🎉 ${(window.guestName ? window.guestName.toUpperCase() : 'PLAYER 2')} MENANG!`;
+            winnerText.style.color = "magenta";
+            finalStatus = "Lose";
+        } else {
+            winnerText.innerText = "🤝 SERI!";
+            winnerText.style.color = "yellow";
+        }
 
         scoreP2Container.style.display = "block";
         scoreP2.innerText = data.score.p2;
+
+        // Kirim skor versus lokal
+        if (window.socket) {
+          window.socket.emit("laporSkorVersusLokal", {
+            game: "labirin",
+            status: finalStatus,
+            score: data.score.p1, 
+            p2Name: window.guestName || "Guest"
+          });
+        }
       } else {
         title.innerText = "🏁 MISI SELESAI!";
         winnerText.innerText = "Selamat! Kamu berhasil.";
         winnerText.style.color = "#00f2ff";
         scoreP2Container.style.display = "none";
+        
+        // Kirim Skor Solo Lokal (jika ada handler lama)
+        if (window.socket && !data.isVersus) {
+          window.socket.emit("simpanSkor", {
+            nama: localStorage.getItem("playerName") || "Guest",
+            game: "labirin",
+            skor: data.score.p1,
+          });
+        }
       }
 
       scoreP1.innerText = data.score.p1;
@@ -1181,3 +1247,10 @@ document
 document
   .querySelector(".btn-right-p2")
   ?.addEventListener("click", () => window.movePhaserPlayer("p2", 1, 0));
+
+// Pastikan memori dilepas saat anak SD menutup tab atau pindah halaman
+window.addEventListener("beforeunload", () => {
+  if (typeof window.destroyLabirinGame === "function") {
+    window.destroyLabirinGame();
+  }
+});

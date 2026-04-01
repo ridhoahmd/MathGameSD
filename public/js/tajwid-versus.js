@@ -25,92 +25,141 @@ const VersusTajwid = (function () {
     win: typeof AudioManager !== "undefined" ? AudioManager.playWin : () => {},
   };
 
-  function init(data) {
-    console.log("⚔️ VersusTajwid.init called. Raw data:", data);
-
-    if (!ui.container) {
-      ui.container = document.getElementById("versus-container");
-      ui.resultScreen = document.getElementById("versus-result");
-      ui.timer = document.getElementById("v-timer");
-
-      // P1 UI
-      ui.p1.score = document.getElementById("v-p1-score");
-      ui.p1.cardArea = document.getElementById("v-p1-card-area");
-      ui.p1.buckets = {
-        left: document.querySelector(
-          "#versus-container .p1-area .v-bucket.left",
-        ),
-        right: document.querySelector(
-          "#versus-container .p1-area .v-bucket.right",
-        ),
-      };
-
-      // P2 UI
-      ui.p2.score = document.getElementById("v-p2-score");
-      ui.p2.cardArea = document.getElementById("v-p2-card-area");
-      ui.p2.buckets = {
-        left: document.querySelector(
-          "#versus-container .p2-area .v-bucket.left",
-        ),
-        right: document.querySelector(
-          "#versus-container .p2-area .v-bucket.right",
-        ),
-      };
-    }
-
-    // Reset State
-    state.isActive = true;
-
-    // Normalize Data: Ensure it's an array of objects
-    let queue = [];
-    if (data.data && Array.isArray(data.data)) {
-      queue = data.data; // Object format used in Solo
-      // Update Bucket Labels from Category Data
-      if (data.kategori_kiri && data.kategori_kanan) {
-        if (ui.p1.buckets.left)
-          ui.p1.buckets.left.innerText = data.kategori_kiri;
-        if (ui.p1.buckets.right)
-          ui.p1.buckets.right.innerText = data.kategori_kanan;
-
-        if (ui.p2.buckets.left)
-          ui.p2.buckets.left.innerText = data.kategori_kiri;
-        if (ui.p2.buckets.right)
-          ui.p2.buckets.right.innerText = data.kategori_kanan;
-      }
-    } else if (Array.isArray(data)) {
-      queue = data; // Direct array
-    } else {
-      console.error("VersusTajwid: Invalid data format", data);
-      return;
-    }
-
-    console.log("⚔️ VersusTajwid.init ready with", queue.length, "questions");
-    state.questions = queue; // Shared queue source
-
-    // Reset Player State
-    state.p1 = { score: 0, index: 0, currentCard: null };
-    state.p2 = { score: 0, index: 0, currentCard: null };
-    state.timeLeft = 60;
-
-    updateScoreUI();
-    updateTimerUI();
-
-    // Hide Solo UI
-    document.getElementById("start-screen").classList.add("hidden");
-    document.querySelector(".game-wrapper").style.display = "none";
-    document.querySelector(".top-bar").style.display = "none";
-
-    // Show Versus UI
-    ui.container.classList.remove("hidden");
-    ui.container.style.display = "flex"; // Force layout
-    ui.container.style.zIndex = "100000"; // Force on top
+  function exitVersus() {
+    state.isActive = false;
+    if (ui.container) ui.container.classList.add("hidden");
     if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
+    document.getElementById("start-screen").classList.remove("hidden");
+    window.location.reload();
+  }
 
-    // Start Game
-    console.log("⚔️ VS UI Classes:", ui.container.className);
-    startTimer();
-    loadCard(1);
-    loadCard(2);
+  function init(data) {
+    const startScreen = document.getElementById("start-screen");
+    if (startScreen) {
+      startScreen.classList.remove("active");
+      startScreen.classList.add("hidden");
+    }
+
+    Swal.fire({
+      title: "Masukkan Nama Lawan",
+      input: "text",
+      inputPlaceholder: "Nama Player 2 (Temanmu)",
+      showCancelButton: true,
+      confirmButtonText: "Mulai Duel",
+      cancelButtonText: "Batal",
+      allowOutsideClick: false,
+      background: "#1e1e2e",
+      color: "#fff"
+    }).then((result) => {
+      if (result.isDismissed) {
+        if (startScreen) {
+          startScreen.classList.remove("hidden");
+          startScreen.classList.add("active");
+        }
+        exitVersus();
+        return;
+      }
+      state.p2.name = (result.value || "Guest").trim();
+      
+      console.log("⚔️ VersusTajwid.init called. Raw data:", data);
+
+      if (!ui.container) {
+        ui.container = document.getElementById("versus-container");
+        ui.resultScreen = document.getElementById("versus-result");
+        ui.timer = document.getElementById("v-timer");
+
+        // P1 UI
+        ui.p1.score = document.getElementById("v-p1-score");
+        ui.p1.cardArea = document.getElementById("v-p1-card-area");
+        ui.p1.buckets = {
+          left: document.querySelector(
+            "#versus-container .p1-area .v-bucket.left",
+          ),
+          right: document.querySelector(
+            "#versus-container .p1-area .v-bucket.right",
+          ),
+        };
+
+        // P2 UI
+        ui.p2.score = document.getElementById("v-p2-score");
+        ui.p2.cardArea = document.getElementById("v-p2-card-area");
+        ui.p2.buckets = {
+          left: document.querySelector(
+            "#versus-container .p2-area .v-bucket.left",
+          ),
+          right: document.querySelector(
+            "#versus-container .p2-area .v-bucket.right",
+          ),
+        };
+      }
+
+      // Reset State
+      state.isActive = true;
+
+      // Normalize Data: Ensure it's an array of objects
+      let queue = [];
+      if (data.data && Array.isArray(data.data)) {
+        queue = data.data; // Object format used in Solo
+        // Update Bucket Labels from Category Data
+        if (data.kategori_kiri && data.kategori_kanan) {
+          if (ui.p1.buckets.left)
+            ui.p1.buckets.left.innerText = data.kategori_kiri;
+          if (ui.p1.buckets.right)
+            ui.p1.buckets.right.innerText = data.kategori_kanan;
+
+          if (ui.p2.buckets.left)
+            ui.p2.buckets.left.innerText = data.kategori_kiri;
+          if (ui.p2.buckets.right)
+            ui.p2.buckets.right.innerText = data.kategori_kanan;
+        }
+      } else if (Array.isArray(data)) {
+        queue = data; // Direct array
+      } else {
+        console.error("VersusTajwid: Invalid data format", data);
+        return;
+      }
+
+      console.log("⚔️ VersusTajwid.init ready with", queue.length, "questions");
+      state.questions = queue; // Shared queue source
+
+      // Reset Player State
+      state.p1 = { score: 0, index: 0, currentCard: null };
+      
+      // Preserve the name we just set for P2
+      const guestName = state.p2.name;
+      state.p2 = { score: 0, index: 0, currentCard: null, name: guestName };
+      state.timeLeft = 60;
+
+      updateScoreUI();
+      updateTimerUI();
+
+      // Hide Solo UI
+      const startScreen = document.getElementById("start-screen");
+      if (startScreen) {
+          startScreen.classList.remove("active");
+          startScreen.classList.add("hidden");
+      }
+      
+      const gameWrapper = document.querySelector(".game-wrapper");
+      if (gameWrapper) gameWrapper.style.display = "none";
+      
+      const topBar = document.querySelector(".top-bar");
+      if (topBar) topBar.style.display = "none";
+
+      // Show Versus UI
+      if (ui.container) {
+        ui.container.classList.remove("hidden");
+        ui.container.style.display = "flex"; // Force layout
+        ui.container.style.zIndex = "100000"; // Force on top
+      }
+      if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
+
+      // Start Game
+      console.log("⚔️ VS UI Classes:", ui.container.className);
+      startTimer();
+      loadCard(1);
+      loadCard(2);
+    });
   }
 
   function loadCard(playerId) {
@@ -282,12 +331,26 @@ const VersusTajwid = (function () {
     if (finalP1) finalP1.innerText = p1s;
     if (finalP2) finalP2.innerText = p2s;
 
+    let finalStatus = "Draw";
+
     if (p1s > p2s) {
       winnerText.innerText = "🏆 PEMAIN 1 MENANG!";
+      finalStatus = "Win";
     } else if (p2s > p1s) {
-      winnerText.innerText = "🏆 PEMAIN 2 MENANG!";
+      winnerText.innerText = `🏆 ${state.p2.name ? state.p2.name.toUpperCase() : 'PEMAIN 2'} MENANG!`;
+      finalStatus = "Lose";
     } else {
       winnerText.innerText = "🤝 SERI!";
+    }
+
+    // Kirim skor ke server
+    if (window.socket) {
+      window.socket.emit("laporSkorVersusLokal", {
+        game: "tajwid",
+        status: finalStatus,
+        score: p1s,
+        p2Name: state.p2.name || "Guest"
+      });
     }
 
     // Play Sound

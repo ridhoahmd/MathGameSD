@@ -1,0 +1,160 @@
+2026-03-31 10:17:31 [info]: 🚀 Server jalan di Port 3010
+2026-03-31 10:17:32 [info]: [0mGET / [32m200[0m 12.079 ms - 13181[0m
+2026-03-31 10:17:32 [info]: [0mGET /tidak-ada-route [32m200[0m 12.821 ms - 13181[0m
+2026-03-31 10:17:32 [info]: [0mPOST /api/ask-ai [33m400[0m 13.989 ms - 26[0m
+2026-03-31 10:19:25 [info]: 🚀 Server jalan di Port 3000
+2026-03-31 10:19:46 [info]: [0mGET / [32m200[0m 26.395 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /css/loading.css [32m200[0m 53.089 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /css/design-tokens.css [32m200[0m 48.844 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /css/micro-interactions.css [32m200[0m 47.981 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /css/responsive.css [32m200[0m 29.898 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /css/visual-enhancements.css [32m200[0m 22.197 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /css/sidebar-fixes.css [32m200[0m 35.246 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /css/visual-overhaul.css [32m200[0m 34.508 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /css/chat-enhanced.css [32m200[0m 32.189 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /css/style.css?v=final [32m200[0m 34.565 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /js/utils/loading.js [32m200[0m 4.002 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /js/gamification/achievements.js [32m200[0m 33.514 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /js/gamification/streaks.js [32m200[0m 41.203 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /js/global.js [32m200[0m 34.580 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /js/utils/confetti.js [32m200[0m 52.295 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /js/utils/animations.js [32m200[0m 25.914 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /js/gamification/leveling.js [32m200[0m 26.727 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /js/config.js [32m200[0m 10.483 ms - 705[0m
+2026-03-31 10:19:46 [info]: [0mGET /manifest.json [32m200[0m 12.470 ms - 482[0m
+2026-03-31 10:19:46 [info]: [0mGET /js/dashboard.js [32m200[0m 14.975 ms - -[0m
+2026-03-31 10:19:46 [info]: [0mGET /js/audio.js [32m200[0m 13.497 ms - -[0m
+2026-03-31 10:19:49 [info]: [0mGET /sw.js [32m200[0m 11.047 ms - -[0m
+2026-03-31 10:19:52 [info]: [0mGET /tidak_ada_route [32m200[0m 27.357 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /css/design-tokens.css [32m200[0m 37.113 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /css/micro-interactions.css [32m200[0m 32.327 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /css/responsive.css [32m200[0m 19.998 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /css/loading.css [32m200[0m 74.926 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /css/sidebar-fixes.css [32m200[0m 35.354 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /css/visual-enhancements.css [32m200[0m 56.658 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /css/style.css?v=final [32m200[0m 55.693 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /css/visual-overhaul.css [32m200[0m 47.462 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /css/chat-enhanced.css [32m200[0m 46.933 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /js/global.js [32m200[0m 33.712 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /js/utils/animations.js [32m200[0m 52.667 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /js/utils/loading.js [32m200[0m 76.225 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /js/config.js [32m200[0m 74.655 ms - 705[0m
+2026-03-31 10:19:53 [info]: [0mGET /js/utils/confetti.js [32m200[0m 116.028 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /js/gamification/achievements.js [32m200[0m 108.165 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /js/gamification/streaks.js [32m200[0m 108.081 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /js/gamification/leveling.js [32m200[0m 99.897 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /js/audio.js [32m200[0m 42.916 ms - -[0m
+2026-03-31 10:19:53 [info]: [0mGET /manifest.json [32m200[0m 10.625 ms - 482[0m
+2026-03-31 10:19:53 [info]: [0mGET /js/dashboard.js [32m200[0m 43.301 ms - -[0m
+2026-03-31 10:19:55 [info]: [0mGET /sw.js [32m200[0m 42.599 ms - -[0m
+2026-03-31 10:19:59 [info]: [0mGET /api/simulate-error [31m500[0m 9.728 ms - -[0m
+2026-03-31 10:20:01 [info]: [0mGET /sw.js [32m200[0m 0.629 ms - -[0m
+2026-03-31 10:21:06 [info]: 🚀 Server jalan di Port 3000
+2026-03-31 10:21:08 [error]: [Express Error] GET /api/simulate-error - Simulasi Error Fatal Server Database/Memori!
+Error: Simulasi Error Fatal Server Database/Memori!
+    at /home/ridho/Downloads/MathGameSD-main/server.js:105:8
+    at Layer.handleRequest (/home/ridho/Downloads/MathGameSD-main/node_modules/router/lib/layer.js:152:17)
+    at next (/home/ridho/Downloads/MathGameSD-main/node_modules/router/lib/route.js:157:13)
+    at Route.dispatch (/home/ridho/Downloads/MathGameSD-main/node_modules/router/lib/route.js:117:3)
+    at handle (/home/ridho/Downloads/MathGameSD-main/node_modules/router/index.js:435:11)
+    at Layer.handleRequest (/home/ridho/Downloads/MathGameSD-main/node_modules/router/lib/layer.js:152:17)
+    at /home/ridho/Downloads/MathGameSD-main/node_modules/router/index.js:295:15
+    at processParams (/home/ridho/Downloads/MathGameSD-main/node_modules/router/index.js:582:12)
+    at next (/home/ridho/Downloads/MathGameSD-main/node_modules/router/index.js:291:5)
+    at /home/ridho/Downloads/MathGameSD-main/server.js:48:3
+2026-03-31 10:21:08 [info]: [0mGET /api/simulate-error [31m500[0m 6.622 ms - 33[0m
+2026-03-31 10:24:47 [info]: [0mGET /sw.js [32m200[0m 9.975 ms - -[0m
+2026-03-31 10:36:50 [info]: [0mGET / [32m200[0m 4.968 ms - 13181[0m
+2026-03-31 10:37:11 [info]: [0mGET / [32m200[0m 2.484 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /css/design-tokens.css [32m200[0m 14.464 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /css/loading.css [32m200[0m 48.433 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /css/responsive.css [32m200[0m 53.319 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /css/micro-interactions.css [32m200[0m 48.266 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /css/visual-enhancements.css [32m200[0m 83.337 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /css/sidebar-fixes.css [32m200[0m 103.879 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /css/style.css?v=final [32m200[0m 71.314 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /css/visual-overhaul.css [32m200[0m 106.519 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /css/chat-enhanced.css [32m200[0m 95.896 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /js/utils/animations.js [32m200[0m 80.139 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /js/global.js [32m200[0m 85.568 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /js/utils/loading.js [32m200[0m 115.140 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /js/utils/confetti.js [32m200[0m 54.265 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /js/config.js [32m200[0m 35.825 ms - 705[0m
+2026-03-31 10:37:11 [info]: [0mGET /js/gamification/leveling.js [32m200[0m 33.144 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /js/audio.js [32m200[0m 83.420 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /js/gamification/achievements.js [32m200[0m 26.789 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /js/gamification/streaks.js [32m200[0m 30.822 ms - -[0m
+2026-03-31 10:37:11 [info]: [0mGET /manifest.json [32m200[0m 14.944 ms - 482[0m
+2026-03-31 10:37:12 [info]: [0mGET /js/dashboard.js [32m200[0m 140.007 ms - -[0m
+2026-03-31 10:37:13 [info]: [0mGET /sw.js [32m200[0m 1.756 ms - -[0m
+2026-03-31 10:37:38 [info]: [0mGET /html/bintang.html [32m200[0m 20.193 ms - -[0m
+2026-03-31 10:37:39 [info]: [0mGET /css/base.css?v=2 [32m200[0m 3.854 ms - -[0m
+2026-03-31 10:37:39 [info]: [0mGET /css/variables.css [32m200[0m 53.696 ms - -[0m
+2026-03-31 10:37:39 [info]: [0mGET /css/bintang.css?v=centered [32m200[0m 37.330 ms - -[0m
+2026-03-31 10:37:39 [info]: [0mGET /css/decorative-objects.css [32m200[0m 36.687 ms - -[0m
+2026-03-31 10:37:39 [info]: [0mGET /css/streak-effects.css [32m200[0m 37.963 ms - -[0m
+2026-03-31 10:37:39 [info]: [0mGET /css/visual-enhancements.css [32m200[0m 36.258 ms - -[0m
+2026-03-31 10:37:39 [info]: [0mGET /js/audio.js [32m200[0m 4.990 ms - -[0m
+2026-03-31 10:37:39 [info]: [0mGET /js/bintang.js [32m200[0m 5.937 ms - -[0m
+2026-03-31 10:37:41 [info]: [0mGET /sw.js [32m200[0m 2.451 ms - -[0m
+2026-03-31 10:38:03 [info]: [0mGET / [32m200[0m 47.512 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /css/design-tokens.css [32m200[0m 72.412 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /css/loading.css [32m200[0m 55.390 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /css/micro-interactions.css [32m200[0m 39.025 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /css/responsive.css [32m200[0m 37.862 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /css/sidebar-fixes.css [32m200[0m 46.946 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /css/visual-enhancements.css [32m200[0m 26.218 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /css/visual-overhaul.css [32m200[0m 29.722 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /css/chat-enhanced.css [32m200[0m 24.816 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /css/style.css?v=final [32m200[0m 31.527 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /js/global.js [32m200[0m 24.757 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /js/utils/animations.js [32m200[0m 64.053 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /js/utils/loading.js [32m200[0m 90.627 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /js/utils/confetti.js [32m200[0m 38.171 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /js/gamification/achievements.js [32m200[0m 50.681 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /js/gamification/streaks.js [32m200[0m 41.410 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /js/gamification/leveling.js [32m200[0m 34.602 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /js/config.js [32m200[0m 108.603 ms - 705[0m
+2026-03-31 10:38:04 [info]: [0mGET /manifest.json [32m200[0m 103.310 ms - 482[0m
+2026-03-31 10:38:04 [info]: [0mGET /js/audio.js [32m200[0m 104.289 ms - -[0m
+2026-03-31 10:38:04 [info]: [0mGET /js/dashboard.js [32m200[0m 109.406 ms - -[0m
+2026-03-31 10:38:07 [info]: [0mGET /sw.js [32m200[0m 6.317 ms - -[0m
+2026-03-31 10:38:35 [info]: [0mGET /html/labirin-phaser.html [32m200[0m 20.528 ms - -[0m
+2026-03-31 10:38:35 [info]: [0mGET /css/style.css?v=final [32m200[0m 12.713 ms - -[0m
+2026-03-31 10:38:35 [info]: [0mGET /css/labirin-phaser.css?v=2 [32m200[0m 8.587 ms - -[0m
+2026-03-31 10:38:35 [info]: [0mGET /js/audio.js?v=r3 [32m200[0m 9.418 ms - -[0m
+2026-03-31 10:38:35 [info]: [0mGET /js/global.js [32m200[0m 16.081 ms - -[0m
+2026-03-31 10:38:35 [info]: [0mGET /js/labirin-phaser.js?v=versusdb [32m200[0m 1.235 ms - -[0m
+2026-03-31 10:38:37 [info]: [0mGET /sw.js [32m200[0m 11.083 ms - -[0m
+2026-03-31 10:38:56 [info]: [0mGET / [32m200[0m 18.325 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /css/design-tokens.css [32m200[0m 5.423 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /css/loading.css [32m200[0m 20.874 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /css/micro-interactions.css [32m200[0m 21.819 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /css/responsive.css [32m200[0m 13.794 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /css/sidebar-fixes.css [32m200[0m 13.822 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /css/visual-enhancements.css [32m200[0m 12.799 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /css/style.css?v=final [32m200[0m 12.223 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /css/visual-overhaul.css [32m200[0m 3.940 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /css/chat-enhanced.css [32m200[0m 8.921 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /js/global.js [32m200[0m 17.180 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /js/utils/animations.js [32m200[0m 48.769 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /js/utils/loading.js [32m200[0m 51.323 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /js/utils/confetti.js [32m200[0m 43.465 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /js/gamification/achievements.js [32m200[0m 36.060 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /js/gamification/streaks.js [32m200[0m 36.503 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /js/gamification/leveling.js [32m200[0m 20.786 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /js/audio.js [32m200[0m 22.413 ms - -[0m
+2026-03-31 10:38:57 [info]: [0mGET /js/config.js [32m200[0m 59.966 ms - 705[0m
+2026-03-31 10:38:57 [info]: [0mGET /manifest.json [32m200[0m 40.202 ms - 482[0m
+2026-03-31 10:38:57 [info]: [0mGET /js/dashboard.js [32m200[0m 65.751 ms - -[0m
+2026-03-31 10:38:59 [info]: [0mGET /sw.js [32m200[0m 1.067 ms - -[0m
+2026-03-31 10:39:21 [info]: [0mGET /html/bintang.html [32m200[0m 3.850 ms - -[0m
+2026-03-31 10:39:21 [info]: [0mGET /css/variables.css [32m200[0m 20.794 ms - -[0m
+2026-03-31 10:39:21 [info]: [0mGET /css/bintang.css?v=centered [32m200[0m 19.935 ms - -[0m
+2026-03-31 10:39:21 [info]: [0mGET /css/visual-enhancements.css [32m200[0m 17.233 ms - -[0m
+2026-03-31 10:39:21 [info]: [0mGET /css/decorative-objects.css [32m200[0m 11.004 ms - -[0m
+2026-03-31 10:39:21 [info]: [0mGET /css/base.css?v=2 [32m200[0m 23.505 ms - -[0m
+2026-03-31 10:39:21 [info]: [0mGET /css/streak-effects.css [32m200[0m 24.364 ms - -[0m
+2026-03-31 10:39:21 [info]: [0mGET /js/audio.js [32m200[0m 4.951 ms - -[0m
+2026-03-31 10:39:22 [info]: [0mGET /js/bintang.js [32m200[0m 1.078 ms - -[0m
+2026-03-31 10:39:24 [info]: [0mGET /sw.js [32m200[0m 7.340 ms - -[0m

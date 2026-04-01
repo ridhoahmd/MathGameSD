@@ -95,6 +95,8 @@ function startGame() {
 
 // --- 4. TERIMA DATA SOAL ---
 if (window.socket) {
+  // Anti Memory Leak
+  window.socket.off("soalDariAI");
   window.socket.on("soalDariAI", (response) => {
     // Cek error dlu
     if (!response || !response.data || response.data.length === 0) {
@@ -378,6 +380,7 @@ function panggilTutor(soal, jawabUser, jawabBenar) {
 
 // Dapet Jawaban Tutor
 if (window.socket) {
+  window.socket.off("penjelasanTutor");
   window.socket.on("penjelasanTutor", (data) => {
     if (ui.tutorText) {
       ui.tutorText.innerHTML =

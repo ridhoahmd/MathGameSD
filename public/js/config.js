@@ -13,8 +13,6 @@ if (typeof firebase !== "undefined" && !firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-// CUMA PAKE AUTH YA!
-// Database murni pake PostgreSQL lewat server, firebase cuma numpang login.
 let auth;
 if (typeof firebase !== "undefined") {
   auth = firebase.auth();

@@ -381,3 +381,72 @@ function cycleTheme() {
   localStorage.setItem("selectedTheme", nextTheme);
   console.log("💾 Tema disimpen:", nextTheme);
 }
+
+// --- 8. RIWAYAT DUEL VERSUS ---
+function showVersusHistory() {
+  const modal = document.getElementById("versus-history-modal");
+  if (modal) {
+    modal.style.display = "flex";
+    document.getElementById("versus-history-list").innerHTML = '<p class="text-center text-ccc">Memuat data duel...</p>';
+    socket.emit("mintaRiwayatVersus");
+  }
+}
+
+socket.on("riwayatVersusData", (data) => {
+  const listContainer = document.getElementById("versus-history-list");
+  if (!listContainer) return;
+  
+  if (!data || data.length === 0) {
+    listContainer.innerHTML = '<p class="text-center text-ccc" style="padding: 20px;">Belum ada riwayat duel. Ayo tantang temanmu di mode Versus!</p>';
+    return;
+  }
+  
+  listContainer.innerHTML = "";
+  data.forEach(match => {
+    const item = document.createElement("div");
+    item.style.padding = "10px 15px";
+    item.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+    item.style.borderLeft = match.status === "Win" ? "4px solid #00ff00" : (match.status === "Lose" ? "4px solid #ff4444" : "4px solid #ffeb3b");
+    item.style.borderRadius = "8px";
+    
+    let color = "#fff";
+    let icon = "➖";
+    let statusId = "SERI";
+    
+    if (match.status === "Win") {
+      color = "#00ff00";
+      icon = "🏆";
+      statusId = "MENANG";
+    } else if (match.status === "Lose") {
+      color = "#ff4444";
+      icon = "💀";
+      statusId = "KALAH";
+    } else {
+      color = "#ffeb3b";
+      icon = "🤝";
+      statusId = "SERI";
+    }
+    
+    const date = new Date(match.playedAt);
+    const dateStr = isNaN(date) ? "Waktu tidak valid" : date.toLocaleDateString("id-ID") + " " + date.toLocaleTimeString("id-ID", {hour: '2-digit', minute:'2-digit'});
+    
+    item.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="flex: 1.2;">
+          <strong style="color: #00f2ff; font-size: 1.1rem;">${match.game}</strong><br>
+          <span style="font-size: 0.75rem; color: #aaa;">${dateStr}</span>
+        </div>
+        <div style="flex: 0.8; text-align: center;">
+          <div style="font-size: 1.5rem;">${icon}</div>
+          <div style="color: ${color}; font-weight: bold; font-size: 0.8rem; letter-spacing: 1px;">${statusId}</div>
+        </div>
+        <div style="flex: 1; text-align: right;">
+          <div style="font-size: 0.75rem; color: #888;">vs <strong style="color: #fff; font-size: 0.9rem;">${match.p2Name}</strong></div>
+          <div style="font-size: 0.8rem; color: #aaa; margin-top: 4px;">Skormu: <span style="color: #fff; font-weight: bold;">${match.score}</span></div>
+        </div>
+      </div>
+    `;
+    listContainer.appendChild(item);
+  });
+});
+

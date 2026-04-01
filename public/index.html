@@ -93,6 +93,10 @@
             <button class="btn-menu btn-common">🏆 PERINGKAT</button>
           </a>
 
+          <button class="btn-menu btn-common" onclick="showVersusHistory()">
+            ⚔️ RIWAYAT DUEL
+          </button>
+
           <button class="btn-menu btn-common" onclick="toggleChat()">
             💬 RUANG CHAT<span id="chat-notif">●</span>
           </button>
@@ -288,6 +292,17 @@
           onkeypress="handleEnter(event)"
         />
         <button class="chat-send" onclick="kirimPesan()">➤</button>
+      </div>
+    </div>
+
+    <!-- === MODAL RIWAYAT DUEL === -->
+    <div id="versus-history-modal" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; display: none;">
+      <div class="modal-content glass-panel" style="max-width: 500px; width: 90%; background: #1a1a2e; padding: 20px; border-radius: 12px; border: 1px solid #00f2ff;">
+        <h2 class="text-center font-orbitron mb-20" style="color: #00f2ff; text-align: center; margin-bottom: 20px;">⚔️ RIWAYAT DUEL ⚔️</h2>
+        <div id="versus-history-list" class="history-list" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+          <p class="text-center text-ccc" style="text-align: center; color: #ccc;">Memuat data duel...</p>
+        </div>
+        <button class="btn-shop mt-20" style="width: 100%; margin-top: 20px; background: #00f2ff; color: #000; font-weight: bold; border: none; padding: 10px; border-radius: 8px; cursor: pointer;" onclick="document.getElementById('versus-history-modal').style.display = 'none';">TUTUP</button>
       </div>
     </div>
 

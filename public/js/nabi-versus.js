@@ -32,23 +32,50 @@ const VersusNabi = (() => {
   // --- Public Methods ---
 
   function init(allQuestions) {
-    state.isActive = true;
-    state.questions = shuffleArray([...allQuestions]).slice(0, 10); // Ambil 10 soal acak
-    state.currentIndex = 0;
+    const startScreen = document.getElementById("start-screen");
+    if (startScreen) {
+      startScreen.classList.remove("active");
+      startScreen.classList.add("hidden");
+    }
 
-    // Reset Scores
-    state.p1.score = 0;
-    state.p2.score = 0;
-    updateScoreUI();
+    Swal.fire({
+      title: "Masukkan Nama Lawan",
+      input: "text",
+      inputPlaceholder: "Nama Player 2 (Temanmu)",
+      showCancelButton: true,
+      confirmButtonText: "Mulai Duel",
+      cancelButtonText: "Batal",
+      allowOutsideClick: false,
+      background: "#1e1e2e",
+      color: "#fff"
+    }).then((result) => {
+      if (result.isDismissed) {
+        if (startScreen) {
+          startScreen.classList.remove("hidden");
+          startScreen.classList.add("active");
+        }
+        exitVersus();
+        return;
+      }
+      
+      state.p2.name = (result.value || "Guest").trim();
 
-    // Show UI
-    document.getElementById("start-screen").classList.remove("active");
-    document.getElementById("start-screen").classList.add("hidden");
-    ui.container.classList.remove("hidden");
-    ui.resultScreen.classList.add("hidden");
+      state.isActive = true;
+      state.questions = shuffleArray([...allQuestions]).slice(0, 10); // Ambil 10 soal acak
+      state.currentIndex = 0;
 
-    // Start Game
-    loadQuestion();
+      // Reset Scores
+      state.p1.score = 0;
+      state.p2.score = 0;
+      updateScoreUI();
+
+      // Show UI
+      if (ui.container) ui.container.classList.remove("hidden");
+      ui.resultScreen.classList.add("hidden");
+
+      // Start Game
+      loadQuestion();
+    });
   }
 
   function toggleRotation() {
@@ -206,10 +233,29 @@ const VersusNabi = (() => {
     document.getElementById("end-score-p2").innerText = state.p2.score;
 
     let winnerText = "SERI!";
-    if (state.p1.score > state.p2.score) winnerText = "PEMENANG: PLAYER 1! 🏆";
-    if (state.p2.score > state.p1.score) winnerText = "🏆 PEMENANG: PLAYER 2!";
+    let finalStatus = "Draw";
+    
+    if (state.p1.score > state.p2.score) {
+      winnerText = "PEMENANG: PLAYER 1! 🏆";
+      finalStatus = "Win";
+    }
+    if (state.p2.score > state.p1.score) {
+      winnerText = `🏆 PEMENANG: ${state.p2.name ? state.p2.name.toUpperCase() : 'PLAYER 2'}!`;
+      finalStatus = "Lose";
+    }
 
     document.getElementById("v-winner-text").innerText = winnerText;
+    
+    // Kirim skor ke server
+    if (window.socket) {
+      window.socket.emit("laporSkorVersusLokal", {
+        game: "nabi",
+        status: finalStatus,
+        score: state.p1.score, 
+        p2Name: state.p2.name || "Guest"
+      });
+    }
+
     try {
       AudioManager.playWin();
     } catch (e) {}

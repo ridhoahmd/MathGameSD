@@ -108,6 +108,8 @@ function startGame() {
 
 // 4. Data masuk dari server
 if (window.socket) {
+  // Mencegah Listener Bertumpuk (Freeze HP Issue)
+  window.socket.off("soalDariAI");
   window.socket.on("soalDariAI", (response) => {
     const btnStart = document.querySelector(".btn-start");
 
@@ -358,6 +360,8 @@ function panggilTutor(soal, jawabUser, jawabBenar) {
 }
 
 if (window.socket) {
+  // Mencegah Tutor Numpuk
+  window.socket.off("penjelasanTutor");
   window.socket.on("penjelasanTutor", (data) => {
     if (ui.tutorText) ui.tutorText.innerHTML = data.penjelasan || data.teks;
   });

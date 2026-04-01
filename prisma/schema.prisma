@@ -25,6 +25,7 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   scores        Score[]
+  versusMatches VersusMatch[]
 }
 
 
@@ -35,6 +36,7 @@ model Game {
   title       String
   description String?
   scores      Score[]
+  versusMatches VersusMatch[]
 }
 
 // Riwayat Skor
@@ -57,4 +59,18 @@ model GameQuestion {
   createdAt DateTime @default(now())
 
   @@index([category, level])
+}
+
+// Riwayat Duel (Mode Versus)
+model VersusMatch {
+  id        Int      @id @default(autoincrement())
+  p1Score   Int
+  p2Name    String
+  status    String   // "Win", "Lose", "Draw"
+  playedAt  DateTime @default(now())
+  p1Id      Int
+  gameId    Int
+  
+  user      User     @relation(fields: [p1Id], references: [id], onDelete: Cascade)
+  game      Game     @relation(fields: [gameId], references: [id])
 }

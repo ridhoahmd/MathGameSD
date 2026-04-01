@@ -69,6 +69,8 @@ function mintaSoalKeServer() {
   socket.emit("mintaSoalAI", { kategori: "kasir", tingkat: currentLevel });
 }
 
+// Anti Memory Leak
+socket.off("soalDariAI");
 socket.on("soalDariAI", (response) => {
   if (response.kategori === "kasir") {
     // 🔧 FIX: Better error handling

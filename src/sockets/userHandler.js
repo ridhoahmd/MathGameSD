@@ -228,6 +228,118 @@ module.exports = (socket, io) => {
     }
   });
 
+  // B2. SIMPAN SKOR VERSUS LOKAL (Split Screen)
+  socket.on("laporSkorVersusLokal", async (data) => {
+    if (!data || !socket.activeUser || !socket.activeUser.username) return;
+    
+    const { game, status, score, p2Name } = data;
+    let skor = parseInt(score);
+    if (isNaN(skor)) skor = 0;
+    if (skor < 0) skor = 0;
+
+    const safeName = socket.activeUser.username;
+    let koin = Math.floor(skor / 10);
+    let xpGained = getXPFromScore(game, skor);
+
+    // LOGIC BONUS E-SPORT (Gaya Konsep A)
+    if (status === "Win") {
+      xpGained += 50; // Bonus XP menang versus
+      koin += 20;     // Bonus Koin menang versus
+      console.log(`🏆 [Versus] ${safeName} MENANG melawan ${p2Name || 'Guest'} di game ${game}! Bonus +50XP & +20Coins`);
+    } else {
+      console.log(`🏁 [Versus] ${safeName} mendapat hasil ${status} melawan ${p2Name || 'Guest'} di game ${game}`);
+    }
+
+    try {
+      let gameDb = await prisma.game.findUnique({ where: { slug: game } });
+      if (!gameDb) {
+        gameDb = await prisma.game.create({
+          data: { slug: game, title: game.toUpperCase() },
+        });
+      }
+
+      let existingUser = await prisma.user.findUnique({ where: { username: safeName } });
+      if (!existingUser) return; // Harus user yg login
+      
+      const currentXP = existingUser.xp;
+      const newTotalXP = currentXP + xpGained;
+      const newLevel = calculateLevel(newTotalXP);
+
+      const updatedUser = await prisma.user.update({
+        where: { username: safeName },
+        data: {
+          coins: { increment: koin },
+          totalScore: { increment: skor },
+          xp: newTotalXP,
+          level: newLevel,
+        }
+      });
+
+      await prisma.score.create({
+        data: {
+          score: skor,
+          game: { connect: { id: gameDb.id } },
+          user: { connect: { id: updatedUser.id } },
+        },
+      });
+
+      // Simpan riwayat duel khusus Mode Versus
+      await prisma.versusMatch.create({
+        data: {
+          p1Score: skor,
+          p2Name: p2Name || "Guest",
+          status: status,
+          game: { connect: { id: gameDb.id } },
+          user: { connect: { id: updatedUser.id } },
+        },
+      });
+
+      // Konfirmasi sukses ke client
+      socket.emit("skorTersimpan", {
+        totalScore: updatedUser.totalScore,
+        koin: updatedUser.coins,
+        xp: updatedUser.xp,
+        level: updatedUser.level,
+        xpGained: xpGained,
+        isVersusWin: status === "Win"
+      });
+
+      if (io) io.emit("refreshDataGuru");
+    } catch (err) {
+      console.error("❌ DB Error Versus Lokal:", err.message);
+    }
+  });
+
+  // B3. MINTA RIWAYAT DUEL VERSUS
+  socket.on("mintaRiwayatVersus", async () => {
+    if (!socket.activeUser || !socket.activeUser.username) return;
+    try {
+      const user = await prisma.user.findUnique({
+        where: { username: socket.activeUser.username }
+      });
+      if (!user) return;
+
+      const history = await prisma.versusMatch.findMany({
+        where: { p1Id: user.id },
+        orderBy: { playedAt: "desc" },
+        take: 10,
+        include: { game: true }
+      });
+      
+      const formattedHistory = history.map(h => ({
+        game: h.game.title,
+        p2Name: h.p2Name,
+        status: h.status,
+        score: h.p1Score,
+        playedAt: h.playedAt
+      }));
+      
+      socket.emit("riwayatVersusData", formattedHistory);
+    } catch (err) {
+      console.error("❌ Gagal ambil riwayat versus:", err.message);
+    }
+  });
+
   // C. LEADERBOARD
   socket.on("mintaLeaderboard", async () => {
     try {
@@ -300,7 +412,7 @@ module.exports = (socket, io) => {
     }
 
     // 3. Validate newRole value
-    const validRoles = ["siswa", "guru", "admin"];
+    const validRoles = ["banned", "siswa", "guru", "admin"];
     if (!validRoles.includes(newRole)) {
       console.warn(
         `⚠️ Invalid role value: ${newRole} from ${requestorUsername}`,
@@ -325,6 +437,7 @@ module.exports = (socket, io) => {
 
       // 5. Role Hierarchy Definition
       const ROLE_HIERARCHY = {
+        banned: 0,
         siswa: 1,
         guru: 2,
         admin: 3,
@@ -406,6 +519,11 @@ module.exports = (socket, io) => {
 
       // 13. Broadcast refresh to all admin/guru dashboards
       if (io) io.emit("refreshDataGuru");
+
+      // 14. Jika role baru adalah 'banned', kick paksa user secara real-time
+      if (newRole === "banned" && io) {
+        io.emit("kickUser", targetUser);
+      }
     } catch (err) {
       console.error("❌ Failed to update role:", err.message);
       socket.emit("errorUpdate", "Terjadi kesalahan database. Coba lagi.");

@@ -101,6 +101,8 @@ function requestNewSequence() {
   socket.emit("mintaSoalAI", { kategori: "piano", tingkat: level });
 }
 
+// Anti Memory Leak
+socket.off("soalDariAI");
 socket.on("soalDariAI", async (data) => {
   if (data && data.kategori === "piano" && gameActive) {
     let info = data.data;

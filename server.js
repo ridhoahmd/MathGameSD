@@ -10,6 +10,8 @@ const compression = require("compression");
 const initSocket = require("./src/sockets/socketManager");
 const { apiLimiter } = require("./src/utils/rateLimit");
 const { askAI } = require("./src/services/aiService");
+const logger = require("./src/utils/logger");
+const morgan = require("morgan");
 
 // Bikin aplikasi express & server
 const app = express();
@@ -26,6 +28,14 @@ app.use(
   }),
 );
 app.use(express.json());
+
+// Hubungkan Morgan dengan Winston
+const morganFormat = process.env.NODE_ENV === "production" ? "combined" : "dev";
+app.use(morgan(morganFormat, {
+  stream: {
+    write: (message) => logger.info(message.trim())
+  }
+}));
 
 // Biar ga nyimpen cache aneh-aneh
 app.use((req, res, next) => {
@@ -47,7 +57,7 @@ app.use("/api/ask-ai", apiLimiter);
 // Cek JWT Secret ada apa ngga
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
-  console.error("❌ Ga bisa jalan bos, JWT_SECRET belom di set di .env!");
+  logger.error("❌ Ga bisa jalan bos, JWT_SECRET belom di set di .env!");
   process.exit(1);
 }
 
@@ -57,7 +67,7 @@ app.post("/api/login-guru", apiLimiter, (req, res) => {
   const passwordBenar = process.env.GURU_PASSWORD;
 
   if (!passwordBenar) {
-    console.error("❌ Waduh, GURU_PASSWORD lupa di set di .env");
+    logger.error("❌ Waduh, GURU_PASSWORD lupa di set di .env");
     return res.status(500).json({
       success: false,
       message: "Server config error: Password belum diset.",
@@ -85,9 +95,14 @@ app.post("/api/ask-ai", async (req, res) => {
     const answer = await askAI(prompt);
     res.json({ answer });
   } catch (e) {
-    console.error("Error AI:", e.message);
+    logger.error(`Error AI: ${e.message}`);
     res.status(500).json({ error: "Lagi pusing AInya" });
   }
+});
+
+// Endpoint untuk simulasi error testing uat
+app.get("/api/simulate-error", (req, res, next) => {
+  next(new Error("Simulasi Error Fatal Server Database/Memori!"));
 });
 
 // Serve file statis (frontend) dengan Caching Pintar untuk Media
@@ -116,11 +131,17 @@ app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// Global Error Handler Middleware buat nangkap 500 ke Winston
+app.use((err, req, res, next) => {
+  logger.error(`[Express Error] ${req.method} ${req.url} - ${err.message}\n${err.stack}`);
+  res.status(500).json({ error: "Internal Server Error" });
+});
+
 // Gas server!
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
   server.listen(PORT, () => {
-    console.log(`🚀 Server jalan di Port ${PORT}`);
+    logger.info(`🚀 Server jalan di Port ${PORT}`);
   });
 }
 

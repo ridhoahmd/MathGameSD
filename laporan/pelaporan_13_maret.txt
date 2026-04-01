@@ -1,0 +1,8 @@
+Uraian Aktivitas:
+Hari ini fokus memperbaiki UI mode versus pada game Jejak Nabi, Sambung Ayat, dan Pilah Hukum. Perbaikan utamanya memindahkan posisi tombol kontrol dan indikator timer/VS ke bagian atas layar agar tidak menutupi visual objek utama game saat dimainkan.
+
+Pembelajaran:
+Memahami pentingnya z-index dan absolute positioning dalam CSS untuk mencegah tumpang tindih elemen UI. Penyesuaian tata letak yang presisi sangat krusial, terutama pada mode split-screen (versus), untuk menjaga kenyamanan dan aksesibilitas pemain.
+
+Kendala:
+Beberapa elemen UI memiliki struktur HTML dan styling spesifik yang berbeda per game (seperti inline styling pada Pilah Hukum), sehingga butuh waktu ekstra menelusuri file (HTML/CSS) untuk memastikan perbaikan posisi konsisten tanpa merusak layout lain.

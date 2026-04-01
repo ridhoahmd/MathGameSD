@@ -79,6 +79,8 @@ function initGame() {
 }
 
 // 3. Dapet Soal dari AI
+// Anti Memory leak
+socket.off("soalDariAI");
 socket.on("soalDariAI", (response) => {
   if (response.kategori === "memory") {
     let rawData = response.data;
