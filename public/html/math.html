@@ -106,7 +106,14 @@
         <!-- Soal Matematika -->
         <h2 id="question-display">Loading...</h2>
 
-        <input type="number" id="answer-input" placeholder="Ketik Jawaban..." />
+        <input
+          type="text"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          id="answer-input"
+          placeholder="Ketik Jawaban..."
+          autocomplete="off"
+        />
         <button class="btn-action" id="action-btn">TEMBAK JAWABAN 🔥</button>
 
         <hr class="separator" />
@@ -127,7 +134,7 @@
           <span id="final-score">0</span>
         </div>
 
-        <button onclick="location.reload()" class="btn-restart">
+        <button onclick="restartGame()" class="btn-action btn-retry">
           MAIN LAGI
         </button>
 

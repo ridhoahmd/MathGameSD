@@ -1,4 +1,7 @@
-const socket = window.socket;
+let flashTimerInterval = null; // Fix memory leak zombie timer
+
+// SOCKET RACE CONDITION FIX: guard agar listener tidak didaftarkan dua kali
+let _socketWired = false;
 
 // Ambil elemen HTML
 const board = document.getElementById("board");
@@ -37,6 +40,8 @@ function initGame() {
   lockBoard = false;
   hasFlippedCard = false;
 
+  if (flashTimerInterval) clearInterval(flashTimerInterval);
+
   // Reset variabel
   if (window.socket) {
     console.log("⏱️ Start Memory");
@@ -72,81 +77,102 @@ function initGame() {
   if (movesEl) movesEl.innerText = moves;
   if (winScreen) winScreen.style.display = "none";
 
-  socket.emit("mintaSoalAI", {
-    kategori: "memory",
-    tingkat: selectedDifficulty,
-  });
+  if (window.socket) {
+    window.socket.emit("mintaSoalAI", {
+      kategori: "memory",
+      tingkat: selectedDifficulty,
+    });
+  }
 }
 
-// 3. Dapet Soal dari AI
-// Anti Memory leak
-socket.off("soalDariAI");
-socket.on("soalDariAI", (response) => {
-  if (response.kategori === "memory") {
-    let rawData = response.data;
+// 3. PENGATURAN KONEKSI SOCKET
+function wireSocketEvents() {
+  // RACE CONDITION FIX: Hanya daftarkan listener sekali
+  if (_socketWired) return;
 
-    // Ubah data jadi array
-    if (!Array.isArray(rawData)) {
-      if (rawData && rawData.data) rawData = rawData.data;
-      else if (rawData && typeof rawData === "object")
-        rawData = Object.values(rawData);
-    }
+  if (window.socket) {
+    _socketWired = true;
 
-    let cleanPairs = rawData
-      .map((item) => {
-        if (typeof item === "string") {
-          try {
-            return JSON.parse(item);
-          } catch (e) {
-            return null;
-          }
+    // Memastikan tidak ada duplikasi listener
+    window.socket.off("soalDariAI");
+    window.socket.on("soalDariAI", (response) => {
+      if (response.kategori === "memory") {
+        let rawData = response.data;
+
+        // Ubah data jadi array
+        if (!Array.isArray(rawData)) {
+          if (rawData && rawData.data) rawData = rawData.data;
+          else if (rawData && typeof rawData === "object")
+            rawData = Object.values(rawData);
         }
-        if (item.content) {
-          if (typeof item.content === "string") {
-            try {
-              return JSON.parse(item.content);
-            } catch (e) {
-              return null;
+
+        let cleanPairs = rawData
+          .map((item) => {
+            if (typeof item === "string") {
+              try {
+                return JSON.parse(item);
+              } catch (e) {
+                return null;
+              }
             }
-          }
-          return item.content;
+            if (item.content) {
+              if (typeof item.content === "string") {
+                try {
+                  return JSON.parse(item.content);
+                } catch (e) {
+                  return null;
+                }
+              }
+              return item.content;
+            }
+            return item;
+          })
+          .filter((item) => item && item.a && item.b);
+
+        // Batasin jumlah kartu sesuai level
+        let maxPairs = 6;
+        if (selectedDifficulty === "sedang") maxPairs = 8;
+        if (selectedDifficulty === "sulit") maxPairs = 12;
+
+        if (cleanPairs.length > maxPairs) {
+          cleanPairs.sort(() => 0.5 - Math.random());
+          cleanPairs = cleanPairs.slice(0, maxPairs);
         }
-        return item;
-      })
-      .filter((item) => item && item.a && item.b);
 
-    // Batasin jumlah kartu sesuai level
-    let maxPairs = 6;
-    if (selectedDifficulty === "sedang") maxPairs = 8;
-    if (selectedDifficulty === "sulit") maxPairs = 12;
+        // Cek error takut datanya zonk
+        if (cleanPairs.length === 0) {
+          board.innerHTML =
+            '<p style="color:red;">❌ Gagal memuat soal. Silakan refresh halaman.</p>';
+          console.error("Memory game: No valid pairs received from server");
+          setTimeout(() => {
+            document.getElementById("start-screen").style.display = "block";
+            document.getElementById("game-screen").style.display = "none";
+          }, 2000);
+          return;
+        }
 
-    if (cleanPairs.length > maxPairs) {
-      cleanPairs.sort(() => 0.5 - Math.random());
-      cleanPairs = cleanPairs.slice(0, maxPairs);
-    }
+        let gameCards = [];
+        totalPairs = cleanPairs.length;
+        cleanPairs.forEach((pair, index) => {
+          gameCards.push({ content: pair.a, value: index });
+          gameCards.push({ content: pair.b, value: index });
+        });
 
-    // Cek error takut datanya zonk
-    if (cleanPairs.length === 0) {
-      board.innerHTML =
-        '<p style="color:red;">❌ Gagal memuat soal. Silakan refresh halaman.</p>';
-      console.error("Memory game: No valid pairs received from server");
-      setTimeout(() => {
-        document.getElementById("start-screen").style.display = "block";
-        document.getElementById("game-screen").style.display = "none";
-      }, 2000);
-      return;
-    }
+        // MEMORY LEAK FIX: Pastikan flash lama sudah berhenti sebelum setup board baru
+        isFlashing = false;
+        if (flashTimerInterval) {
+          clearInterval(flashTimerInterval);
+          flashTimerInterval = null;
+        }
 
-    let gameCards = [];
-    totalPairs = cleanPairs.length;
-    cleanPairs.forEach((pair, index) => {
-      gameCards.push({ content: pair.a, value: index });
-      gameCards.push({ content: pair.b, value: index });
+        setupBoard(gameCards);
+      }
     });
-
-    setupBoard(gameCards);
+    console.log("✅ Memory game socket listener registered");
+  } else {
+    setTimeout(wireSocketEvents, 100);
   }
-});
+}
 
 // Responfif kalo layar diubah
 window.addEventListener("resize", () => {
@@ -238,8 +264,20 @@ function checkForMatch() {
 }
 
 function disableCards() {
-  firstCard.classList.add("matched");
-  secondCard.classList.add("matched");
+  // ISU-5-B FIX: Warna unik per pasangan berdasarkan value kartu
+  // Menggunakan HSL hue rotation agar setiap pasangan punya warna berbeda
+  const hue = (parseInt(firstCard.dataset.value || "0") * 47) % 360;
+  const matchColor = `hsl(${hue}, 65%, 55%)`;
+  [firstCard, secondCard].forEach((card) => {
+    const front = card.querySelector(".front") || card.querySelector(".card-front");
+    if (front) {
+      front.style.background = matchColor;
+      front.style.color = "white";
+      front.style.textShadow = "0 1px 3px rgba(0,0,0,0.3)";
+    }
+    card.classList.add("matched");
+  });
+
   resetBoard();
   matchesFound++;
   if (typeof AudioManager !== "undefined") AudioManager.playCorrect();
@@ -281,10 +319,28 @@ function gameWon() {
 
   // Bonus untuk efficient play (tapi tidak minus)
   let bonus = Math.max(0, (optimalMoves - extraMoves) * 5);
-
   let finalScore = baseScore + bonus;
 
   if (finalScoreEl) finalScoreEl.innerText = finalScore;
+
+  // ISU-5-A FIX: Rating bintang berdasarkan efisiensi
+  let stars, perfMsg, starColor;
+  if (extraMoves === 0) {
+    stars = "⭐⭐⭐"; perfMsg = "SEMPURNA!"; starColor = "#ffd700";
+  } else if (extraMoves <= optimalMoves * 0.5) {
+    stars = "⭐⭐"; perfMsg = "Bagus! Bisa lebih baik."; starColor = "#c0c0c0";
+  } else {
+    stars = "⭐"; perfMsg = "Teruskan berlatih!"; starColor = "#cd7f32";
+  }
+
+  // Inject bintang ke win-title
+  const winTitle = document.querySelector(".win-title");
+  if (winTitle) {
+    winTitle.innerHTML =
+      `MISSION COMPLETE!<br>` +
+      `<span style="font-size:2rem;color:${starColor};display:block;margin:8px 0">${stars}</span>` +
+      `<small style="font-size:0.85rem;color:#aaa;font-weight:normal">${perfMsg}</small>`;
+  }
 
   // Umpetin Game, Munculin Modal
   document.getElementById("game-screen").style.display = "none";
@@ -298,11 +354,13 @@ function gameWon() {
 
   if (typeof AudioManager !== "undefined") AudioManager.playWin();
 
-  socket.emit("simpanSkor", {
-    nama: playerName,
-    skor: finalScore,
-    game: "memory",
-  });
+  if (window.socket) {
+    window.socket.emit("simpanSkor", {
+      nama: playerName,
+      skor: finalScore,
+      game: "memory",
+    });
+  }
 }
 
 // 6. FLASHING (Ngasih liat kartu bentar)
@@ -325,12 +383,12 @@ function startFlashSequence() {
   titleEl.innerText = `HAFALKAN! ${timeLeft}s`;
   titleEl.style.color = "#ffeb3b";
 
-  const timer = setInterval(() => {
+  flashTimerInterval = setInterval(() => {
     timeLeft--;
     if (timeLeft > 0) {
       titleEl.innerText = `HAFALKAN! ${timeLeft}s`;
     } else {
-      clearInterval(timer);
+      clearInterval(flashTimerInterval);
 
       // C. Tutup Semua Kartu & Mulai Game
       allCards.forEach((card) => card.classList.add("card-closed"));
@@ -344,4 +402,56 @@ function startFlashSequence() {
       }, 1000);
     }
   }, 1000);
+}
+
+// --- RESTART TANPA RELOAD ---
+window.restartGame = function () {
+  // 1. Stop zombie timers
+  isFlashing = false;
+  if (flashTimerInterval) {
+    clearInterval(flashTimerInterval);
+    flashTimerInterval = null;
+  }
+
+  // 2. Reset semua state board
+  cards = [];
+  hasFlippedCard = false;
+  lockBoard = false;
+  firstCard = undefined;
+  secondCard = undefined;
+  matchesFound = 0;
+  moves = 0;
+  totalPairs = 0;
+
+  // 3. Reset UI
+  if (movesEl) movesEl.innerText = "0";
+  if (finalScoreEl) finalScoreEl.innerText = "0";
+
+  // Reset judul h1 jika sempat diubah oleh startFlashSequence
+  const titleEl = document.querySelector("h1");
+  if (titleEl) {
+    titleEl.innerText = "MEMORY LAB";
+    titleEl.style.color = "";
+  }
+
+  // 4. Bersihkan board DOM
+  if (board) board.innerHTML = "";
+
+  // 5. Sembunyikan win-screen & game-screen
+  if (winScreen) winScreen.style.display = "none";
+  const gameScreen = document.getElementById("game-screen");
+  if (gameScreen) gameScreen.style.display = "none";
+
+  // 6. Tampilkan start-screen
+  const startScreen = document.getElementById("start-screen");
+  if (startScreen) startScreen.style.display = "flex";
+
+  console.log("🔄 Memory game restarted (no reload)");
+};
+
+// Pastikan HTML siap baru kita jalankan listener
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", wireSocketEvents);
+} else {
+  wireSocketEvents();
 }

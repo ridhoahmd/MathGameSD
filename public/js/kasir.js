@@ -19,7 +19,11 @@ let currentIndex = 0;
 let score = 0;
 let timeLeft = 0;
 let timerInterval;
+let isProcessing = false; // FIX: Deklarasi di sini agar tidak ReferenceError di tampilkanSoal()
 let playerName = localStorage.getItem("playerName") || "Guest";
+
+// SOCKET RACE CONDITION FIX: guard agar listener tidak didaftarkan dua kali
+let _socketWired = false;
 
 // Setup Tombol Level - 🔧 FIX: Standardized to .btn-difficulty
 document.querySelectorAll(".btn-diff").forEach((btn) => {
@@ -52,7 +56,9 @@ function startGame() {
 
   // 4. Request Server
   // Panggil fungsi request yang sudah ada, tapi kita modifikasi sedikit flow-nya
-  socket.emit("mintaSoalAI", { kategori: "kasir", tingkat: currentLevel });
+  if (window.socket) {
+    window.socket.emit("mintaSoalAI", { kategori: "kasir", tingkat: currentLevel });
+  }
 
   // 5. Safety Net
   setTimeout(() => {
@@ -66,12 +72,22 @@ function startGame() {
 function mintaSoalKeServer() {
   ui.screenText.innerText = "RESTOCKING...";
   ui.storyText.innerText = "Mengambil data transaksi...";
-  socket.emit("mintaSoalAI", { kategori: "kasir", tingkat: currentLevel });
+  if (window.socket) {
+    window.socket.emit("mintaSoalAI", { kategori: "kasir", tingkat: currentLevel });
+  }
 }
 
-// Anti Memory Leak
-socket.off("soalDariAI");
-socket.on("soalDariAI", (response) => {
+// 5. PENGATURAN KONEKSI SOCKET
+function wireSocketEvents() {
+  // RACE CONDITION FIX: Hanya daftarkan listener sekali
+  if (_socketWired) return;
+
+  if (window.socket) {
+    _socketWired = true;
+
+    // Memastikan tidak ada duplikasi listener
+    window.socket.off("soalDariAI");
+    window.socket.on("soalDariAI", (response) => {
   if (response.kategori === "kasir") {
     // 🔧 FIX: Better error handling
     if (!response.data) {
@@ -114,6 +130,11 @@ socket.on("soalDariAI", (response) => {
     tampilkanSoal();
   }
 });
+    console.log("✅ Kasir game socket listener registered");
+  } else {
+    setTimeout(wireSocketEvents, 100);
+  }
+}
 
 function formatRupiah(angka) {
   return "Rp " + angka.toLocaleString("id-ID");
@@ -171,10 +192,23 @@ function startTimer(seconds) {
   clearInterval(timerInterval);
   timeLeft = seconds;
   ui.timer.innerText = timeLeft;
+  // ISU-4-B: Reset visual urgency saat timer baru dimulai
+  ui.timer.style.color = "";
+  ui.timer.style.animation = "";
 
   timerInterval = setInterval(() => {
     timeLeft--;
     ui.timer.innerText = timeLeft;
+
+    // ISU-4-B FIX: Efek urgensi visual saat waktu hampir habis
+    if (timeLeft <= 10) {
+      ui.timer.style.color = "#d63031";
+      ui.timer.style.animation = "timerUrgent 0.5s ease-in-out infinite alternate";
+    } else if (timeLeft <= 20) {
+      ui.timer.style.color = "#e17055"; // Oranye awal sebagai peringatan dini
+      ui.timer.style.animation = "";
+    }
+
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
       checkAnswer(true); // Waktu Habis
@@ -186,8 +220,7 @@ function handleEnter(e) {
   if (e.key === "Enter") checkAnswer();
 }
 
-// Flag Anti-Spam
-let isProcessing = false;
+// (isProcessing sudah dideklarasikan di atas bersama variabel global)
 
 function checkAnswer(isTimeOut = false) {
   // Cegah eksekusi ganda jika sedang memproses jawaban sebelumnya
@@ -270,7 +303,7 @@ function endGame() {
   } catch (e) {}
 
   if (window.socket) {
-    socket.emit("simpanSkor", {
+    window.socket.emit("simpanSkor", {
       nama: playerName,
       skor: score,
       game: "kasir",
@@ -283,3 +316,60 @@ window.lanjutKasir = function () {
   ui.inputAnswer.style.display = "block";
   mintaSoalKeServer();
 };
+
+// --- RESTART TANPA RELOAD ---
+window.restartGame = function () {
+  // 1. Stop semua timer
+  clearInterval(timerInterval);
+  isProcessing = false;
+
+  // 2. Reset semua state
+  questions = [];
+  currentIndex = 0;
+  score = 0;
+  timeLeft = 0;
+
+  // 3. Reset UI — hati-hati: jangan overwrite className penuh, bisa hapus class penting
+  if (ui.score) ui.score.innerText = "0";
+  if (ui.timer) ui.timer.innerText = "00";
+  if (ui.screenText) ui.screenText.innerText = "KASIR READY...";
+  if (ui.feedback) {
+    ui.feedback.innerText = "";
+    // Hapus HANYA class state, bukan seluruh className
+    ui.feedback.classList.remove("correct", "wrong");
+  }
+  if (ui.inputAnswer) {
+    ui.inputAnswer.value = "";
+    ui.inputAnswer.style.display = ""; // Tampilkan kembali jika sempat disembunyikan
+  }
+
+  // 4. Kembalikan ke start-screen menggunakan class panel
+  if (ui.resultScreen) {
+    ui.resultScreen.classList.remove("active");
+    ui.resultScreen.classList.add("hidden");
+  }
+  if (ui.gameScreen) {
+    ui.gameScreen.classList.remove("active");
+    ui.gameScreen.classList.add("hidden");
+  }
+  if (ui.startScreen) {
+    ui.startScreen.classList.remove("hidden");
+    ui.startScreen.classList.add("active");
+  }
+
+  // 5. Reset tombol start
+  const btnStart = document.querySelector(".btn-start");
+  if (btnStart) {
+    btnStart.innerText = "BUKA KASIR";
+    btnStart.disabled = false;
+  }
+
+  console.log("🔄 Kasir game restarted (no reload)");
+};
+
+// Pastikan HTML siap baru jalankan listener
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", wireSocketEvents);
+} else {
+  wireSocketEvents();
+}

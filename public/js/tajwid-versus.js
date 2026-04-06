@@ -29,8 +29,20 @@ const VersusTajwid = (function () {
     state.isActive = false;
     if (ui.container) ui.container.classList.add("hidden");
     if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
-    document.getElementById("start-screen").classList.remove("hidden");
-    window.location.reload();
+    
+    // Cleanup DOM specifically for versus
+    const startScreen = document.getElementById("start-screen");
+    if (startScreen) {
+        startScreen.classList.remove("hidden");
+        startScreen.classList.add("active");
+    }
+    
+    // Restore elements hidden during init
+    const gameWrapper = document.querySelector(".game-wrapper");
+    if (gameWrapper) gameWrapper.style.display = "";
+    
+    const topBar = document.querySelector(".top-bar");
+    if (topBar) topBar.style.display = "";
   }
 
   function init(data) {
@@ -271,6 +283,9 @@ const VersusTajwid = (function () {
         cardEl.style.transform = `translateX(${moveX}px) rotate(${moveX / 10}deg) scale(0)`;
       }
 
+      // 💥 Particle Burst
+      if (typeof ParticleManager !== "undefined") ParticleManager.burst(window.innerWidth / 2, window.innerHeight / 2, 40);
+
       setTimeout(() => {
         pState.index++;
         loadCard(playerId);
@@ -356,6 +371,40 @@ const VersusTajwid = (function () {
     // Play Sound
     if (typeof AudioManager !== "undefined") AudioManager.playWin();
   }
+
+  // Expose global restart method for no-reload retry
+  window.restartGame = function() {
+    if(!state.questions || state.questions.length === 0) {
+        console.warn("No questions available for restart. Escaping.");
+        exitVersus();
+        return;
+    }
+    
+    console.log("🔄 Restarting Versus Tajwid...");
+    
+    // Reset state but keep questions and p2 name
+    state.isActive = true;
+    state.timeLeft = 60;
+    
+    const guestName = state.p2.name;
+    state.p1 = { score: 0, index: 0, currentCard: null };
+    state.p2 = { score: 0, index: 0, currentCard: null, name: guestName };
+    
+    updateScoreUI();
+    updateTimerUI();
+    
+    // Reset UI visibility
+    if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
+    if (ui.container) {
+        ui.container.classList.remove("hidden");
+        ui.container.style.display = "flex";
+    }
+    
+    // Start again
+    startTimer();
+    loadCard(1);
+    loadCard(2);
+  };
 
   // Public API
   return {

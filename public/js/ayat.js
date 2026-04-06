@@ -41,6 +41,9 @@ let isRequestingQuestions = false;
 let lastRequestTime = 0;
 const REQUEST_COOLDOWN = 5000;
 
+// SOCKET RACE CONDITION FIX: guard agar listener tidak didaftarkan dua kali
+let _socketWired = false;
+
 // --- 2. PILIH LEVEL ---
 document.querySelectorAll(".btn-diff").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -93,107 +96,113 @@ function startGame() {
   }, 8000);
 }
 
-// --- 4. TERIMA DATA SOAL ---
-if (window.socket) {
-  // Anti Memory Leak
-  window.socket.off("soalDariAI");
-  window.socket.on("soalDariAI", (response) => {
-    // Cek error dlu
-    if (!response || !response.data || response.data.length === 0) {
-      console.error("Game Ayat: Data server error");
-      alert("Gagal memuat soal. Coba lagi ya.");
+// --- 4. PENGATURAN KONEKSI SOCKET ---
+function wireSocketEvents() {
+  // RACE CONDITION FIX: Hanya daftarkan listener sekali
+  if (_socketWired) return;
 
-      const btnStart = document.querySelector(".btn-start");
-      if (btnStart) {
-        btnStart.innerText = "MULAI GAME";
-        btnStart.disabled = false;
+  if (window.socket) {
+    _socketWired = true;
+
+    // Memastikan tidak ada duplikasi listener
+    window.socket.off("soalDariAI");
+    window.socket.on("soalDariAI", (response) => {
+      // Cek error dlu
+      if (!response || !response.data || response.data.length === 0) {
+        console.error("Game Ayat: Data server error");
+        alert("Gagal memuat soal. Coba lagi ya.");
+
+        const btnStart = document.querySelector(".btn-start");
+        if (btnStart) {
+          btnStart.innerText = "MULAI GAME";
+          btnStart.disabled = false;
+        }
+
+        if (ui.start && ui.start.classList.contains("hidden")) {
+          ui.start.classList.remove("hidden");
+          ui.start.classList.add("active");
+        }
+
+        isRequestingQuestions = false; // Reset flag
+        return;
       }
 
-      if (ui.start && ui.start.classList.contains("hidden")) {
-        ui.start.classList.remove("hidden");
-        ui.start.classList.add("active");
-      }
-
-      isRequestingQuestions = false; // Reset flag
-      return;
-    }
-
-    // --- CHECK VERSUS MODE FIRST ---
-    if (currentGameMode === "versus") {
-      if (typeof VersusAyat !== "undefined") {
-        VersusAyat.init(response.data);
-      } else {
-        alert("Versus module not loaded!");
-      }
-      return; // Stop Solo logic completely
-    }
-
-    // ENDLESS MODE: Determine if initial load or append
-    const isInitialLoad = questions.length === 0;
-
-    if (isInitialLoad) {
-      // Original behavior - first load
-      questions = response.data;
-
-      // CHECK MODE
+      // --- CHECK VERSUS MODE FIRST ---
       if (currentGameMode === "versus") {
         if (typeof VersusAyat !== "undefined") {
-          VersusAyat.init(questions);
+          VersusAyat.init(response.data);
         } else {
           alert("Versus module not loaded!");
         }
-        return; // Stop Solo logic
+        return; // Stop Solo logic completely
       }
 
-      currentIndex = 0;
-      score = 0;
-      isAnswering = false;
-      tutorUsageCount = 0;
+      // ENDLESS MODE: Determine if initial load or append
+      const isInitialLoad = questions.length === 0;
 
-      if (ui.qTotal) ui.qTotal.innerText = questions.length;
-      if (ui.score) ui.score.innerText = "0";
+      if (isInitialLoad) {
+        // Original behavior - first load
+        questions = response.data;
+        currentIndex = 0;
+        score = 0;
+        isAnswering = false;
+        tutorUsageCount = 0;
 
-      ui.start.classList.add("hidden");
-      ui.game.classList.remove("hidden");
-      ui.game.classList.add("active");
+        if (ui.qTotal) ui.qTotal.innerText = questions.length;
+        if (ui.score) ui.score.innerText = "0";
 
-      // Show save button di stats-row
-      const btnSave = document.getElementById("btn-save-exit");
-      if (btnSave) btnSave.classList.remove("hidden");
+        ui.start.classList.add("hidden");
+        ui.game.classList.remove("hidden");
+        ui.game.classList.add("active");
 
-      loadQuestion();
-    } else {
-      // ENDLESS MODE: Append new questions
-      const prevLength = questions.length;
-      questions.push(...response.data);
-      isRequestingQuestions = false;
+        // Show save button di stats-row
+        const btnSave = document.getElementById("btn-save-exit");
+        if (btnSave) btnSave.classList.remove("hidden");
 
-      // MEMORY OPTIMIZATION: Mencegah array bengkak di HP low-end
-      // Jika soal sudah banyak (> 30) dan user sudah jauh menjawab,
-      // kita potong (hapus) soal-soal lama yang sudah dijawab.
-      if (questions.length > 30 && currentIndex > 10) {
-        // Hapus 10 soal pertama yang sudah berlalu
-        const hapusCount = 10;
-        questions.splice(0, hapusCount);
-        currentIndex -= hapusCount; // Sesuaikan index saat ini
-        console.log(
-          `🧹 Memory Cleanup: Dihapus ${hapusCount} soal lama, Total kini: ${questions.length}`,
-        );
-      }
-
-      console.log(
-        `✅ Added ${response.data.length} questions. Total: ${questions.length}`,
-      );
-
-      // Visual feedback
-      showToast(`📥 +${response.data.length} ayat baru dimuat`);
-
-      // If waiting for questions, continue
-      if (currentIndex >= prevLength) {
         loadQuestion();
+      } else {
+        // ENDLESS MODE: Append new questions
+        const prevLength = questions.length;
+        questions.push(...response.data);
+        isRequestingQuestions = false;
+
+        // MEMORY OPTIMIZATION: Mencegah array bengkak di HP low-end
+        if (questions.length > 30 && currentIndex > 10) {
+          const hapusCount = 10;
+          questions.splice(0, hapusCount);
+          currentIndex -= hapusCount;
+          console.log(
+            `🧹 Memory Cleanup: Dihapus ${hapusCount} soal lama, Total kini: ${questions.length}`,
+          );
+        }
+
+        console.log(
+          `✅ Added ${response.data.length} questions. Total: ${questions.length}`,
+        );
+
+        // Visual feedback
+        showToast(`📥 +${response.data.length} ayat baru dimuat`);
+
+        // If waiting for questions, continue
+        if (currentIndex >= prevLength) {
+          loadQuestion();
+        }
       }
-    }
-  });
+    });
+
+    // Dapet Jawaban Tutor
+    window.socket.off("penjelasanTutor");
+    window.socket.on("penjelasanTutor", (data) => {
+      if (ui.tutorText) {
+        ui.tutorText.innerHTML = data.penjelasan || data.teks || "Maaf, koneksi putus.";
+      }
+    });
+
+    console.log("✅ Ayat game socket listener registered");
+  } else {
+    // Jika socket belum siap, tunggu 100ms dan coba lagi
+    setTimeout(wireSocketEvents, 100);
+  }
 }
 
 // --- 5. TAMPILIN SOAL ---
@@ -378,16 +387,8 @@ function panggilTutor(soal, jawabUser, jawabBenar) {
   }
 }
 
-// Dapet Jawaban Tutor
-if (window.socket) {
-  window.socket.off("penjelasanTutor");
-  window.socket.on("penjelasanTutor", (data) => {
-    if (ui.tutorText) {
-      ui.tutorText.innerHTML =
-        data.penjelasan || data.teks || "Maaf, koneksi putus.";
-    }
-  });
-}
+// (Logika listener penjabaran dipindahkan ke wireSocketEvents)
+// ...
 
 // Tutup Tutor
 window.tutupTutor = function () {
@@ -566,3 +567,58 @@ window.addEventListener("beforeunload", (e) => {
     }
   }
 });
+
+// --- RESTART TANPA RELOAD ---
+window.restartGame = function () {
+  // 1. Stop semua timer
+  clearInterval(timerInterval);
+
+  // 2. Reset semua state
+  questions = [];
+  currentIndex = 0;
+  score = 0;
+  isAnswering = false;
+  tutorUsageCount = 0;
+  timeLeft = 30;
+  isRequestingQuestions = false;
+  lastRequestTime = 0;
+
+  // 3. Reset UI display
+  if (ui.score) ui.score.innerText = "0";
+  if (ui.finalScore) ui.finalScore.innerText = "0";
+  if (ui.tutorOverlay) ui.tutorOverlay.style.display = "none";
+
+  // 4. Sembunyikan result-screen & tampilkan start-screen
+  if (ui.result) {
+    ui.result.classList.remove("active");
+    ui.result.classList.add("hidden");
+  }
+  if (ui.game) {
+    ui.game.classList.remove("active");
+    ui.game.classList.add("hidden");
+  }
+  if (ui.start) {
+    ui.start.classList.remove("hidden");
+    ui.start.classList.add("active");
+  }
+
+  // 5. Reset tombol start
+  const btnStart = document.querySelector(".btn-start");
+  if (btnStart) {
+    btnStart.innerText = "MULAI TAHFIDZ";
+    btnStart.disabled = false;
+  }
+
+  // 6. Simpan tombol save-exit
+  const btnSave = document.getElementById("btn-save-exit");
+  if (btnSave) btnSave.classList.add("hidden");
+
+  console.log("🔄 Ayat game restarted (no reload)");
+};
+
+// Pastikan HTML siap baru kita jalankan listener
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", wireSocketEvents);
+} else {
+  wireSocketEvents();
+}

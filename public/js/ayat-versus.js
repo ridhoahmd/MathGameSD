@@ -115,14 +115,16 @@ const VersusAyat = (() => {
     if (ui.container) ui.container.classList.add("hidden");
     if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
 
-    // Show Start Screen
+    // Show Start Screen cleanly
     const startScreen = document.getElementById("start-screen");
-    startScreen.classList.remove("hidden");
-    startScreen.classList.add("active");
+    if (startScreen) {
+        startScreen.classList.remove("hidden");
+        startScreen.classList.add("active");
+    }
 
-    // Go back to main menu or just show start screen?
-    // Reload page to be safe and clean state for now, or just show start
-    window.location.reload();
+    // Restore elements hidden during init
+    const soloGameContainer = document.querySelector(".game-container");
+    if (soloGameContainer) soloGameContainer.style.display = "";
   }
 
   function rematch() {
@@ -193,6 +195,12 @@ const VersusAyat = (() => {
       try {
         AudioManager.playCorrect();
       } catch (e) {}
+
+      // 💥 Particle Burst
+      if (typeof ParticleManager !== "undefined") {
+          const rect = btnElement.getBoundingClientRect();
+          ParticleManager.burst(rect.left + rect.width / 2, rect.top + rect.height / 2, 40);
+      }
     } else {
       btnElement.classList.add("wrong");
       try {
@@ -284,6 +292,16 @@ const VersusAyat = (() => {
     }
     return array;
   }
+
+  // Expose global restart method
+  window.restartGame = function() {
+      if(!state.questions || state.questions.length === 0) {
+          exitVersus();
+          return;
+      }
+      console.log("🔄 Restarting Versus Ayat...");
+      rematch();
+  };
 
   return {
     init,

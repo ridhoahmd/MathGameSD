@@ -9,6 +9,8 @@ class MathGame extends GameEngine {
     this.currentIdx = 0;
     this.currentProblem = null;
     this.selectedDifficulty = "sedang";
+    this.isEvaluating = false;
+    this.isRequestingGame = false; // SPAM-CLICK FIX: Guard tombol start
   }
 
   init() {
@@ -59,6 +61,13 @@ class MathGame extends GameEngine {
       return;
     }
 
+    // SPAM-CLICK FIX: Blokir jika sedang request
+    if (this.isRequestingGame) {
+      console.log("⏳ Request sudah dikirim, tunggu respons server...");
+      return;
+    }
+    this.isRequestingGame = true;
+
     const startBtn = document.querySelector(".btn-start");
     if (startBtn) {
       startBtn.innerText = "⏳ Meminta Soal...";
@@ -74,12 +83,20 @@ class MathGame extends GameEngine {
 
   // Dipanggil pas data socket masuk
   onDataReceived(data) {
+    // SPAM-CLICK FIX: Reset flag request
+    this.isRequestingGame = false;
+
     let rawData = data.data || data;
     if (Array.isArray(rawData)) this.questionList = rawData;
     else if (rawData.data) this.questionList = rawData.data;
 
     if (!this.questionList.length) {
       alert("Gagal memuat soal.");
+      const startBtn = document.querySelector(".btn-start");
+      if (startBtn) {
+        startBtn.innerText = "MULAI GAME";
+        startBtn.disabled = false;
+      }
       return;
     }
 
@@ -92,6 +109,8 @@ class MathGame extends GameEngine {
   }
 
   showQuestion() {
+    this.isEvaluating = false; // Buka kunci input
+
     if (this.currentIdx >= this.questionList.length) {
       this.endGame();
       return;
@@ -117,6 +136,9 @@ class MathGame extends GameEngine {
   }
 
   checkAnswer() {
+    if (this.isEvaluating) return; // Cegah spam!
+    this.isEvaluating = true;
+
     const input = document.getElementById("answer-input");
     const val = input.value.trim();
     const correct = String(
@@ -170,6 +192,56 @@ class MathGame extends GameEngine {
 // Bikin game nya
 const game = new MathGame();
 game.init();
+
+// --- RESTART TANPA RELOAD ---
+// Expose ke window agar bisa dipanggil dari onclick di HTML
+window.restartGame = function () {
+  // 1. Stop timer — GameEngine tidak punya stopTimer(), flag gameActive sudah cukup
+  // Timer di GameEngine biasanya cek this.gameActive setiap tick
+  game.gameActive = false;
+
+  // 2. Reset state game
+  game.questionList = [];
+  game.currentIdx = 0;
+  game.currentProblem = null;
+  game.isEvaluating = false;
+  game.isRequestingGame = false;
+  game.score = 0;
+
+  // 3. Reset UI skor (gunakan string untuk konsistensi)
+  UI.updateText("score", "0");
+  UI.updateText("opponent-score", "0");
+  UI.updateText("q-current", "0");
+  UI.updateText("q-total", "∞");
+  UI.updateText("status-display", "");
+
+  // 4. Kembali ke login-screen menggunakan UI.showScreen
+  // UI.showScreen hides semua .screen lalu tampilkan target
+  UI.showScreen("login-screen");
+
+  // 5. Reset tombol start — cocokkan dengan teks di HTML baris 80
+  const startBtn = document.querySelector(".btn-start");
+  if (startBtn) {
+    startBtn.innerText = "MULAI PERTEMPURAN 🚀";
+    startBtn.disabled = false;
+  }
+
+  // 6. Sembunyikan game-over screen — gunakan class seperti UI.showGameOver() memakainya
+  const goScreen = document.getElementById("game-over-screen");
+  if (goScreen) goScreen.classList.remove("active");
+
+  // 7. Reset progress bar
+  UI.updateProgressBar("progress-bar", 0, 1);
+
+  // 8. Clear input jawaban
+  const input = document.getElementById("answer-input");
+  if (input) {
+    input.value = "";
+    input.placeholder = "Ketik jawaban...";
+  }
+
+  console.log("🔄 Math game restarted (no reload)");
+};
 
 // Sambungin socket (tunggu ready dulu)
 function wireSocketEvents() {

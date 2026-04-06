@@ -19,6 +19,7 @@ const ui = {
 let queue = [];
 let currentItem = null;
 let score = 0;
+let isAnswering = false;
 let playerName = localStorage.getItem("playerName") || "Guest";
 let currentGameMode = "solo"; // "solo" or "versus"
 
@@ -37,6 +38,9 @@ let timerInterval;
 let isRequestingQuestions = false;
 let lastRequestTime = 0;
 const REQUEST_COOLDOWN = 5000;
+
+// SOCKET RACE CONDITION FIX: guard agar listener tidak didaftarkan dua kali
+let _socketWired = false;
 
 // 2. Pilihan Level
 document.addEventListener("DOMContentLoaded", () => {
@@ -106,11 +110,17 @@ function startGame() {
   }
 }
 
-// 4. Data masuk dari server
-if (window.socket) {
-  // Mencegah Listener Bertumpuk (Freeze HP Issue)
-  window.socket.off("soalDariAI");
-  window.socket.on("soalDariAI", (response) => {
+// 4. PENGATURAN KONEKSI SOCKET
+function wireSocketEvents() {
+  // RACE CONDITION FIX: Hanya daftarkan listener sekali
+  if (_socketWired) return;
+
+  if (window.socket) {
+    _socketWired = true;
+
+    // Memastikan tidak ada duplikasi listener
+    window.socket.off("soalDariAI");
+    window.socket.on("soalDariAI", (response) => {
     const btnStart = document.querySelector(".btn-start");
 
     // Cek data valid ga
@@ -195,10 +205,22 @@ if (window.socket) {
 
     nextCard();
   });
+
+  // Listener Tutor
+  window.socket.off("penjelasanTutor");
+  window.socket.on("penjelasanTutor", (data) => {
+    if (ui.tutorText) ui.tutorText.innerHTML = data.penjelasan || data.teks;
+  });
+
+  console.log("✅ Tajwid game socket listener registered");
+  } else {
+    setTimeout(wireSocketEvents, 100);
+  }
 }
 
 // 5. Gameplay
 function nextCard() {
+  isAnswering = false;
   // ENDLESS MODE: Check if need more cards
   if (queue.length <= 2) {
     requestMoreCards();
@@ -234,6 +256,8 @@ function answer(side) {
     showToast("⚠️ Tunggu koneksi pulih sebelum menjawab.");
     return;
   }
+  if (isAnswering) return;
+  isAnswering = true;
 
   // ENDLESS MODE: Stop timer when answering
   clearInterval(timerInterval);
@@ -359,13 +383,7 @@ function panggilTutor(soal, jawabUser, jawabBenar) {
   }
 }
 
-if (window.socket) {
-  // Mencegah Tutor Numpuk
-  window.socket.off("penjelasanTutor");
-  window.socket.on("penjelasanTutor", (data) => {
-    if (ui.tutorText) ui.tutorText.innerHTML = data.penjelasan || data.teks;
-  });
-}
+// (Listener tutor AI dipindahkan ke wireSocketEvents)
 
 window.tutupTutor = function () {
   if (ui.tutorOverlay) {
@@ -461,6 +479,12 @@ if (cardElement) {
     if (!isDragging) return;
     isDragging = false;
 
+    // INPUT LOCK FIX: Jika sedang menjawab (misal dari timeout), abaikan swipe
+    if (isAnswering) {
+      cardElement.style.transform = "translateX(0) rotate(0deg)";
+      return;
+    }
+
     const endX = e.changedTouches[0].clientX;
     const diffX = endX - startX;
     const threshold = 100;
@@ -504,7 +528,9 @@ function updateTimerUI() {
 }
 
 function handleTimeout() {
+  if (isAnswering) return;
   if (!currentItem) return; // No card to skip
+  isAnswering = true;
 
   try {
     AudioManager.playWrong();
@@ -648,3 +674,80 @@ window.addEventListener("beforeunload", (e) => {
     }
   }
 });
+
+// --- RESTART TANPA RELOAD ---
+window.restartGame = function () {
+  // 1. Stop semua timer
+  clearInterval(timerInterval);
+
+  // 2. Reset semua state
+  queue = [];
+  currentItem = null;
+  score = 0;
+  isAnswering = false;
+  tutorUsageCount = 0;
+  timeLeft = 25;
+  isRequestingQuestions = false;
+  lastRequestTime = 0;
+  cardCount = 0;
+
+  // 3. Reset UI display
+  if (ui.score) ui.score.innerText = "0";
+  const timerEl = document.getElementById("timer");
+  if (timerEl) timerEl.innerText = "25";
+  if (ui.overlay) {
+    ui.overlay.className = "";
+    ui.overlay.style.background = "";
+  }
+  if (ui.tutorOverlay) ui.tutorOverlay.style.display = "none";
+
+  // 4. Kembalikan ke start-screen menggunakan class panel
+  if (ui.result) {
+    ui.result.classList.remove("active");
+    ui.result.classList.add("hidden");
+  }
+  if (ui.game) {
+    ui.game.classList.remove("active");
+    // game-screen pakai display:none via CSS
+  }
+  if (ui.start) {
+    ui.start.classList.remove("hidden");
+    ui.start.classList.add("active");
+  }
+
+  // 5. Reset card ke keadaan awal
+  if (ui.card) {
+    ui.card.style.transform = "";
+    ui.card.style.transition = "";
+    ui.card.style.opacity = "";
+    ui.card.className = "flashcard";
+  }
+  if (ui.text) ui.text.innerText = "...";
+
+  // 6. Reset tombol start — JANGAN panggil initStartButton() lagi!
+  // initStartButton() menggunakan cloneNode() yang akan menambah event listener GANDA
+  // cukup reset properti tombol yang sudah ada
+  const btnStart = document.querySelector(".btn-start");
+  if (btnStart) {
+    btnStart.innerText = "MULAI MAIN";
+    btnStart.disabled = false;
+  }
+
+  // 7. Sembunyikan btn-save-exit
+  const btnSave = document.getElementById("btn-save-exit");
+  if (btnSave) btnSave.classList.add("hidden");
+
+  // 8. Reset hint system jika ada
+  if (typeof HintSystem !== "undefined") HintSystem.reset();
+  const hintCount = document.getElementById("hint-count");
+  if (hintCount) hintCount.innerText = "2/2";
+
+  console.log("🔄 Tajwid game restarted (no reload)");
+};
+
+// Pastikan HTML siap baru jalankan listener
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", wireSocketEvents);
+} else {
+  wireSocketEvents();
+}

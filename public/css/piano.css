@@ -347,7 +347,8 @@ body::before {
   }
 }
 
-/* Extra small screens (320px) */
+/* ISU-6-A FIX: Extra small screens. min-width:25px bisa overflow di 320px.
+   Gunakan flex:1 1 0 agar tuts melebar/menyempit secara fluid */
 @media (max-width: 360px) {
   .piano-container {
     gap: 2px;
@@ -355,8 +356,10 @@ body::before {
   }
 
   .key {
-    min-width: 25px;
+    min-width: 0;       /* Biarkan flex tentukan lebar */
+    flex: 1 1 0;        /* Fluid — tidak ada min-width kaku */
     height: 100px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+    padding-bottom: 15px;
   }
 }

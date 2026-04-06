@@ -19,12 +19,17 @@
     <link rel="stylesheet" href="../css/streak-effects.css?v=scrollbar_fix2" />
     <link rel="stylesheet" href="../css/versus-enhancements.css" />
     <style>
-      /* NUCLEAR FIX: Force Purple Scrollbar & Layout */
-      html,
+      /* ISU-3-A FIX: overflow:hidden dipindah dari body ke game-wrapper
+         Agar tombol tidak terpotong di HP kecil (tinggi < 640px) */
+      html {
+        height: 100%;
+      }
       body {
-        overflow: hidden !important; /* Kill window scrollbar */
+        /* TIDAK pakai overflow:hidden di sini — biarkan scroll sebagai fallback */
+        min-height: 100dvh;
         background: #0f5132;
       }
+      /* Scrollbar styling tetap dipertahankan */
       ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
@@ -40,7 +45,8 @@
         background: #9333ea !important;
       }
       .game-wrapper {
-        overflow-y: auto !important; /* Ensure internal scrolling */
+        overflow-y: auto !important; /* Semua scroll terjadi di sini */
+        max-height: 100dvh;          /* Batasi tinggi ke viewport */
         scrollbar-width: thin;
         scrollbar-color: #a855f7 rgba(0, 0, 0, 0.1);
       }
@@ -152,7 +158,7 @@
           <h1 id="final-score" class="result-score-value">0</h1>
         </div>
         <div class="action-buttons">
-          <button onclick="location.reload()" class="btn-retry">
+          <button onclick="restartGame()" class="btn-retry">
             MAIN LAGI
           </button>
           <button onclick="window.location.href = '/'" class="btn-home">
@@ -258,7 +264,7 @@
           <span id="v-final-p2">0</span>
         </div>
       </div>
-      <button onclick="location.reload()" class="btn-retry">MAIN LAGI</button>
+      <button onclick="restartGame()" class="btn-retry">MAIN LAGI</button>
       <button onclick="window.location.href = '/'" class="btn-home">
         MENU UTAMA
       </button>

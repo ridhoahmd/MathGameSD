@@ -574,3 +574,14 @@ body {
     font-size: 12px;
   }
 }
+
+/* ISU-2-C: Animasi skor naik saat jawaban benar */
+@keyframes scoreBounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.55); color: #ffd700; text-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+  100% { transform: scale(1); }
+}
+.score-bounce {
+  animation: scoreBounce 0.5s ease-out;
+  display: inline-block;
+}

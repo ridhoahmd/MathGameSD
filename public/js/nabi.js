@@ -42,6 +42,14 @@ window.selectMode = function (mode) {
 let tutorUsageCount = 0;
 const MAX_TUTOR_USAGE = 3;
 
+// ENDLESS MODE: variabel diletakkan di sini agar tidak ReferenceError
+let isRequestingQuestions = false;
+let lastRequestTime = 0;
+const REQUEST_COOLDOWN = 5000; // 5 seconds
+
+// SOCKET RACE CONDITION FIX: guard agar listener tidak didaftarkan dua kali
+let _socketWired = false;
+
 // 1. Tombol Difficulty
 document.querySelectorAll(".btn-diff").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -84,80 +92,98 @@ function startGame() {
   }, 8000);
 }
 
-// 3. Terima Data
-if (window.socket) {
-  // Anti Memory-Leak
-  socket.off("soalDariAI");
-  socket.on("soalDariAI", (response) => {
-    if (response.kategori === "nabi") {
-      // Cek error dulu
-      if (!response.data || response.data.length === 0) {
-        console.error("Nabi game: Error data");
-        alert("Gagal memuat soal. Silakan coba lagi.");
+// 3. PENGATURAN KONEKSI SOCKET
+function wireSocketEvents() {
+  // RACE CONDITION FIX: Hanya daftarkan listener sekali
+  if (_socketWired) return;
 
-        const btnStart = document.querySelector(".btn-start");
-        if (btnStart) {
-          btnStart.innerText = "MULAI GAME";
-          btnStart.disabled = false;
-        }
+  if (window.socket) {
+    _socketWired = true;
 
-        if (screens.start) {
-          screens.start.classList.remove("hidden");
-          screens.start.classList.add("active");
-        }
+    // Memastikan tidak ada duplikasi listener
+    window.socket.off("soalDariAI");
+    window.socket.on("soalDariAI", (response) => {
+      if (response.kategori === "nabi") {
+        // Cek error dulu
+        if (!response.data || response.data.length === 0) {
+          console.error("Nabi game: Error data");
+          alert("Gagal memuat soal. Silakan coba lagi.");
 
-        isRequestingQuestions = false; // Reset flag
-        return;
-      }
-
-      // ENDLESS MODE: Determine if initial load or append
-      const isInitialLoad = questions.length === 0;
-
-      if (isInitialLoad) {
-        // Original behavior - first load
-        questions = response.data;
-
-        // CHECK MODE
-        if (currentGameMode === "versus") {
-          if (typeof VersusNabi !== "undefined") {
-            VersusNabi.init(questions);
-          } else {
-            alert("Versus module not loaded!");
+          const btnStart = document.querySelector(".btn-start");
+          if (btnStart) {
+            btnStart.innerText = "MULAI GAME";
+            btnStart.disabled = false;
           }
-          return; // Stop Solo logic
+
+          if (screens.start) {
+            screens.start.classList.remove("hidden");
+            screens.start.classList.add("active");
+          }
+
+          isRequestingQuestions = false; // Reset flag
+          return;
         }
 
-        currentIndex = 0;
-        score = 0;
-        if (ui.score) ui.score.innerText = "0";
-        if (ui.qTotal) ui.qTotal.innerText = questions.length;
+        // ENDLESS MODE: Determine if initial load or append
+        const isInitialLoad = questions.length === 0;
 
-        screens.start.classList.remove("active");
-        screens.start.classList.add("hidden");
-        screens.game.classList.remove("hidden");
-        screens.game.classList.add("active");
+        if (isInitialLoad) {
+          // Original behavior - first load
+          questions = response.data;
 
-        loadQuestion();
-      } else {
-        // ENDLESS MODE: Append new questions
-        const prevLength = questions.length;
-        questions.push(...response.data);
-        isRequestingQuestions = false;
+          // CHECK MODE
+          if (currentGameMode === "versus") {
+            if (typeof VersusNabi !== "undefined") {
+              VersusNabi.init(questions);
+            } else {
+              alert("Versus module not loaded!");
+            }
+            return; // Stop Solo logic
+          }
 
-        console.log(
-          `✅ Added ${response.data.length} questions. Total: ${questions.length}`,
-        );
+          currentIndex = 0;
+          score = 0;
+          if (ui.score) ui.score.innerText = "0";
+          if (ui.qTotal) ui.qTotal.innerText = questions.length;
 
-        // Visual feedback
-        showToast(`📥 +${response.data.length} soal baru dimuat`);
+          screens.start.classList.remove("active");
+          screens.start.classList.add("hidden");
+          screens.game.classList.remove("hidden");
+          screens.game.classList.add("active");
 
-        // If waiting for questions, continue
-        if (currentIndex >= prevLength) {
           loadQuestion();
+        } else {
+          // ENDLESS MODE: Append new questions
+          const prevLength = questions.length;
+          questions.push(...response.data);
+          isRequestingQuestions = false;
+
+          console.log(
+            `✅ Added ${response.data.length} questions. Total: ${questions.length}`,
+          );
+
+          // Visual feedback
+          showToast(`📥 +${response.data.length} soal baru dimuat`);
+
+          // If waiting for questions, continue
+          if (currentIndex >= prevLength) {
+            loadQuestion();
+          }
         }
       }
-    }
-  });
+    });
+
+    // Terima jawaban tutor
+    window.socket.off("penjelasanTutor");
+    window.socket.on("penjelasanTutor", (data) => {
+      if (ui.tutorText) ui.tutorText.innerHTML = data.penjelasan || data.teks;
+    });
+
+    console.log("✅ Nabi game socket listener registered");
+  } else {
+    // Jika socket belum siap, tunggu 100ms dan coba lagi
+    setTimeout(wireSocketEvents, 100);
+  }
 }
 
 function loadQuestion() {
@@ -213,17 +239,37 @@ function handleTimeOut() {
     AudioManager.playWrong();
   } catch (e) {}
 
-  // FIX: Reset combo ketika waktu habis
+  // Reset combo ketika waktu habis
   if (typeof ComboManager !== "undefined") {
     ComboManager.reset();
   }
 
+  // ISU-2-B FIX: Tampilkan jawaban benar agar siswa bisa belajar dari timeout
+  const q = questions[currentIndex];
+  const kunci = q ? q.jawab : null;
   const buttons = document.querySelectorAll(".btn-option");
-  buttons.forEach((b) => (b.disabled = true));
+
+  buttons.forEach((b) => {
+    b.disabled = true;
+    const bText = b.innerText.trim().toLowerCase();
+    const kunciClean = kunci ? kunci.trim().toLowerCase() : null;
+    if (kunciClean && bText === kunciClean) {
+      // Highlight tombol yang benar dengan warna hijau
+      b.style.background = "linear-gradient(135deg, #2ecc71, #27ae60)";
+      b.style.color = "white";
+      b.style.borderColor = "#2ecc71";
+      b.style.boxShadow = "0 0 15px rgba(46, 204, 113, 0.5)";
+    }
+  });
+
+  // Tampilkan toast "Waktu Habis"
+  if (kunci) showToast("⏰ Waktu habis! Jawaban: " + kunci);
+
+  // Beri siswa 2 detik untuk melihat jawaban sebelum pindah soal
   setTimeout(() => {
     currentIndex++;
     loadQuestion();
-  }, 1000);
+  }, 2000);
 }
 
 function checkAnswer(selectedRaw, correctRaw, btnElement) {
@@ -251,7 +297,14 @@ function checkAnswer(selectedRaw, correctRaw, btnElement) {
 
     let basePoints = 20 + Math.floor(timeLeft / 2);
     score += Math.round(basePoints * multiplier);
-    if (ui.score) ui.score.innerText = score;
+    if (ui.score) {
+      ui.score.innerText = score;
+      // ISU-2-C: Trigger score bounce animation
+      ui.score.classList.remove("score-bounce");
+      void ui.score.offsetWidth; // Force reflow agar animasi bisa di-restart
+      ui.score.classList.add("score-bounce");
+      setTimeout(() => ui.score.classList.remove("score-bounce"), 500);
+    }
     setTimeout(() => {
       currentIndex++;
       loadQuestion();
@@ -316,13 +369,8 @@ function panggilTutor(soal, jawabUser, jawabBenar) {
   }
 }
 
-// Terima jawaban tutor
-if (window.socket) {
-  socket.off("penjelasanTutor");
-  socket.on("penjelasanTutor", (data) => {
-    if (ui.tutorText) ui.tutorText.innerHTML = data.penjelasan || data.teks;
-  });
-}
+// (Logika listener penjabaran dipindahkan ke wireSocketEvents)
+// ...
 
 // Tutup tutor
 window.tutupTutor = function () {
@@ -357,10 +405,7 @@ function endGame() {
 // ENDLESS MODE FUNCTIONS
 // ==========================================
 
-// Auto-request more questions
-let isRequestingQuestions = false;
-let lastRequestTime = 0;
-const REQUEST_COOLDOWN = 5000; // 5 seconds
+// (isRequestingQuestions, lastRequestTime, REQUEST_COOLDOWN sudah dideklarasikan di atas)
 
 function requestMoreQuestions() {
   // Rate limiting
@@ -481,3 +526,61 @@ window.addEventListener("beforeunload", (e) => {
     }
   }
 });
+
+// --- RESTART TANPA RELOAD ---
+window.restartGame = function () {
+  // 1. Stop semua timer
+  clearInterval(timerInterval);
+
+  // 2. Reset semua state
+  questions = [];
+  currentIndex = 0;
+  score = 0;
+  timeLeft = 0;
+  tutorUsageCount = 0;
+  isRequestingQuestions = false;
+  lastRequestTime = 0;
+
+  // 3. Reset UI display
+  if (ui.score) ui.score.innerText = "0";
+  if (ui.finalScore) ui.finalScore.innerText = "0";
+  if (ui.timer) ui.timer.innerText = "00";
+  if (ui.tutorOverlay) ui.tutorOverlay.style.display = "none";
+
+  // 4. Sembunyikan screens → kembalikan ke start
+  if (screens.result) {
+    screens.result.classList.remove("active");
+    screens.result.classList.add("hidden");
+  }
+  if (screens.game) {
+    screens.game.classList.remove("active");
+    screens.game.classList.add("hidden");
+  }
+  if (screens.start) {
+    screens.start.classList.remove("hidden");
+    screens.start.classList.add("active");
+  }
+
+  // 5. Reset tombol start — trim whitespace agar cocok dengan innerHTML HTML
+  const btnStart = document.querySelector(".btn-start");
+  if (btnStart) {
+    btnStart.innerText = "BUKA GULUNGAN SEJARAH";
+    btnStart.disabled = false;
+  }
+
+  // 6. Sembunyikan btn-save-exit — gunakan class hidden agar konsisten dengan CSS
+  const btnSave = document.getElementById("btn-save-exit");
+  if (btnSave) {
+    btnSave.classList.add("hidden");
+    btnSave.style.display = ""; // Bersihkan inline style jika ada
+  }
+
+  console.log("🔄 Nabi game restarted (no reload)");
+};
+
+// Pastikan HTML siap baru kita jalankan listener
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", wireSocketEvents);
+} else {
+  wireSocketEvents();
+}

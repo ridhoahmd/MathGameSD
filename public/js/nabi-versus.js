@@ -93,9 +93,12 @@ const VersusNabi = (() => {
     ui.container.classList.add("hidden");
     ui.resultScreen.classList.add("hidden");
 
-    // Show Start Screen
-    document.getElementById("start-screen").classList.remove("hidden");
-    document.getElementById("start-screen").classList.add("active");
+    // Show Start Screen cleanly
+    const startScreen = document.getElementById("start-screen");
+    if (startScreen) {
+        startScreen.classList.remove("hidden");
+        startScreen.classList.add("active");
+    }
   }
 
   function rematch() {
@@ -170,6 +173,12 @@ const VersusNabi = (() => {
       try {
         AudioManager.playCorrect();
       } catch (e) {}
+
+      // 💥 Particle Burst
+      if (typeof ParticleManager !== "undefined") {
+          const rect = btnElement.getBoundingClientRect();
+          ParticleManager.burst(rect.left + rect.width / 2, rect.top + rect.height / 2, 40);
+      }
     } else {
       btnElement.classList.add("wrong");
       try {
@@ -268,6 +277,16 @@ const VersusNabi = (() => {
     }
     return array;
   }
+
+  // Expose global restart method for no-reload retry
+  window.restartGame = function() {
+      if(!state.questions || state.questions.length === 0) {
+          exitVersus();
+          return;
+      }
+      console.log("🔄 Restarting Versus Nabi...");
+      rematch();
+  };
 
   return {
     init,

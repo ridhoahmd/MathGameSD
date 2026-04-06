@@ -1,4 +1,5 @@
-const socket = window.socket;
+// PERBAIKAN: Jangan tangkap window.socket di sini — bisa null saat file diparse!
+// Gunakan window.socket secara langsung di dalam fungsi.
 
 const scoreEl = document.getElementById("score");
 const timerEl = document.getElementById("timer");
@@ -14,6 +15,12 @@ let playerSequence = [];
 let level = "mudah";
 let playerName = localStorage.getItem("playerName") || "Guest";
 
+// SPAM-CLICK FIX: Debounce untuk blokir spam tuts piano
+let isPlayingNote = false;
+
+// SOCKET RACE CONDITION FIX: guard agar listener tidak didaftarkan dua kali
+let _socketWired = false;
+
 // Setup Audio Context
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const notes = {
@@ -21,12 +28,12 @@ const notes = {
   2: 293.66, // D4
   3: 329.63, // E4
   4: 349.23, // F4
-  5: 392.0, // G4
-  6: 440.0, // A4
+  5: 392.0,  // G4
+  6: 440.0,  // A4
   7: 493.88, // B4
   8: 523.25, // C5
   9: 587.33, // D5
-  0: 220.0, // A3 (Opsional)
+  0: 220.0,  // A3 (Opsional)
 };
 
 function playTone(num) {
@@ -98,30 +105,62 @@ function requestNewSequence() {
   questionBox.innerText = "⏳ AI Membuat Nada...";
   disableInput(true);
 
-  socket.emit("mintaSoalAI", { kategori: "piano", tingkat: level });
+  if (window.socket) {
+    window.socket.emit("mintaSoalAI", { kategori: "piano", tingkat: level });
+  }
 }
 
-// Anti Memory Leak
-socket.off("soalDariAI");
-socket.on("soalDariAI", async (data) => {
-  if (data && data.kategori === "piano" && gameActive) {
-    let info = data.data;
-    if (Array.isArray(info)) {
-      info = info[0];
-    }
-
-    currentSequence = info.sequence || [1, 2, 3];
-    playerSequence = [];
-
-    questionBox.innerText = "👁️ DENGAR & HAFALKAN!";
-    await playSequence(currentSequence);
-
-    if (gameActive) {
-      questionBox.innerText = "🎹 ULANGI SEKARANG!";
-      disableInput(false);
-    }
+// ISU-6-B: Countdown sebelum sequence dimainkan
+async function countdownBeforePlay() {
+  const msgs = ["SIAP?", "3...", "2...", "1...", "👁️ DENGAR!"];
+  for (const msg of msgs) {
+    if (!gameActive) return; // Abort jika game sudah selesai
+    questionBox.innerText = msg;
+    await sleep(450);
   }
-});
+}
+
+// PENGATURAN KONEKSI SOCKET — dipindahkan ke dalam fungsi agar aman
+function wireSocketEvents() {
+  // RACE CONDITION FIX: Hanya daftarkan listener sekali
+  if (_socketWired) return;
+
+  if (window.socket) {
+    _socketWired = true;
+
+    // Anti Memory Leak: off dulu sebelum on
+    window.socket.off("soalDariAI");
+    window.socket.on("soalDariAI", async (data) => {
+      if (data && data.kategori === "piano" && gameActive) {
+        let info = data.data;
+        if (Array.isArray(info)) {
+          info = info[0];
+        }
+
+        currentSequence = info.sequence || [1, 2, 3];
+        playerSequence = [];
+
+        // ISU-6-B: Countdown sebelum nada dimainkan
+        await countdownBeforePlay();
+
+        if (gameActive) {
+          questionBox.innerText = "👁️ DENGAR & HAFALKAN!";
+          await playSequence(currentSequence);
+        }
+
+        if (gameActive) {
+          questionBox.innerText = "🎹 ULANGI SEKARANG!";
+          disableInput(false);
+        }
+      }
+    });
+
+    console.log("✅ Piano game socket listener registered");
+  } else {
+    // Jika socket belum siap, tunggu 100ms dan coba lagi
+    setTimeout(wireSocketEvents, 100);
+  }
+}
 
 async function playSequence(seq) {
   await sleep(500);
@@ -161,6 +200,13 @@ function disableInput(disabled) {
 window.playNote = function (num) {
   if (!gameActive) return;
 
+  // SPAM-CLICK FIX: Debounce 80ms — cegah multi-tap dalam satu jari
+  if (isPlayingNote) return;
+  isPlayingNote = true;
+  setTimeout(() => {
+    isPlayingNote = false;
+  }, 80);
+
   playTone(num);
   const keyEl = document.querySelector(`.key[data-val="${num}"]`);
   if (keyEl) {
@@ -177,6 +223,7 @@ function checkInput() {
   const idx = playerSequence.length - 1;
 
   if (playerSequence[idx] !== currentSequence[idx]) {
+    disableInput(true); // Kunci agar tuts tidak bisa ditekan lagi saat salah
     flashScreen("#550000"); // Merah Gelap
     questionBox.innerText = "❌ SALAH! Ganti Soal...";
 
@@ -185,6 +232,7 @@ function checkInput() {
   }
 
   if (playerSequence.length === currentSequence.length) {
+    disableInput(true); // Kunci karena sedang memproses pindah soal
     // REBALANCED: Reduced from 10 to 8 (line 186)
     score += 8 * currentSequence.length;
     scoreEl.innerText = score;
@@ -220,9 +268,53 @@ function endGame() {
   if (modal) modal.style.display = "flex";
 
   console.log(`🎹 Waktu Habis! Skor: ${score}`);
-  socket.emit("simpanSkor", {
-    nama: playerName,
-    skor: score,
-    game: "piano",
-  });
+
+  if (window.socket) {
+    window.socket.emit("simpanSkor", {
+      nama: playerName,
+      skor: score,
+      game: "piano",
+    });
+  }
+}
+
+// --- RESTART TANPA RELOAD ---
+window.restartGame = function () {
+  // 1. Stop timer & reset state
+  gameActive = false;
+  clearInterval(timerInterval);
+
+  // 2. Reset semua variabel game
+  score = 0;
+  timeLeft = 60;
+  currentSequence = [];
+  playerSequence = [];
+  isPlayingNote = false;
+
+  // 3. Reset UI
+  if (scoreEl) scoreEl.innerText = "0";
+  if (timerEl) timerEl.innerText = "60";
+  if (questionBox) questionBox.innerText = "PILIH LEVEL & MULAI";
+
+  // 4. Tampilkan kembali area kontrol (level + btn mulai)
+  if (controlsArea) controlsArea.style.display = "";
+
+  // 5. Sembunyikan modal Game Over
+  const modal = document.getElementById("game-over-modal");
+  if (modal) modal.style.display = "none";
+
+  // 6. Re-enable semua tuts piano
+  disableInput(false);
+
+  // 7. Reset background ke warna normal
+  document.body.style.backgroundColor = "#1e1e2e";
+
+  console.log("🔄 Piano game restarted (no reload)");
+};
+
+// Pastikan HTML siap baru jalankan listener
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", wireSocketEvents);
+} else {
+  wireSocketEvents();
 }

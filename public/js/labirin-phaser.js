@@ -1002,6 +1002,31 @@ document.querySelector(".btn-back")?.addEventListener("click", () => {
   document.getElementById("quiz-modal").style.display = "none";
 });
 
+// Expose global restart method
+window.restartGame = window.restartLabirin = function() {
+    console.log("🔄 Restarting Labirin Game...");
+    
+    // Sembunyikan layar hasil
+    const goModal = document.getElementById("game-over-modal");
+    if (goModal) goModal.style.display = "none";
+    
+    if (phaserGameInstance && phaserGameInstance.registry) {
+        const gameConfig = phaserGameInstance.registry.get("gameData");
+        if (gameConfig) {
+            // Kita bisa menggunakan startPhaserGame lagi, tapi kita destroy dulu secara halus
+            // Scene restart is better for Phaser to prevent memory leaks over time
+            const scene = phaserGameInstance.scene.getScene("LabirinScene");
+            if(scene) {
+                scene.scene.restart(gameConfig);
+                return;
+            }
+        }
+    }
+    
+    // Fallback: If everything fails, invoke requestGame again (this might hit API again)
+    window.requestGame();
+};
+
 // UI HELPERS & EVENT LISTENERS
 function setupUIListeners(scene) {
   console.log("✅ UI Listening to Game Events");

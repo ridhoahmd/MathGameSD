@@ -6,7 +6,12 @@ export class GameEngine {
     this.score = 0;
     this.gameActive = false;
     this.playerName = localStorage.getItem("playerName") || "Guest";
-    this.socket = window.socket; // Assuming global socket from socket-client init
+    // ISU-7-B FIX: Jangan tangkap socket di constructor — bisa null!
+    // Gunakan getter agar selalu merujuk window.socket terbaru
+  }
+
+  get socket() {
+    return window.socket || null;
   }
 
   startGame() {

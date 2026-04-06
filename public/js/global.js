@@ -221,3 +221,61 @@ if (window.socket) {
     }
   });
 }
+
+// ============================================
+// CROSS-2: Global Toast Notifikasi Koneksi (Non-Blocking)
+// ============================================
+function showGlobalToast(msg, type) {
+  const t = document.createElement("div");
+  t.style.cssText = "position:fixed;bottom:24px;left:50%;" +
+    "transform:translateX(-50%) translateY(80px);" +
+    "padding:10px 22px;border-radius:8px;font-weight:bold;" +
+    "font-family:Poppins,sans-serif;font-size:0.9rem;z-index:99999;" +
+    "transition:transform 0.3s ease,opacity 0.3s ease;" +
+    "opacity:0;white-space:nowrap;pointer-events:none;" +
+    "box-shadow:0 4px 12px rgba(0,0,0,0.4);";
+  t.style.background = type === "warning" ? "#e17055"
+    : type === "success" ? "#00b894" : "#636e72";
+  t.style.color = "white";
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => {
+    t.style.transform = "translateX(-50%) translateY(0)";
+    t.style.opacity = "1";
+  });
+  setTimeout(() => {
+    t.style.opacity = "0";
+    t.style.transform = "translateX(-50%) translateY(80px)";
+    setTimeout(() => t.remove(), 300);
+  }, 3500);
+}
+window.showGlobalToast = showGlobalToast;
+
+if (window.socket) {
+  window.socket.on("connect_error", () =>
+    showGlobalToast("⚠️ Gagal terhubung ke server...", "warning"));
+  window.socket.on("reconnect", () =>
+    showGlobalToast("✅ Terhubung kembali!", "success"));
+}
+
+// ============================================
+// CROSS-4: Konfirmasi saat klik btn-back di tengah game
+// ============================================
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".btn-back").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const isActive =
+        (typeof gameActive !== "undefined" && gameActive) ||
+        (typeof isAnswering !== "undefined" && isAnswering) ||
+        (typeof questions !== "undefined" && questions.length > 0);
+
+      if (isActive) {
+        e.preventDefault();
+        const target = btn.href || "/";
+        if (confirm("⚠️ Keluar sekarang? Progress game akan hilang.")) {
+          window.location.href = target;
+        }
+      }
+    });
+  });
+});

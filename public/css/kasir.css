@@ -289,6 +289,7 @@ body {
   border-radius: 15px;
   color: #2d3436;
 }
+/* Shared button base untuk result-screen */
 .btn-retry,
 .btn-home {
   width: 100%;
@@ -298,14 +299,50 @@ body {
   font-weight: bold;
   cursor: pointer;
   margin-top: 10px;
+  transition: background 0.2s, transform 0.1s;
 }
 .btn-retry {
   background: #ffeaa7;
   color: #d63031;
   border: 2px solid #e17055;
 }
+.btn-retry:hover { transform: translateY(-2px); }
 .btn-home {
+  /* ISU-4-C FIX: background agar tidak invisible */
+  background: rgba(0, 0, 0, 0.35);
   color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+.btn-home:hover {
+  background: rgba(0, 0, 0, 0.55);
+  border-color: rgba(255, 255, 255, 0.7);
+  transform: translateY(-2px);
+}
+
+/* ISU-4-A: Floating dekorasi tematik toko di background */
+body::before {
+  content: "🛒";
+  position: fixed;
+  top: 10%; left: 5%;
+  font-size: 3rem;
+  opacity: 0.12;
+  animation: floatShop 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+body::after {
+  content: "💰";
+  position: fixed;
+  bottom: 15%; right: 5%;
+  font-size: 2.5rem;
+  opacity: 0.10;
+  animation: floatShop 5s ease-in-out infinite reverse;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes floatShop {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
 }
 
 @media (max-width: 480px) {
@@ -321,5 +358,17 @@ body {
   }
   .story {
     font-size: 1rem;
+  }
+}
+
+/* ISU-4-B: Animasi urgency timer saat waktu hampir habis */
+@keyframes timerUrgent {
+  from {
+    transform: scale(1);
+    text-shadow: none;
+  }
+  to {
+    transform: scale(1.4);
+    text-shadow: 0 0 12px #d63031, 0 0 24px rgba(214, 48, 49, 0.5);
   }
 }

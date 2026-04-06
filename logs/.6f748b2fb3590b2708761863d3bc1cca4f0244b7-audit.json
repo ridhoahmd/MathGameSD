@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/home/ridho/Downloads/MathGameSD-main/logs/.6f748b2fb3590b2708761863d3bc1cca4f0244b7-audit.json",
+    "files": [
+        {
+            "date": 1775449417052,
+            "name": "/home/ridho/Downloads/MathGameSD-main/logs/application-2026-04-06-11.log",
+            "hash": "d208f8838fab55b4b8e168d9c71453c00a334c08327fecfa1ac649ebd4a10062"
+        }
+    ],
+    "hashType": "sha256"
+}

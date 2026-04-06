@@ -337,10 +337,13 @@ body {
   margin-top: 10px;
   font-family: "Poppins", sans-serif;
   text-align: center;
-  background: #fff8e1;
-  padding: 12px;
+  /* ISU-1-B FIX: Kontras diperkuat dengan border solid dan box-shadow */
+  background: #fff3cd;
+  padding: 14px;
   border-radius: 12px;
-  border: 2px dashed #f39c12;
+  border: 2px solid #f39c12;
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.25);
+  line-height: 1.6;
 }
 
 /* ========================================= */
