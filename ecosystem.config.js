@@ -2,7 +2,7 @@ module.exports = {
   apps: [{
     name: "math-game-sd",
     script: "./server.js",
-    instances: 1,
+    instances: "max",  // Gunakan semua CPU core di VPS
     exec_mode: "cluster",
     watch: false,
     max_memory_restart: "500M",

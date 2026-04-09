@@ -271,6 +271,33 @@ window.equipItem = function (itemId, itemType) {
 // 6. Respon Server
 
 socket.on("transaksiSukses", (data) => {
+  // Efek Partikel WOW (Confetti)
+  if (typeof confetti === "function") {
+    const end = Date.now() + 2500;
+    const colors = ["#ffeb3b", "#00f2ff", "#38ef7d", "#ff4444"];
+    (function frame() {
+      confetti({
+        particleCount: 5,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: colors,
+        zIndex: 9999
+      });
+      confetti({
+        particleCount: 5,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: colors,
+        zIndex: 9999
+      });
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    }());
+  }
+
   Swal.fire({
     title: "Berhasil!",
     text: `Item ${data.itemId} berhasil dibeli!`,

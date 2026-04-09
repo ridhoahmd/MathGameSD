@@ -121,12 +121,12 @@ function create() {
   // Bikin background gradasi biar keren
   const bg = this.add.graphics();
   bg.fillGradientStyle(0x0a0a1a, 0x0a0a1a, 0x1a1a3e, 0x1a1a3e, 1);
-  bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  bg.fillRect(0, 0, this.scale.width, this.scale.height);
 
   // Hiasan bintang bintang latar belakang
   for (let i = 0; i < 50; i++) {
-    const x = Phaser.Math.Between(0, GAME_WIDTH);
-    const y = Phaser.Math.Between(0, GAME_HEIGHT);
+    const x = Phaser.Math.Between(0, this.scale.width);
+    const y = Phaser.Math.Between(0, this.scale.height);
     const size = Phaser.Math.Between(1, 3);
     const star = this.add.circle(x, y, size, 0xffffff, 0.3);
 
@@ -155,7 +155,7 @@ function create() {
   }
 
   // Spawn Player
-  player = this.physics.add.sprite(GAME_WIDTH / 2, GAME_HEIGHT - 50, "player");
+  player = this.physics.add.sprite(this.scale.width / 2, this.scale.height - 50, "player");
   player.setCollideWorldBounds(true);
   player.setImmovable(true);
 
@@ -210,7 +210,7 @@ function create() {
         // Gerakan absolut untuk mouse PC
         player.x = pointer.x;
       }
-      player.x = Phaser.Math.Clamp(player.x, 40, GAME_WIDTH - 40);
+      player.x = Phaser.Math.Clamp(player.x, 40, scene.scale.width - 40);
     }
   });
 
