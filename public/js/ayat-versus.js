@@ -52,7 +52,10 @@ const VersusAyat = (() => {
       cancelButtonText: "Batal",
       allowOutsideClick: false,
       background: "#1e1e2e",
-      color: "#fff"
+      color: "#fff",
+      customClass: {
+        popup: 'vs-modal'
+      }
     }).then((result) => {
       if (result.isDismissed) {
         if (startScreen) {

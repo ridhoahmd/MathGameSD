@@ -234,3 +234,24 @@
   background: rgba(0, 0, 0, 0.4) !important;
   backdrop-filter: blur(8px) !important;
 }
+
+/* 5. WAITING AVATAR PULSE */
+.avatar-waiting {
+  animation: waitingPulse 1.5s infinite;
+  border: 3px solid rgba(0, 242, 255, 0.5);
+  border-radius: 50%;
+}
+@keyframes waitingPulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 242, 255, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(0, 242, 255, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 242, 255, 0); }
+}
+
+/* 6. CHALLENGE MODAL BOUNCE */
+.vs-modal {
+  animation: modalBounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+@keyframes modalBounce {
+  0% { transform: scale(0.8) translateY(50px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}

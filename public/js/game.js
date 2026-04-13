@@ -175,8 +175,8 @@ class MathGame extends GameEngine {
       setTimeout(() => document.body.classList.remove("shake-active"), 400);
 
       // 🔴 SHAKE INPUT FIELD (Phase 4)
-      input.classList.add("wrong-shake");
-      setTimeout(() => input.classList.remove("wrong-shake"), 500);
+      input.classList.add("shake");
+      setTimeout(() => input.classList.remove("shake"), 500);
 
       // Kasih tau jawaban bener di placeholder
       input.value = "";

@@ -1,4 +1,7 @@
-/* TEMA DARK GALACTIC */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: "Poppins", sans-serif;
   margin: 0;
@@ -15,11 +18,12 @@ body {
 .container {
   width: 95%;
   max-width: 1200px;
-  background: rgba(30, 30, 46, 0.9);
+  background: rgba(30, 30, 46, 0.7);
+  backdrop-filter: blur(15px);
   padding: 30px;
   border-radius: 20px;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  border: none;
 }
 
 h1 {
@@ -46,10 +50,13 @@ h1 {
   padding: 10px 20px;
   border-radius: 8px;
   font-weight: bold;
-  transition: 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
 }
 .btn-back:hover {
   background: #666;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
 }
 
 /* TOMBOL DOWNLOAD PDF (BARU) */
@@ -73,9 +80,12 @@ h1 {
 
 .table-wrapper {
   overflow-x: auto;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 10px;
-  padding: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 /* Gaya Tabel Dasar */
@@ -99,8 +109,14 @@ th {
   font-family: "Orbitron", sans-serif;
 }
 
+tr {
+  transition: all 0.2s ease-in-out;
+}
+
 tr:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
+  transform: scale(1.01);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .avatar-mini {
@@ -132,12 +148,20 @@ select.role-select:disabled {
 
 .search-box {
   width: 100%;
-  padding: 12px;
+  padding: 12px 15px;
   margin-bottom: 20px;
   background: rgba(255, 255, 255, 0.1);
-  border: 1px solid #555;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
   border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.search-box:focus {
+  outline: none;
+  border-color: #00f2ff;
+  box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .badge-info {
@@ -159,10 +183,17 @@ select.role-select:disabled {
 /* --- Tambahan Style untuk Input Soal --- */
 .container-input {
   background: rgba(43, 16, 85, 0.5); /* Ungu gelap transparan */
+  backdrop-filter: blur(10px);
   padding: 20px;
   border-radius: 15px;
   margin-top: 20px;
-  border: 1px solid #00f2ff;
+  border: 1px solid rgba(0, 242, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 242, 255, 0.1);
+  transition: all 0.3s ease;
+}
+.container-input:hover {
+  border-color: rgba(0, 242, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(0, 242, 255, 0.2);
 }
 
 .container-input h2 {

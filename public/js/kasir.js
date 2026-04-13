@@ -195,6 +195,7 @@ function startTimer(seconds) {
   // ISU-4-B: Reset visual urgency saat timer baru dimulai
   ui.timer.style.color = "";
   ui.timer.style.animation = "";
+  ui.timer.classList.remove("timer-danger");
 
   timerInterval = setInterval(() => {
     timeLeft--;
@@ -202,11 +203,10 @@ function startTimer(seconds) {
 
     // ISU-4-B FIX: Efek urgensi visual saat waktu hampir habis
     if (timeLeft <= 10) {
-      ui.timer.style.color = "#d63031";
-      ui.timer.style.animation = "timerUrgent 0.5s ease-in-out infinite alternate";
+      ui.timer.classList.add("timer-danger");
     } else if (timeLeft <= 20) {
       ui.timer.style.color = "#e17055"; // Oranye awal sebagai peringatan dini
-      ui.timer.style.animation = "";
+      ui.timer.classList.remove("timer-danger");
     }
 
     if (timeLeft <= 0) {
@@ -243,7 +243,7 @@ function checkAnswer(isTimeOut = false) {
     // JIKA BENAR
     ui.feedback.innerText = "LUNAS! TRANSAKSI BERHASIL.";
     ui.feedback.classList.remove("wrong");
-    ui.feedback.classList.add("correct");
+    ui.feedback.classList.add("correct", "success-pulse", "bounce-on-hover");
     ui.screenText.innerText = "SUKSES";
 
     try {
@@ -264,9 +264,11 @@ function checkAnswer(isTimeOut = false) {
     // JIKA SALAH / WAKTU HABIS
     // Tampilkan jawaban yang seharusnya
     ui.feedback.innerText = `SALAH! Harusnya: ${formatRupiah(correctAnswer)}`;
-    ui.feedback.classList.remove("correct");
-    ui.feedback.classList.add("wrong");
+    ui.feedback.classList.remove("correct", "success-pulse", "bounce-on-hover");
+    ui.feedback.classList.add("wrong", "shake");
     ui.screenText.innerText = "GAGAL";
+    ui.inputAnswer.classList.add("shake");
+    setTimeout(() => ui.inputAnswer.classList.remove("shake"), 500);
 
     try {
       AudioManager.playWrong();

@@ -619,3 +619,26 @@ button:active:not(:disabled),
     transform: skewX(-0.1953125deg) skewY(-0.1953125deg);
   }
 }
+
+/* === TIMER URGENCY === */
+@keyframes timerBlink {
+  0%, 100% {
+    background-color: transparent;
+    color: inherit;
+    transform: scale(1);
+  }
+  50% {
+    background-color: rgba(255, 0, 0, 0.2);
+    color: #ff3333;
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+  }
+}
+
+.timer-danger {
+  animation: timerBlink 1s infinite;
+  font-weight: bold !important;
+  border-radius: 5px;
+  padding: 0 5px;
+}
+

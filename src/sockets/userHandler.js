@@ -1,4 +1,6 @@
 const prisma = require("../config/prisma");
+const fs = require("fs");
+const path = require("path");
 
 // Rate pengali XP per game (sama kayak di frontend)
 const XP_RATES = {
@@ -153,12 +155,17 @@ module.exports = (socket, io) => {
     }
     if (skor < 0) skor = 0;
 
-    // TODO: Add Server-Side Validation here later
-    if (
-      !socket.activeGameSession ||
-      socket.activeGameSession.game !== data.game
-    ) {
-      // console.warn(⚠️ Warning: Skor tanpa sesi valid);
+    // 🛡️ Server-Side Validation: Wajib punya sesi bermain dari "mulaiGame"
+    if (!socket.activeGameSession || socket.activeGameSession.game !== data.game) {
+      console.warn(`⚠️ Blokir skor ilegal: Sesi tidak valid. User: ${data.nama}, Game: ${data.game}`);
+      return socket.emit("errorSkor", "Sesi tidak valid atau telah berakhir. Harap ulangi permainan.");
+    }
+
+    // 🛡️ Server-Side Validation: Pencegahan Speedhack (Terlalu Cepat)
+    const timePlayedMs = Date.now() - socket.activeGameSession.startTime;
+    if (timePlayedMs < 5000 && skor > 50) {
+      console.warn(`⚠️ Speedhack Dicegah: ${data.nama} dapat skor ${skor} dalam ${timePlayedMs}ms (Game: ${data.game})`);
+      return socket.emit("errorSkor", "Terdeteksi anomali pada permainan (Terlalu cepat). Skor dibatalkan.");
     }
 
     const safeName = data.nama;
@@ -565,8 +572,38 @@ module.exports = (socket, io) => {
     }
 
     try {
-      // TODO: Implement backup before reset
-      // const backupData = await prisma.score.findMany({ include: { user: true, game: true } });
+      // 🛡️ AUTO-BACKUP SEBELUM RESET
+      const allUsers = await prisma.user.findMany();
+      const allScores = await prisma.score.findMany();
+      
+      const backupData = {
+        timestamp: new Date().toISOString(),
+        adminTrigger: requestorUsername,
+        users: allUsers,
+        scores: allScores
+      };
+      
+      const backupDir = path.join(process.cwd(), "backups");
+      if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir, { recursive: true });
+      }
+      
+      const backupFilename = `backup_reset_${Date.now()}.json`;
+      const backupPath = path.join(backupDir, backupFilename);
+      fs.writeFileSync(backupPath, JSON.stringify(backupData, null, 2));
+
+      // Limit Max 5 Backups Files logic
+      const files = fs.readdirSync(backupDir)
+        .filter(f => f.startsWith('backup_reset_') && f.endsWith('.json'))
+        .sort().reverse(); // turun (terbaru terlebih dahulu)
+      
+      // Hapus file sisa jika lebih dari 5
+      if (files.length > 5) {
+        for (let i = 5; i < files.length; i++) {
+          try { fs.unlinkSync(path.join(backupDir, files[i])); } catch(e){}
+        }
+      }
+      console.log(`✅ Data berhasil dicadangkan sebelum reset: ${backupFilename}`);
 
       await prisma.score.deleteMany({});
       await prisma.user.updateMany({
