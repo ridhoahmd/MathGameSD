@@ -94,13 +94,49 @@ module.exports = (socket, io) => {
         playedAt: h.playedAt
       }));
 
+      // Analitik Lanjutan: Total Bermain (Frekuensi), Topik Dominan, Skor Rata-rata
+      const riwayatScores = await prisma.score.findMany({
+        where: { userId: targetUser.id },
+        include: { game: true }
+      });
+
+      let rataRataSkor = 0;
+      let frekuensiBermain = riwayatScores.length;
+      let topikDominan = "-";
+
+      if (frekuensiBermain > 0) {
+        const sumSkor = riwayatScores.reduce((acc, curr) => acc + curr.score, 0);
+        rataRataSkor = Math.round(sumSkor / frekuensiBermain);
+
+        // Agregasi Topik Dominan (Top Game berdasarkan total skor dikumpulkan di game tersebut)
+        const gameStats = {};
+        riwayatScores.forEach(s => {
+          const gTitle = s.game.title;
+          if (!gameStats[gTitle]) gameStats[gTitle] = 0;
+          gameStats[gTitle] += s.score; // Atau bisa dengan s.score (average score), tp total skor merepresentasikan penguasaan
+        });
+        
+        let maxTitle = "-";
+        let maxVal = -1;
+        for (const [title, totalS] of Object.entries(gameStats)) {
+          if (totalS > maxVal) {
+            maxVal = totalS;
+            maxTitle = title;
+          }
+        }
+        topikDominan = maxTitle;
+      }
+
       socket.emit("analitikSiswaData", {
         success: true,
         nama: usernameSiswa,
         xp: targetUser.xp,
         coins: targetUser.coins,
         level: targetUser.level,
-        versus: formattedVersus
+        versus: formattedVersus,
+        rataRataSkor,
+        frekuensiBermain,
+        topikDominan
       });
 
     } catch (err) {

@@ -171,12 +171,20 @@
             </div>
           </div>
 
+          <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; border: 1px solid #444;">
+            <p style="margin: 5px 0; color: #fff;"><strong>📈 Skor Rata-Rata: </strong> <span id="rapor-avg-score" style="color:#00f2ff">-</span> poin</p>
+            <p style="margin: 5px 0; color: #fff;"><strong>⏳ Tingkat Keaktifan: </strong> <span id="rapor-frequency" style="color:#00f2ff">-</span> penyelesaian kuis</p>
+            <p style="margin: 5px 0; color: #fff;"><strong>🔥 Topik Dominan: </strong> <span id="rapor-dominant" style="color:#00f2ff">-</span></p>
+          </div>
+
           <h3 style="color: #ccc; font-size: 1.1rem; border-bottom: 1px solid #333; padding-bottom: 5px;">⚔️ Riwayat Duel Terakhir</h3>
           <div id="rapor-versus" style="margin-bottom: 20px; font-size: 0.9rem;">
             <p class="text-muted-small">Memuat histori duel...</p>
           </div>
 
-          <button onclick="document.getElementById('modal-rapor').style.display='none'" style="width: 100%; padding: 12px; background: #00f2ff; color: #000; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px;">TUTUP RAPOR</button>
+          <button onclick="cetakRaporIndividu()" style="width: 100%; padding: 10px; background: #fff; color: #000; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 10px; transition: transform 0.2s;">🖨️ CETAK KARTU RAPOR PDF</button>
+
+          <button onclick="document.getElementById('modal-rapor').style.display='none'" style="width: 100%; padding: 12px; background: #2a2a4e; color: #fff; font-weight: bold; border: 1px solid #555; border-radius: 8px; cursor: pointer; margin-top: 5px;">TUTUP</button>
         </div>
       </div>
     </div>
@@ -239,6 +247,7 @@
 
       // --- 4. UI FUNCTIONS (UI HELPERS) ---
       function renderLeaderboardTable(users) {
+        window.currentLeaderboardData = users; // Simpan untuk memori export PDF
         const tbody = document.getElementById("table-body");
 
         if (!users || users.length === 0) {
@@ -319,15 +328,41 @@
         }
       };
 
-      // Download PDF (Placeholder)
+      // Download PDF Kelas (Laporan Global)
       window.downloadPDF = function () {
-        Swal.fire({
-          icon: "info",
-          title: "Fitur Belum Tersedia",
-          text: "Fitur ekspor PDF sedang disesuaikan dengan database PostgreSQL baru.",
-          background: "#1e1e2e",
-          color: "#fff",
+        if (!window.currentLeaderboardData || window.currentLeaderboardData.length === 0) {
+          Swal.fire("Data Kosong", "Belum ada data siswa untuk diexport.", "error");
+          return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF("landscape");
+
+        doc.setFontSize(18);
+        doc.text("Laporan Global Progres Siswa - MathGameSD", 14, 20);
+        doc.setFontSize(10);
+        doc.text("Tanggal Cetak: " + new Date().toLocaleDateString("id-ID"), 14, 28);
+        
+        const tableColumn = ["Nama", "Math", "Zuma", "Memory", "Piano", "Kasir", "Labirin", "Nabi", "Ayat", "Total XP", "Role"];
+        const tableRows = [];
+
+        window.currentLeaderboardData.forEach(user => {
+          const rowData = [
+            user.nama, user.math, user.zuma, user.memory, user.piano, user.kasir, user.labirin, user.nabi, user.ayat, user.skor || 0, user.role || "siswa"
+          ];
+          tableRows.push(rowData);
         });
+
+        doc.autoTable({
+          head: [tableColumn],
+          body: tableRows,
+          startY: 35,
+          theme: 'grid',
+          headStyles: { fillColor: [0, 242, 255], textColor: [0,0,0] },
+          styles: { fontSize: 8 }
+        });
+
+        doc.save("Laporan-Guru-MathGameSD.pdf");
       };
 
       // --- 5. ACTION FUNCTIONS (INTERAKSI USER) ---
@@ -534,6 +569,9 @@
         document.getElementById("rapor-level").innerText = "Lvl -";
         document.getElementById("rapor-xp").innerText = "- XP";
         document.getElementById("rapor-koin").innerText = "- Koin";
+        document.getElementById("rapor-avg-score").innerText = "-";
+        document.getElementById("rapor-frequency").innerText = "-";
+        document.getElementById("rapor-dominant").innerText = "-";
         document.getElementById("rapor-versus").innerHTML = '<p class="text-center">Memuat data...</p>';
         
         socket.emit("mintaAnalitikSiswa", namaSiswa);
@@ -545,9 +583,15 @@
           return;
         }
 
+        window.currentRaporData = data; // Set memori untuk diprint PDF
+
         document.getElementById("rapor-level").innerText = "Lvl " + data.level;
         document.getElementById("rapor-xp").innerText = data.xp + " XP";
         document.getElementById("rapor-koin").innerText = data.coins + " Koin";
+        
+        document.getElementById("rapor-avg-score").innerText = data.rataRataSkor || 0;
+        document.getElementById("rapor-frequency").innerText = data.frekuensiBermain || 0;
+        document.getElementById("rapor-dominant").innerText = data.topikDominan || "-";
 
         const listVersus = document.getElementById("rapor-versus");
         if (!data.versus || data.versus.length === 0) {
@@ -577,6 +621,72 @@
         });
         listVersus.innerHTML = htmlVersus;
       });
+
+      // Cetak PDF Rapor Individu
+      window.cetakRaporIndividu = function() {
+        if (!window.currentRaporData) return;
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Header
+        doc.setFontSize(22);
+        doc.text("KARTU RAPOR SISWA", 105, 20, null, null, "center");
+        doc.setFontSize(14);
+        doc.text("MathGameSD - Platform Edukasi", 105, 28, null, null, "center");
+        
+        doc.setLineWidth(0.5);
+        doc.line(20, 33, 190, 33);
+        
+        // Info Dasar
+        doc.setFontSize(11);
+        doc.text("Nama Siswa   :  " + window.currentRaporData.nama, 20, 45);
+        doc.text("Tingkat Level:  Level " + window.currentRaporData.level, 20, 52);
+        doc.text("Total XP     :  " + window.currentRaporData.xp, 20, 59);
+        doc.text("Koin Tersisa :  " + window.currentRaporData.coins, 20, 66);
+        
+        doc.line(20, 75, 190, 75);
+        doc.setFontSize(12);
+        doc.text("Ringkasan Analitik Kognitif:", 20, 85);
+        
+        // Analitik Lanjutan
+        doc.setFontSize(10);
+        doc.text("1. Penguasaan Materi (Rata-rata Skor per Modul) : " + window.currentRaporData.rataRataSkor + " Poin", 25, 95);
+        doc.text("2. Tingkat Keaktifan (Frekuensi Bermain / Kuis)   : Diselesaikan " + window.currentRaporData.frekuensiBermain + " Kali", 25, 102);
+        doc.text("3. Topik/Game Paling Dikuasai (Bidang Kuat)   : " + window.currentRaporData.topikDominan, 25, 109);
+        
+        // Tabel Versus
+        doc.setFontSize(12);
+        doc.text("Historial Mode Kompetitif (Versus):", 20, 125);
+        
+        const tableColumn = ["Nama Modul", "Lawan / Teman", "Status", "Skor Dicapai", "Tanggal Bermain"];
+        const tableRows = [];
+        
+        if (window.currentRaporData.versus && window.currentRaporData.versus.length > 0) {
+          window.currentRaporData.versus.forEach(v => {
+            const d = new Date(v.playedAt);
+            tableRows.push([
+              v.game, v.p2Name, v.status, v.score, d.toLocaleDateString("id-ID")
+            ]);
+          });
+        }
+        
+        doc.autoTable({
+          head: [tableColumn],
+          body: tableRows.length > 0 ? tableRows : [["Membanggakan! Belum ada riwayat."]],
+          startY: 130,
+          theme: 'grid',
+          headStyles: { fillColor: [50, 50, 50], textColor: [255,255,255] }
+        });
+        
+        // Footer signature
+        const finalY = doc.lastAutoTable.finalY || 180;
+        doc.text("Tanda Tangan Guru / Wali", 160, finalY + 20, null, null, "center");
+        doc.text("(____________________)", 160, finalY + 40, null, null, "center");
+
+        // Execute save
+        doc.save("Kartu_Rapor_" + window.currentRaporData.nama + ".pdf");
+      };
     </script>
   </body>
 </html>
