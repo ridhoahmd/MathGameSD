@@ -1,0 +1,9 @@
+{"level":"info","message":"\u001b[0mGET /html/guru.html \u001b[32m200\u001b[0m 2.889 ms - -\u001b[0m","timestamp":"2026-04-15T04:00:05.812Z"}
+{"level":"info","message":"\u001b[0mGET /css/guru.css?v=final \u001b[32m200\u001b[0m 2.847 ms - -\u001b[0m","timestamp":"2026-04-15T04:00:05.869Z"}
+{"level":"info","message":"\u001b[0mGET /sw.js \u001b[32m200\u001b[0m 1.395 ms - -\u001b[0m","timestamp":"2026-04-15T04:00:07.776Z"}
+{"level":"info","message":"\u001b[0mGET /html/guru.html \u001b[32m200\u001b[0m 2.268 ms - -\u001b[0m","timestamp":"2026-04-15T04:00:12.997Z"}
+{"level":"info","message":"\u001b[0mGET /css/guru.css?v=final \u001b[32m200\u001b[0m 2.006 ms - -\u001b[0m","timestamp":"2026-04-15T04:00:13.061Z"}
+{"level":"info","message":"\u001b[0mGET /favicon.ico \u001b[32m200\u001b[0m 3.474 ms - -\u001b[0m","timestamp":"2026-04-15T04:00:13.281Z"}
+{"level":"info","message":"\u001b[0mGET /css/guru.css?v=final \u001b[32m200\u001b[0m 3.380 ms - -\u001b[0m","timestamp":"2026-04-15T04:00:23.157Z"}
+{"level":"info","message":"\u001b[0mGET /.well-known/appspecific/com.chrome.devtools.json \u001b[32m200\u001b[0m 36.931 ms - -\u001b[0m","timestamp":"2026-04-15T04:00:23.233Z"}
+{"level":"info","message":"\u001b[0mGET /sw.js \u001b[32m200\u001b[0m 0.704 ms - -\u001b[0m","timestamp":"2026-04-15T04:01:09.837Z"}
