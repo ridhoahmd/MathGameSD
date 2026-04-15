@@ -15,8 +15,11 @@ let maxCombo = 0;
 
 // Config dasar: Cek resolusi layar (Mobile vs Desktop)
 const isMobile = window.innerWidth < window.innerHeight;
-const GAME_WIDTH = isMobile ? 600 : 800; // Layar potrait buat mobile
-const GAME_HEIGHT = isMobile ? 800 : 600;
+
+// Dimensi canvas: 800x600 untuk desktop, 480x700 untuk portrait mobile
+// FIX CENTERING: Gunakan dimensi eksplisit + mode FIT agar canvas tetap di tengah layar laptop
+const GAME_WIDTH = isMobile ? 480 : 800;
+const GAME_HEIGHT = isMobile ? 700 : 600;
 
 const config = {
   type: Phaser.AUTO,
@@ -37,10 +40,19 @@ const config = {
     update: update,
   },
   scale: {
-    mode: Phaser.Scale.RESIZE,
+    // FIT: Skalakan canvas agar muat di layar tanpa memotong, sambil menjaga aspek rasio
+    // CENTER_BOTH: Pastikan canvas selalu di tengah (horizontal & vertical)
+    mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
+    // parentIsWindow: true → Phaser center terhadap window viewport, bukan parent container
+    // Ini kunci supaya canvas selalu tepat di tengah layar laptop!
+    parentIsWindow: true,
+    // Batas min/max supaya tidak terlalu kecil di mobile atau terlalu besar di 4K
+    min: { width: 320, height: 320 },
+    max: { width: 1200, height: 900 },
   },
 };
+
 
 // Variabel main game
 let player;
@@ -247,10 +259,17 @@ function create() {
 }
 
 function handleResize(gameSize) {
+    // FIT mode: Phaser mengelola ukuran canvas secara otomatis
+    // Kita hanya perlu pastikan kamera update ke ukuran baru
     const width = gameSize.width;
     const height = gameSize.height;
-
     this.cameras.main.setViewport(0, 0, width, height);
+    
+    // Update posisi player agar tidak keluar layar setelah resize
+    if (player && player.active) {
+        player.x = Phaser.Math.Clamp(player.x, 40, width - 40);
+        player.y = height - 50;
+    }
 }
 
 // Loop Utama (Update setiap frame)

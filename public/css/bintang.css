@@ -114,21 +114,26 @@ body {
 }
 
 /* ========== AREA GAME (BENAR-BENAR TENGAH) ========== */
+/* FIX CENTERING: parentIsWindow:true di Phaser config memastikan canvas center terhadap window.
+   Container ini hanya sebagai layer wrapper, Phaser urus sendiri posisi canvas-nya */
 #game-container {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   z-index: 1;
+  /* Pointer events none agar klik tetap sampai ke canvas Phaser di dalamnya */
+  pointer-events: none;
 }
 
+/* Canvas Phaser diposisikan absolute oleh Phaser sendiri (CENTER_BOTH + parentIsWindow) */
 #game-container canvas {
+  pointer-events: all;
   border-radius: 15px;
-  box-shadow: 0 0 50px rgba(0, 242, 255, 0.2);
+  box-shadow: 0 0 50px rgba(0, 242, 255, 0.2),
+              0 0 0 2px rgba(0, 242, 255, 0.15);
+  display: block;
 }
 
 /* ========== POP-UP MODAL ========== */
