@@ -14,12 +14,18 @@ let combo = 0;
 let maxCombo = 0;
 
 // Config dasar: Cek resolusi layar (Mobile vs Desktop)
-const isMobile = window.innerWidth < window.innerHeight;
+// FIX: Gunakan lebar aktual untuk tentukan layout portrait vs landscape
+const isPortrait = window.innerWidth < window.innerHeight;
+const screenW = window.innerWidth;
+const screenH = window.innerHeight;
 
-// Dimensi canvas: 800x600 untuk desktop, 480x700 untuk portrait mobile
-// FIX CENTERING: Gunakan dimensi eksplisit + mode FIT agar canvas tetap di tengah layar laptop
-const GAME_WIDTH = isMobile ? 480 : 800;
-const GAME_HEIGHT = isMobile ? 700 : 600;
+// Dimensi canvas game (aspek rasio 4:3 untuk landscape, 3:5 untuk portrait)
+// FIX: Jika layar sesungguhnya lebih kecil dari dimensi target, gunakan layar aktual
+const GAME_WIDTH  = isPortrait ? Math.min(480, screenW)  : Math.min(800, screenW);
+const GAME_HEIGHT = isPortrait ? Math.min(700, screenH)  : Math.min(600, screenH);
+
+// Tetap simpan isMobile untuk backward compat
+const isMobile = isPortrait;
 
 const config = {
   type: Phaser.AUTO,
@@ -101,11 +107,56 @@ window.selectDifficulty = function (level) {
 function startGame() {
   if (!game) {
     game = new Phaser.Game(config);
+    
+    // FIX HUD OVERLAP: Setelah Phaser ready, geser canvas ke bawah HUD menggunakan transform
+    // Alasan pakai transform bukan margin-top: Phaser bisa override margin tapi TIDAK override transform
+    game.events.once('ready', () => {
+      applyCanvasTopOffset();
+      
+      // Re-apply saat window resize (Phaser FIT akan recalculate posisi)
+      window.addEventListener('resize', applyCanvasTopOffset);
+    });
   } else {
     // Kalo game udah ada, restart aja scenenya
     game.scene.scenes[0].scene.restart();
+    setTimeout(applyCanvasTopOffset, 200); // Delay kecil setelah restart
   }
   gameActive = true;
+}
+
+// Fungsi untuk menggeser canvas ke bawah area HUD
+function applyCanvasTopOffset() {
+  const canvas = document.querySelector('#game-container canvas');
+  const topBar = document.querySelector('.top-bar');
+  if (!canvas) return;
+  
+  // Hitung tinggi area HUD (top-bar + question) secara dinamis
+  let hudBottom = 130; // fallback
+  if (topBar) {
+    const tbr = topBar.getBoundingClientRect();
+    const qCont = document.getElementById('question-container');
+    if (qCont) {
+      const qRect = qCont.getBoundingClientRect();
+      hudBottom = Math.ceil(qRect.bottom) + 10; // 10px margin bawah soal
+    } else {
+      hudBottom = Math.ceil(tbr.bottom) + 10;
+    }
+  }
+  
+  // Ambil posisi canvas saat ini dari Phaser (absolute top)
+  const canvasRect = canvas.getBoundingClientRect();
+  const currentTop = canvasRect.top;
+  
+  if (currentTop < hudBottom) {
+    // Geser canvas ke bawah menggunakan transform translateY
+    // Ini tidak diinterferensi oleh Phaser's internal centering logic
+    const shiftY = hudBottom - currentTop;
+    canvas.style.transform = `translateY(${shiftY}px)`;
+    canvas.style.transformOrigin = 'top center';
+  } else {
+    // Canvas sudah di bawah HUD, tidak perlu shift
+    canvas.style.transform = '';
+  }
 }
 
 // Load aset dulu
