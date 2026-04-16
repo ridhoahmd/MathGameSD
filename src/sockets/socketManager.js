@@ -36,10 +36,10 @@ module.exports = (httpServer) => {
     if (token) {
       jwt.verify(token, JWT_SECRET, (err, decoded) => {
         if (err) {
-          console.warn(`⚠️ Token ga valid dari ${socket.id}: ${err.message}`);
-          return next(
-            new Error("Authentication Error: Invalid or Expired Token"),
-          );
+          // Token invalid/expired: jangan putus koneksi, cukup downgrade ke tamu
+          // Ini mencegah halaman guru crash hanya karena token expired
+          console.warn(`⚠️ Token tidak valid dari ${socket.id}: ${err.message} — diteruskan sebagai tamu.`);
+          next(); // Lanjutkan sebagai tamu (isAuth tetap false)
         } else {
           socket.decoded = decoded;
           socket.isAuth = true;
@@ -50,7 +50,7 @@ module.exports = (httpServer) => {
         }
       });
     } else {
-      next(); // Tamu
+      next(); // Tamu tanpa token
     }
   });
 

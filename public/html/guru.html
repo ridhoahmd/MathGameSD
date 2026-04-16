@@ -192,12 +192,23 @@
     <!-- Script Logic Halaman Guru -->
     <script>
       // --- 1. INISIALISASI & GLOBAL VARS ---
-      const socket = io();
+      // Kirim JWT Token saat koneksi agar server bisa verifikasi role guru/admin
+      const guruToken = localStorage.getItem("guruToken") || "";
+      const socket = io({ auth: { token: guruToken || undefined } });
       const currentUserName = localStorage.getItem("playerName") || "";
       let currentUserRole = "siswa";
 
       // --- 2. MAIN LOGIC SAAT LOAD ---
-      document.addEventListener("DOMContentLoaded", () => {
+      // Gunakan readyState check agar tidak missed jika DOMContentLoaded sudah lewat
+      function onPageReady(callback) {
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", callback);
+        } else {
+          callback();
+        }
+      }
+
+      onPageReady(() => {
         // Validasi Login Dasar
         if (!currentUserName) {
           window.location.href = "/";
@@ -382,27 +393,52 @@
           color: "#fff",
         }).then((result) => {
           if (result.isConfirmed) {
+            // Tampilkan loading dulu — tunggu konfirmasi dari SERVER
+            Swal.fire({
+              title: "Memproses...",
+              didOpen: () => Swal.showLoading(),
+              background: "#1e1e2e",
+              color: "#fff",
+              allowOutsideClick: false
+            });
             socket.emit("updateUserRole", {
               targetUser: targetName,
               newRole: newRole,
               requestor: currentUserName,
             });
-
-            Swal.fire({
-              title: "Sukses!",
-              text: "Role berhasil diperbarui.",
-              icon: "success",
-              timer: 1500,
-              showConfirmButton: false,
-              background: "#1e1e2e",
-              color: "#fff",
-            });
+            // Respon ditangani oleh listener roleUpdateSuccess / errorUpdate di bawah
           } else {
-            // Jika batal, refresh tabel agar dropdown balik lagi
+            // Jika batal, refresh tabel agar dropdown balik ke nilai asli
             socket.emit("mintaLeaderboard");
           }
         });
       };
+
+      // Listener konfirmasi role update dari server
+      socket.on("roleUpdateSuccess", (res) => {
+        Swal.fire({
+          title: "Berhasil! ✅",
+          text: res.message,
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+          background: "#1e1e2e",
+          color: "#fff",
+        });
+      });
+
+      // Listener gagal role update dari server
+      socket.on("errorUpdate", (msg) => {
+        Swal.fire({
+          title: "Akses Ditolak ⛔",
+          text: msg,
+          icon: "error",
+          background: "#1e1e2e",
+          color: "#fff",
+        });
+        // Refresh tabel agar dropdown kembali ke nilai asli
+        socket.emit("mintaLeaderboard");
+      });
 
       // Fungsi Filter/Search Tabel
       window.filterTable = function () {
@@ -454,10 +490,8 @@
         renderFormSingkat();
       });
 
-      // Panggil saat pertama kali load agar form muncul
-      document.addEventListener("DOMContentLoaded", () => {
-        renderFormSingkat();
-      });
+      // Panggil langsung - DOM sudah tersedia karena script ini inline di akhir body
+      renderFormSingkat();
 
       // Simpan Pengaturan Prioritas Soal
       window.saveContentSource = function () {
@@ -517,13 +551,29 @@
 
       socket.on("adminResponse", (res) => {
         if (res.success) {
-          Swal.fire("Sukses", res.message, "success");
-          document.getElementById("manual-soal").value = "";
-          document.getElementById("manual-opsi").value = "";
-          document.getElementById("manual-jawaban").value = "";
-          document.getElementById("manual-penjelasan").value = "";
+          Swal.fire({
+            title: "Berhasil! ✅",
+            text: res.message,
+            icon: "success",
+            background: "#1e1e2e",
+            color: "#fff",
+            timer: 2500,
+            showConfirmButton: false
+          });
+          // Bersihkan form dengan null-check agar tidak error jika elemen tidak ada
+          const clearField = (id) => { const el = document.getElementById(id); if (el) el.value = ""; };
+          clearField("manual-soal");
+          clearField("manual-opsi");
+          clearField("manual-jawaban");
+          clearField("manual-penjelasan");
         } else {
-          Swal.fire("Gagal", res.message, "error");
+          Swal.fire({
+            title: "Gagal ❌",
+            text: res.message,
+            icon: "error",
+            background: "#1e1e2e",
+            color: "#fff"
+          });
         }
       });
 
@@ -561,41 +611,60 @@
 
       // 7. FUNGSI ANALITIK SISWA (RAPOR)
       window.lihatDetailSiswa = function(namaSiswa) {
-        // Tampilkan modal loading
         const modal = document.getElementById("modal-rapor");
+        if (!modal) {
+          console.error("Modal rapor tidak ditemukan di DOM!");
+          return;
+        }
+
         modal.style.display = "flex";
-        
-        document.getElementById("rapor-nama").innerText = namaSiswa;
-        document.getElementById("rapor-level").innerText = "Lvl -";
-        document.getElementById("rapor-xp").innerText = "- XP";
-        document.getElementById("rapor-koin").innerText = "- Koin";
-        document.getElementById("rapor-avg-score").innerText = "-";
-        document.getElementById("rapor-frequency").innerText = "-";
-        document.getElementById("rapor-dominant").innerText = "-";
-        document.getElementById("rapor-versus").innerHTML = '<p class="text-center">Memuat data...</p>';
-        
+
+        // Reset semua field ke loading state
+        const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        setEl("rapor-nama", namaSiswa);
+        setEl("rapor-level", "Lvl -");
+        setEl("rapor-xp", "- XP");
+        setEl("rapor-koin", "- Koin");
+        setEl("rapor-avg-score", "-");
+        setEl("rapor-frequency", "-");
+        setEl("rapor-dominant", "-");
+        const versusEl = document.getElementById("rapor-versus");
+        if (versusEl) versusEl.innerHTML = '<p style="text-align:center; color:#aaa;">⏳ Memuat data...</p>';
+
         socket.emit("mintaAnalitikSiswa", namaSiswa);
       };
 
       socket.on("analitikSiswaData", (data) => {
         if (!data.success) {
-          document.getElementById("rapor-versus").innerHTML = '<p style="color:red">Gagal memuat detail siswa.</p>';
+          const versusEl = document.getElementById("rapor-versus");
+          if (versusEl) versusEl.innerHTML = '<p style="color:#ff4444; text-align:center;">❌ Gagal memuat detail siswa. Coba lagi.</p>';
+          Swal.fire({
+            title: "Gagal",
+            text: "Tidak dapat memuat data analitik siswa.",
+            icon: "error",
+            background: "#1e1e2e",
+            color: "#fff",
+            timer: 2500,
+            showConfirmButton: false
+          });
           return;
         }
 
         window.currentRaporData = data; // Set memori untuk diprint PDF
 
-        document.getElementById("rapor-level").innerText = "Lvl " + data.level;
-        document.getElementById("rapor-xp").innerText = data.xp + " XP";
-        document.getElementById("rapor-koin").innerText = data.coins + " Koin";
-        
-        document.getElementById("rapor-avg-score").innerText = data.rataRataSkor || 0;
-        document.getElementById("rapor-frequency").innerText = data.frekuensiBermain || 0;
-        document.getElementById("rapor-dominant").innerText = data.topikDominan || "-";
+        const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        setEl("rapor-level", "Lvl " + data.level);
+        setEl("rapor-xp", data.xp + " XP");
+        setEl("rapor-koin", data.coins + " Koin");
+        setEl("rapor-avg-score", data.rataRataSkor || 0);
+        setEl("rapor-frequency", data.frekuensiBermain || 0);
+        setEl("rapor-dominant", data.topikDominan || "-");
 
         const listVersus = document.getElementById("rapor-versus");
+        if (!listVersus) return;
+
         if (!data.versus || data.versus.length === 0) {
-          listVersus.innerHTML = '<p class="text-muted-small" style="text-align:center;">Belum pernah berduel di mode versus.</p>';
+          listVersus.innerHTML = '<p style="text-align:center; color:#888;">Belum pernah berduel di mode versus.</p>';
           return;
         }
 
@@ -604,7 +673,7 @@
           let color = match.status === "Win" ? "#00ff00" : (match.status === "Lose" ? "#ff4444" : "#ffeb3b");
           let icon = match.status === "Win" ? "🏆" : (match.status === "Lose" ? "💀" : "🤝");
           const d = new Date(match.playedAt);
-          const tglStr = d.toLocaleDateString("id-ID") + " " + d.toLocaleTimeString("id-ID", {hour: '2-digit', minute:'2-digit'});
+          const tglStr = isNaN(d) ? "Waktu tidak valid" : d.toLocaleDateString("id-ID") + " " + d.toLocaleTimeString("id-ID", {hour: '2-digit', minute:'2-digit'});
           
           htmlVersus += `
             <div style="background: rgba(255,255,255,0.05); padding: 8px 12px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid ${color};">

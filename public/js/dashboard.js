@@ -385,11 +385,30 @@ function cycleTheme() {
 // --- 8. RIWAYAT DUEL VERSUS ---
 function showVersusHistory() {
   const modal = document.getElementById("versus-history-modal");
-  if (modal) {
-    modal.style.display = "flex";
-    document.getElementById("versus-history-list").innerHTML = '<p class="text-center text-ccc">Memuat data duel...</p>';
-    socket.emit("mintaRiwayatVersus");
+  if (!modal) return;
+
+  modal.style.display = "flex";
+  const listContainer = document.getElementById("versus-history-list");
+
+  // Cek apakah user sudah login (bukan Guest)
+  const playerName = localStorage.getItem("playerName") || "";
+  const isGuest = playerName.startsWith("Guest_") || !playerName;
+
+  if (isGuest) {
+    // Langsung tampilkan pesan login dulu, tidak perlu minta ke server
+    listContainer.innerHTML = `
+      <div style="text-align: center; padding: 30px 20px;">
+        <div style="font-size: 3rem; margin-bottom: 12px;">🔐</div>
+        <p style="color: #00f2ff; font-weight: bold; margin-bottom: 8px;">Login Google dulu yuk!</p>
+        <p style="color: #888; font-size: 0.85rem;">Riwayat duelmu tersimpan setelah kamu masuk dengan akun Google.</p>
+      </div>
+    `;
+    return;
   }
+
+  // User sudah login, minta data ke server
+  listContainer.innerHTML = '<p style="text-align:center; color:#ccc; padding: 20px;">⏳ Memuat data duel...</p>';
+  socket.emit("mintaRiwayatVersus");
 }
 
 socket.on("riwayatVersusData", (data) => {
@@ -397,7 +416,13 @@ socket.on("riwayatVersusData", (data) => {
   if (!listContainer) return;
   
   if (!data || data.length === 0) {
-    listContainer.innerHTML = '<p class="text-center text-ccc" style="padding: 20px;">Belum ada riwayat duel. Ayo tantang temanmu di mode Versus!</p>';
+    listContainer.innerHTML = `
+      <div style="text-align: center; padding: 30px 20px;">
+        <div style="font-size: 3rem; margin-bottom: 12px;">⚔️</div>
+        <p style="color: #ffeb3b; font-weight: bold; margin-bottom: 8px;">Belum ada riwayat duel!</p>
+        <p style="color: #888; font-size: 0.85rem;">Ayo tantang temanmu di mode Versus dan tulis sejarahmu! 🏆</p>
+      </div>
+    `;
     return;
   }
   

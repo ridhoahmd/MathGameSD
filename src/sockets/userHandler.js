@@ -319,7 +319,10 @@ module.exports = (socket, io) => {
 
   // B3. MINTA RIWAYAT DUEL VERSUS
   socket.on("mintaRiwayatVersus", async () => {
-    if (!socket.activeUser || !socket.activeUser.username) return;
+    // Jika belum login, kirim array kosong biar modal tidak stuck loading
+    if (!socket.activeUser || !socket.activeUser.username) {
+      return socket.emit("riwayatVersusData", []);
+    }
     try {
       const user = await prisma.user.findUnique({
         where: { username: socket.activeUser.username }
