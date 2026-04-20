@@ -105,6 +105,12 @@ window.selectDifficulty = function (level) {
 };
 
 function startGame() {
+  // 🔧 FIX: Emit mulaiGame agar server mencatat sesi bermain yang valid
+  // Tanpa ini, server akan menolak simpanSkor karena sesi dianggap tidak valid
+  if (socket) {
+    socket.emit("mulaiGame", "bintang");
+  }
+
   if (!game) {
     game = new Phaser.Game(config);
     

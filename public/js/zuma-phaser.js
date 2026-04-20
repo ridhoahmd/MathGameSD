@@ -36,7 +36,7 @@ let levelConfig = {
   pola: "spiral",
 };
 
-// SCENE ZUMA
+// SCENE ZUMAs
 class ZumaScene extends Phaser.Scene {
   constructor() {
     super({ key: "ZumaScene" });
@@ -289,7 +289,10 @@ class ZumaScene extends Phaser.Scene {
       // ... (Existing bullet update)
       if (
         bullet.active &&
-        (bullet.x < -100 || bullet.x > this.scale.width + 100 || bullet.y < -100 || bullet.y > this.scale.height + 100)
+        (bullet.x < -100 ||
+          bullet.x > this.scale.width + 100 ||
+          bullet.y < -100 ||
+          bullet.y > this.scale.height + 100)
       ) {
         this.destroyBullet(bullet);
       }
@@ -306,8 +309,6 @@ class ZumaScene extends Phaser.Scene {
       this.levelComplete();
     }
   }
-
-
 
   /* =========================================
      HELPER FUNCTIONS
@@ -524,7 +525,7 @@ class ZumaScene extends Phaser.Scene {
   createTurret() {
     const w = this.scale.width;
     const h = this.scale.height;
-    
+
     // Position turret near the bottom center
     this.turret = this.add.container(w / 2, h - 50);
     this.turret.setDepth(100);
@@ -570,10 +571,10 @@ class ZumaScene extends Phaser.Scene {
     if (this.turret) {
       this.turret.setPosition(width / 2, height - 50);
     }
-    
+
     // Redraw Path (Optional, if you want the path to scale with screen)
-    if(this.pathGraphics && this.levelData) {
-        this.createPath(this.levelData.pola || "spiral");
+    if (this.pathGraphics && this.levelData) {
+      this.createPath(this.levelData.pola || "spiral");
     }
   }
 
@@ -867,7 +868,7 @@ window.destroyZumaGame = function () {
     currentGameInstance.destroy(true);
     currentGameInstance = null;
   }
-  
+
   const container = document.getElementById("game-container");
   if (container) container.innerHTML = "";
 };

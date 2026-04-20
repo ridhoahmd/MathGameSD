@@ -244,7 +244,9 @@ async function loginGoogle() {
 
       if (data.success) {
         adminToken = data.token; // Simpan token
-        localStorage.setItem("guruToken", adminToken);
+        // 🔧 FIX: Wajib pakai key "authToken" agar global.js bisa membacanya
+        // Sebelumnya pakai "guruToken" → socket tidak pernah mengirim token ke server
+        localStorage.setItem("authToken", adminToken);
       } else {
         alert("Kode Guru Salah! Ga jadi login.");
         return;
@@ -285,6 +287,8 @@ async function loginGoogle() {
 function logout() {
   auth.signOut().then(() => {
     localStorage.removeItem("playerName");
+    localStorage.removeItem("authToken");  // 🔧 FIX: Hapus token guru
+    localStorage.removeItem("guruToken");  // Hapus key lama juga (backward compat)
     location.reload();
   });
 }

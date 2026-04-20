@@ -830,6 +830,10 @@ window.requestGame = async function () {
     socket.off("soalDariAI", responseHandler);
     socket.on("soalDariAI", responseHandler);
 
+    // 🔧 FIX: Emit mulaiGame agar server mencatat sesi bermain yang valid
+    // Tanpa ini, server akan menolak simpanSkor karena sesi dianggap tidak valid
+    socket.emit("mulaiGame", "labirin");
+
     // Emit Request
     socket.emit("mintaSoalAI", {
       kategori: "labirin",
