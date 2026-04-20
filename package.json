@@ -4,7 +4,7 @@
   "description": "Portal Game Edukasi Videa Class",
   "main": "server.js",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "scripts": {
     "test": "cross-env NODE_ENV=test jest --forceExit",
