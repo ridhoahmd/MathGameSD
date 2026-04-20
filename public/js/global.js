@@ -9,7 +9,7 @@ try {
       window.socket = io({
         auth: { token: authToken },
       });
-      console.log("✅ Socket connected dengan autentikasi");
+      // Socket connected with auth;
     } else {
       // Guest connection (siswa biasa)
       window.socket = io();
@@ -41,7 +41,7 @@ window.GameUtils = {
 
     return function (...args) {
       if (isProcessing) {
-        console.log("⏳ Action sedang diproses, harap tunggu...");
+        // Action throttled;
         return;
       }
 
@@ -56,7 +56,7 @@ window.GameUtils = {
   },
 };
 
-console.log("✅ GameUtils loaded (Anti-spam protection ready)");
+// GameUtils loaded;
 
 // 3. TAMPILAN KALO OFFLINE
 function createOfflineUI() {
@@ -124,7 +124,7 @@ if (window.socket) {
 
   window.socket.on("connect", () => {
     if (isReconnecting) {
-      console.log("✅ Nyambung lagi!");
+      // Socket reconnected;
       isReconnecting = false;
       const overlay = document.getElementById("connection-overlay");
       if (overlay) overlay.style.display = "none";
@@ -132,7 +132,7 @@ if (window.socket) {
   });
 }
 
-console.log("✅ Sistem Global Siap (Socket & Offline UI & GameUtils)");
+// Sistem Global Siap;
 
 // --- 8. GLOBAL THEME MANAGER (NEW: Default Royal) ---
 (function () {
@@ -169,7 +169,7 @@ document.addEventListener("keydown", function (e) {
     if (!isInput) {
       // Jika di luar input, cegah browser melakukan aksi "Kembali ke hal sebelum"
       e.preventDefault();
-      console.log("🛡️ Navigasi Backspace dicegah.");
+      // Backspace navigation blocked;
     }
   }
 });
@@ -252,10 +252,25 @@ function showGlobalToast(msg, type) {
 window.showGlobalToast = showGlobalToast;
 
 if (window.socket) {
+  // Notifikasi koneksi error (non-blocking toast)
   window.socket.on("connect_error", () =>
     showGlobalToast("⚠️ Gagal terhubung ke server...", "warning"));
-  window.socket.on("reconnect", () =>
-    showGlobalToast("✅ Terhubung kembali!", "success"));
+
+  // 🔧 FIX [8]: Reconnect handler - re-register sesi game jika terputus di tengah permainan
+  window.socket.on("reconnect", () => {
+    showGlobalToast("✅ Terhubung kembali!", "success");
+
+    // Re-register sesi game yang sedang aktif agar server kembali menerima simpanSkor
+    if (window._activeGameSlug) {
+      window.socket.emit("mulaiGame", window._activeGameSlug);
+    }
+  });
+
+  // 🔧 FIX [3]: Global handler untuk errorSkor - tampil sebagai toast agar user tau
+  // Menangani penolakan skor oleh server (sesi tidak valid, speedhack, dll)
+  window.socket.on("errorSkor", (msg) => {
+    showGlobalToast("⚠️ " + (msg || "Skor tidak dapat disimpan."), "warning");
+  });
 }
 
 // ============================================

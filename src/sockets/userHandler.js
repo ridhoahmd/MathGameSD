@@ -146,12 +146,24 @@ module.exports = (socket, io) => {
     let skor = parseInt(data.skor);
     if (isNaN(skor)) skor = 0;
 
-    // 🛡️ SECURITY: VALIDASI SKOR
-    const MAX_SCORE_PER_GAME = 1000; // Contoh batas wajar
+    // 🛡️ SECURITY: VALIDASI SKOR (Per-game limit yang realistis)
+    const MAX_SCORE_MAP = {
+      math:    3000, // Soal berlevel, bisa panjang
+      zuma:    5000, // Per-hit 15 poin, banyak level
+      labirin: 3000, // Waktu bisa panjang
+      memory:  2000, // Terbatas jumlah kartu
+      piano:   2000, // Terbatas jumlah nada
+      kasir:   2000, // Soal terbatas
+      nabi:    3000, // Endless dengan multiplier
+      ayat:    3000, // Endless dengan multiplier
+      tajwid:  3000, // Endless dengan combo
+      bintang: 2000, // Combo-based, 60 detik
+    };
+    const MAX_SCORE_PER_GAME = MAX_SCORE_MAP[gameSlug] || 2000;
     if (skor > MAX_SCORE_PER_GAME) {
-      console.warn(`⚠️ Suspicious Score Attempt: ${skor} by ${data.nama}`);
-      skor = MAX_SCORE_PER_GAME; // Cap skor
-      socket.emit("info", "Skor Anda disesuaikan dengan batas maksimum.");
+      console.warn(`⚠️ Suspicious Score Attempt: ${skor} (max: ${MAX_SCORE_PER_GAME}) by ${data.nama} in ${gameSlug}`);
+      skor = MAX_SCORE_PER_GAME; // Cap skor ke batas wajar per-game
+      socket.emit("info", "Skor Anda disesuaikan dengan batas maksimum permainan.");
     }
     if (skor < 0) skor = 0;
 

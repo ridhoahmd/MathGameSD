@@ -167,9 +167,7 @@ function applyCanvasTopOffset() {
 
 // Load aset dulu
 function preload() {
-  this.load.on("complete", () => {
-    console.log(`🎮 Game Tangkap Bintang siap! Mode: ${currentDifficulty}`);
-  });
+  // Assets loaded
 }
 
 // Bikin objek-objek game di sini
@@ -616,6 +614,16 @@ function endGame(scene) {
     });
   }
 }
+
+// 🔧 FIX: Alias restartGame standar agar konsisten dengan game lain
+window.restartGame = function () {
+  if (game) {
+    game.scene.scenes[0].scene.restart();
+    setTimeout(applyCanvasTopOffset, 200);
+  } else {
+    location.reload();
+  }
+};
 
 // FIX MEMORY LEAK: Destroy game instance
 window.destroyBintangGame = function () {

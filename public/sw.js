@@ -1,4 +1,4 @@
-const CACHE_NAME = "videa-class-master-v8";
+const CACHE_NAME = "videa-class-master-v9";
 
 const urlsToCache = [
   "/",
@@ -26,6 +26,8 @@ const urlsToCache = [
   // --- CSS Styles (Core & Features) ---
   "/css/style.css",
   "/css/design-tokens.css",
+  "/css/base.css",
+  "/css/variables.css",
   "/css/loading.css",
   "/css/micro-interactions.css",
   "/css/responsive.css",
@@ -33,9 +35,12 @@ const urlsToCache = [
   "/css/visual-enhancements.css",
   "/css/visual-overhaul.css",
   "/css/chat-enhanced.css",
+  "/css/decorative-objects.css",
+  "/css/streak-effects.css",
 
   // --- CSS Styles (Games) ---
   "/css/ayat.css",
+  "/css/ayat-versus.css",
   "/css/bintang.css",
   "/css/guru.css",
   "/css/kasir.css",
@@ -44,9 +49,12 @@ const urlsToCache = [
   "/css/math.css",
   "/css/memory.css",
   "/css/nabi.css",
+  "/css/nabi-versus.css",
   "/css/piano.css",
   "/css/tajwid.css",
+  "/css/tajwid-versus.css",
   "/css/toko.css",
+  "/css/versus-enhancements.css",
   "/css/zuma-phaser.css",
 
   // --- JavaScript Logic (Core & Utils) ---
@@ -59,6 +67,8 @@ const urlsToCache = [
   "/js/utils/confetti.js",
   "/js/utils/ui.js",
   "/js/utils/comboManager.js",
+  "/js/utils/hintSystem.js",
+  "/js/utils/particleEffects.js",
 
   // --- JavaScript Logic (Gamification) ---
   "/js/gamification/achievements.js",
@@ -67,14 +77,17 @@ const urlsToCache = [
 
   // --- JavaScript Logic (Games) ---
   "/js/ayat.js",
+  "/js/ayat-versus.js",
   "/js/bintang.js",
   "/js/game.js",
   "/js/kasir.js",
   "/js/labirin-phaser.js",
   "/js/memory.js",
   "/js/nabi.js",
+  "/js/nabi-versus.js",
   "/js/piano.js",
   "/js/tajwid.js",
+  "/js/tajwid-versus.js",
   "/js/toko.js",
   "/js/zuma-phaser.js",
 ];
@@ -84,17 +97,25 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      console.log("📦 SW: Caching semua file game...");
-      try {
-        return await cache.addAll(urlsToCache);
-      } catch (err) {
-        console.error("❌ Gagal Cache:", err);
+      // Cache satu per satu agar satu file gagal tidak blokir yang lain
+      const results = await Promise.allSettled(
+        urlsToCache.map((url) =>
+          cache.add(url).catch((err) => {
+            console.warn(`⚠️ SW: Gagal cache ${url}:`, err.message);
+          })
+        )
+      );
+      const failed = results.filter((r) => r.status === "rejected").length;
+      if (failed > 0) {
+        console.warn(`⚠️ SW: ${failed} file gagal dicache, tapi SW tetap aktif.`);
+      } else {
+        console.log("✅ SW v9: Semua file berhasil dicache.");
       }
-    }),
+    })
   );
 });
 
-// 2. ACTIVATE: Hapus cache lama (v4, v3, dll)
+// 2. ACTIVATE: Hapus cache lama
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
@@ -106,46 +127,50 @@ self.addEventListener("activate", (event) => {
               console.log("🗑️ SW: Menghapus cache lama:", key);
               return caches.delete(key);
             }
-          }),
-        ),
+          })
+        )
       )
-      .then(() => self.clients.claim()),
+      .then(() => self.clients.claim())
   );
 });
 
-// 3. FETCH: Strategi "Stale-While-Revalidate" (Pakai Cache dulu, lalu update di background)
+// 3. FETCH: Strategi "Network First, Cache Fallback"
+// - Prioritaskan jaringan agar konten selalu fresh
+// - Fallback ke cache jika offline
 self.addEventListener("fetch", (event) => {
   if (!event.request.url.startsWith("http")) {
     return;
   }
 
+  // Jangan intercept socket.io, firebase, atau API calls
   if (
     event.request.url.includes("/api/") ||
     event.request.url.includes("socket.io") ||
-    event.request.url.includes("firebase")
+    event.request.url.includes("firebase") ||
+    event.request.url.includes("dicebear")
   ) {
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          if (
-            networkResponse &&
-            networkResponse.status === 200 &&
-            networkResponse.type === "basic"
-          ) {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => {});
-
-      return cachedResponse || fetchPromise;
-    }),
+    fetch(event.request)
+      .then((networkResponse) => {
+        // Update cache di background kalau dapat respon valid
+        if (
+          networkResponse &&
+          networkResponse.status === 200 &&
+          networkResponse.type === "basic"
+        ) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        // Offline fallback: pakai cache
+        return caches.match(event.request);
+      })
   );
 });

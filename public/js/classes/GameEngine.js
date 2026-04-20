@@ -19,6 +19,9 @@ export class GameEngine {
     this.gameActive = true;
     UI.updateText("score", this.score);
 
+    // Simpan slug game aktif untuk keperluan reconnect (dipakai global.js)
+    window._activeGameSlug = this.gameSlug;
+
     // Show loading for game initialization
     if (typeof LoadingUI !== "undefined") {
       LoadingUI.show("Mulai game...");
@@ -85,16 +88,15 @@ export class GameEngine {
 
   saveScore() {
     if (this.socket) {
-      console.log(`💾 Saving Score: ${this.score} for ${this.gameSlug}`);
+      // Saving score to server
       this.socket.emit("simpanSkor", {
         nama: this.playerName,
         skor: this.score,
         game: this.gameSlug,
       });
 
-      // Timeout save score
+      // Timeout fallback: refresh profil jika server tidak merespons
       let timeoutId = setTimeout(() => {
-        console.log("⏱️ Score save timeout - refreshing profile anyway");
         this.socket.emit("mintaDataProfil", this.playerName);
       }, 2000);
 

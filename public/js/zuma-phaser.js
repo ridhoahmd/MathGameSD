@@ -237,7 +237,7 @@ class ZumaScene extends Phaser.Scene {
         this.sound.play("shoot", { volume: 0 }); // Pre-warm audio
       } catch (e) {}
 
-      console.log("✅ Phaser CREATE Finished");
+      // Phaser CREATE finished
     } catch (err) {
       console.error("❌ CRITICAL ERROR in CREATE:", err);
       alert("Game Error: " + err.message);
@@ -378,7 +378,7 @@ class ZumaScene extends Phaser.Scene {
     else if (currentLevel <= 6) finalPola = "spiral";
     else finalPola = "infinity";
 
-    console.log(`Generating Path: ${finalPola} for Level ${currentLevel}`);
+    // Path generated: finalPola for currentLevel
 
     if (finalPola === "spiral") {
       // SPIRAL (Classic)
@@ -747,7 +747,7 @@ class ZumaScene extends Phaser.Scene {
     this.isGameOver = true;
     this.physics.pause();
 
-    console.log("GAME OVER:", reason);
+    // Game over: reason
 
     // Tampilkan Layar Game Over UI
     const goScreen = document.getElementById("game-over-screen");
@@ -818,7 +818,7 @@ class ZumaScene extends Phaser.Scene {
     // Naik global level
     currentLevel++;
 
-    console.log("Minta Level Baru:", currentLevel);
+    // Minta level baru: currentLevel
 
     // Minta Data Baru (AI)
     if (socket) {
@@ -828,7 +828,6 @@ class ZumaScene extends Phaser.Scene {
       });
 
       socket.once("soalDariAI", (data) => {
-        console.log("Data Level Baru:", data);
         this.scene.restart({ levelData: data.data, score: this.score });
       });
     } else {
@@ -856,6 +855,9 @@ window.restartZuma = function () {
   }
 };
 
+// 🔧 FIX: Alias standar agar kode global bisa panggil window.restartGame()
+window.restartGame = window.restartZuma;
+
 window.nextLevelZuma = function () {
   const game = currentGameInstance;
   if (!game) return;
@@ -878,7 +880,6 @@ let currentGameInstance = null;
 
 function initGame() {
   if (currentGameInstance) {
-    console.warn("⚠️ Game udah ada! Hancurkan yang lama...");
     currentGameInstance.destroy(true);
     currentGameInstance = null;
   }
@@ -903,8 +904,12 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("game-hud").style.display = "flex";
 
+    // 🔧 FIX: Emit mulaiGame agar server mencatat sesi bermain yang valid
+    // Tanpa ini, server akan menolak simpanSkor karena sesi dianggap tidak valid
+    if (socket) socket.emit("mulaiGame", "zuma");
+
     // Mulai Game
-    const game = initGame(); // Start game immediately
+    const game = initGame();
 
     // Minta Data Level
     if (socket) {
@@ -917,13 +922,10 @@ document.addEventListener("DOMContentLoaded", () => {
       socket.off("soalDariAI");
 
       socket.once("soalDariAI", (data) => {
-        // Pass data ke scene
         // Tunggu scene siap
         setTimeout(() => {
           const scene = game.scene.getScene("ZumaScene");
           if (scene) {
-            console.log("📥 Data Level Masuk", data);
-            // Restart buat apply param
             scene.scene.restart({ levelData: data.data });
           }
         }, 500);
