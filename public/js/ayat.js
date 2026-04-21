@@ -63,12 +63,10 @@ window.selectMode = function (mode) {
     btn.classList.remove("active");
     if (btn.dataset.mode === mode) btn.classList.add("active");
   });
-  console.log("Mode selected:", mode);
 };
 
 // --- 3. MULAI GAME ---
 function startGame() {
-  console.log("🚀 Starting game. Mode:", currentGameMode);
   // alert("Debug: Mode is " + currentGameMode); // Uncomment for extreme debug
 
   const btnStart = document.querySelector(".btn-start");
@@ -171,14 +169,8 @@ function wireSocketEvents() {
           const hapusCount = 10;
           questions.splice(0, hapusCount);
           currentIndex -= hapusCount;
-          console.log(
-            `🧹 Memory Cleanup: Dihapus ${hapusCount} soal lama, Total kini: ${questions.length}`,
-          );
         }
 
-        console.log(
-          `✅ Added ${response.data.length} questions. Total: ${questions.length}`,
-        );
 
         // Visual feedback
         showToast(`📥 +${response.data.length} ayat baru dimuat`);
@@ -198,7 +190,6 @@ function wireSocketEvents() {
       }
     });
 
-    console.log("✅ Ayat game socket listener registered");
   } else {
     // Jika socket belum siap, tunggu 100ms dan coba lagi
     setTimeout(wireSocketEvents, 100);
@@ -454,14 +445,12 @@ function requestMoreQuestions() {
   // Rate limiting
   const now = Date.now();
   if (isRequestingQuestions || now - lastRequestTime < REQUEST_COOLDOWN) {
-    console.log("⏳ Request cooldown active");
     return;
   }
 
   isRequestingQuestions = true;
   lastRequestTime = now;
 
-  console.log("📥 Requesting more questions...");
 
   if (window.socket) {
     window.socket.emit("mintaSoalAI", {
@@ -494,7 +483,6 @@ function checkAutoSave() {
 }
 
 function autoSaveProgress() {
-  console.log("💾 Auto-saving progress...");
 
   if (window.socket) {
     window.socket.emit("simpanProgress", {
@@ -613,7 +601,6 @@ window.restartGame = function () {
   const btnSave = document.getElementById("btn-save-exit");
   if (btnSave) btnSave.classList.add("hidden");
 
-  console.log("🔄 Ayat game restarted (no reload)");
 };
 
 // Pastikan HTML siap baru kita jalankan listener

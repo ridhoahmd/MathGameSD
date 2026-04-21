@@ -50,7 +50,6 @@ function requestSQLData(username) {
     uid = auth.currentUser.uid; // Ambil UID dari user Google
   }
 
-  console.log("📡 Minta data profil buat:", username);
 
   // Kirim Paket Lengkap: Nama + Foto + UID
   socket.emit("mintaDataProfil", {
@@ -334,8 +333,7 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("/sw.js")
-      .catch((err) => console.log("SW Error:", err));
-  });
+      .catch((err) =>  });
 }
 
 // --- 7. GANTI TEMA ---
@@ -345,7 +343,6 @@ function loadSavedTheme() {
   const savedTheme = localStorage.getItem("selectedTheme");
   if (savedTheme && savedTheme !== "default") {
     document.body.classList.add("theme-" + savedTheme);
-    console.log("✅ Tema dipasang:", savedTheme);
   }
 }
 
@@ -383,7 +380,6 @@ function cycleTheme() {
 
   // Simpen
   localStorage.setItem("selectedTheme", nextTheme);
-  console.log("💾 Tema disimpen:", nextTheme);
 }
 
 // --- 8. RIWAYAT DUEL VERSUS ---

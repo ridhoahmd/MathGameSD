@@ -38,7 +38,6 @@ document.querySelectorAll(".btn-diff").forEach((btn) => {
 
 function startGame() {
   if (window.socket) {
-    console.log("⏱️ Start Kasir");
     window.socket.emit("mulaiGame", "kasir");
   }
   const btn = document.querySelector(".btn-start"); // Pastikan class di HTML benar
@@ -130,7 +129,6 @@ function wireSocketEvents() {
     tampilkanSoal();
   }
 });
-    console.log("✅ Kasir game socket listener registered");
   } else {
     setTimeout(wireSocketEvents, 100);
   }
@@ -366,7 +364,6 @@ window.restartGame = function () {
     btnStart.disabled = false;
   }
 
-  console.log("🔄 Kasir game restarted (no reload)");
 };
 
 // Pastikan HTML siap baru jalankan listener

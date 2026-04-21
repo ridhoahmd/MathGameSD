@@ -18,4 +18,3 @@ if (typeof firebase !== "undefined") {
   auth = firebase.auth();
 }
 
-console.log("✅ Firebase Auth Aman (Database putus)");

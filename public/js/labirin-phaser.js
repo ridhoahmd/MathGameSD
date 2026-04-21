@@ -2,7 +2,6 @@
 // Game Maze pake Phaser 3 dengan Class Architecture
 // ============================================
 
-console.log("✅ Labirin Phaser Script Loading...");
 
 // ==========================================
 // 1. CLASS DEFINITION: LabirinScene
@@ -39,7 +38,6 @@ class LabirinScene extends Phaser.Scene {
   }
 
   init(data) {
-    console.log("Scene Init with data:", data);
 
     // Dependency Injection & Configuration
     this.isVersus = data.mode === "versus";
@@ -57,9 +55,6 @@ class LabirinScene extends Phaser.Scene {
 
     // Emit State Awal
     this.updateScoreUI();
-    console.log(
-      `[LabirinScene] Init. Level: ${this.level}. Questions: ${this.questions.length}. Cols: ${this.config.cols}`,
-    );
   }
 
   create() {
@@ -425,9 +420,6 @@ class LabirinScene extends Phaser.Scene {
     // Logic needs to bridge HTML buttons to Phaser functions.
     // We can expose a global method or use the EventBus pattern.
     window.movePhaserPlayer = (playerKey, x, y) => {
-      console.log(
-        `[Input] movePhaserPlayer called for ${playerKey}: ${x},${y}`,
-      );
       this.tryMove(playerKey, x, y);
     };
   }
@@ -495,15 +487,11 @@ class LabirinScene extends Phaser.Scene {
 
     // 2. Questions/Obstacles
     if (cell.isQuestion) {
-      console.log(
-        `[Collision] Player ${playerKey} hit question at ${cell.i},${cell.j}`,
-      );
       this.triggerQuestion(playerKey, cell);
     }
   }
 
   triggerQuestion(playerKey, cell) {
-    console.log("[Trigger] Emitting showQuestion", cell.questionData);
     // Reset wrong attempts for new question
     this.wrongAttempts = 0;
     this.isQuizActive = true; // Lock movement
@@ -711,7 +699,6 @@ const socket = window.socket; // Global Socket
 // Initialize Game (Called from Server Response)
 // Initialize Game (Called from Server Response)
 window.requestGame = async function () {
-  console.log("🚀 Requesting Game V3 (Fixing RefError)...");
 
   // Robust Mode Detection
   let mode = window.currentMode || "solo";
@@ -765,9 +752,6 @@ window.requestGame = async function () {
     level = activeLevelBtn.getAttribute("data-level") || "mudah";
   }
 
-  console.log(
-    `📡 Sending Params: Level=${level}, Mode=${mode}, Kode=${kodeAkses}`,
-  );
 
   // TIMEOUT FALLBACK (5 Detik)
   // We capture 'level' and 'mode' in this closure.
@@ -1008,7 +992,6 @@ document.querySelector(".btn-back")?.addEventListener("click", () => {
 
 // Expose global restart method
 window.restartGame = window.restartLabirin = function() {
-    console.log("🔄 Restarting Labirin Game...");
     
     // Sembunyikan layar hasil
     const goModal = document.getElementById("game-over-modal");
@@ -1033,7 +1016,6 @@ window.restartGame = window.restartLabirin = function() {
 
 // UI HELPERS & EVENT LISTENERS
 function setupUIListeners(scene) {
-  console.log("✅ UI Listening to Game Events");
 
   scene.events.on("updateScore", (scores) => {
     const scoreEl = document.getElementById("score");
@@ -1111,7 +1093,6 @@ function setupUIListeners(scene) {
 }
 
 function showQuizModal(data) {
-  console.log("[UI] showQuizModal triggered", data);
   const modal = document.getElementById("quiz-modal");
   const qText = document.getElementById("q-text");
   const qInput = document.getElementById("q-input");

@@ -102,7 +102,6 @@ class ZumaScene extends Phaser.Scene {
     });
 
     document.addEventListener("mousedown", (e) => {
-      console.log("DOM CLICK:", e.target);
     });
   }
 
@@ -115,7 +114,6 @@ class ZumaScene extends Phaser.Scene {
 
   // 3. Create
   create() {
-    console.log("🔥 Phaser START CREATE");
     try {
       // A. Bikin Grafik 3D
       this.generateTextures();

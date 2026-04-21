@@ -73,7 +73,6 @@ document.querySelectorAll(".btn-diff").forEach((btn) => {
 // Mulai Game
 window.startGameSession = function () {
   if (window.socket) {
-    console.log("⏱️ Start Piano");
     window.socket.emit("mulaiGame", "piano");
   }
   if (audioCtx.state === "suspended") audioCtx.resume();
@@ -155,7 +154,6 @@ function wireSocketEvents() {
       }
     });
 
-    console.log("✅ Piano game socket listener registered");
   } else {
     // Jika socket belum siap, tunggu 100ms dan coba lagi
     setTimeout(wireSocketEvents, 100);
@@ -267,7 +265,6 @@ function endGame() {
   const modal = document.getElementById("game-over-modal");
   if (modal) modal.style.display = "flex";
 
-  console.log(`🎹 Waktu Habis! Skor: ${score}`);
 
   if (window.socket) {
     window.socket.emit("simpanSkor", {
@@ -309,7 +306,6 @@ window.restartGame = function () {
   // 7. Reset background ke warna normal
   document.body.style.backgroundColor = "#1e1e2e";
 
-  console.log("🔄 Piano game restarted (no reload)");
 };
 
 // Pastikan HTML siap baru jalankan listener

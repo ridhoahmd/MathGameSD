@@ -73,7 +73,6 @@ const VersusTajwid = (function () {
       }
       state.p2.name = (result.value || "Guest").trim();
       
-      console.log("⚔️ VersusTajwid.init called. Raw data:", data);
 
       if (!ui.container) {
         ui.container = document.getElementById("versus-container");
@@ -131,7 +130,6 @@ const VersusTajwid = (function () {
         return;
       }
 
-      console.log("⚔️ VersusTajwid.init ready with", queue.length, "questions");
       state.questions = queue; // Shared queue source
 
       // Reset Player State
@@ -167,7 +165,6 @@ const VersusTajwid = (function () {
       if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
 
       // Start Game
-      console.log("⚔️ VS UI Classes:", ui.container.className);
       startTimer();
       loadCard(1);
       loadCard(2);
@@ -380,7 +377,6 @@ const VersusTajwid = (function () {
         return;
     }
     
-    console.log("🔄 Restarting Versus Tajwid...");
     
     // Reset state but keep questions and p2 name
     state.isActive = true;

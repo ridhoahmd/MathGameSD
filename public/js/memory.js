@@ -44,7 +44,6 @@ function initGame() {
 
   // Reset variabel
   if (window.socket) {
-    console.log("⏱️ Start Memory");
     window.socket.emit("mulaiGame", "memory");
   }
 
@@ -168,7 +167,6 @@ function wireSocketEvents() {
         setupBoard(gameCards);
       }
     });
-    console.log("✅ Memory game socket listener registered");
   } else {
     setTimeout(wireSocketEvents, 100);
   }
@@ -446,7 +444,6 @@ window.restartGame = function () {
   const startScreen = document.getElementById("start-screen");
   if (startScreen) startScreen.style.display = "flex";
 
-  console.log("🔄 Memory game restarted (no reload)");
 };
 
 // Pastikan HTML siap baru kita jalankan listener

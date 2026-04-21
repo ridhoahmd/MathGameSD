@@ -91,13 +91,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return;
   }
-  console.log("🛒 Meminta data toko untuk:", username);
   socket.emit("mintaInventory", username);
 });
 
 // 2. Data masuk dari server
 socket.on("dataInventory", (data) => {
-  console.log("📦 Data Diterima:", data);
   serverData = data;
 
   // A. Update koin
@@ -259,7 +257,6 @@ window.equipItem = function (itemId, itemType) {
     }
   }
 
-  console.log(`Mengirim request pakai: ${itemId} sebagai [${tipe}]`);
 
   socket.emit("pakaiItem", {
     username: username,

@@ -63,7 +63,6 @@ class MathGame extends GameEngine {
 
     // SPAM-CLICK FIX: Blokir jika sedang request
     if (this.isRequestingGame) {
-      console.log("⏳ Request sudah dikirim, tunggu respons server...");
       return;
     }
     this.isRequestingGame = true;
@@ -240,7 +239,6 @@ window.restartGame = function () {
     input.placeholder = "Ketik jawaban...";
   }
 
-  console.log("🔄 Math game restarted (no reload)");
 };
 
 // Sambungin socket (tunggu ready dulu)
@@ -253,10 +251,8 @@ function wireSocketEvents() {
         game.onDataReceived(data);
       }
     });
-    console.log("✅ Math game socket listener registered");
   } else {
     // Coba lagi bentar lagi
-    console.log("⏳ Nunggu socket...");
     setTimeout(wireSocketEvents, 100);
   }
 }

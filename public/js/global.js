@@ -109,7 +109,6 @@ let isReconnecting = false;
 
 if (window.socket) {
   window.socket.on("disconnect", (reason) => {
-    console.log("⚠️ Putus koneksi:", reason);
     isReconnecting = true;
 
     // Create overlay if not exists
@@ -144,7 +143,6 @@ if (window.socket) {
     if (!currentTheme) {
       currentTheme = DEFAULT_THEME;
       localStorage.setItem("selectedTheme", DEFAULT_THEME);
-      console.log("✨ Tema Default Diterapkan:", DEFAULT_THEME);
     }
 
     // Apply Theme Class

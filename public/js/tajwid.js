@@ -63,7 +63,6 @@ function initStartButton() {
     const tombolBaru = tombolMulai.cloneNode(true);
     tombolMulai.parentNode.replaceChild(tombolBaru, tombolMulai);
     tombolBaru.addEventListener("click", startGame);
-    console.log("✅ Tajwid.js: Tombol Start Siap!");
   }
 }
 
@@ -74,7 +73,6 @@ window.selectMode = function (mode) {
     btn.classList.remove("active");
     if (btn.dataset.mode === mode) btn.classList.add("active");
   });
-  console.log("Mode selected:", mode);
 };
 
 // 3. Mulai Game
@@ -83,7 +81,6 @@ function startGame() {
 
   // A. Lapor server
   if (window.socket) {
-    console.log("⏱️ Start Tajwid: Lapor Server...");
     window.socket.emit("mulaiGame", "tajwid");
   }
 
@@ -212,7 +209,6 @@ function wireSocketEvents() {
     if (ui.tutorText) ui.tutorText.innerHTML = data.penjelasan || data.teks;
   });
 
-  console.log("✅ Tajwid game socket listener registered");
   } else {
     setTimeout(wireSocketEvents, 100);
   }
@@ -414,7 +410,6 @@ function endGame() {
   } catch (e) {}
 
   if (window.socket) {
-    console.log("💾 Simpan Skor Tajwid...");
     window.socket.emit("simpanSkor", {
       nama: playerName,
       skor: score,
@@ -436,7 +431,6 @@ document.addEventListener("keydown", (e) => {
 // ==========================================
 // Agar onclick="handleInput('kiri')" di HTML bisa jalan
 window.handleInput = function (side) {
-  console.log("Input diterima:", side);
   answer(side);
 };
 
@@ -559,14 +553,12 @@ function requestMoreCards() {
   // Rate limiting
   const now = Date.now();
   if (isRequestingQuestions || now - lastRequestTime < REQUEST_COOLDOWN) {
-    console.log("⏳ Request cooldown active");
     return;
   }
 
   isRequestingQuestions = true;
   lastRequestTime = now;
 
-  console.log("📥 Requesting more cards...");
 
   if (window.socket) {
     window.socket.emit("mintaSoalAI", {
@@ -601,7 +593,6 @@ function checkAutoSave() {
 }
 
 function autoSaveProgress() {
-  console.log("💾 Auto-saving progress...");
 
   if (window.socket) {
     window.socket.emit("simpanProgress", {
@@ -742,7 +733,6 @@ window.restartGame = function () {
   const hintCount = document.getElementById("hint-count");
   if (hintCount) hintCount.innerText = "2/2";
 
-  console.log("🔄 Tajwid game restarted (no reload)");
 };
 
 // Pastikan HTML siap baru jalankan listener

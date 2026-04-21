@@ -284,7 +284,6 @@ const VersusNabi = (() => {
           exitVersus();
           return;
       }
-      console.log("🔄 Restarting Versus Nabi...");
       rematch();
   };
 

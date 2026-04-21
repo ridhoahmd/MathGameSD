@@ -35,7 +35,6 @@ window.selectMode = function (mode) {
     btn.classList.remove("active");
     if (btn.dataset.mode === mode) btn.classList.add("active");
   });
-  console.log("Mode selected:", mode);
 };
 
 // Batas Tutor
@@ -158,9 +157,6 @@ function wireSocketEvents() {
           questions.push(...response.data);
           isRequestingQuestions = false;
 
-          console.log(
-            `✅ Added ${response.data.length} questions. Total: ${questions.length}`,
-          );
 
           // Visual feedback
           showToast(`📥 +${response.data.length} soal baru dimuat`);
@@ -179,7 +175,6 @@ function wireSocketEvents() {
       if (ui.tutorText) ui.tutorText.innerHTML = data.penjelasan || data.teks;
     });
 
-    console.log("✅ Nabi game socket listener registered");
   } else {
     // Jika socket belum siap, tunggu 100ms dan coba lagi
     setTimeout(wireSocketEvents, 100);
@@ -411,14 +406,12 @@ function requestMoreQuestions() {
   // Rate limiting
   const now = Date.now();
   if (isRequestingQuestions || now - lastRequestTime < REQUEST_COOLDOWN) {
-    console.log("⏳ Request cooldown active");
     return;
   }
 
   isRequestingQuestions = true;
   lastRequestTime = now;
 
-  console.log("📥 Requesting more questions...");
 
   if (window.socket) {
     window.socket.emit("mintaSoalAI", {
@@ -451,7 +444,6 @@ function checkAutoSave() {
 }
 
 function autoSaveProgress() {
-  console.log("💾 Auto-saving progress...");
 
   if (window.socket) {
     window.socket.emit("simpanProgress", {
@@ -575,7 +567,6 @@ window.restartGame = function () {
     btnSave.style.display = ""; // Bersihkan inline style jika ada
   }
 
-  console.log("🔄 Nabi game restarted (no reload)");
 };
 
 // Pastikan HTML siap baru kita jalankan listener

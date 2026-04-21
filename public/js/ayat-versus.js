@@ -68,17 +68,11 @@ const VersusAyat = (() => {
       
       state.p2.name = (result.value || "Guest").trim();
 
-      console.log(
-        "VersusAyat.init called with",
-        allQuestions.length,
-        "questions",
-      );
       state.isActive = true;
       // Shuffle and take 10 questions
       state.questions = shuffleArray([...allQuestions]).slice(0, 10);
       state.currentIndex = 0;
 
-      console.log("⚔️ Questions ready:", state.questions);
 
       // Reset Scores
       state.p1.score = 0;
@@ -302,7 +296,6 @@ const VersusAyat = (() => {
           exitVersus();
           return;
       }
-      console.log("🔄 Restarting Versus Ayat...");
       rematch();
   };
 
