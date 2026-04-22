@@ -1,4 +1,5 @@
 const prisma = require("../config/prisma");
+const logger = require("../utils/logger"); // BUG-09 FIX: pakai Winston logger
 
 // Global variable untuk menyimpan prioritas konten (AI vs Cache)
 global.CONTENT_SOURCE_PRIORITY = "CACHE_FIRST";
@@ -9,7 +10,7 @@ module.exports = (socket, io) => {
     try {
       // Pastikan ada auth token dengan role guru/admin
       if (!socket.isAuth || (socket.decoded.role !== "guru" && socket.decoded.role !== "admin")) {
-        console.warn(`[Admin] Unauthorized simpan soal request from ${socket.id}`);
+        logger.warn(`[Admin] Unauthorized simpan soal request from ${socket.id}`);
         socket.emit("adminResponse", { success: false, message: "Akses Ditolak: Khusus Guru/Admin" });
         return;
       }
@@ -35,10 +36,10 @@ module.exports = (socket, io) => {
       // Broadcast Soal Real-Time ke murid-murid
       io.emit("soalBaruTersedia", { game: kategori, level: level });
 
-      console.log(`[Admin] ✅ Soal manual '${kategori}' berhasil disimpan oleh ${socket.decoded.username}`);
+      logger.info(`[Admin] ✅ Soal manual '${kategori}' berhasil disimpan oleh ${socket.decoded.username}`);
       socket.emit("adminResponse", { success: true, message: "Soal berhasil disimpan di database!" });
     } catch (err) {
-      console.error("[Admin] ❌ Gagal menyimpan soal manual:", err.message);
+      logger.error(`[Admin] ❌ Gagal menyimpan soal manual: ${err.message}`);
       socket.emit("adminResponse", { success: false, message: "Terjadi kesalahan server saat menyimpan." });
     }
   });
@@ -52,7 +53,7 @@ module.exports = (socket, io) => {
 
     if (source === "CACHE_FIRST" || source === "AI_ONLY") {
       global.CONTENT_SOURCE_PRIORITY = source;
-      console.log(`[Admin] 🔄 Prioritas Sumber Soal diubah ke: ${source} oleh ${socket.decoded.username}`);
+      logger.info(`[Admin] 🔄 Prioritas Sumber Soal diubah ke: ${source} oleh ${socket.decoded.username}`);
       
       // Broadcast ke semua admin yang sedang online
       io.emit("updatePrioritasMasaDepan", source);
@@ -140,7 +141,7 @@ module.exports = (socket, io) => {
       });
 
     } catch (err) {
-      console.error("[Admin] Gagal ambil analitik siswa:", err.message);
+      logger.error(`[Admin] Gagal ambil analitik siswa: ${err.message}`);
       socket.emit("analitikSiswaData", { success: false });
     }
   });

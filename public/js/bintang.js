@@ -4,8 +4,11 @@
 // ============================================
 
 // Koneksi socket buat save skor
-const socket = io();
+// BUG-02 FIX: Pakai window.socket dari global.js (sudah include auth token jika guru/admin)
+// Jangan buat koneksi baru! Duplikat socket = memory leak + tanpa token
+const socket = window.socket;
 const username = localStorage.getItem("playerName") || "Tamu";
+
 
 // State Game
 let gameActive = false;
@@ -109,6 +112,7 @@ function startGame() {
   // Tanpa ini, server akan menolak simpanSkor karena sesi dianggap tidak valid
   if (socket) {
     socket.emit("mulaiGame", "bintang");
+    window._activeGameSlug = "bintang"; // BUG-03 FIX: agar reconnect handler bisa re-register sesi
   }
 
   if (!game) {

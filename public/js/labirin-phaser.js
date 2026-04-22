@@ -817,6 +817,7 @@ window.requestGame = async function () {
     // 🔧 FIX: Emit mulaiGame agar server mencatat sesi bermain yang valid
     // Tanpa ini, server akan menolak simpanSkor karena sesi dianggap tidak valid
     socket.emit("mulaiGame", "labirin");
+    window._activeGameSlug = "labirin"; // BUG-03 FIX: agar reconnect handler bisa re-register sesi
 
     // Emit Request
     socket.emit("mintaSoalAI", {

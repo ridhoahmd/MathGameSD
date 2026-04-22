@@ -62,6 +62,7 @@ const urlsToCache = [
   "/js/global.js",
   "/js/audio.js",
   "/js/dashboard.js",
+  "/js/classes/GameEngine.js",  // BUG-07 FIX: wajib untuk game.js (ES Module import)
   "/js/utils/animations.js",
   "/js/utils/loading.js",
   "/js/utils/confetti.js",

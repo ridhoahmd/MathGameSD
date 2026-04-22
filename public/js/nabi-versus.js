@@ -14,24 +14,30 @@ const VersusNabi = (() => {
     isRotated: false,
   };
 
+  // BUG-04 FIX: Lazy-init UI — jangan query DOM saat module load, tapi saat game init()
+  // Sebelumnya: eager query di sini → null jika DOM belum ready
   const ui = {
-    container: document.getElementById("versus-container"),
-    resultScreen: document.getElementById("versus-result"),
-    p1: {
-      score: document.getElementById("v-score-p1"),
-      question: document.getElementById("v-q-p1"),
-      options: document.getElementById("v-opts-p1"),
-    },
-    p2: {
-      score: document.getElementById("v-score-p2"),
-      question: document.getElementById("v-q-p2"),
-      options: document.getElementById("v-opts-p2"),
-    },
+    container: null,
+    resultScreen: null,
+    p1: { score: null, question: null, options: null },
+    p2: { score: null, question: null, options: null },
   };
+
+  function initUI() {
+    ui.container = document.getElementById("versus-container");
+    ui.resultScreen = document.getElementById("versus-result");
+    ui.p1.score = document.getElementById("v-score-p1");
+    ui.p1.question = document.getElementById("v-q-p1");
+    ui.p1.options = document.getElementById("v-opts-p1");
+    ui.p2.score = document.getElementById("v-score-p2");
+    ui.p2.question = document.getElementById("v-q-p2");
+    ui.p2.options = document.getElementById("v-opts-p2");
+  }
 
   // --- Public Methods ---
 
   function init(allQuestions) {
+    if (!ui.container) initUI(); // Lazy-init UI saat pertama kali dibutuhkan
     const startScreen = document.getElementById("start-screen");
     if (startScreen) {
       startScreen.classList.remove("active");

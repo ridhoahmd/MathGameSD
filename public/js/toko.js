@@ -1,4 +1,5 @@
-const socket = io();
+// BUG-02 FIX: Pakai window.socket dari global.js (sudah include auth token jika guru/admin)
+const socket = window.socket;
 const username = localStorage.getItem("playerName");
 
 // Daftar bingkai

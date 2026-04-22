@@ -1,6 +1,7 @@
 const prisma = require("../config/prisma");
 const fs = require("fs");
 const path = require("path");
+const logger = require("../utils/logger"); // BUG-09 FIX: pakai Winston logger, bukan console
 
 // Rate pengali XP per game (sama kayak di frontend)
 const XP_RATES = {
@@ -135,7 +136,7 @@ module.exports = (socket, io) => {
         badge: user.equippedBadge || null,
       });
     } catch (err) {
-      console.error("❌ Gagal ambil profil SQL:", err.message);
+      logger.error(`❌ Gagal ambil profil SQL: ${err.message}`);
       socket.emit("errorProfil", "Gagal memuat profil. Coba refresh.");
     }
   });
@@ -145,6 +146,10 @@ module.exports = (socket, io) => {
     if (!data || !data.nama || !data.game) return;
     let skor = parseInt(data.skor);
     if (isNaN(skor)) skor = 0;
+
+    // 🔧 FIX BUG-01: Deklarasi gameSlug & safeName SEBELUM dipakai di MAX_SCORE_MAP
+    const safeName = data.nama;
+    const gameSlug = data.game;
 
     // 🛡️ SECURITY: VALIDASI SKOR (Per-game limit yang realistis)
     const MAX_SCORE_MAP = {
@@ -161,7 +166,7 @@ module.exports = (socket, io) => {
     };
     const MAX_SCORE_PER_GAME = MAX_SCORE_MAP[gameSlug] || 2000;
     if (skor > MAX_SCORE_PER_GAME) {
-      console.warn(`⚠️ Suspicious Score Attempt: ${skor} (max: ${MAX_SCORE_PER_GAME}) by ${data.nama} in ${gameSlug}`);
+      logger.warn(`⚠️ Suspicious Score Attempt: ${skor} (max: ${MAX_SCORE_PER_GAME}) by ${data.nama} in ${gameSlug}`);
       skor = MAX_SCORE_PER_GAME; // Cap skor ke batas wajar per-game
       socket.emit("info", "Skor Anda disesuaikan dengan batas maksimum permainan.");
     }
@@ -169,19 +174,18 @@ module.exports = (socket, io) => {
 
     // 🛡️ Server-Side Validation: Wajib punya sesi bermain dari "mulaiGame"
     if (!socket.activeGameSession || socket.activeGameSession.game !== data.game) {
-      console.warn(`⚠️ Blokir skor ilegal: Sesi tidak valid. User: ${data.nama}, Game: ${data.game}`);
+      logger.warn(`⚠️ Blokir skor ilegal: Sesi tidak valid. User: ${data.nama}, Game: ${data.game}`);
       return socket.emit("errorSkor", "Sesi tidak valid atau telah berakhir. Harap ulangi permainan.");
     }
 
     // 🛡️ Server-Side Validation: Pencegahan Speedhack (Terlalu Cepat)
     const timePlayedMs = Date.now() - socket.activeGameSession.startTime;
     if (timePlayedMs < 5000 && skor > 50) {
-      console.warn(`⚠️ Speedhack Dicegah: ${data.nama} dapat skor ${skor} dalam ${timePlayedMs}ms (Game: ${data.game})`);
+      logger.warn(`⚠️ Speedhack Dicegah: ${data.nama} dapat skor ${skor} dalam ${timePlayedMs}ms (Game: ${data.game})`);
       return socket.emit("errorSkor", "Terdeteksi anomali pada permainan (Terlalu cepat). Skor dibatalkan.");
     }
 
-    const safeName = data.nama;
-    const gameSlug = data.game;
+    // safeName & gameSlug sudah dideklarasikan di atas (BUG-01 fix)
     const koin = Math.floor(skor / 10);
     const xpGained = getXPFromScore(gameSlug, skor);
 
@@ -243,7 +247,7 @@ module.exports = (socket, io) => {
       // Notifikasi ke guru (Global Emit via io)
       if (io) io.emit("refreshDataGuru");
     } catch (err) {
-      console.error("❌ DB Error:", err.message);
+      logger.error(`❌ DB Error simpanSkor: ${err.message}`);
     }
   });
 
@@ -325,7 +329,7 @@ module.exports = (socket, io) => {
 
       if (io) io.emit("refreshDataGuru");
     } catch (err) {
-      console.error("❌ DB Error Versus Lokal:", err.message);
+      logger.error(`❌ DB Error Versus Lokal: ${err.message}`);
     }
   });
 
@@ -395,12 +399,14 @@ module.exports = (socket, io) => {
           labirin: skorMap["labirin"] || 0,
           nabi: skorMap["nabi"] || 0,
           ayat: skorMap["ayat"] || 0,
+          tajwid: skorMap["tajwid"] || 0,   // BUG-06 FIX: sebelumnya tidak ada
+          bintang: skorMap["bintang"] || 0, // BUG-06 FIX: sebelumnya tidak ada
         };
       });
 
       socket.emit("updateLeaderboard", leaderboard);
     } catch (err) {
-      console.error("❌ Gagal ambil leaderboard SQL:", err.message);
+      logger.error(`❌ Gagal ambil leaderboard SQL: ${err.message}`);
       socket.emit("updateLeaderboard", []);
     }
   });
@@ -547,7 +553,7 @@ module.exports = (socket, io) => {
         io.emit("kickUser", targetUser);
       }
     } catch (err) {
-      console.error("❌ Failed to update role:", err.message);
+      logger.error(`❌ Failed to update role: ${err.message}`);
       socket.emit("errorUpdate", "Terjadi kesalahan database. Coba lagi.");
     }
   });
@@ -618,11 +624,12 @@ module.exports = (socket, io) => {
           try { fs.unlinkSync(path.join(backupDir, files[i])); } catch(e){}
         }
       }
-      console.log(`✅ Data berhasil dicadangkan sebelum reset: ${backupFilename}`);
+      logger.info(`✅ Data berhasil dicadangkan sebelum reset: ${backupFilename}`);
 
       await prisma.score.deleteMany({});
       await prisma.user.updateMany({
-        data: { coins: 0, totalScore: 0, inventory: ["default"] },
+        // BUG-10 FIX: Reset XP dan Level juga, bukan hanya coins & totalScore
+        data: { coins: 0, totalScore: 0, xp: 0, level: 0, inventory: ["default"] },
       });
 
       console.log(
@@ -634,7 +641,7 @@ module.exports = (socket, io) => {
 
       if (io) io.emit("forceRefresh");
     } catch (e) {
-      console.error("Gagal Reset:", e);
+      logger.error(`Gagal Reset: ${e.message}`, { stack: e.stack });
     }
   });
 };

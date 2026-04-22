@@ -4,6 +4,7 @@ const {
   isSocketRateLimited,
   cleanUpSocketRateLimit,
 } = require("../utils/rateLimit");
+const logger = require("../utils/logger"); // BUG-09 FIX: pakai Winston logger
 
 // Handlers (Pengurus masing-masing fitur)
 const userHandler = require("./userHandler");
@@ -38,7 +39,7 @@ module.exports = (httpServer) => {
         if (err) {
           // Token invalid/expired: jangan putus koneksi, cukup downgrade ke tamu
           // Ini mencegah halaman guru crash hanya karena token expired
-          console.warn(`⚠️ Token tidak valid dari ${socket.id}: ${err.message} — diteruskan sebagai tamu.`);
+          logger.warn(`⚠️ Token tidak valid dari ${socket.id}: ${err.message} — diteruskan sebagai tamu.`);
           next(); // Lanjutkan sebagai tamu (isAuth tetap false)
         } else {
           socket.decoded = decoded;
@@ -55,7 +56,7 @@ module.exports = (httpServer) => {
   });
 
   io.on("connection", (socket) => {
-    console.log(`✅ User CONNECTED: ${socket.id} | Auth: ${socket.isAuth}`);
+    logger.info(`✅ User CONNECTED: ${socket.id} | Auth: ${socket.isAuth}`);
 
     // Middleware Global / Rate Limit bisa ditaruh sini
     // Sekarang kita langsung bind handler aja
@@ -69,7 +70,7 @@ module.exports = (httpServer) => {
 
     socket.on("disconnect", () => {
       cleanUpSocketRateLimit(socket.id);
-      console.log(`❌ User DISCONNECTED: ${socket.id}`);
+      logger.info(`❌ User DISCONNECTED: ${socket.id}`);
     });
   });
 

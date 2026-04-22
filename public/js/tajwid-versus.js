@@ -406,5 +406,6 @@ const VersusTajwid = (function () {
   return {
     init: init,
     handleInput: handleAnswer, // For bucket clicks
+    exitVersus: exitVersus,   // BUG-05 FIX: expose exitVersus agar tombol keluar berfungsi
   };
 })();
