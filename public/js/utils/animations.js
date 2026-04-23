@@ -201,21 +201,26 @@ const AnimationUtils = {
   fadeIn(element, duration = 300) {
     if (!element) return;
 
+    // FIX: Gunakan requestAnimationFrame (bukan setInterval) untuk animasi
+    // yang benar-benar smooth 60fps dan tidak drift/block di device lambat
     element.style.opacity = "0";
     element.style.display = "block";
 
-    let opacity = 0;
-    const interval = 16; // ~60fps
-    const increment = interval / duration;
+    const startTime = performance.now();
 
-    const fade = setInterval(() => {
-      opacity += increment;
-      element.style.opacity = Math.min(opacity, 1);
+    const tick = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      element.style.opacity = progress;
 
-      if (opacity >= 1) {
-        clearInterval(fade);
+      if (progress < 1) {
+        requestAnimationFrame(tick);
+      } else {
+        element.style.opacity = "1";
       }
-    }, interval);
+    };
+
+    requestAnimationFrame(tick);
   },
 
   /**
@@ -227,20 +232,26 @@ const AnimationUtils = {
   fadeOut(element, duration = 300, callback) {
     if (!element) return;
 
-    let opacity = 1;
-    const interval = 16;
-    const decrement = interval / duration;
+    // FIX: Gunakan requestAnimationFrame (bukan setInterval) untuk animasi
+    // yang benar-benar smooth 60fps dan tidak drift/block di device lambat
+    const startOpacity = parseFloat(element.style.opacity) || 1;
+    const startTime = performance.now();
 
-    const fade = setInterval(() => {
-      opacity -= decrement;
-      element.style.opacity = Math.max(opacity, 0);
+    const tick = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      element.style.opacity = startOpacity * (1 - progress);
 
-      if (opacity <= 0) {
-        clearInterval(fade);
+      if (progress < 1) {
+        requestAnimationFrame(tick);
+      } else {
+        element.style.opacity = "0";
         element.style.display = "none";
         if (callback) callback();
       }
-    }, interval);
+    };
+
+    requestAnimationFrame(tick);
   },
 
   /**

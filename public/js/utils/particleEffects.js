@@ -212,13 +212,8 @@ class ParticleEffects {
 }
 
 // Create global instance
+// FIX: Constructor sudah memanggil this.init() secara internal.
+// Blok DOMContentLoaded di bawah ini DIHAPUS untuk mencegah:
+// 1. Loop requestAnimationFrame ganda (dua rAF loop jalan bersamaan)
+// 2. Potensi canvas overlay duplikat jika getElementById gagal race condition
 const ParticleManager = new ParticleEffects();
-
-// Auto init on DOM ready
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => {
-    ParticleManager.init();
-  });
-} else {
-  ParticleManager.init();
-}

@@ -447,79 +447,75 @@ body.theme-crimson .stat-value {
    ========================================= */
 
 body.theme-obsidian {
-  /* Pure black with breathing ambient glow */
+  /* Pure black base — statis, tidak ada animasi di body */
   background: #000000;
+  /* FIX PERFORMA: background-image diset statis di sini.
+     Efek "breathing" dipindahkan ke pseudo-element ::before & ::after
+     yang HANYA menganimasikan 'opacity' — properti compositable GPU.
+     Ini menghilangkan full repaint setiap frame yang terjadi
+     ketika background-image di-animasikan langsung. */
   background-image:
-    /* Subtle blue ambient spot (bottom left) */
-    radial-gradient(
-      circle at 20% 80%,
-      rgba(100, 100, 255, 0.03) 0%,
-      transparent 50%
-    ),
-    /* Subtle purple ambient spot (top right) */
-    radial-gradient(
-        circle at 80% 20%,
-        rgba(255, 100, 255, 0.02) 0%,
-        transparent 50%
-      ),
-    /* Subtle noise texture for depth */
     repeating-radial-gradient(
-        circle at 50% 50%,
-        transparent 0,
-        rgba(255, 255, 255, 0.005) 1px,
-        transparent 2px,
-        transparent 40px
-      );
-
-  /* Breathing animation for ambient spots */
-  animation: obsidian-ambient-pulse 10s ease-in-out infinite alternate;
-
-  color: #f5f5f5; /* Very light gray - excellent contrast */
+      circle at 50% 50%,
+      transparent 0,
+      rgba(255, 255, 255, 0.005) 1px,
+      transparent 2px,
+      transparent 40px
+    );
+  position: relative; /* Diperlukan agar ::before & ::after terpasang */
+  color: #f5f5f5;
 }
 
-/* Breathing animation keyframes */
-@keyframes obsidian-ambient-pulse {
-  from {
-    background-image:
-      radial-gradient(
-        circle at 20% 80%,
-        rgba(100, 100, 255, 0.03),
-        transparent 50%
-      ),
-      radial-gradient(
-        circle at 80% 20%,
-        rgba(255, 100, 255, 0.02),
-        transparent 50%
-      ),
-      repeating-radial-gradient(
-        circle at 50% 50%,
-        transparent 0,
-        rgba(255, 255, 255, 0.005) 1px,
-        transparent 2px,
-        transparent 40px
-      );
-  }
-  to {
-    background-image:
-      radial-gradient(
-        circle at 25% 75%,
-        rgba(100, 100, 255, 0.05),
-        transparent 50%
-      ),
-      radial-gradient(
-        circle at 75% 25%,
-        rgba(255, 100, 255, 0.04),
-        transparent 50%
-      ),
-      repeating-radial-gradient(
-        circle at 50% 50%,
-        transparent 0,
-        rgba(255, 255, 255, 0.005) 1px,
-        transparent 2px,
-        transparent 40px
-      );
-  }
+/* Ambient spot BIRU (kiri bawah) — animasi opacity saja (GPU composite) */
+body.theme-obsidian::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    circle at 20% 80%,
+    rgba(100, 100, 255, 0.05) 0%,
+    transparent 50%
+  );
+  /* Opacity animation: 100% GPU, zero repaint, zero layout */
+  animation: obsidian-glow-blue 10s ease-in-out infinite alternate;
 }
+
+/* Ambient spot UNGU (kanan atas) — animasi opacity saja (GPU composite) */
+body.theme-obsidian::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    circle at 80% 20%,
+    rgba(255, 100, 255, 0.04) 0%,
+    transparent 50%
+  );
+  animation: obsidian-glow-purple 10s ease-in-out infinite alternate-reverse;
+}
+
+/* Pastikan konten di atas pseudo-element glow */
+body.theme-obsidian .dashboard-container,
+body.theme-obsidian .main-header {
+  position: relative;
+  z-index: 1;
+}
+
+/* Keyframes: hanya opacity — properti compositable, NOL repaint */
+@keyframes obsidian-glow-blue {
+  from { opacity: 0.5; }
+  to   { opacity: 1; }
+}
+
+@keyframes obsidian-glow-purple {
+  from { opacity: 0.3; }
+  to   { opacity: 0.9; }
+}
+
+/* HAPUS @keyframes obsidian-ambient-pulse (dulu animasi background-image) */
 
 /* HEADER: Premium minimal */
 body.theme-obsidian .main-header {
