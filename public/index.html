@@ -76,10 +76,32 @@
         <div class="profile-name" id="display-name">Silakan Login</div>
         <div class="badge-display hidden" id="user-badge"></div>
 
-        <!-- Kotak Skor Total -->
+        <!-- Kotak Statistik Player -->
         <div class="stats-box">
-          <div class="font-small text-ccc">TOTAL SKOR</div>
-          <span class="stat-value" id="total-score">-</span>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-label">SKOR</div>
+              <div class="stat-value" id="total-score">-</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">LEVEL</div>
+              <div class="stat-value stat-value--level" id="stat-level">-</div>
+            </div>
+          </div>
+          <!-- XP Progress Bar -->
+          <div class="stats-xp-section">
+            <div class="stats-xp-header">
+              <span class="stats-xp-label">Progres XP</span>
+              <span class="stats-xp-next" id="stat-xp-next">— XP lagi</span>
+            </div>
+            <div class="stats-xp-bar">
+              <div class="stats-xp-fill" id="stat-xp-fill" style="width: 0%"></div>
+            </div>
+            <div class="stats-xp-values">
+              <span id="stat-xp-current">0 XP</span>
+              <span id="stat-xp-pct">0%</span>
+            </div>
+          </div>
         </div>
 
         <!-- Menu Khusus Siswa -->
@@ -138,7 +160,7 @@
             />
           </div>
           <button onclick="loginGoogle()" class="btn-google" id="btn-login">
-            G Masuk Google
+            Masuk dengan Google
           </button>
           <p
             id="text-guru"
@@ -159,6 +181,7 @@
         <div class="grid-games">
           <!-- Game 1: Matematika Dasar -->
           <a href="#" onclick="masukGame('html/math.html')" class="game-card">
+            <span class="game-badge badge-math">Matematika</span>
             <div class="game-icon">🚀</div>
             <div class="game-title">GESIT BERHITUNG</div>
             <div class="game-desc">Matematika cepat antar galaksi!</div>
@@ -166,11 +189,8 @@
           </a>
 
           <!-- Game 2: Zuma Phaser -->
-          <a
-            href="#"
-            onclick="masukGame('html/zuma-phaser.html')"
-            class="game-card"
-          >
+          <a href="#" onclick="masukGame('html/zuma-phaser.html')" class="game-card">
+            <span class="game-badge badge-math">Matematika</span>
             <div class="game-icon">☄️</div>
             <div class="game-title">TEMBAK ANGKA</div>
             <div class="game-desc">Hancurkan bola angka sebelum meledak!</div>
@@ -179,16 +199,16 @@
 
           <!-- Game 3: Memory Match -->
           <a href="#" onclick="masukGame('html/memory.html')" class="game-card">
+            <span class="game-badge badge-otak">Otak</span>
             <div class="game-icon">🧩</div>
             <div class="game-title">LAB MEMORI</div>
-            <div class="game-desc">
-              Aktifkan sel otakmu dengan kartu memori.
-            </div>
+            <div class="game-desc">Aktifkan sel otakmu dengan kartu memori.</div>
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
           <!-- Game 4: Piano Matematika -->
           <a href="#" onclick="masukGame('html/piano.html')" class="game-card">
+            <span class="game-badge badge-math">Matematika</span>
             <div class="game-icon">🎹</div>
             <div class="game-title">MATEMATIKA PIANO</div>
             <div class="game-desc">Tekan tuts piano sesuai hasil hitungan.</div>
@@ -197,6 +217,7 @@
 
           <!-- Game 5: Kasir Belanja -->
           <a href="#" onclick="masukGame('html/kasir.html')" class="game-card">
+            <span class="game-badge badge-math">Matematika</span>
             <div class="game-icon">🏪</div>
             <div class="game-title">KASIR CILIK</div>
             <div class="game-desc">Simulasi belanja & hitung kembalian.</div>
@@ -204,11 +225,8 @@
           </a>
 
           <!-- Game 6: Labirin -->
-          <a
-            href="#"
-            onclick="masukGame('html/labirin-phaser.html')"
-            class="game-card"
-          >
+          <a href="#" onclick="masukGame('html/labirin-phaser.html')" class="game-card">
+            <span class="game-badge badge-otak">Logika</span>
             <div class="game-icon">🌀</div>
             <div class="game-title">LABIRIN ILMU</div>
             <div class="game-desc">Cari jalan keluar & jawab rintangan!</div>
@@ -217,26 +235,25 @@
 
           <!-- Game 7: Kisah Nabi -->
           <a href="#" onclick="masukGame('html/nabi.html')" class="game-card">
+            <span class="game-badge badge-islam">Islam</span>
             <div class="game-icon">🕌</div>
             <div class="game-title">JEJAK NABI</div>
-            <div class="game-desc">
-              Petualangan menelusuri kisah 25 Nabi & Rasul.
-            </div>
+            <div class="game-desc">Petualangan menelusuri kisah 25 Nabi & Rasul.</div>
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
           <!-- Game 8: Sambung Ayat -->
           <a href="#" onclick="masukGame('html/ayat.html')" class="game-card">
+            <span class="game-badge badge-islam">Islam</span>
             <div class="game-icon">📖</div>
             <div class="game-title">SAMBUNG AYAT</div>
-            <div class="game-desc">
-              Lanjutkan potongan ayat Juz Amma (Juz 30).
-            </div>
+            <div class="game-desc">Lanjutkan potongan ayat Juz Amma (Juz 30).</div>
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
           <!-- Game 9: Tajwid -->
           <a href="#" onclick="masukGame('html/tajwid.html')" class="game-card">
+            <span class="game-badge badge-islam">Islam</span>
             <div class="game-icon">⚖️</div>
             <div class="game-title">PILAH HUKUM</div>
             <div class="game-desc">Geser kata sesuai hukum tajwidnya!</div>
@@ -244,11 +261,8 @@
           </a>
 
           <!-- Game 10: Tangkap Bintang -->
-          <a
-            href="#"
-            onclick="masukGame('html/bintang.html')"
-            class="game-card"
-          >
+          <a href="#" onclick="masukGame('html/bintang.html')" class="game-card">
+            <span class="game-badge badge-math">Matematika</span>
             <div class="game-icon">🌟</div>
             <div class="game-title">TANGKAP BINTANG</div>
             <div class="game-desc">Tangkap bintang dengan jawaban benar!</div>
@@ -297,13 +311,13 @@
     </div>
 
     <!-- === MODAL RIWAYAT DUEL === -->
-    <div id="versus-history-modal" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; display: none;">
-      <div class="modal-content glass-panel" style="max-width: 500px; width: 90%; background: #1a1a2e; padding: 20px; border-radius: 12px; border: 1px solid #00f2ff;">
-        <h2 class="text-center font-orbitron mb-20" style="color: #00f2ff; text-align: center; margin-bottom: 20px;">⚔️ RIWAYAT DUEL ⚔️</h2>
-        <div id="versus-history-list" class="history-list" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
-          <p class="text-center text-ccc" style="text-align: center; color: #ccc;">Memuat data duel...</p>
+    <div id="versus-history-modal" class="modal-duel-overlay">
+      <div class="modal-duel-panel">
+        <h2 class="modal-duel-title">⚔️ RIWAYAT DUEL ⚔️</h2>
+        <div id="versus-history-list" class="modal-duel-list">
+          <p class="modal-duel-empty">Memuat data duel...</p>
         </div>
-        <button class="btn-shop mt-20" style="width: 100%; margin-top: 20px; background: #00f2ff; color: #000; font-weight: bold; border: none; padding: 10px; border-radius: 8px; cursor: pointer;" onclick="document.getElementById('versus-history-modal').style.display = 'none';">TUTUP</button>
+        <button class="modal-duel-close" onclick="document.getElementById('versus-history-modal').classList.remove('is-open')">TUTUP</button>
       </div>
     </div>
 

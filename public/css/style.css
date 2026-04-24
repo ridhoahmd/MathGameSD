@@ -1126,13 +1126,53 @@ button:active,
 }
 
 .btn-google {
-  background: #fff;
-  color: #333;
+  background: #ffffff;
+  color: #3c4043;
   width: 100%;
-  padding: 12px;
+  padding: 11px 16px;
   border-radius: 8px;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 0.88rem;
   cursor: pointer;
+  /* Layout flex agar logo & teks sejajar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  /* Border & shadow ala Google brand */
+  border: 1px solid #dadce0;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.15);
+  transition:
+    box-shadow 0.2s ease,
+    transform   0.2s ease,
+    background  0.2s ease;
+  letter-spacing: 0.01em;
+}
+
+.btn-google::before {
+  /* Logo Google inline via SVG data URI */
+  content: "";
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/%3E%3Cpath fill='%234285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/%3E%3Cpath fill='%23FBBC05' d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z'/%3E%3Cpath fill='%2334A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/%3E%3Cpath fill='none' d='M0 0h48v48H0z'/%3E%3C/svg%3E") center / contain no-repeat;
+  flex-shrink: 0;
+}
+
+.btn-google:hover {
+  background: #f8f9fa;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.25),
+    0 4px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  border-color: #c8ccd0;
+}
+
+.btn-google:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 .btn-logout {
   background: rgba(255, 255, 255, 0.1);
@@ -1211,6 +1251,35 @@ button:active,
   font-size: 50px;
   margin-bottom: 10px;
   display: block;
+  /* Animasi float default — tiap kartu dapat delay berbeda via nth-child */
+  animation: icon-float 3.5s ease-in-out infinite;
+  will-change: transform;
+  display: inline-block; /* Wajib agar transform translateY bekerja */
+}
+
+/* Stagger: setiap kartu dimulai di fase berbeda */
+.game-card:nth-child(1)  .game-icon { animation-delay: 0s;    }
+.game-card:nth-child(2)  .game-icon { animation-delay: 0.35s; }
+.game-card:nth-child(3)  .game-icon { animation-delay: 0.70s; }
+.game-card:nth-child(4)  .game-icon { animation-delay: 1.05s; }
+.game-card:nth-child(5)  .game-icon { animation-delay: 1.40s; }
+.game-card:nth-child(6)  .game-icon { animation-delay: 1.75s; }
+.game-card:nth-child(7)  .game-icon { animation-delay: 2.10s; }
+.game-card:nth-child(8)  .game-icon { animation-delay: 2.45s; }
+.game-card:nth-child(9)  .game-icon { animation-delay: 2.80s; }
+.game-card:nth-child(10) .game-icon { animation-delay: 3.15s; }
+
+/* Pause animasi float saat card di-hover (biar tidak bentrok dgn lift card) */
+.game-card:hover .game-icon {
+  animation-play-state: paused;
+  transform: translateY(-4px) scale(1.1);
+  transition: transform 0.3s ease;
+}
+
+@keyframes icon-float {
+  0%, 100% { transform: translateY(0px);   }
+  40%       { transform: translateY(-10px); }
+  60%       { transform: translateY(-8px);  }
 }
 .game-title {
   font-weight: bold;
@@ -1413,12 +1482,18 @@ button:active,
     grid-template-columns: 1fr;
   }
 
-  /* [PERBAIKAN] Judul tidak dihilangkan, tapi dikecilkan */
+  /* [PERBAIKAN] Judul dikecilkan di mobile */
   .portal-title {
     display: block;
-    font-size: 0.8rem; /* Ukuran kecil */
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
     padding-left: 10px;
     border-left: 1px solid #444;
+    /* Overflow text jadi ellipsis biar tidak meluber */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
   }
 
   .logo-img {
@@ -1628,3 +1703,347 @@ button:active,
     opacity: 1;
   }
 }
+
+/* =====================================================
+   #1 — GAME CATEGORY BADGES
+   Color-coded pill badge di pojok kanan atas kartu game
+   ===================================================== */
+
+.game-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  pointer-events: none;
+  z-index: 2;
+  /* Efek shimmer ringan */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* Badge: Matematika (kuning-oranye) */
+.badge-math {
+  background: linear-gradient(135deg, #f7971e, #ffd200);
+  color: #1a0a00;
+}
+
+/* Badge: Islam (hijau emerald) */
+.badge-islam {
+  background: linear-gradient(135deg, #0f5132, #38ef7d);
+  color: #fff;
+}
+
+/* Badge: Otak / Logika (biru-ungu) */
+.badge-otak {
+  background: linear-gradient(135deg, #4e4376, #2b5876);
+  color: #fff;
+}
+
+/* =====================================================
+   #2 — EXPANDED STATS BOX (Player Card)
+   Grid skor + level + XP progress bar
+   ===================================================== */
+
+/* Override stats-box lama */
+.stats-box {
+  background: rgba(255, 255, 255, 0.05);
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Grid 2 kolom: Skor | Level */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.stat-item {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 10px 8px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.stat-label {
+  font-size: 0.6rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+/* Override stat-value supaya cocok di stat-item (lebih kecil) */
+.stat-item .stat-value {
+  font-family: "Orbitron", sans-serif;
+  font-size: 1.4rem;
+  color: #ffeb3b;
+  display: block;
+  line-height: 1.1;
+}
+
+/* Level badge warna berbeda */
+.stat-item .stat-value--level {
+  color: #00f2ff;
+}
+
+/* XP Progress Section */
+.stats-xp-section {
+  margin-top: 4px;
+}
+
+.stats-xp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.stats-xp-label {
+  font-size: 0.65rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.stats-xp-next {
+  font-size: 0.65rem;
+  color: #aaa;
+}
+
+.stats-xp-bar {
+  width: 100%;
+  height: 7px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.stats-xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00f2ff, #8338ec);
+  border-radius: 99px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shimmer animasi di XP bar */
+.stats-xp-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: xp-shimmer 2s ease-in-out infinite;
+}
+
+@keyframes xp-shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.stats-xp-values {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: #777;
+}
+
+/* =====================================================
+   #3 — MODAL RIWAYAT DUEL (Proper CSS Classes)
+   Menggantikan semua inline style di index.html
+   ===================================================== */
+
+.modal-duel-overlay {
+  display: none; /* default hidden */
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: modal-fade-in 0.2s ease;
+}
+
+/* Aktif saat .is-open ditambahkan via JS */
+.modal-duel-overlay.is-open {
+  display: flex;
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-duel-panel {
+  max-width: 500px;
+  width: 90%;
+  background: linear-gradient(145deg, #1a1a2e, #16213e);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 242, 255, 0.4);
+  box-shadow:
+    0 0 40px rgba(0, 242, 255, 0.1),
+    0 20px 60px rgba(0, 0, 0, 0.6);
+  animation: modal-slide-up 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modal-slide-up {
+  from { transform: translateY(30px) scale(0.95); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.modal-duel-title {
+  font-family: "Orbitron", sans-serif;
+  color: #00f2ff;
+  text-align: center;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  margin: 0 0 20px;
+  text-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
+}
+
+.modal-duel-list {
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* Scrollbar tipis biar rapi */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 242, 255, 0.3) transparent;
+}
+
+.modal-duel-list::-webkit-scrollbar { width: 4px; }
+.modal-duel-list::-webkit-scrollbar-track { background: transparent; }
+.modal-duel-list::-webkit-scrollbar-thumb { background: rgba(0, 242, 255, 0.3); border-radius: 2px; }
+
+.modal-duel-empty {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+  font-size: 0.9rem;
+}
+
+/* Kartu satu item duel */
+.duel-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  border-left: 4px solid transparent;
+  transition: background 0.2s;
+}
+
+.duel-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.duel-item.duel-win   { border-left-color: #38ef7d; }
+.duel-item.duel-lose  { border-left-color: #ff4757; }
+.duel-item.duel-draw  { border-left-color: #ffbe0b; }
+
+.duel-info { flex: 1.2; }
+.duel-game-name {
+  color: #00f2ff;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.duel-date {
+  font-size: 0.7rem;
+  color: #666;
+  margin-top: 2px;
+}
+
+.duel-status { flex: 0.8; text-align: center; }
+.duel-icon   { font-size: 1.4rem; }
+.duel-label  {
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
+.duel-score-col  { flex: 1; text-align: right; }
+.duel-vs-text    { font-size: 0.72rem; color: #777; }
+.duel-vs-name    { color: #fff; font-size: 0.88rem; font-weight: 600; }
+.duel-score-text { font-size: 0.78rem; color: #aaa; margin-top: 4px; }
+.duel-score-val  { color: #fff; font-weight: 700; }
+
+.modal-duel-close {
+  display: block;
+  width: 100%;
+  margin-top: 18px;
+  padding: 11px;
+  background: linear-gradient(90deg, #00f2ff, #0099cc);
+  color: #000;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.modal-duel-close:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 242, 255, 0.35);
+}
+
+/* =====================================================
+   #5 — RESPONSIVE PORTAL TITLE
+   Sembunyikan teks judul header di layar < 480px
+   ===================================================== */
+
+@media (max-width: 480px) {
+  .portal-title {
+    /* Teks terlalu panjang di layar sangat kecil — sembunyikan */
+    display: none;
+  }
+
+  /* Logo lebih kecil biar header tidak overflow */
+  .logo-img {
+    height: 34px;
+  }
+
+  /* Padding header lebih ringkas */
+  .main-header {
+    padding: 8px 16px;
+  }
+}
+
+/* =====================================================
+   Accessibility: Hormati preferensi reduced-motion user
+   Matikan animasi float ikon jika user memilih demikian
+   ===================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .game-icon {
+    animation: none !important;
+    transform: none !important;
+  }
+  .game-card:hover .game-icon {
+    transform: scale(1.05) !important;
+    transition: transform 0.2s ease !important;
+  }
+}
+
+

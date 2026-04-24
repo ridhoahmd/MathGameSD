@@ -114,6 +114,32 @@ socket.on("updateProfil", (data) => {
   const xpDisplay = document.getElementById("total-score");
   if (xpDisplay) xpDisplay.innerText = data.skor || "0";
 
+  // UPDATE LEVEL di stats box baru
+  const statLevel = document.getElementById("stat-level");
+  if (statLevel) statLevel.innerText = data.level !== undefined ? data.level : "-";
+
+  // UPDATE XP BAR di stats box baru
+  if (data.xp !== undefined) {
+    const level = data.level || 0;
+    const xpForLevel = (lvl) => lvl * lvl * 100;
+    const currentLevelXP = xpForLevel(level);
+    const nextLevelXP    = xpForLevel(level + 1);
+    const xpInLevel      = data.xp - currentLevelXP;
+    const xpNeeded       = nextLevelXP - currentLevelXP;
+    const pct            = xpNeeded > 0 ? Math.min(100, Math.round((xpInLevel / xpNeeded) * 100)) : 0;
+    const xpLeft         = Math.max(0, nextLevelXP - data.xp);
+
+    const fillEl   = document.getElementById("stat-xp-fill");
+    const nextEl   = document.getElementById("stat-xp-next");
+    const currEl   = document.getElementById("stat-xp-current");
+    const pctEl    = document.getElementById("stat-xp-pct");
+
+    if (fillEl)  fillEl.style.width   = pct + "%";
+    if (nextEl)  nextEl.innerText     = xpLeft.toLocaleString("id-ID") + " XP lagi";
+    if (currEl)  currEl.innerText     = data.xp.toLocaleString("id-ID") + " XP";
+    if (pctEl)   pctEl.innerText      = pct + "%";
+  }
+
   // UPDATE TEMA (kalo belum ada settingan manual di lokal)
   const savedTheme = localStorage.getItem("selectedTheme");
 
@@ -388,88 +414,87 @@ function showVersusHistory() {
   const modal = document.getElementById("versus-history-modal");
   if (!modal) return;
 
-  modal.style.display = "flex";
+  // Buka modal dengan class (bukan inline style)
+  modal.classList.add("is-open");
   const listContainer = document.getElementById("versus-history-list");
+
+  // Tutup modal kalau klik di luar panel
+  modal.addEventListener("click", function outsideClick(e) {
+    if (e.target === modal) {
+      modal.classList.remove("is-open");
+      modal.removeEventListener("click", outsideClick);
+    }
+  }, { once: false });
 
   // Cek apakah user sudah login (bukan Guest)
   const playerName = localStorage.getItem("playerName") || "";
   const isGuest = playerName.startsWith("Guest_") || !playerName;
 
   if (isGuest) {
-    // Langsung tampilkan pesan login dulu, tidak perlu minta ke server
     listContainer.innerHTML = `
       <div style="text-align: center; padding: 30px 20px;">
         <div style="font-size: 3rem; margin-bottom: 12px;">🔐</div>
-        <p style="color: #00f2ff; font-weight: bold; margin-bottom: 8px;">Login Google dulu yuk!</p>
-        <p style="color: #888; font-size: 0.85rem;">Riwayat duelmu tersimpan setelah kamu masuk dengan akun Google.</p>
+        <p class="modal-duel-empty" style="color: #00f2ff; font-weight: bold; margin-bottom: 8px;">Login Google dulu yuk!</p>
+        <p class="modal-duel-empty">Riwayat duelmu tersimpan setelah kamu masuk dengan akun Google.</p>
       </div>
     `;
     return;
   }
 
   // User sudah login, minta data ke server
-  listContainer.innerHTML = '<p style="text-align:center; color:#ccc; padding: 20px;">⏳ Memuat data duel...</p>';
+  listContainer.innerHTML = '<p class="modal-duel-empty">⏳ Memuat data duel...</p>';
   socket.emit("mintaRiwayatVersus");
 }
 
 socket.on("riwayatVersusData", (data) => {
   const listContainer = document.getElementById("versus-history-list");
   if (!listContainer) return;
-  
+
   if (!data || data.length === 0) {
     listContainer.innerHTML = `
       <div style="text-align: center; padding: 30px 20px;">
         <div style="font-size: 3rem; margin-bottom: 12px;">⚔️</div>
-        <p style="color: #ffeb3b; font-weight: bold; margin-bottom: 8px;">Belum ada riwayat duel!</p>
-        <p style="color: #888; font-size: 0.85rem;">Ayo tantang temanmu di mode Versus dan tulis sejarahmu! 🏆</p>
+        <p class="modal-duel-empty" style="color: #ffeb3b; font-weight: bold;">Belum ada riwayat duel!</p>
+        <p class="modal-duel-empty">Ayo tantang temanmu di mode Versus dan tulis sejarahmu! 🏆</p>
       </div>
     `;
     return;
   }
-  
+
   listContainer.innerHTML = "";
   data.forEach(match => {
     const item = document.createElement("div");
-    item.style.padding = "10px 15px";
-    item.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
-    item.style.borderLeft = match.status === "Win" ? "4px solid #00ff00" : (match.status === "Lose" ? "4px solid #ff4444" : "4px solid #ffeb3b");
-    item.style.borderRadius = "8px";
-    
-    let color = "#fff";
-    let icon = "➖";
-    let statusId = "SERI";
-    
+
+    // Tentukan status
+    let statusClass = "duel-draw";
+    let icon = "🤝";
+    let label = "SERI";
+    let labelColor = "#ffbe0b";
+
     if (match.status === "Win") {
-      color = "#00ff00";
-      icon = "🏆";
-      statusId = "MENANG";
+      statusClass = "duel-win";  icon = "🏆"; label = "MENANG"; labelColor = "#38ef7d";
     } else if (match.status === "Lose") {
-      color = "#ff4444";
-      icon = "💀";
-      statusId = "KALAH";
-    } else {
-      color = "#ffeb3b";
-      icon = "🤝";
-      statusId = "SERI";
+      statusClass = "duel-lose"; icon = "💀"; label = "KALAH";  labelColor = "#ff4757";
     }
-    
+
     const date = new Date(match.playedAt);
-    const dateStr = isNaN(date) ? "Waktu tidak valid" : date.toLocaleDateString("id-ID") + " " + date.toLocaleTimeString("id-ID", {hour: '2-digit', minute:'2-digit'});
-    
+    const dateStr = isNaN(date)
+      ? "Waktu tidak valid"
+      : date.toLocaleDateString("id-ID") + " " + date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+
+    item.className = `duel-item ${statusClass}`;
     item.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div style="flex: 1.2;">
-          <strong style="color: #00f2ff; font-size: 1.1rem;">${match.game}</strong><br>
-          <span style="font-size: 0.75rem; color: #aaa;">${dateStr}</span>
-        </div>
-        <div style="flex: 0.8; text-align: center;">
-          <div style="font-size: 1.5rem;">${icon}</div>
-          <div style="color: ${color}; font-weight: bold; font-size: 0.8rem; letter-spacing: 1px;">${statusId}</div>
-        </div>
-        <div style="flex: 1; text-align: right;">
-          <div style="font-size: 0.75rem; color: #888;">vs <strong style="color: #fff; font-size: 0.9rem;">${match.p2Name}</strong></div>
-          <div style="font-size: 0.8rem; color: #aaa; margin-top: 4px;">Skormu: <span style="color: #fff; font-weight: bold;">${match.score}</span></div>
-        </div>
+      <div class="duel-info">
+        <div class="duel-game-name">${match.game}</div>
+        <div class="duel-date">${dateStr}</div>
+      </div>
+      <div class="duel-status">
+        <div class="duel-icon">${icon}</div>
+        <div class="duel-label" style="color: ${labelColor}">${label}</div>
+      </div>
+      <div class="duel-score-col">
+        <div class="duel-vs-text">vs <span class="duel-vs-name">${match.p2Name}</span></div>
+        <div class="duel-score-text">Skormu: <span class="duel-score-val">${match.score}</span></div>
       </div>
     `;
     listContainer.appendChild(item);
