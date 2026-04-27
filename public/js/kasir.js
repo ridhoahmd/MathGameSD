@@ -87,52 +87,52 @@ function wireSocketEvents() {
     // Memastikan tidak ada duplikasi listener
     window.socket.off("soalDariAI");
     window.socket.on("soalDariAI", (response) => {
-  if (response.kategori === "kasir") {
-    // 🔧 FIX: Better error handling
-    if (!response.data) {
-      console.error("Kasir game: No data received from server");
-      alert("Gagal memuat soal. Silakan coba lagi.");
-      const btn = document.querySelector(".btn-start");
-      if (btn) {
-        btn.innerText = "BUKA KASIR";
-        btn.disabled = false;
+      if (response.kategori === "kasir") {
+        // Error handling jika tidak ada data
+        if (!response.data) {
+          console.error("Kasir game: No data received from server");
+          alert("Gagal memuat soal. Silakan coba lagi.");
+          const btn = document.querySelector(".btn-start");
+          if (btn) {
+            btn.innerText = "BUKA KASIR";
+            btn.disabled = false;
+          }
+          ui.startScreen.classList.remove("hidden");
+          ui.startScreen.classList.add("active");
+          return;
+        }
+
+        // Jika server mengirim array, pakai langsung. Jika object, bungkus jadi array.
+        const data = response.data;
+        if (Array.isArray(data)) {
+          questions = data;
+        } else {
+          questions = [data];
+        }
+
+        currentIndex = 0;
+
+        ui.startScreen.classList.remove("active");
+        ui.startScreen.classList.add("hidden");
+
+        ui.gameScreen.classList.remove("hidden");
+        ui.gameScreen.classList.add("active");
+
+        // Kembalikan tombol start ke kondisi semula
+        const btn = document.querySelector(".btn-start");
+        if (btn) {
+          btn.innerText = "BUKA KASIR";
+          btn.disabled = false;
+        }
+
+        tampilkanSoal();
       }
-      ui.startScreen.classList.remove("hidden");
-      ui.startScreen.classList.add("active");
-      return;
-    }
-
-    // Jika server mengirim array, pakai langsung. Jika object, bungkus jadi array.
-    const data = response.data;
-    if (Array.isArray(data)) {
-      questions = data;
-    } else {
-      questions = [data];
-    }
-
-    currentIndex = 0;
-
-    // 🔥 TAMBAHAN PENTING:
-    ui.startScreen.classList.remove("active");
-    ui.startScreen.classList.add("hidden");
-
-    ui.gameScreen.classList.remove("hidden");
-    ui.gameScreen.classList.add("active");
-
-    // Kembalikan tombol start ke kondisi semula
-    const btn = document.querySelector(".btn-start");
-    if (btn) {
-      btn.innerText = "BUKA KASIR";
-      btn.disabled = false;
-    }
-
-    tampilkanSoal();
-  }
-});
+    });
   } else {
     setTimeout(wireSocketEvents, 100);
   }
 }
+
 
 function formatRupiah(angka) {
   return "Rp " + angka.toLocaleString("id-ID");

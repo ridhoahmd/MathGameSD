@@ -1,4 +1,5 @@
 const prisma = require("../config/prisma");
+const logger = require("../utils/logger");
 
 const ITEM_PRICES = {
   // Frames
@@ -15,8 +16,19 @@ const ITEM_PRICES = {
 };
 
 module.exports = (socket, io) => {
+  // ============================================================
+  // BELI ITEM
+  // 🛡️ SECURITY: Gunakan socket.activeUser.username (server-side),
+  // bukan data.username dari client, untuk mencegah pembelian
+  // atas nama user lain.
+  // ============================================================
   socket.on("beliItem", async (data) => {
-    const { username, itemId } = data;
+    // Ambil username dari server-side session, bukan dari client
+    if (!socket.activeUser || !socket.activeUser.username) {
+      return socket.emit("transaksiGagal", "Anda harus login terlebih dahulu.");
+    }
+    const username = socket.activeUser.username;
+    const { itemId } = data;
 
     // 1. Cek Harga Server
     const hargaAsli = ITEM_PRICES[itemId];
@@ -25,85 +37,84 @@ module.exports = (socket, io) => {
     }
 
     try {
-      const user = await prisma.user.findUnique({
-        where: { username: username },
-      });
-      if (!user) return;
+      // 2. Gunakan Prisma Transaction untuk atomicity (mencegah race condition double-buy)
+      const result = await prisma.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({
+          where: { username },
+        });
 
-      // 2. Cek Saldo & Inventory
-      if (user.coins < hargaAsli) {
-        socket.emit("transaksiGagal", "Maaf, Koin tidak cukup! 🪙");
-        return;
-      }
+        if (!user) throw new Error("User tidak ditemukan.");
 
-      let myInventory = user.inventory;
-      if (typeof myInventory === "string")
-        myInventory = JSON.parse(myInventory);
-      if (!Array.isArray(myInventory)) myInventory = [];
+        // Cek Saldo
+        if (user.coins < hargaAsli) {
+          throw new Error("INSUFFICIENT_COINS");
+        }
 
-      if (myInventory.includes(itemId)) {
-        socket.emit("transaksiGagal", "Kamu sudah punya barang ini! ✅");
-        return;
-      }
-
-      // 3. Proses Transaksi Aman
-      // Ambil ulang user biar data terbaru
-      const freshUser = await prisma.user.findUnique({
-        where: { username: username },
-      });
-      let currentInv = [];
-      try {
-        currentInv =
-          typeof freshUser.inventory === "string"
-            ? JSON.parse(freshUser.inventory)
-            : freshUser.inventory;
+        // Cek Inventory
+        let currentInv = user.inventory;
+        if (typeof currentInv === "string") currentInv = JSON.parse(currentInv);
         if (!Array.isArray(currentInv)) currentInv = [];
-      } catch (e) {
-        currentInv = [];
-      }
 
-      if (currentInv.includes(itemId)) {
-        return socket.emit("transaksiGagal", "Baru saja dibeli! ✅");
-      }
+        if (currentInv.includes(itemId)) {
+          throw new Error("ALREADY_OWNED");
+        }
 
-      currentInv.push(itemId);
+        // Proses Transaksi
+        currentInv.push(itemId);
 
-      const updatedUser = await prisma.user.update({
-        where: { username: username },
-        data: {
-          coins: { decrement: hargaAsli },
-          inventory: currentInv,
-        },
+        const updatedUser = await tx.user.update({
+          where: { username },
+          data: {
+            coins: { decrement: hargaAsli },
+            inventory: currentInv,
+          },
+        });
+
+        return { updatedUser, currentInv };
       });
 
       socket.emit("transaksiSukses", {
         itemId: itemId,
-        sisaKoin: updatedUser.coins,
-        inventory: myInventory,
+        sisaKoin: result.updatedUser.coins,
+        inventory: result.currentInv, // Kirim inventory TERBARU (sudah include item baru)
       });
 
       socket.emit("updateProfil", {
-        nama: updatedUser.username,
-        koin: updatedUser.coins,
-        skor: updatedUser.totalScore,
-        role: updatedUser.role,
-        foto: updatedUser.photoURL || null,
-        frame: updatedUser.equippedFrame || "default",
-        theme: updatedUser.activeTheme || "default",
+        nama: result.updatedUser.username,
+        koin: result.updatedUser.coins,
+        skor: result.updatedUser.totalScore,
+        role: result.updatedUser.role,
+        foto: result.updatedUser.photoURL || null,
+        frame: result.updatedUser.equippedFrame || "default",
+        theme: result.updatedUser.activeTheme || "default",
       });
     } catch (err) {
-      console.error("❌ Error Transaksi:", err.message);
-      socket.emit("transaksiGagal", "Terjadi kesalahan server.");
+      if (err.message === "INSUFFICIENT_COINS") {
+        socket.emit("transaksiGagal", "Maaf, Koin tidak cukup! 🪙");
+      } else if (err.message === "ALREADY_OWNED") {
+        socket.emit("transaksiGagal", "Kamu sudah punya barang ini! ✅");
+      } else {
+        logger.error(`❌ Error Transaksi beliItem: ${err.message}`);
+        socket.emit("transaksiGagal", "Terjadi kesalahan server.");
+      }
     }
   });
 
+  // ============================================================
+  // PAKAI ITEM
+  // 🛡️ SECURITY: Gunakan socket.activeUser.username, bukan data.username
+  // ============================================================
   socket.on("pakaiItem", async (data) => {
-    const { username, tipe, itemId } = data;
+    if (!socket.activeUser || !socket.activeUser.username) {
+      return socket.emit("transaksiGagal", "Anda harus login terlebih dahulu.");
+    }
+    const username = socket.activeUser.username;
+    const { tipe, itemId } = data;
 
     try {
       // 🛡️ SECURITY: Cek user punya item ga sebelum dipake
       const user = await prisma.user.findUnique({
-        where: { username: username },
+        where: { username },
         select: { inventory: true },
       });
 
@@ -122,7 +133,7 @@ module.exports = (socket, io) => {
 
       // Cek kepemilikan (default selalu punya)
       if (itemId !== "default" && !myInventory.includes(itemId)) {
-        console.warn(
+        logger.warn(
           `⚠️ Percobaan equip ilegal: ${username} mau pakai ${itemId}`,
         );
         socket.emit("transaksiGagal", "Kamu belum memiliki item ini!");
@@ -131,47 +142,61 @@ module.exports = (socket, io) => {
 
       if (tipe === "theme") {
         await prisma.user.update({
-          where: { username: username },
+          where: { username },
           data: { activeTheme: itemId },
         });
       } else if (tipe === "frame") {
         await prisma.user.update({
-          where: { username: username },
+          where: { username },
           data: { equippedFrame: itemId },
         });
       } else if (tipe === "badge") {
         await prisma.user.update({
-          where: { username: username },
+          where: { username },
           data: { equippedBadge: itemId },
         });
       }
       socket.emit("itemTerpasang", { tipe, itemId });
     } catch (err) {
-      console.error("❌ Gagal ganti item:", err.message);
+      logger.error(`❌ Gagal ganti item: ${err.message}`);
       socket.emit("transaksiGagal", "Terjadi kesalahan server.");
     }
   });
 
+  // ============================================================
+  // MINTA INVENTORY
+  // ============================================================
   socket.on("mintaInventory", async (username) => {
-    const user = await prisma.user.findUnique({
-      where: { username },
-      select: {
-        inventory: true,
-        activeTheme: true,
-        equippedFrame: true,
-        equippedBadge: true,
-        coins: true,
-      },
-    });
+    // Jika ada activeUser di session, prioritaskan itu untuk keamanan
+    const resolvedUsername = (socket.activeUser && socket.activeUser.username)
+      ? socket.activeUser.username
+      : username;
 
-    if (user) {
-      socket.emit("dataInventory", {
-        owned: user.inventory || [],
-        activeTheme: user.activeTheme,
-        activeFrame: user.equippedFrame,
-        activeBadge: user.equippedBadge,
-        koin: user.coins,
+    if (!resolvedUsername) return;
+
+    try {
+      const user = await prisma.user.findUnique({
+        where: { username: resolvedUsername },
+        select: {
+          inventory: true,
+          activeTheme: true,
+          equippedFrame: true,
+          equippedBadge: true,
+          coins: true,
+        },
       });
+
+      if (user) {
+        socket.emit("dataInventory", {
+          owned: user.inventory || [],
+          activeTheme: user.activeTheme,
+          activeFrame: user.equippedFrame,
+          activeBadge: user.equippedBadge,
+          koin: user.coins,
+        });
+      }
+    } catch (err) {
+      logger.error(`❌ Error mintaInventory: ${err.message}`);
     }
   });
 };

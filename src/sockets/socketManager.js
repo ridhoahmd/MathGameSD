@@ -44,7 +44,7 @@ module.exports = (httpServer) => {
         } else {
           socket.decoded = decoded;
           socket.isAuth = true;
-          console.log(
+          logger.info(
             `🔑 User Ter-autentikasi: ${decoded.username} (${decoded.role})`,
           );
           next();

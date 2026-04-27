@@ -1,7 +1,5 @@
 const prisma = require("../config/prisma");
-const fs = require("fs");
-const path = require("path");
-const logger = require("../utils/logger"); // BUG-09 FIX: pakai Winston logger, bukan console
+const logger = require("../utils/logger");
 
 // Rate pengali XP per game (sama kayak di frontend)
 const XP_RATES = {
@@ -47,8 +45,7 @@ module.exports = (socket, io) => {
     // 2. Jika user punya token, paksa username sesuai token.
     if (socket.isAuth && socket.decoded) {
       if (socket.decoded.role === "guru" || socket.decoded.role === "admin") {
-        // Log akses authenticated
-        console.log(
+        logger.info(
           `✅ Authenticated ${socket.decoded.role} accessing profile: ${username}`,
         );
       }
@@ -72,7 +69,7 @@ module.exports = (socket, io) => {
         ) {
           // Hanya log WARNING sekali per socket session
           if (!socket.downgradedWarningShown) {
-            console.warn(
+            logger.warn(
               `⚠️ Unauthorized access to ADMIN account ${username}. Downgrading to SISWA.`,
             );
             socket.downgradedWarningShown = true; // Flag agar ga spam log
@@ -254,7 +251,7 @@ module.exports = (socket, io) => {
   // B2. SIMPAN SKOR VERSUS LOKAL (Split Screen)
   socket.on("laporSkorVersusLokal", async (data) => {
     if (!data || !socket.activeUser || !socket.activeUser.username) return;
-    
+
     const { game, status, score, p2Name } = data;
     let skor = parseInt(score);
     if (isNaN(skor)) skor = 0;
@@ -264,13 +261,13 @@ module.exports = (socket, io) => {
     let koin = Math.floor(skor / 10);
     let xpGained = getXPFromScore(game, skor);
 
-    // LOGIC BONUS E-SPORT (Gaya Konsep A)
+    // LOGIC BONUS E-SPORT
     if (status === "Win") {
       xpGained += 50; // Bonus XP menang versus
       koin += 20;     // Bonus Koin menang versus
-      console.log(`🏆 [Versus] ${safeName} MENANG melawan ${p2Name || 'Guest'} di game ${game}! Bonus +50XP & +20Coins`);
+      logger.info(`🏆 [Versus] ${safeName} MENANG melawan ${p2Name || 'Guest'} di game ${game}! Bonus +50XP & +20Coins`);
     } else {
-      console.log(`🏁 [Versus] ${safeName} mendapat hasil ${status} melawan ${p2Name || 'Guest'} di game ${game}`);
+      logger.info(`🏁 [Versus] ${safeName} mendapat hasil ${status} melawan ${p2Name || 'Guest'} di game ${game}`);
     }
 
     try {
@@ -283,7 +280,7 @@ module.exports = (socket, io) => {
 
       let existingUser = await prisma.user.findUnique({ where: { username: safeName } });
       if (!existingUser) return; // Harus user yg login
-      
+
       const currentXP = existingUser.xp;
       const newTotalXP = currentXP + xpGained;
       const newLevel = calculateLevel(newTotalXP);
@@ -351,7 +348,7 @@ module.exports = (socket, io) => {
         take: 10,
         include: { game: true }
       });
-      
+
       const formattedHistory = history.map(h => ({
         game: h.game.title,
         p2Name: h.p2Name,
@@ -359,10 +356,10 @@ module.exports = (socket, io) => {
         score: h.p1Score,
         playedAt: h.playedAt
       }));
-      
+
       socket.emit("riwayatVersusData", formattedHistory);
     } catch (err) {
-      console.error("❌ Gagal ambil riwayat versus:", err.message);
+      logger.error(`❌ Gagal ambil riwayat versus: ${err.message}`);
     }
   });
 
@@ -399,8 +396,8 @@ module.exports = (socket, io) => {
           labirin: skorMap["labirin"] || 0,
           nabi: skorMap["nabi"] || 0,
           ayat: skorMap["ayat"] || 0,
-          tajwid: skorMap["tajwid"] || 0,   // BUG-06 FIX: sebelumnya tidak ada
-          bintang: skorMap["bintang"] || 0, // BUG-06 FIX: sebelumnya tidak ada
+          tajwid: skorMap["tajwid"] || 0,
+          bintang: skorMap["bintang"] || 0,
         };
       });
 
@@ -419,7 +416,7 @@ module.exports = (socket, io) => {
 
     // 1. Authentication Check
     if (!socket.isAuth || !socket.decoded) {
-      console.warn(`⚠️ Unauthenticated role update attempt from ${socket.id}`);
+      logger.warn(`⚠️ Unauthenticated role update attempt from ${socket.id}`);
       socket.emit("errorUpdate", "Unauthorized: Please login first");
       return;
     }
@@ -429,7 +426,7 @@ module.exports = (socket, io) => {
 
     // 2. Basic Permission Check
     if (requestorRole !== "guru" && requestorRole !== "admin") {
-      console.warn(
+      logger.warn(
         `⚠️ Unauthorized role update attempt by ${requestorUsername} (${requestorRole})`,
       );
       socket.emit(
@@ -442,7 +439,7 @@ module.exports = (socket, io) => {
     // 3. Validate newRole value
     const validRoles = ["banned", "siswa", "guru", "admin"];
     if (!validRoles.includes(newRole)) {
-      console.warn(
+      logger.warn(
         `⚠️ Invalid role value: ${newRole} from ${requestorUsername}`,
       );
       socket.emit("errorUpdate", "Role tidak valid");
@@ -473,11 +470,10 @@ module.exports = (socket, io) => {
 
       const requestorLevel = ROLE_HIERARCHY[requestorRole] || 0;
       const targetLevel = ROLE_HIERARCHY[currentTargetRole] || 0;
-      const newRoleLevel = ROLE_HIERARCHY[newRole] || 0;
 
       // 6. SECURITY RULE: Cannot edit yourself
       if (requestorUsername === targetUser) {
-        console.warn(`⚠️ Self-edit attempt blocked: ${requestorUsername}`);
+        logger.warn(`⚠️ Self-edit attempt blocked: ${requestorUsername}`);
         socket.emit(
           "errorUpdate",
           "⛔ Tidak bisa mengubah role sendiri untuk keamanan sistem",
@@ -487,7 +483,7 @@ module.exports = (socket, io) => {
 
       // 7. SECURITY RULE: Cannot edit users with equal or higher privilege
       if (targetLevel >= requestorLevel) {
-        console.warn(
+        logger.warn(
           `⚠️ Privilege escalation blocked: ${requestorUsername} (${requestorRole}) ` +
             `tried to edit ${targetUser} (${currentTargetRole})`,
         );
@@ -500,7 +496,7 @@ module.exports = (socket, io) => {
 
       // 8. SECURITY RULE: Guru cannot promote anyone to admin
       if (requestorRole === "guru" && newRole === "admin") {
-        console.warn(
+        logger.warn(
           `⚠️ Guru ${requestorUsername} tried to promote ${targetUser} to admin`,
         );
         socket.emit(
@@ -512,7 +508,7 @@ module.exports = (socket, io) => {
 
       // 9. SECURITY RULE: Only admin can manage admin role
       if (newRole === "admin" && requestorRole !== "admin") {
-        console.warn(
+        logger.warn(
           `⚠️ Non-admin ${requestorUsername} tried to set admin role`,
         );
         socket.emit(
@@ -528,8 +524,8 @@ module.exports = (socket, io) => {
         data: { role: newRole },
       });
 
-      // 11. Security Logging (Enhanced)
-      console.log(
+      // 11. Security Logging
+      logger.info(
         `✅ ROLE UPDATE SUCCESS:\n` +
           `   Requestor: ${requestorUsername} (${requestorRole})\n` +
           `   Target: ${targetUser}\n` +
@@ -564,7 +560,7 @@ module.exports = (socket, io) => {
 
     // 🛡️ SECURITY: Admin-only function
     if (!socket.isAuth || !socket.decoded) {
-      console.warn(`⚠️ Unauthenticated reset attempt from ${socket.id}`);
+      logger.warn(`⚠️ Unauthenticated reset attempt from ${socket.id}`);
       return;
     }
 
@@ -573,7 +569,7 @@ module.exports = (socket, io) => {
 
     // Only Admin can reset system (NOT guru!)
     if (requestorRole !== "admin") {
-      console.warn(
+      logger.warn(
         `⚠️ UNAUTHORIZED RESET ATTEMPT:\n` +
           `   User: ${requestorUsername} (${requestorRole})\n` +
           `   IP: ${socket.handshake.address}\n` +
@@ -584,7 +580,7 @@ module.exports = (socket, io) => {
 
     // Password validation
     if (passwordInput !== process.env.GURU_PASSWORD) {
-      console.warn(
+      logger.warn(
         `⚠️ WRONG PASSWORD FOR RESET:\n` +
           `   Admin: ${requestorUsername}\n` +
           `   IP: ${socket.handshake.address}`,
@@ -593,32 +589,34 @@ module.exports = (socket, io) => {
     }
 
     try {
+      const fs = require("fs");
+      const path = require("path");
+
       // 🛡️ AUTO-BACKUP SEBELUM RESET
       const allUsers = await prisma.user.findMany();
       const allScores = await prisma.score.findMany();
-      
+
       const backupData = {
         timestamp: new Date().toISOString(),
         adminTrigger: requestorUsername,
         users: allUsers,
         scores: allScores
       };
-      
+
       const backupDir = path.join(process.cwd(), "backups");
       if (!fs.existsSync(backupDir)) {
         fs.mkdirSync(backupDir, { recursive: true });
       }
-      
+
       const backupFilename = `backup_reset_${Date.now()}.json`;
       const backupPath = path.join(backupDir, backupFilename);
       fs.writeFileSync(backupPath, JSON.stringify(backupData, null, 2));
 
-      // Limit Max 5 Backups Files logic
+      // Limit Max 5 Backups Files
       const files = fs.readdirSync(backupDir)
         .filter(f => f.startsWith('backup_reset_') && f.endsWith('.json'))
-        .sort().reverse(); // turun (terbaru terlebih dahulu)
-      
-      // Hapus file sisa jika lebih dari 5
+        .sort().reverse();
+
       if (files.length > 5) {
         for (let i = 5; i < files.length; i++) {
           try { fs.unlinkSync(path.join(backupDir, files[i])); } catch(e){}
@@ -628,11 +626,10 @@ module.exports = (socket, io) => {
 
       await prisma.score.deleteMany({});
       await prisma.user.updateMany({
-        // BUG-10 FIX: Reset XP dan Level juga, bukan hanya coins & totalScore
         data: { coins: 0, totalScore: 0, xp: 0, level: 0, inventory: ["default"] },
       });
 
-      console.log(
+      logger.info(
         `⚠️ SYSTEM RESET EXECUTED:\n` +
           `   Admin: ${requestorUsername}\n` +
           `   IP: ${socket.handshake.address}\n` +

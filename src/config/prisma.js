@@ -1,11 +1,12 @@
 const { PrismaClient } = require("@prisma/client");
+const logger = require("../utils/logger");
 
 const prisma = new PrismaClient();
 
 // Cek koneksi database
 prisma
   .$connect()
-  .then(() => console.log("✅ DATABASE POSTGRE: AMAN!"))
-  .catch((e) => console.error("❌ DATABASE GA KONEK:", e.message));
+  .then(() => logger.info("✅ DATABASE POSTGRE: AMAN!"))
+  .catch((e) => logger.error(`❌ DATABASE GA KONEK: ${e.message}`));
 
 module.exports = prisma;

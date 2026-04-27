@@ -1,6 +1,7 @@
 const prisma = require("../config/prisma");
 const { askAI } = require("../services/aiService");
 const { getFallbackData } = require("../config/fallbackData");
+const logger = require("../utils/logger");
 
 // --- STRATEGI PROMPT ---
 // Versi simpel, idealnya dipisah kalau makin kompleks.
@@ -131,7 +132,7 @@ module.exports = (socket, io) => {
         }
       }
     } catch (err) {
-      console.error("❌ DB ERROR:", err.message);
+      logger.error(`❌ DB ERROR mintaSoalAI: ${err.message}`);
     }
 
     // 4. FALLBACK (CADANGAN)
@@ -186,7 +187,7 @@ module.exports = (socket, io) => {
         penjelasan: penjelasanAI,
       });
     } catch (e) {
-      console.error("❌ Tutor Error:", e.message);
+      logger.error(`❌ Tutor Error: ${e.message}`);
       const fallback = `Jawaban yang benar: ${cleanJawabBenar}. Tetap semangat!`;
       socket.emit("penjelasanTutor", { teks: fallback, penjelasan: fallback });
     }

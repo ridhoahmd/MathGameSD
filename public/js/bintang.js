@@ -430,9 +430,6 @@ function spawnStar() {
   const x = Phaser.Math.Between(50, w - 50);
   const isCorrect = Math.random() < 0.4; // 40% kemungkinan bener
 
-  // Mencegah kebanyakan salah?
-  // Nanti aja dipikirin, sekarang random dulu
-
   const value = isCorrect
     ? correctAnswer
     : correctAnswer +

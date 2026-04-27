@@ -100,9 +100,7 @@ function createOfflineUI() {
   document.body.appendChild(overlay);
 }
 
-// EMERGENCY FIX: DO NOT create overlay on page load!
-// Only create when actually disconnected
-// createOfflineUI(); // REMOVED - was causing production outage
+// Overlay dibuat hanya saat disconnect, bukan saat page load
 
 // 4. DETEKSI PUTUS/NYAMBUNG
 let isReconnecting = false;

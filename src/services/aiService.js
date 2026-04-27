@@ -1,6 +1,7 @@
-require("dotenv").config();
+// Catatan: dotenv.config() sudah dipanggil di server.js (entry point).
+// Jangan panggil di sini agar tidak ada duplikasi dan race condition.
+const logger = require("../utils/logger");
 
-const CURRENT_AI_MODEL = "glm";
 const MAX_RETRIES = 3;
 const BASE_DELAY = 1000; // 1 detik
 
@@ -56,7 +57,7 @@ async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
 
       // Tunggu makin lama (Exponential backoff)
       const delay = BASE_DELAY * Math.pow(2, attempt - 1);
-      console.log(
+      logger.info(
         `⏳ AI request cobaan ke-${attempt} gagal, coba lagi dalam ${delay}ms...`,
       );
       await new Promise((resolve) => setTimeout(resolve, delay));
@@ -67,7 +68,7 @@ async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
 async function askAI(promptText) {
   const apiKey = process.env.ZHIPU_API_KEY;
   if (!apiKey) {
-    console.warn("⚠️ Kunci API AI ga ketemu");
+    logger.warn("⚠️ Kunci API AI ga ketemu");
     throw new Error("Misconfiguration: API Key Missing");
   }
 
