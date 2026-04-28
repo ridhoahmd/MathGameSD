@@ -12,6 +12,7 @@ const VersusNabi = (() => {
     p1: { score: 0, ready: false },
     p2: { score: 0, ready: false },
     isRotated: false,
+    isTransitioning: false,
   };
 
   // BUG-04 FIX: Lazy-init UI — jangan query DOM saat module load, tapi saat game init()
@@ -118,6 +119,7 @@ const VersusNabi = (() => {
   // --- Private Game Logic ---
 
   function loadQuestion() {
+    state.isTransitioning = false; // Reset transition lock
     if (state.currentIndex >= state.questions.length) {
       endGame();
       return;
@@ -161,7 +163,7 @@ const VersusNabi = (() => {
   }
 
   function handleAnswer(playerId, selected, correct, btnElement) {
-    if (!state.isActive) return;
+    if (!state.isActive || state.isTransitioning) return; // Prevent input if transitioning
 
     // Disable buttons for this player immediately
     const playerUI = ui[playerId];
@@ -174,11 +176,22 @@ const VersusNabi = (() => {
       clean(selected).includes(clean(correct));
 
     if (isCorrect) {
+      state.isTransitioning = true; // Lock further answers
+      
+      // Disable the OTHER player's buttons immediately
+      const otherPlayerId = playerId === "p1" ? "p2" : "p1";
+      const otherButtons = ui[otherPlayerId].options.querySelectorAll(".btn-option");
+      otherButtons.forEach((b) => (b.disabled = true));
+
       btnElement.classList.add("correct");
       state[playerId].score += 10;
       try {
         AudioManager.playCorrect();
       } catch (e) {}
+
+      // Show visual indicator to the other player that they lost this round
+      ui[otherPlayerId].question.innerText = `⏳ Terlambat! ${playerId.toUpperCase()} Benar!`;
+      ui[otherPlayerId].question.style.color = "#ffeb3b";
 
       // 💥 Particle Burst
       if (typeof ParticleManager !== "undefined") {
@@ -200,24 +213,18 @@ const VersusNabi = (() => {
 
     updateScoreUI();
 
-    // Check if both answered (For Independent Logic: No need. We advance when ONE answers?
-    // Or wait for both?
-    // Independent Logic with SAME question stream:
-    // Idea: Keep them on same question. If P1 answers, P1 waits?
-    // Better: "First Correct" gets point -> Next Question.
-    // OR "Independent": Both answer. If P1 right, +10. If P2 right, +10. Next question after both answer or timeout?
-    // Let's go with: "First Correct Wins the Round" (Adrenaline).
-
     // VERSUS MODE LOGIC: "First Correct Advances All"
     if (isCorrect) {
       setTimeout(() => {
+        ui.p1.question.style.color = ""; // Reset color
+        ui.p2.question.style.color = "";
         state.currentIndex++;
         loadQuestion();
+        // Reset ready states for next round
+        state.p1.ready = false;
+        state.p2.ready = false;
       }, 1000);
     } else {
-      // If wrong, wait for other player or short delay?
-      // If both wrong?
-      // Let's separate "Answered" state.
       state[playerId].ready = true;
       checkRoundComplete();
     }
@@ -226,6 +233,8 @@ const VersusNabi = (() => {
   function checkRoundComplete() {
     // If both answered wrong -> Next
     if (state.p1.ready && state.p2.ready) {
+      if (state.isTransitioning) return;
+      state.isTransitioning = true;
       setTimeout(() => {
         state.currentIndex++;
         loadQuestion();

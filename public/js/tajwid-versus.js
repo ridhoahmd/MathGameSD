@@ -1,7 +1,8 @@
 const VersusTajwid = (function () {
   const state = {
     isActive: false,
-    questions: [],
+    questionsP1: [],
+    questionsP2: [],
     timerInterval: null,
     timeLeft: 60, // 60 seconds per round
     p1: { score: 0, currentCard: null, index: 0 },
@@ -130,7 +131,18 @@ const VersusTajwid = (function () {
         return;
       }
 
-      state.questions = queue; // Shared queue source
+      // Shuffle function
+      const shuffleArray = (array) => {
+        const arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      };
+
+      state.questionsP1 = shuffleArray(queue);
+      state.questionsP2 = shuffleArray(queue);
 
       // Reset Player State
       state.p1 = { score: 0, index: 0, currentCard: null };
@@ -177,12 +189,14 @@ const VersusTajwid = (function () {
     const playerState = playerId === 1 ? state.p1 : state.p2;
     const uiArea = playerId === 1 ? ui.p1.cardArea : ui.p2.cardArea;
 
+    const playerQuestions = playerId === 1 ? state.questionsP1 : state.questionsP2;
+    
     // Verify index
-    if (playerState.index >= state.questions.length) {
+    if (playerState.index >= playerQuestions.length) {
       playerState.index = 0; // Loop questions in Versus if run out
     }
 
-    const cardData = state.questions[playerState.index];
+    const cardData = playerQuestions[playerState.index];
     playerState.currentCard = cardData;
 
     // Create Card Element
@@ -257,6 +271,36 @@ const VersusTajwid = (function () {
       isDragging = true;
       card.style.transition = "none";
     });
+
+    const handleMouseUp = (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+
+      const endX = e.clientX;
+      const diffX = endX - startX;
+      const threshold = 50;
+
+      card.style.transition = "transform 0.3s ease";
+
+      if (diffX > threshold) {
+        handleAnswer(playerId, "kanan");
+      } else if (diffX < -threshold) {
+        handleAnswer(playerId, "kiri");
+      } else {
+        card.style.transform = "translateX(0) rotate(0deg)";
+      }
+    };
+
+    card.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+      const currentX = e.clientX;
+      const diffX = currentX - startX;
+      const rotate = diffX / 10;
+      card.style.transform = `translateX(${diffX}px) rotate(${rotate}deg)`;
+    });
+
+    card.addEventListener("mouseup", handleMouseUp);
+    card.addEventListener("mouseleave", handleMouseUp);
   }
 
   function handleAnswer(playerId, side) {
@@ -371,7 +415,7 @@ const VersusTajwid = (function () {
 
   // Expose global restart method for no-reload retry
   window.restartGame = function() {
-    if(!state.questions || state.questions.length === 0) {
+    if(!state.questionsP1 || state.questionsP1.length === 0) {
         console.warn("No questions available for restart. Escaping.");
         exitVersus();
         return;

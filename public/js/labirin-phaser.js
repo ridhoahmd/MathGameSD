@@ -1032,6 +1032,11 @@ function setupUIListeners(scene) {
   });
 
   scene.events.on("gameFinished", (data) => {
+    // Freeze the game to prevent further movement
+    if (scene && scene.scene) {
+      scene.scene.pause();
+    }
+
     // Show Modal instead of alert
     const modal = document.getElementById("game-over-modal");
     if (modal) {

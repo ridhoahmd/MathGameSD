@@ -12,6 +12,7 @@ const VersusAyat = (() => {
     p1: { score: 0, ready: false },
     p2: { score: 0, ready: false },
     isRotated: false,
+    isTransitioning: false,
   };
 
   const ui = {
@@ -131,6 +132,7 @@ const VersusAyat = (() => {
   // --- Private Game Logic ---
 
   function loadQuestion() {
+    state.isTransitioning = false; // Reset transition lock
     if (state.currentIndex >= state.questions.length) {
       endGame();
       return;
@@ -177,9 +179,9 @@ const VersusAyat = (() => {
   }
 
   function handleAnswer(playerId, selected, correct, btnElement) {
-    if (!state.isActive) return;
+    if (!state.isActive || state.isTransitioning) return; // Prevent input if transitioning
 
-    // Disable buttons for this player
+    // Disable buttons for this player immediately
     const playerUI = ui[playerId];
     const buttons = playerUI.options.querySelectorAll(".btn-option");
     buttons.forEach((b) => (b.disabled = true));
@@ -187,11 +189,22 @@ const VersusAyat = (() => {
     const isCorrect = selected === correct;
 
     if (isCorrect) {
+      state.isTransitioning = true; // Lock further answers
+      
+      // Disable the OTHER player's buttons immediately
+      const otherPlayerId = playerId === "p1" ? "p2" : "p1";
+      const otherButtons = ui[otherPlayerId].options.querySelectorAll(".btn-option");
+      otherButtons.forEach((b) => (b.disabled = true));
+
       btnElement.classList.add("correct");
       state[playerId].score += 10;
       try {
         AudioManager.playCorrect();
       } catch (e) {}
+
+      // Show visual indicator to the other player that they lost this round
+      ui[otherPlayerId].question.innerText = `⏳ Terlambat! ${playerId.toUpperCase()} Benar!`;
+      ui[otherPlayerId].question.style.color = "#ffeb3b";
 
       // 💥 Particle Burst
       if (typeof ParticleManager !== "undefined") {
@@ -213,10 +226,10 @@ const VersusAyat = (() => {
 
     updateScoreUI();
 
-    // VERSUS LOGIC: First correct advances? Or both must answer?
-    // Jejak Nabi uses: First correct advances. If wrong, wait.
     if (isCorrect) {
       setTimeout(() => {
+        ui.p1.question.style.color = ""; // Reset color
+        ui.p2.question.style.color = "";
         state.currentIndex++;
         loadQuestion();
         // Reset ready states for next round
@@ -232,6 +245,8 @@ const VersusAyat = (() => {
   function checkRoundComplete() {
     // If both answered wrong -> Next
     if (state.p1.ready && state.p2.ready) {
+      if (state.isTransitioning) return;
+      state.isTransitioning = true;
       setTimeout(() => {
         state.currentIndex++;
         loadQuestion();

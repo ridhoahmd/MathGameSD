@@ -493,6 +493,48 @@ if (cardElement) {
       cardElement.style.transform = "translateX(0) rotate(0deg)";
     }
   });
+
+  // Mouse Events for PC Testing
+  cardElement.addEventListener("mousedown", (e) => {
+    startX = e.clientX;
+    isDragging = true;
+    cardElement.style.transition = "none";
+  });
+
+  const handleMouseUp = (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+
+    if (isAnswering) {
+      cardElement.style.transform = "translateX(0) rotate(0deg)";
+      return;
+    }
+
+    const endX = e.clientX;
+    const diffX = endX - startX;
+    const threshold = 100;
+
+    cardElement.style.transition = "transform 0.3s ease";
+
+    if (diffX > threshold) {
+      answer("kanan");
+    } else if (diffX < -threshold) {
+      answer("kiri");
+    } else {
+      cardElement.style.transform = "translateX(0) rotate(0deg)";
+    }
+  };
+
+  cardElement.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    const currentX = e.clientX;
+    const diffX = currentX - startX;
+    const rotate = diffX / 20;
+    cardElement.style.transform = `translateX(${diffX}px) rotate(${rotate}deg)`;
+  });
+
+  cardElement.addEventListener("mouseup", handleMouseUp);
+  cardElement.addEventListener("mouseleave", handleMouseUp);
 }
 
 // ==========================================
