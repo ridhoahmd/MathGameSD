@@ -1,10 +1,24 @@
+/**
+ * VersusTajwid — Tajwid 1v1 Split Screen
+ *
+ * Fixes applied:
+ *  - Client-side setInterval timer REMOVED (was cheatable via DevTools)
+ *  - Timer is now driven by server-side tajwidTimerTick events
+ *  - Each answer is reported to the server via submitTajwidAnswer for
+ *    server-side score tracking and validation
+ *  - Game end is triggered by tajwidGameEnded from the server
+ *  - submitTajwidGameResult persists the result to the database
+ *  - Disconnect cleanup stops any lingering state
+ */
 const VersusTajwid = (function () {
   const state = {
     isActive: false,
     questionsP1: [],
     questionsP2: [],
-    timerInterval: null,
-    timeLeft: 60, // 60 seconds per round
+    // timerInterval removed — timer is now server-authoritative
+    timeLeft: 60, // display-only; updated by server ticks
+    roomId: null,  // unique room id sent to server when game starts
+    gameStartTime: null,
     p1: { score: 0, currentCard: null, index: 0 },
     p2: { score: 0, currentCard: null, index: 0 },
   };
@@ -28,6 +42,13 @@ const VersusTajwid = (function () {
 
   function exitVersus() {
     state.isActive = false;
+
+    // Remove server-side timer listeners
+    if (window.socket) {
+      window.socket.off("tajwidTimerTick");
+      window.socket.off("tajwidGameEnded");
+    }
+
     if (ui.container) ui.container.classList.add("hidden");
     if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
     
@@ -176,10 +197,52 @@ const VersusTajwid = (function () {
       }
       if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
 
+      // Generate a unique room id for this game session
+      state.roomId = `tajwid_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      state.gameStartTime = Date.now();
+
+      // Register server-side timer listeners before starting
+      registerSocketListeners();
+
+      // Tell the server to start the authoritative timer
+      if (window.socket) {
+        window.socket.emit("startTajwidVersusGame", {
+          roomId: state.roomId,
+          p2Name: state.p2.name || "Guest",
+          duration: 60,
+        });
+      }
+
       // Start Game
-      startTimer();
       loadCard(1);
       loadCard(2);
+    });
+  }
+
+  /**
+   * Register (or re-register) socket event listeners for the server-side timer.
+   * Uses .off() first to prevent duplicate listeners on rematch.
+   */
+  function registerSocketListeners() {
+    if (!window.socket) return;
+
+    window.socket.off("tajwidTimerTick");
+    window.socket.off("tajwidGameEnded");
+
+    // Server sends a tick every second with the authoritative time remaining
+    window.socket.on("tajwidTimerTick", (data) => {
+      if (!state.isActive) return;
+      state.timeLeft = data.timeLeft;
+      updateTimerUI();
+    });
+
+    // Server fires this when the timer reaches zero
+    window.socket.on("tajwidGameEnded", (data) => {
+      if (!state.isActive) return;
+      // Use server-provided scores if available (they were validated server-side)
+      if (data && typeof data.p1Score === "number") state.p1.score = data.p1Score;
+      if (data && typeof data.p2Score === "number") state.p2.score = data.p2Score;
+      endGame(true); // true = triggered by server
     });
   }
 
@@ -310,6 +373,7 @@ const VersusTajwid = (function () {
     if (!card) return;
 
     const isCorrect = side === card.hukum;
+    const scoreDelta = isCorrect ? 10 : -5;
 
     if (isCorrect) {
       pState.score += 10;
@@ -344,21 +408,16 @@ const VersusTajwid = (function () {
     }
 
     updateScoreUI();
-  }
 
-  function startTimer() {
-    if (state.timerInterval) clearInterval(state.timerInterval);
-
-    updateTimerUI();
-
-    state.timerInterval = setInterval(() => {
-      state.timeLeft--;
-      updateTimerUI();
-
-      if (state.timeLeft <= 0) {
-        endGame();
-      }
-    }, 1000);
+    // Report answer to server for authoritative score tracking
+    if (window.socket && state.roomId) {
+      window.socket.emit("submitTajwidAnswer", {
+        roomId: state.roomId,
+        playerId,
+        isCorrect,
+        scoreDelta,
+      });
+    }
   }
 
   function updateTimerUI() {
@@ -370,12 +429,22 @@ const VersusTajwid = (function () {
     if (ui.p2.score) ui.p2.score.innerText = state.p2.score;
   }
 
-  function endGame() {
-    clearInterval(state.timerInterval);
+  /**
+   * End the game and show results.
+   * @param {boolean} [serverTriggered=false] - true when called from tajwidGameEnded socket event
+   */
+  function endGame(serverTriggered = false) {
+    if (!state.isActive) return; // Guard against double-call
     state.isActive = false;
 
-    ui.container.classList.add("hidden");
-    ui.resultScreen.classList.remove("hidden");
+    // Remove socket listeners to prevent stale callbacks
+    if (window.socket) {
+      window.socket.off("tajwidTimerTick");
+      window.socket.off("tajwidGameEnded");
+    }
+
+    if (ui.container) ui.container.classList.add("hidden");
+    if (ui.resultScreen) ui.resultScreen.classList.remove("hidden");
 
     // Determine Winner
     const p1s = state.p1.score;
@@ -390,22 +459,27 @@ const VersusTajwid = (function () {
     let finalStatus = "Draw";
 
     if (p1s > p2s) {
-      winnerText.innerText = "🏆 PEMAIN 1 MENANG!";
+      if (winnerText) winnerText.innerText = "🏆 PEMAIN 1 MENANG!";
       finalStatus = "Win";
     } else if (p2s > p1s) {
-      winnerText.innerText = `🏆 ${state.p2.name ? state.p2.name.toUpperCase() : 'PEMAIN 2'} MENANG!`;
+      if (winnerText) winnerText.innerText = `🏆 ${state.p2.name ? state.p2.name.toUpperCase() : 'PEMAIN 2'} MENANG!`;
       finalStatus = "Lose";
     } else {
-      winnerText.innerText = "🤝 SERI!";
+      if (winnerText) winnerText.innerText = "🤝 SERI!";
     }
 
-    // Kirim skor ke server
+    const durationMs = state.gameStartTime ? Date.now() - state.gameStartTime : null;
+
+    // Submit result to server for persistence and final validation
+    // Use submitTajwidGameResult (dedicated handler) instead of laporSkorVersusLokal
+    // so the server can cross-check against its own tracked scores.
     if (window.socket) {
-      window.socket.emit("laporSkorVersusLokal", {
-        game: "tajwid",
-        status: finalStatus,
-        score: p1s,
-        p2Name: state.p2.name || "Guest"
+      window.socket.emit("submitTajwidGameResult", {
+        roomId: state.roomId,
+        p1Score: p1s,
+        p2Score: p2s,
+        p2Name: state.p2.name || "Guest",
+        durationMs,
       });
     }
 
@@ -415,36 +489,56 @@ const VersusTajwid = (function () {
 
   // Expose global restart method for no-reload retry
   window.restartGame = function() {
-    if(!state.questionsP1 || state.questionsP1.length === 0) {
-        console.warn("No questions available for restart. Escaping.");
-        exitVersus();
-        return;
+    if (!state.questionsP1 || state.questionsP1.length === 0) {
+      console.warn("No questions available for restart. Escaping.");
+      exitVersus();
+      return;
     }
-    
-    
+
     // Reset state but keep questions and p2 name
     state.isActive = true;
     state.timeLeft = 60;
-    
+    state.roomId = `tajwid_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    state.gameStartTime = Date.now();
+
     const guestName = state.p2.name;
     state.p1 = { score: 0, index: 0, currentCard: null };
     state.p2 = { score: 0, index: 0, currentCard: null, name: guestName };
-    
+
     updateScoreUI();
     updateTimerUI();
-    
+
     // Reset UI visibility
     if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
     if (ui.container) {
-        ui.container.classList.remove("hidden");
-        ui.container.style.display = "flex";
+      ui.container.classList.remove("hidden");
+      ui.container.style.display = "flex";
     }
-    
-    // Start again
-    startTimer();
+
+    // Re-register socket listeners and start server-side timer
+    registerSocketListeners();
+    if (window.socket) {
+      window.socket.emit("startTajwidVersusGame", {
+        roomId: state.roomId,
+        p2Name: guestName || "Guest",
+        duration: 60,
+      });
+    }
+
     loadCard(1);
     loadCard(2);
   };
+
+  // Clean up on disconnect
+  if (window.socket) {
+    window.socket.on("disconnect", () => {
+      state.isActive = false;
+      if (window.socket) {
+        window.socket.off("tajwidTimerTick");
+        window.socket.off("tajwidGameEnded");
+      }
+    });
+  }
 
   // Public API
   return {

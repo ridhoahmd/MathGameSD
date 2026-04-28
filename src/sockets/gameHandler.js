@@ -2,6 +2,12 @@ const prisma = require("../config/prisma");
 const { askAI } = require("../services/aiService");
 const { getFallbackData } = require("../config/fallbackData");
 const logger = require("../utils/logger");
+const { validateScore } = require("../utils/gameValidator");
+const { logGameEvent, logGameStart, logGameEnd, logSuspiciousActivity } = require("../utils/gameLogger");
+
+// In-memory store for active Tajwid versus game rooms
+// Key: roomId (string), Value: { timer, timeLeft, p1SocketId, p2SocketId, p1Score, p2Score, p2Name, startedAt }
+const gameRooms = new Map();
 
 // --- STRATEGI PROMPT ---
 // Versi simpel, idealnya dipisah kalau makin kompleks.
@@ -228,5 +234,222 @@ module.exports = (socket, io) => {
 
   socket.on("updateScoreDuel", (data) => {
     socket.to(data.room).emit("opponentScoreUpdate", data.score);
+  });
+
+  // ─── TAJWID VERSUS: Server-Side Timer & Answer Validation ───────────────────
+
+  /**
+   * Client emits this when both players are ready to start a Tajwid versus game.
+   * Payload: { roomId, p2Name, duration }
+   *   roomId   – unique room identifier (e.g. socket.id of P1)
+   *   p2Name   – display name of the local P2 player
+   *   duration – game duration in seconds (default 60)
+   */
+  socket.on("startTajwidVersusGame", (data) => {
+    const { roomId, p2Name, duration } = data || {};
+    if (!roomId) return;
+
+    // Clean up any existing room with the same id
+    if (gameRooms.has(roomId)) {
+      const existing = gameRooms.get(roomId);
+      if (existing.timer) clearInterval(existing.timer);
+      gameRooms.delete(roomId);
+    }
+
+    const totalSeconds = Math.min(Math.max(parseInt(duration, 10) || 60, 10), 120);
+
+    const room = {
+      p1SocketId: socket.id,
+      p2Name: (p2Name || "Guest").trim().slice(0, 50),
+      p1Score: 0,
+      p2Score: 0,
+      timeLeft: totalSeconds,
+      startedAt: Date.now(),
+      timer: null,
+    };
+
+    // Tick every second, broadcast remaining time to the initiating socket
+    room.timer = setInterval(() => {
+      room.timeLeft--;
+
+      // Push authoritative time to the client
+      socket.emit("tajwidTimerTick", { timeLeft: room.timeLeft });
+
+      if (room.timeLeft <= 0) {
+        clearInterval(room.timer);
+        room.timer = null;
+
+        // Tell the client the game is over (server-authoritative end)
+        socket.emit("tajwidGameEnded", {
+          p1Score: room.p1Score,
+          p2Score: room.p2Score,
+          p2Name: room.p2Name,
+          durationMs: Date.now() - room.startedAt,
+        });
+
+        logGameEvent("TAJWID_TIMER_EXPIRED", { roomId, p1Score: room.p1Score, p2Score: room.p2Score });
+        gameRooms.delete(roomId);
+      }
+    }, 1000);
+
+    gameRooms.set(roomId, room);
+
+    const p1Name = socket.activeUser ? socket.activeUser.username : socket.id;
+    logGameStart("tajwid", p1Name, room.p2Name, roomId);
+    logGameEvent("TAJWID_GAME_STARTED", { roomId, duration: totalSeconds, p1: p1Name, p2: room.p2Name });
+  });
+
+  /**
+   * Client emits this each time a player swipes a card.
+   * Payload: { roomId, playerId, isCorrect, scoreDelta }
+   *   playerId  – 1 (P1) or 2 (P2)
+   *   isCorrect – boolean
+   *   scoreDelta – points to add (positive) or subtract (negative, for penalty)
+   */
+  socket.on("submitTajwidAnswer", (data) => {
+    const { roomId, playerId, isCorrect, scoreDelta } = data || {};
+    if (!roomId || !gameRooms.has(roomId)) return;
+
+    const room = gameRooms.get(roomId);
+    if (!room.timer) return; // Game already ended
+
+    const delta = parseInt(scoreDelta, 10);
+    if (isNaN(delta)) return;
+
+    // Clamp delta to prevent abuse: max +10 per correct, max -5 per wrong
+    const clampedDelta = isCorrect
+      ? Math.min(delta, 10)
+      : Math.max(delta, -5);
+
+    if (playerId === 1) {
+      room.p1Score = Math.max(0, room.p1Score + clampedDelta);
+    } else if (playerId === 2) {
+      room.p2Score = Math.max(0, room.p2Score + clampedDelta);
+    }
+
+    logGameEvent("TAJWID_ANSWER", {
+      roomId,
+      playerId,
+      isCorrect,
+      delta: clampedDelta,
+      p1Score: room.p1Score,
+      p2Score: room.p2Score,
+    });
+  });
+
+  /**
+   * Client emits this when the game ends (either timer expired client-side or
+   * the server already fired tajwidGameEnded). Used to persist the result.
+   * Payload: { roomId, p1Score, p2Score, p2Name, durationMs }
+   */
+  socket.on("submitTajwidGameResult", async (data) => {
+    const { roomId, p1Score, p2Score, p2Name, durationMs } = data || {};
+
+    // If the room is still active, stop the server timer
+    if (roomId && gameRooms.has(roomId)) {
+      const room = gameRooms.get(roomId);
+      if (room.timer) clearInterval(room.timer);
+      gameRooms.delete(roomId);
+    }
+
+    if (!socket.activeUser || !socket.activeUser.username) return;
+    const safeName = socket.activeUser.username;
+
+    // Validate score before persisting
+    const scoreValidation = validateScore("tajwid", p1Score, { durationMs });
+    let finalScore = scoreValidation.score;
+
+    if (scoreValidation.reason) {
+      logSuspiciousActivity("tajwid", safeName, scoreValidation.reason, {
+        submittedScore: p1Score,
+        cappedScore: finalScore,
+        durationMs,
+      });
+      socket.emit("info", "Skor Anda disesuaikan dengan batas maksimum permainan.");
+    }
+
+    const status = finalScore > p2Score ? "Win" : finalScore < p2Score ? "Lose" : "Draw";
+    const guestName = (p2Name || "Guest").trim().slice(0, 50);
+
+    logGameEnd("tajwid", safeName, guestName, status, finalScore, { durationMs });
+
+    try {
+      let gameDb = await prisma.game.findUnique({ where: { slug: "tajwid" } });
+      if (!gameDb) {
+        gameDb = await prisma.game.create({
+          data: { slug: "tajwid", title: "TAJWID" },
+        });
+      }
+
+      const existingUser = await prisma.user.findUnique({ where: { username: safeName } });
+      if (!existingUser) {
+        logger.warn(`⚠️ [Tajwid Versus] User not found: ${safeName}`);
+        return;
+      }
+
+      // XP / coin rewards
+      const XP_RATE = 1.1;
+      let xpGained = Math.floor(finalScore * XP_RATE);
+      let koin = Math.floor(finalScore / 10);
+      if (status === "Win") { xpGained += 50; koin += 20; }
+
+      const newTotalXP = existingUser.xp + xpGained;
+      const newLevel = Math.floor(Math.sqrt(newTotalXP / 100));
+
+      const updatedUser = await prisma.user.update({
+        where: { username: safeName },
+        data: {
+          coins: { increment: koin },
+          totalScore: { increment: finalScore },
+          xp: newTotalXP,
+          level: newLevel,
+        },
+      });
+
+      await prisma.score.create({
+        data: {
+          score: finalScore,
+          game: { connect: { id: gameDb.id } },
+          user: { connect: { id: existingUser.id } },
+        },
+      });
+
+      await prisma.versusMatch.create({
+        data: {
+          p1Score: finalScore,
+          p2Name: guestName,
+          status,
+          game: { connect: { id: gameDb.id } },
+          user: { connect: { id: existingUser.id } },
+        },
+      });
+
+      logger.info(`✅ [Tajwid Versus] Match saved: ${safeName} vs ${guestName} | score=${finalScore} status=${status}`);
+
+      socket.emit("skorTersimpan", {
+        totalScore: updatedUser.totalScore,
+        koin: updatedUser.coins,
+        xp: updatedUser.xp,
+        level: updatedUser.level,
+        xpGained,
+        isVersusWin: status === "Win",
+      });
+
+      if (io) io.emit("refreshDataGuru");
+    } catch (err) {
+      logger.error(`❌ DB Error Tajwid Versus: ${err.message}`);
+      socket.emit("errorSkor", "Gagal menyimpan hasil permainan. Coba lagi.");
+    }
+  });
+
+  // Clean up any active game room when the socket disconnects
+  socket.on("disconnect", () => {
+    for (const [roomId, room] of gameRooms.entries()) {
+      if (room.p1SocketId === socket.id) {
+        if (room.timer) clearInterval(room.timer);
+        gameRooms.delete(roomId);
+        logGameEvent("TAJWID_ROOM_CLEANED_ON_DISCONNECT", { roomId, socketId: socket.id });
+      }
+    }
   });
 };

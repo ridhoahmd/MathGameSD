@@ -1,5 +1,7 @@
 const prisma = require("../config/prisma");
 const logger = require("../utils/logger");
+const { validateGameResult } = require("../utils/gameValidator");
+const { logGameStart, logGameEnd, logSuspiciousActivity } = require("../utils/gameLogger");
 
 // Rate pengali XP per game (sama kayak di frontend)
 const XP_RATES = {
@@ -252,14 +254,38 @@ module.exports = (socket, io) => {
   socket.on("laporSkorVersusLokal", async (data) => {
     if (!data || !socket.activeUser || !socket.activeUser.username) return;
 
-    const { game, status, score, p2Name } = data;
-    let skor = parseInt(score);
-    if (isNaN(skor)) skor = 0;
-    if (skor < 0) skor = 0;
-
     const safeName = socket.activeUser.username;
+
+    // --- Server-side validation ---
+    const validation = validateGameResult(data);
+    if (!validation.valid && validation.result === undefined) {
+      logger.warn(`⚠️ [Versus] Invalid result payload from ${safeName}: ${validation.reason}`);
+      return socket.emit("errorSkor", "Data permainan tidak valid.");
+    }
+
+    // Use sanitised result (score may have been capped)
+    const { game, status, score: rawScore, p2Name, questionCount, durationMs } = validation.result || data;
+
+    if (validation.reason) {
+      // Score was capped or suspicious — log it
+      logSuspiciousActivity(game, safeName, validation.reason, {
+        submittedScore: data.score,
+        cappedScore: rawScore,
+      });
+      socket.emit("info", "Skor Anda disesuaikan dengan batas maksimum permainan.");
+    }
+
+    let skor = rawScore;
+    if (isNaN(skor) || skor < 0) skor = 0;
+
     let koin = Math.floor(skor / 10);
     let xpGained = getXPFromScore(game, skor);
+
+    // Log game end before DB write
+    logGameEnd(game, safeName, p2Name || "Guest", status, skor, {
+      questionCount,
+      durationMs,
+    });
 
     // LOGIC BONUS E-SPORT
     if (status === "Win") {
@@ -279,7 +305,10 @@ module.exports = (socket, io) => {
       }
 
       let existingUser = await prisma.user.findUnique({ where: { username: safeName } });
-      if (!existingUser) return; // Harus user yg login
+      if (!existingUser) {
+        logger.warn(`⚠️ [Versus] User not found in DB: ${safeName}`);
+        return socket.emit("errorSkor", "Akun tidak ditemukan. Harap login ulang.");
+      }
 
       const currentXP = existingUser.xp;
       const newTotalXP = currentXP + xpGained;
@@ -314,6 +343,8 @@ module.exports = (socket, io) => {
         },
       });
 
+      logger.info(`✅ [Versus] Match saved: ${safeName} vs ${p2Name || 'Guest'} | game=${game} score=${skor} status=${status}`);
+
       // Konfirmasi sukses ke client
       socket.emit("skorTersimpan", {
         totalScore: updatedUser.totalScore,
@@ -327,6 +358,7 @@ module.exports = (socket, io) => {
       if (io) io.emit("refreshDataGuru");
     } catch (err) {
       logger.error(`❌ DB Error Versus Lokal: ${err.message}`);
+      socket.emit("errorSkor", "Gagal menyimpan hasil permainan. Coba lagi.");
     }
   });
 
