@@ -127,6 +127,8 @@ function wireSocketEvents() {
 
       // --- CHECK VERSUS MODE FIRST ---
       if (currentGameMode === "versus") {
+        // FIX: Stop any running solo timer before entering versus
+        clearInterval(timerInterval);
         if (typeof VersusAyat !== "undefined") {
           VersusAyat.init(response.data);
         } else {
@@ -558,6 +560,12 @@ window.addEventListener("beforeunload", (e) => {
 
 // --- RESTART TANPA RELOAD ---
 window.restartGame = function () {
+  // FIX: Jika mode versus aktif, delegasikan ke VersusAyat
+  if (currentGameMode === "versus" && typeof VersusAyat !== "undefined") {
+    VersusAyat.rematch();
+    return;
+  }
+
   // 1. Stop semua timer
   clearInterval(timerInterval);
 

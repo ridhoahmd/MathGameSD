@@ -1,22 +1,30 @@
 /**
  * Logic Mode Versus (1v1 Split Screen) - Jejak Nabi
  * Isolated from nabi.js to ensure zero-risk to solo mode.
+ *
+ * FIXES APPLIED:
+ *  - BUG #3: rematch() no longer calls init() → no duplicate Swal prompt
+ *  - BUG #4: window.restartGame calls _startRound() directly
+ *  - BUG #5: exitVersus() has null-guard on ui.container
+ *  - BUG #6: Added 30s deadlock timeout in checkRoundComplete
+ *  - BUG #7: touchstart uses { once: true } to prevent double-fire
+ *  - Added null-guards throughout
  */
 
 const VersusNabi = (() => {
-  // --- State ---
   let state = {
     isActive: false,
+    _originalQuestions: [], // Save pool for rematch re-shuffle
     questions: [],
     currentIndex: 0,
     p1: { score: 0, ready: false },
     p2: { score: 0, ready: false },
     isRotated: false,
     isTransitioning: false,
+    _deadlockTimeout: null, // FIX #6: deadlock prevention timer
   };
 
-  // BUG-04 FIX: Lazy-init UI — jangan query DOM saat module load, tapi saat game init()
-  // Sebelumnya: eager query di sini → null jika DOM belum ready
+  // BUG-04 FIX: Lazy-init UI
   const ui = {
     container: null,
     resultScreen: null,
@@ -38,7 +46,8 @@ const VersusNabi = (() => {
   // --- Public Methods ---
 
   function init(allQuestions) {
-    if (!ui.container) initUI(); // Lazy-init UI saat pertama kali dibutuhkan
+    if (!ui.container) initUI();
+
     const startScreen = document.getElementById("start-screen");
     if (startScreen) {
       startScreen.classList.remove("active");
@@ -54,7 +63,7 @@ const VersusNabi = (() => {
       cancelButtonText: "Batal",
       allowOutsideClick: false,
       background: "#1e1e2e",
-      color: "#fff"
+      color: "#fff",
     }).then((result) => {
       if (result.isDismissed) {
         if (startScreen) {
@@ -64,62 +73,94 @@ const VersusNabi = (() => {
         exitVersus();
         return;
       }
-      
+
       state.p2.name = (result.value || "Guest").trim();
-
-      state.isActive = true;
-      state.questions = shuffleArray([...allQuestions]).slice(0, 10); // Ambil 10 soal acak
-      state.currentIndex = 0;
-
-      // Reset Scores
-      state.p1.score = 0;
-      state.p2.score = 0;
-      updateScoreUI();
-
-      // Show UI
-      if (ui.container) ui.container.classList.remove("hidden");
-      ui.resultScreen.classList.add("hidden");
-
-      // Start Game
-      loadQuestion();
+      state._originalQuestions = [...allQuestions]; // Save for rematch
+      _startRound();
     });
+  }
+
+  /**
+   * FIX #3 & #4: Internal start — resets and starts game WITHOUT Swal prompt.
+   * Called by both first-start (after Swal) and rematch.
+   */
+  function _startRound() {
+    state.isActive = true;
+    // Always re-shuffle for each new round
+    state.questions = shuffleArray([...state._originalQuestions]).slice(0, 10);
+    state.currentIndex = 0;
+
+    state.p1 = { score: 0, ready: false };
+    state.p2 = { score: 0, ready: false, name: state.p2.name };
+    state.isTransitioning = false;
+
+    if (state._deadlockTimeout) {
+      clearTimeout(state._deadlockTimeout);
+      state._deadlockTimeout = null;
+    }
+
+    updateScoreUI();
+
+    if (ui.container) ui.container.classList.remove("hidden");
+    if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
+
+    loadQuestion();
   }
 
   function toggleRotation() {
     state.isRotated = !state.isRotated;
     const p2Area = document.getElementById("p2-area");
-    if (state.isRotated) {
-      p2Area.classList.add("rotated");
-    } else {
-      p2Area.classList.remove("rotated");
+    if (p2Area) {
+      if (state.isRotated) {
+        p2Area.classList.add("rotated");
+      } else {
+        p2Area.classList.remove("rotated");
+      }
     }
   }
 
   function exitVersus() {
     state.isActive = false;
-    ui.container.classList.add("hidden");
-    ui.resultScreen.classList.add("hidden");
+    if (state._deadlockTimeout) {
+      clearTimeout(state._deadlockTimeout);
+      state._deadlockTimeout = null;
+    }
 
-    // Show Start Screen cleanly
+    // FIX #5: Null-guard on ui.container
+    if (ui.container) ui.container.classList.add("hidden");
+    if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
+
+    // FIX: Reset game mode to solo so main file doesn't keep routing to versus
+    if (typeof window.selectMode === "function") {
+      window.selectMode("solo");
+    }
+
     const startScreen = document.getElementById("start-screen");
     if (startScreen) {
-        startScreen.classList.remove("hidden");
-        startScreen.classList.add("active");
+      startScreen.classList.remove("hidden");
+      startScreen.classList.add("active");
     }
   }
 
+  // FIX #3: rematch no longer calls init() — directly starts new round
   function rematch() {
-    // Request new questions logic similar to init
-    // For now, reload to get fresh questions via socket if needed,
-    // or just re-shuffle current ones?
-    // Best approach: Re-init with same questions but re-shuffled
-    init(state.questions);
+    if (!state._originalQuestions || state._originalQuestions.length === 0) {
+      exitVersus();
+      return;
+    }
+    _startRound();
   }
 
   // --- Private Game Logic ---
 
   function loadQuestion() {
-    state.isTransitioning = false; // Reset transition lock
+    state.isTransitioning = false;
+
+    if (state._deadlockTimeout) {
+      clearTimeout(state._deadlockTimeout);
+      state._deadlockTimeout = null;
+    }
+
     if (state.currentIndex >= state.questions.length) {
       endGame();
       return;
@@ -127,33 +168,47 @@ const VersusNabi = (() => {
 
     const q = state.questions[state.currentIndex];
 
-    // Render P1
     renderPlayerUI(ui.p1, q, "p1");
-
-    // Render P2
     renderPlayerUI(ui.p2, q, "p2");
+
+    // Reset ready states
+    state.p1.ready = false;
+    state.p2.ready = false;
+
+    // FIX #6: 30s deadlock prevention — if both players idle, auto-advance
+    state._deadlockTimeout = setTimeout(() => {
+      if (state.isActive && !state.isTransitioning) {
+        console.warn("[VersusNabi] Deadlock timeout — advancing to next question");
+        state.isTransitioning = true;
+        state.currentIndex++;
+        loadQuestion();
+      }
+    }, 30000);
   }
 
   function renderPlayerUI(playerUI, q, playerId) {
-    playerUI.question.innerText = q.tanya;
+    if (!playerUI.question || !playerUI.options) return;
+
+    playerUI.question.innerText = q.tanya || "...";
+    playerUI.question.style.color = "";
     playerUI.options.innerHTML = "";
 
-    q.opsi.forEach((opt) => {
+    const opts = q.opsi || [];
+    opts.forEach((opt) => {
       const btn = document.createElement("button");
       btn.className = "btn-option";
       btn.innerText = opt;
 
-      // Touchstart for faster reaction
+      // FIX #7: { once: true } prevents double-fire from touchstart+click
       btn.addEventListener(
         "touchstart",
         (e) => {
-          e.preventDefault(); // Prevent ghost clicks
+          e.preventDefault();
           handleAnswer(playerId, opt, q.jawab, btn);
         },
-        { passive: false },
+        { passive: false, once: true }
       );
 
-      // Click fallback for non-touch
       btn.addEventListener("click", () => {
         handleAnswer(playerId, opt, q.jawab, btn);
       });
@@ -163,47 +218,47 @@ const VersusNabi = (() => {
   }
 
   function handleAnswer(playerId, selected, correct, btnElement) {
-    if (!state.isActive || state.isTransitioning) return; // Prevent input if transitioning
+    if (!state.isActive || state.isTransitioning) return;
 
-    // Disable buttons for this player immediately
     const playerUI = ui[playerId];
+    if (!playerUI) return;
+
     const buttons = playerUI.options.querySelectorAll(".btn-option");
     buttons.forEach((b) => (b.disabled = true));
 
-    const clean = (str) => str.trim().toLowerCase();
+    const clean = (str) => String(str).trim().toLowerCase();
     const isCorrect =
       clean(selected) === clean(correct) ||
       clean(selected).includes(clean(correct));
 
     if (isCorrect) {
-      state.isTransitioning = true; // Lock further answers
-      
-      // Disable the OTHER player's buttons immediately
+      state.isTransitioning = true;
+
       const otherPlayerId = playerId === "p1" ? "p2" : "p1";
-      const otherButtons = ui[otherPlayerId].options.querySelectorAll(".btn-option");
-      otherButtons.forEach((b) => (b.disabled = true));
+      const otherUI = ui[otherPlayerId];
+      if (otherUI) {
+        const otherButtons = otherUI.options.querySelectorAll(".btn-option");
+        otherButtons.forEach((b) => (b.disabled = true));
+        if (otherUI.question) {
+          otherUI.question.innerText = `⏳ Terlambat! ${playerId.toUpperCase()} Benar!`;
+          otherUI.question.style.color = "#ffeb3b";
+        }
+      }
 
       btnElement.classList.add("correct");
       state[playerId].score += 10;
-      try {
-        AudioManager.playCorrect();
-      } catch (e) {}
 
-      // Show visual indicator to the other player that they lost this round
-      ui[otherPlayerId].question.innerText = `⏳ Terlambat! ${playerId.toUpperCase()} Benar!`;
-      ui[otherPlayerId].question.style.color = "#ffeb3b";
+      try { AudioManager.playCorrect(); } catch (e) {}
 
-      // 💥 Particle Burst
       if (typeof ParticleManager !== "undefined") {
-          const rect = btnElement.getBoundingClientRect();
-          ParticleManager.burst(rect.left + rect.width / 2, rect.top + rect.height / 2, 40);
+        const rect = btnElement.getBoundingClientRect();
+        ParticleManager.burst(rect.left + rect.width / 2, rect.top + rect.height / 2, 40);
       }
     } else {
       btnElement.classList.add("wrong");
-      try {
-        AudioManager.playWrong();
-      } catch (e) {}
-      // Show correct answer
+      try { AudioManager.playWrong(); } catch (e) {}
+
+      // Highlight correct answer for this player
       buttons.forEach((b) => {
         if (clean(b.innerText).includes(clean(correct))) {
           b.classList.add("correct");
@@ -213,16 +268,10 @@ const VersusNabi = (() => {
 
     updateScoreUI();
 
-    // VERSUS MODE LOGIC: "First Correct Advances All"
     if (isCorrect) {
       setTimeout(() => {
-        ui.p1.question.style.color = ""; // Reset color
-        ui.p2.question.style.color = "";
         state.currentIndex++;
         loadQuestion();
-        // Reset ready states for next round
-        state.p1.ready = false;
-        state.p2.ready = false;
       }, 1000);
     } else {
       state[playerId].ready = true;
@@ -231,58 +280,60 @@ const VersusNabi = (() => {
   }
 
   function checkRoundComplete() {
-    // If both answered wrong -> Next
     if (state.p1.ready && state.p2.ready) {
       if (state.isTransitioning) return;
       state.isTransitioning = true;
       setTimeout(() => {
         state.currentIndex++;
         loadQuestion();
-        state.p1.ready = false;
-        state.p2.ready = false;
       }, 1000);
     }
   }
 
   function updateScoreUI() {
-    ui.p1.score.innerText = state.p1.score;
-    ui.p2.score.innerText = state.p2.score;
+    if (ui.p1.score) ui.p1.score.innerText = state.p1.score;
+    if (ui.p2.score) ui.p2.score.innerText = state.p2.score;
   }
 
   function endGame() {
-    ui.container.classList.add("hidden");
-    ui.resultScreen.classList.remove("hidden");
+    state.isActive = false;
+    if (state._deadlockTimeout) {
+      clearTimeout(state._deadlockTimeout);
+      state._deadlockTimeout = null;
+    }
 
-    document.getElementById("end-score-p1").innerText = state.p1.score;
-    document.getElementById("end-score-p2").innerText = state.p2.score;
+    if (ui.container) ui.container.classList.add("hidden");
+    if (ui.resultScreen) ui.resultScreen.classList.remove("hidden");
 
-    let winnerText = "SERI!";
+    const endP1 = document.getElementById("end-score-p1");
+    const endP2 = document.getElementById("end-score-p2");
+    if (endP1) endP1.innerText = state.p1.score;
+    if (endP2) endP2.innerText = state.p2.score;
+
+    let winnerText = "SERI! 🤝";
     let finalStatus = "Draw";
-    
+
     if (state.p1.score > state.p2.score) {
       winnerText = "PEMENANG: PLAYER 1! 🏆";
       finalStatus = "Win";
-    }
-    if (state.p2.score > state.p1.score) {
-      winnerText = `🏆 PEMENANG: ${state.p2.name ? state.p2.name.toUpperCase() : 'PLAYER 2'}!`;
+    } else if (state.p2.score > state.p1.score) {
+      winnerText = `🏆 PEMENANG: ${state.p2.name ? state.p2.name.toUpperCase() : "PLAYER 2"}!`;
       finalStatus = "Lose";
     }
 
-    document.getElementById("v-winner-text").innerText = winnerText;
-    
-    // Kirim skor ke server
+    const winnerEl = document.getElementById("v-winner-text");
+    if (winnerEl) winnerEl.innerText = winnerText;
+
     if (window.socket) {
       window.socket.emit("laporSkorVersusLokal", {
         game: "nabi",
         status: finalStatus,
-        score: state.p1.score, 
-        p2Name: state.p2.name || "Guest"
+        score: state.p1.score,
+        p2Name: state.p2.name || "Guest",
       });
     }
 
-    try {
-      AudioManager.playWin();
-    } catch (e) {}
+    try { AudioManager.playWin(); } catch (e) {}
   }
 
   function shuffleArray(array) {
@@ -293,13 +344,13 @@ const VersusNabi = (() => {
     return array;
   }
 
-  // Expose global restart method for no-reload retry
-  window.restartGame = function() {
-      if(!state.questions || state.questions.length === 0) {
-          exitVersus();
-          return;
-      }
-      rematch();
+  // FIX #4: restartGame → _startRound() directly, no Swal
+  window.restartGame = function () {
+    if (!state._originalQuestions || state._originalQuestions.length === 0) {
+      exitVersus();
+      return;
+    }
+    _startRound();
   };
 
   return {

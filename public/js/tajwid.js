@@ -141,6 +141,8 @@ function wireSocketEvents() {
 
     // --- CHECK VERSUS MODE ---
     if (currentGameMode === "versus") {
+      // FIX: Stop any running solo timer before entering versus
+      clearInterval(timerInterval);
       if (typeof VersusTajwid !== "undefined") {
         VersusTajwid.init(incomingData);
       } else {
@@ -710,6 +712,12 @@ window.addEventListener("beforeunload", (e) => {
 
 // --- RESTART TANPA RELOAD ---
 window.restartGame = function () {
+  // FIX: Jika mode versus aktif, delegasikan ke VersusTajwid
+  if (currentGameMode === "versus" && typeof VersusTajwid !== "undefined") {
+    VersusTajwid.exitVersus(); // Close versus UI first
+    return;
+  }
+
   // 1. Stop semua timer
   clearInterval(timerInterval);
 

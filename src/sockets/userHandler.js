@@ -257,6 +257,31 @@ module.exports = (socket, io) => {
     if (isNaN(skor)) skor = 0;
     if (skor < 0) skor = 0;
 
+    // FIX #10: Validate that user has an active game session (same as simpanSkor)
+    if (!socket.activeGameSession || socket.activeGameSession.game !== game) {
+      logger.warn(`⚠️ [Versus] Blokir lapor skor ilegal: Sesi tidak valid. User: ${socket.activeUser.username}, Game: ${game}`);
+      return socket.emit("errorSkor", "Sesi bermain versus tidak valid. Harap mulai ulang permainan.");
+    }
+
+    // FIX #10: Cap skor versus agar tidak bisa dimanipulasi
+    const VS_MAX_SCORE_MAP = {
+      math:    3000,
+      zuma:    5000,
+      labirin: 3000,
+      memory:  2000,
+      piano:   2000,
+      kasir:   2000,
+      nabi:    3000,
+      ayat:    3000,
+      tajwid:  3000,
+      bintang: 2000,
+    };
+    const vsMax = VS_MAX_SCORE_MAP[game] || 2000;
+    if (skor > vsMax) {
+      logger.warn(`⚠️ [Versus] Suspicious Score: ${skor} (max: ${vsMax}) by ${socket.activeUser.username} in ${game}`);
+      skor = vsMax;
+    }
+
     const safeName = socket.activeUser.username;
     let koin = Math.floor(skor / 10);
     let xpGained = getXPFromScore(game, skor);

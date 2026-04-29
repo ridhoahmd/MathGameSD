@@ -1,10 +1,11 @@
 const VersusTajwid = (function () {
   const state = {
     isActive: false,
+    isTransitioning: false, // FIX #2: Race condition guard
     questionsP1: [],
     questionsP2: [],
     timerInterval: null,
-    timeLeft: 60, // 60 seconds per round
+    timeLeft: 60,
     p1: { score: 0, currentCard: null, index: 0 },
     p2: { score: 0, currentCard: null, index: 0 },
   };
@@ -13,11 +14,10 @@ const VersusTajwid = (function () {
     container: null,
     resultScreen: null,
     timer: null,
-    p1: { score: null, card: null, buckets: null },
-    p2: { score: null, card: null, buckets: null },
+    p1: { score: null, cardArea: null, buckets: null },
+    p2: { score: null, cardArea: null, buckets: null },
   };
 
-  // Sound Effects (reuse existing)
   const sounds = {
     correct:
       typeof AudioManager !== "undefined" ? AudioManager.playCorrect : () => {},
@@ -26,24 +26,61 @@ const VersusTajwid = (function () {
     win: typeof AudioManager !== "undefined" ? AudioManager.playWin : () => {},
   };
 
+  // Shuffle helper
+  const shuffleArray = (array) => {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
+
   function exitVersus() {
     state.isActive = false;
+    if (state.timerInterval) {
+      clearInterval(state.timerInterval);
+      state.timerInterval = null;
+    }
     if (ui.container) ui.container.classList.add("hidden");
     if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
-    
-    // Cleanup DOM specifically for versus
+
+    // FIX: Reset game mode to solo so main file doesn't route to versus on solo restart
+    if (typeof window.selectMode === "function") {
+      window.selectMode("solo");
+    }
+
     const startScreen = document.getElementById("start-screen");
     if (startScreen) {
-        startScreen.classList.remove("hidden");
-        startScreen.classList.add("active");
+      startScreen.classList.remove("hidden");
+      startScreen.classList.add("active");
     }
-    
-    // Restore elements hidden during init
+
     const gameWrapper = document.querySelector(".game-wrapper");
     if (gameWrapper) gameWrapper.style.display = "";
-    
+
     const topBar = document.querySelector(".top-bar");
     if (topBar) topBar.style.display = "";
+  }
+
+  function _initUIElements() {
+    ui.container = document.getElementById("versus-container");
+    ui.resultScreen = document.getElementById("versus-result");
+    ui.timer = document.getElementById("v-timer");
+
+    ui.p1.score = document.getElementById("v-p1-score");
+    ui.p1.cardArea = document.getElementById("v-p1-card-area");
+    ui.p1.buckets = {
+      left: document.querySelector("#versus-container .p1-area .v-bucket.left"),
+      right: document.querySelector("#versus-container .p1-area .v-bucket.right"),
+    };
+
+    ui.p2.score = document.getElementById("v-p2-score");
+    ui.p2.cardArea = document.getElementById("v-p2-card-area");
+    ui.p2.buckets = {
+      left: document.querySelector("#versus-container .p2-area .v-bucket.left"),
+      right: document.querySelector("#versus-container .p2-area .v-bucket.right"),
+    };
   }
 
   function init(data) {
@@ -62,7 +99,7 @@ const VersusTajwid = (function () {
       cancelButtonText: "Batal",
       allowOutsideClick: false,
       background: "#1e1e2e",
-      color: "#fff"
+      color: "#fff",
     }).then((result) => {
       if (result.isDismissed) {
         if (startScreen) {
@@ -73,114 +110,69 @@ const VersusTajwid = (function () {
         return;
       }
       state.p2.name = (result.value || "Guest").trim();
-      
 
-      if (!ui.container) {
-        ui.container = document.getElementById("versus-container");
-        ui.resultScreen = document.getElementById("versus-result");
-        ui.timer = document.getElementById("v-timer");
+      // Lazy init UI elements
+      if (!ui.container) _initUIElements();
 
-        // P1 UI
-        ui.p1.score = document.getElementById("v-p1-score");
-        ui.p1.cardArea = document.getElementById("v-p1-card-area");
-        ui.p1.buckets = {
-          left: document.querySelector(
-            "#versus-container .p1-area .v-bucket.left",
-          ),
-          right: document.querySelector(
-            "#versus-container .p1-area .v-bucket.right",
-          ),
-        };
-
-        // P2 UI
-        ui.p2.score = document.getElementById("v-p2-score");
-        ui.p2.cardArea = document.getElementById("v-p2-card-area");
-        ui.p2.buckets = {
-          left: document.querySelector(
-            "#versus-container .p2-area .v-bucket.left",
-          ),
-          right: document.querySelector(
-            "#versus-container .p2-area .v-bucket.right",
-          ),
-        };
-      }
-
-      // Reset State
-      state.isActive = true;
-
-      // Normalize Data: Ensure it's an array of objects
+      // Normalize Data
       let queue = [];
       if (data.data && Array.isArray(data.data)) {
-        queue = data.data; // Object format used in Solo
-        // Update Bucket Labels from Category Data
+        queue = data.data;
         if (data.kategori_kiri && data.kategori_kanan) {
-          if (ui.p1.buckets.left)
-            ui.p1.buckets.left.innerText = data.kategori_kiri;
-          if (ui.p1.buckets.right)
-            ui.p1.buckets.right.innerText = data.kategori_kanan;
-
-          if (ui.p2.buckets.left)
-            ui.p2.buckets.left.innerText = data.kategori_kiri;
-          if (ui.p2.buckets.right)
-            ui.p2.buckets.right.innerText = data.kategori_kanan;
+          if (ui.p1.buckets.left) ui.p1.buckets.left.innerText = data.kategori_kiri;
+          if (ui.p1.buckets.right) ui.p1.buckets.right.innerText = data.kategori_kanan;
+          if (ui.p2.buckets.left) ui.p2.buckets.left.innerText = data.kategori_kiri;
+          if (ui.p2.buckets.right) ui.p2.buckets.right.innerText = data.kategori_kanan;
         }
       } else if (Array.isArray(data)) {
-        queue = data; // Direct array
+        queue = data;
       } else {
         console.error("VersusTajwid: Invalid data format", data);
         return;
       }
 
-      // Shuffle function
-      const shuffleArray = (array) => {
-        const arr = [...array];
-        for (let i = arr.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [arr[i], arr[j]] = [arr[j], arr[i]];
-        }
-        return arr;
-      };
-
-      state.questionsP1 = shuffleArray(queue);
-      state.questionsP2 = shuffleArray(queue);
-
-      // Reset Player State
-      state.p1 = { score: 0, index: 0, currentCard: null };
-      
-      // Preserve the name we just set for P2
-      const guestName = state.p2.name;
-      state.p2 = { score: 0, index: 0, currentCard: null, name: guestName };
-      state.timeLeft = 60;
-
-      updateScoreUI();
-      updateTimerUI();
-
-      // Hide Solo UI
-      const startScreen = document.getElementById("start-screen");
-      if (startScreen) {
-          startScreen.classList.remove("active");
-          startScreen.classList.add("hidden");
-      }
-      
-      const gameWrapper = document.querySelector(".game-wrapper");
-      if (gameWrapper) gameWrapper.style.display = "none";
-      
-      const topBar = document.querySelector(".top-bar");
-      if (topBar) topBar.style.display = "none";
-
-      // Show Versus UI
-      if (ui.container) {
-        ui.container.classList.remove("hidden");
-        ui.container.style.display = "flex"; // Force layout
-        ui.container.style.zIndex = "100000"; // Force on top
-      }
-      if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
-
-      // Start Game
-      startTimer();
-      loadCard(1);
-      loadCard(2);
+      _startRound(queue);
     });
+  }
+
+  // FIX #1 & #2: Dedicated internal start function, separate from prompt
+  function _startRound(originalQueue) {
+    // FIX #1: Always re-shuffle on every start/rematch
+    state.questionsP1 = shuffleArray(originalQueue);
+    state.questionsP2 = shuffleArray(originalQueue);
+
+    const guestName = state.p2.name;
+    state.isActive = true;
+    state.isTransitioning = false;
+    state.timeLeft = 60;
+    state.p1 = { score: 0, index: 0, currentCard: null };
+    state.p2 = { score: 0, index: 0, currentCard: null, name: guestName };
+
+    updateScoreUI();
+    updateTimerUI();
+
+    // Hide Solo UI
+    const startScreen = document.getElementById("start-screen");
+    if (startScreen) {
+      startScreen.classList.remove("active");
+      startScreen.classList.add("hidden");
+    }
+    const gameWrapper = document.querySelector(".game-wrapper");
+    if (gameWrapper) gameWrapper.style.display = "none";
+    const topBar = document.querySelector(".top-bar");
+    if (topBar) topBar.style.display = "none";
+
+    // Show Versus UI
+    if (ui.container) {
+      ui.container.classList.remove("hidden");
+      ui.container.style.display = "flex";
+      ui.container.style.zIndex = "100000";
+    }
+    if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
+
+    startTimer();
+    loadCard(1);
+    loadCard(2);
   }
 
   function loadCard(playerId) {
@@ -188,122 +180,106 @@ const VersusTajwid = (function () {
 
     const playerState = playerId === 1 ? state.p1 : state.p2;
     const uiArea = playerId === 1 ? ui.p1.cardArea : ui.p2.cardArea;
-
     const playerQuestions = playerId === 1 ? state.questionsP1 : state.questionsP2;
-    
-    // Verify index
+
+    if (!uiArea) return; // Null guard
+
     if (playerState.index >= playerQuestions.length) {
-      playerState.index = 0; // Loop questions in Versus if run out
+      playerState.index = 0; // Loop questions if exhausted
     }
 
     const cardData = playerQuestions[playerState.index];
+    if (!cardData) return;
     playerState.currentCard = cardData;
 
-    // Create Card Element
-    uiArea.innerHTML = ""; // Clear previous
+    uiArea.innerHTML = "";
     const card = document.createElement("div");
     card.className = "v-card glass-panel";
     card.innerText = cardData.teks || "Error";
 
-    // Setup Drag/Touch events specifically for this card
     setupCardInput(card, playerId);
-
     uiArea.appendChild(card);
   }
 
   function setupCardInput(card, playerId) {
     let startX = 0;
     let isDragging = false;
+    let answered = false; // FIX #2: Per-card answer lock
+
+    const processSwipe = (diffX) => {
+      if (answered) return; // Prevent double-swipe
+      const threshold = 50;
+      if (Math.abs(diffX) < threshold) {
+        card.style.transform = "translateX(0) rotate(0deg)";
+        return;
+      }
+      answered = true; // Lock this card
+
+      let side;
+      if (diffX > threshold) {
+        side = "kanan";
+      } else {
+        side = "kiri";
+      }
+
+      // FIX #9: P2 area is rotated 180deg visually — invert swipe direction for P2
+      if (playerId === 2) {
+        side = side === "kanan" ? "kiri" : "kanan";
+      }
+
+      handleAnswer(playerId, side);
+    };
 
     // Touch Events
-    card.addEventListener(
-      "touchstart",
-      (e) => {
-        startX = e.touches[0].clientX;
-        isDragging = true;
-        card.style.transition = "none";
-      },
-      { passive: true },
-    );
+    card.addEventListener("touchstart", (e) => {
+      startX = e.touches[0].clientX;
+      isDragging = true;
+      card.style.transition = "none";
+    }, { passive: true });
 
-    card.addEventListener(
-      "touchmove",
-      (e) => {
-        if (!isDragging) return;
-        const currentX = e.touches[0].clientX;
-        const diffX = currentX - startX;
-        const rotate = diffX / 10;
-
-        // P2 is rotated 180deg, so swipe directions visually might be tricky
-        // But logic relies on screen coordinates.
-        // Note: For P2 (Rotated), 'Left' visual is actually Screen Right?
-        // Let's rely on raw X diff.
-        // CSS handles visual rotation of the container.
-        // Inputs are relative to screen.
-
-        card.style.transform = `translateX(${diffX}px) rotate(${rotate}deg)`;
-      },
-      { passive: true },
-    );
+    card.addEventListener("touchmove", (e) => {
+      if (!isDragging) return;
+      const diffX = e.touches[0].clientX - startX;
+      const rotate = diffX / 10;
+      card.style.transform = `translateX(${diffX}px) rotate(${rotate}deg)`;
+    }, { passive: true });
 
     card.addEventListener("touchend", (e) => {
       if (!isDragging) return;
       isDragging = false;
-
-      const endX = e.changedTouches[0].clientX;
-      const diffX = endX - startX;
-      const threshold = 50;
-
       card.style.transition = "transform 0.3s ease";
-
-      if (diffX > threshold) {
-        handleAnswer(playerId, "kanan");
-      } else if (diffX < -threshold) {
-        handleAnswer(playerId, "kiri");
-      } else {
-        card.style.transform = "translateX(0) rotate(0deg)";
-      }
+      processSwipe(e.changedTouches[0].clientX - startX);
     });
 
-    // Mouse Events for PC Testing
+    // Mouse Events
     card.addEventListener("mousedown", (e) => {
       startX = e.clientX;
       isDragging = true;
       card.style.transition = "none";
     });
 
-    const handleMouseUp = (e) => {
-      if (!isDragging) return;
-      isDragging = false;
-
-      const endX = e.clientX;
-      const diffX = endX - startX;
-      const threshold = 50;
-
-      card.style.transition = "transform 0.3s ease";
-
-      if (diffX > threshold) {
-        handleAnswer(playerId, "kanan");
-      } else if (diffX < -threshold) {
-        handleAnswer(playerId, "kiri");
-      } else {
-        card.style.transform = "translateX(0) rotate(0deg)";
-      }
-    };
-
     card.addEventListener("mousemove", (e) => {
       if (!isDragging) return;
-      const currentX = e.clientX;
-      const diffX = currentX - startX;
+      const diffX = e.clientX - startX;
       const rotate = diffX / 10;
       card.style.transform = `translateX(${diffX}px) rotate(${rotate}deg)`;
     });
+
+    const handleMouseUp = (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      card.style.transition = "transform 0.3s ease";
+      processSwipe(e.clientX - startX);
+    };
 
     card.addEventListener("mouseup", handleMouseUp);
     card.addEventListener("mouseleave", handleMouseUp);
   }
 
   function handleAnswer(playerId, side) {
+    // FIX #2: Global isTransitioning guard — block if already processing for this player
+    if (!state.isActive) return;
+
     const pState = playerId === 1 ? state.p1 : state.p2;
     const card = pState.currentCard;
 
@@ -313,30 +289,34 @@ const VersusTajwid = (function () {
 
     if (isCorrect) {
       pState.score += 10;
+      if (typeof sounds.correct === "function") sounds.correct();
 
-      if (typeof sounds.correct === "function") sounds.correct(); // Play Sound
-      // Correct Animation
-      const cardEl =
-        playerId === 1 ? ui.p1.cardArea.firstChild : ui.p2.cardArea.firstChild;
+      const cardEl = playerId === 1
+        ? ui.p1.cardArea?.firstChild
+        : ui.p2.cardArea?.firstChild;
+
       if (cardEl) {
         cardEl.classList.add("correct-flash");
         const moveX = side === "kanan" ? 500 : -500;
         cardEl.style.transform = `translateX(${moveX}px) rotate(${moveX / 10}deg) scale(0)`;
       }
 
-      // 💥 Particle Burst
-      if (typeof ParticleManager !== "undefined") ParticleManager.burst(window.innerWidth / 2, window.innerHeight / 2, 40);
+      if (typeof ParticleManager !== "undefined") {
+        ParticleManager.burst(window.innerWidth / 2, window.innerHeight / 2, 40);
+      }
 
       setTimeout(() => {
         pState.index++;
         loadCard(playerId);
       }, 300);
     } else {
-      pState.score = Math.max(0, pState.score - 5); // Penalty
+      pState.score = Math.max(0, pState.score - 5);
       if (typeof sounds.wrong === "function") sounds.wrong();
 
-      const cardEl =
-        playerId === 1 ? ui.p1.cardArea.firstChild : ui.p2.cardArea.firstChild;
+      const cardEl = playerId === 1
+        ? ui.p1.cardArea?.firstChild
+        : ui.p2.cardArea?.firstChild;
+
       if (cardEl) {
         cardEl.classList.add("wrong-flash");
         setTimeout(() => cardEl.classList.remove("wrong-flash"), 400);
@@ -348,13 +328,11 @@ const VersusTajwid = (function () {
 
   function startTimer() {
     if (state.timerInterval) clearInterval(state.timerInterval);
-
     updateTimerUI();
 
     state.timerInterval = setInterval(() => {
       state.timeLeft--;
       updateTimerUI();
-
       if (state.timeLeft <= 0) {
         endGame();
       }
@@ -371,13 +349,15 @@ const VersusTajwid = (function () {
   }
 
   function endGame() {
-    clearInterval(state.timerInterval);
+    if (state.timerInterval) {
+      clearInterval(state.timerInterval);
+      state.timerInterval = null;
+    }
     state.isActive = false;
 
-    ui.container.classList.add("hidden");
-    ui.resultScreen.classList.remove("hidden");
+    if (ui.container) ui.container.classList.add("hidden");
+    if (ui.resultScreen) ui.resultScreen.classList.remove("hidden");
 
-    // Determine Winner
     const p1s = state.p1.score;
     const p2s = state.p2.score;
     const winnerText = document.getElementById("v-winner-text");
@@ -388,68 +368,45 @@ const VersusTajwid = (function () {
     if (finalP2) finalP2.innerText = p2s;
 
     let finalStatus = "Draw";
+    let msg = "🤝 SERI!";
 
     if (p1s > p2s) {
-      winnerText.innerText = "🏆 PEMAIN 1 MENANG!";
+      msg = "🏆 PEMAIN 1 MENANG!";
       finalStatus = "Win";
     } else if (p2s > p1s) {
-      winnerText.innerText = `🏆 ${state.p2.name ? state.p2.name.toUpperCase() : 'PEMAIN 2'} MENANG!`;
+      msg = `🏆 ${state.p2.name ? state.p2.name.toUpperCase() : "PEMAIN 2"} MENANG!`;
       finalStatus = "Lose";
-    } else {
-      winnerText.innerText = "🤝 SERI!";
     }
 
-    // Kirim skor ke server
+    if (winnerText) winnerText.innerText = msg;
+
     if (window.socket) {
       window.socket.emit("laporSkorVersusLokal", {
         game: "tajwid",
         status: finalStatus,
         score: p1s,
-        p2Name: state.p2.name || "Guest"
+        p2Name: state.p2.name || "Guest",
       });
     }
 
-    // Play Sound
     if (typeof AudioManager !== "undefined") AudioManager.playWin();
   }
 
-  // Expose global restart method for no-reload retry
-  window.restartGame = function() {
-    if(!state.questionsP1 || state.questionsP1.length === 0) {
-        console.warn("No questions available for restart. Escaping.");
-        exitVersus();
-        return;
+  // FIX #1 & #3: restartGame re-shuffles and does NOT trigger Swal prompt again
+  window.restartGame = function () {
+    if (!state.questionsP1 || state.questionsP1.length === 0) {
+      console.warn("VersusTajwid: No questions for restart.");
+      exitVersus();
+      return;
     }
-    
-    
-    // Reset state but keep questions and p2 name
-    state.isActive = true;
-    state.timeLeft = 60;
-    
-    const guestName = state.p2.name;
-    state.p1 = { score: 0, index: 0, currentCard: null };
-    state.p2 = { score: 0, index: 0, currentCard: null, name: guestName };
-    
-    updateScoreUI();
-    updateTimerUI();
-    
-    // Reset UI visibility
-    if (ui.resultScreen) ui.resultScreen.classList.add("hidden");
-    if (ui.container) {
-        ui.container.classList.remove("hidden");
-        ui.container.style.display = "flex";
-    }
-    
-    // Start again
-    startTimer();
-    loadCard(1);
-    loadCard(2);
+    // Use the original question pool (we keep a reference via questionsP1 which was already shuffled)
+    // Re-shuffle and start a new round without asking for P2 name again
+    _startRound(state.questionsP1);
   };
 
-  // Public API
   return {
     init: init,
-    handleInput: handleAnswer, // For bucket clicks
-    exitVersus: exitVersus,   // BUG-05 FIX: expose exitVersus agar tombol keluar berfungsi
+    handleInput: handleAnswer,
+    exitVersus: exitVersus,
   };
 })();

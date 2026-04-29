@@ -30,7 +30,10 @@ class LabirinScene extends Phaser.Scene {
     this.moveCooldown = { p1: false, p2: false };
 
     // Game Logic State
-    this.wrongAttempts = 0;
+    // FIX #11: Per-player quiz tracking (was one shared flag → race condition in versus)
+    this.isQuizActive = false; // Legacy: still used as global block in solo
+    this.quizActivePlayer = null; // FIX #8: Track which player is currently in quiz
+    this.wrongAttempts = { p1: 0, p2: 0 }; // FIX #11: Per-player wrong attempts
     this.maxWrongAttempts = 3;
     this.skipPenalty = 25;
     this.pointsPerObstacle = 80;
@@ -51,7 +54,9 @@ class LabirinScene extends Phaser.Scene {
     this.score = { p1: 0, p2: 0 };
     this.grid = [];
     this.moveCooldown = { p1: false, p2: false };
-    this.wrongAttempts = 0;
+    this.wrongAttempts = { p1: 0, p2: 0 }; // FIX #11: Per-player
+    this.isQuizActive = false;
+    this.quizActivePlayer = null;
 
     // Emit State Awal
     this.updateScoreUI();
@@ -426,7 +431,11 @@ class LabirinScene extends Phaser.Scene {
 
   tryMove(playerKey, dx, dy) {
     // Move Logic
-    if (this.moveCooldown[playerKey] || this.isQuizActive) return; // Prevent move if quiz active
+    // FIX #11: Block movement if THIS player OR any player has an active quiz (solo compat)
+    // In versus: only block the player who is in the quiz, allow the other to move
+    const myQuizActive = this.quizActivePlayer === playerKey;
+    const globalQuizBlock = !this.isVersus && this.isQuizActive; // solo: global block
+    if (this.moveCooldown[playerKey] || myQuizActive || globalQuizBlock) return;
 
     const player = this.players[playerKey];
     if (!player) return; // Player not active (e.g. P2 inactive in solo)
@@ -492,34 +501,47 @@ class LabirinScene extends Phaser.Scene {
   }
 
   triggerQuestion(playerKey, cell) {
-    // Reset wrong attempts for new question
-    this.wrongAttempts = 0;
-    this.isQuizActive = true; // Lock movement
-    this.lastQuestionData = cell.questionData; // Store for AI Tutor
+    // FIX #11: If this player is already in a quiz, do nothing
+    if (this.quizActivePlayer === playerKey) return;
+
+    // FIX #8: If another player is in a quiz (versus), block this cell for now
+    // (they can try again when the other resolves)
+    if (this.isVersus && this.quizActivePlayer !== null && this.quizActivePlayer !== playerKey) {
+      // Briefly shake camera to signal "wait"
+      this.cameras.main.shake(80, 0.003);
+      return;
+    }
+
+    // FIX #11: Per-player wrong attempt reset
+    this.wrongAttempts[playerKey] = 0;
+    this.isQuizActive = true; // Legacy solo-compat
+    this.quizActivePlayer = playerKey; // FIX #8: Track who is in quiz
+    this.lastQuestionData = cell.questionData;
 
     this.events.emit("showQuestion", {
       player: playerKey,
       question: cell.questionData,
       callback: (isCorrect, isSkip) => {
         if (isCorrect) {
-          this.isQuizActive = false; // Unlock only if resolved
-          const marker = this.questionMarkers.find((m) => m.cell === cell);
-          if (marker) marker.destroy();
-          cell.isQuestion = false; // Mark as cleared
-
-          this.addScore(playerKey, this.pointsPerObstacle);
-          if (window.safePlayCorrect) window.safePlayCorrect(); // Sound Correct
-        } else if (isSkip) {
-          this.isQuizActive = false; // Unlock
+          // Unlock only for this player's quiz
+          this.isQuizActive = false;
+          this.quizActivePlayer = null; // FIX #8: Release quiz lock
           const marker = this.questionMarkers.find((m) => m.cell === cell);
           if (marker) marker.destroy();
           cell.isQuestion = false;
 
-          this.addScore(playerKey, -this.skipPenalty); // Penalty
+          this.addScore(playerKey, this.pointsPerObstacle);
+          if (window.safePlayCorrect) window.safePlayCorrect();
+        } else if (isSkip) {
+          this.isQuizActive = false;
+          this.quizActivePlayer = null; // FIX #8: Release quiz lock
+          const marker = this.questionMarkers.find((m) => m.cell === cell);
+          if (marker) marker.destroy();
+          cell.isQuestion = false;
+
+          this.addScore(playerKey, -this.skipPenalty);
         } else {
-          // Wrong answer logic - Handle attempts or bounce back
-          // Do NOT unlock movement yet
-          if (window.safePlayWrong) window.safePlayWrong(); // Sound Wrong
+          if (window.safePlayWrong) window.safePlayWrong();
           this.handleWrongAnswer(playerKey);
         }
       },
@@ -527,12 +549,11 @@ class LabirinScene extends Phaser.Scene {
   }
 
   handleWrongAnswer(playerKey) {
-    this.wrongAttempts++;
-    if (this.wrongAttempts >= this.maxWrongAttempts) {
-      // Trigger AI Tutor
+    // FIX #11: Per-player wrong attempts counter
+    this.wrongAttempts[playerKey]++;
+    if (this.wrongAttempts[playerKey] >= this.maxWrongAttempts) {
       // Trigger AI Tutor
       if (socket && this.lastQuestionData) {
-        // Show Loading Overlay Immediately
         const tutorOverlay = document.getElementById("tutor-overlay");
         const textEl = document.getElementById("tutor-text");
         if (tutorOverlay && textEl) {
@@ -540,8 +561,6 @@ class LabirinScene extends Phaser.Scene {
           textEl.innerHTML = "🤖 Sedang memanggil Guru Videa...";
         }
 
-        // FIX: Match server event 'mintaPenjelasan'
-        // Payload: { soal, jawabanBenar, jawabanUser, kategori }
         const qData = this.lastQuestionData;
         socket.emit("mintaPenjelasan", {
           soal: qData.pertanyaan || qData.tanya || qData.soal,
@@ -550,15 +569,11 @@ class LabirinScene extends Phaser.Scene {
           kategori: qData.topik || "Umum",
         });
       }
-      // Reset trigger to avoid spam
-      this.wrongAttempts = 0;
-      // Reset trigger to avoid spam
-      this.wrongAttempts = 0;
+      // Reset this player's wrong-attempt counter (avoid spam)
+      this.wrongAttempts[playerKey] = 0;
     } else {
-      // Optional: Shake effect or alert
-      alert(
-        `Jawaban Salah! Kesempatan: ${this.maxWrongAttempts - this.wrongAttempts}`,
-      );
+      const remaining = this.maxWrongAttempts - this.wrongAttempts[playerKey];
+      alert(`Jawaban Salah! Kesempatan tersisa: ${remaining}`);
     }
   }
 
@@ -885,7 +900,10 @@ window.tutupTutorLabirin = function () {
   // Resume Game / Unlock
   if (phaserGameInstance) {
     const scene = phaserGameInstance.scene.getScene("LabirinScene");
-    if (scene) scene.isQuizActive = false;
+    if (scene) {
+      scene.isQuizActive = false;
+      scene.quizActivePlayer = null; // FIX #8: Release per-player lock
+    }
   }
 };
 
@@ -993,7 +1011,13 @@ document.querySelector(".btn-back")?.addEventListener("click", () => {
 
 // Expose global restart method
 window.restartGame = window.restartLabirin = function() {
-    
+    // FIX: Re-emit mulaiGame agar sesi server diperbarui untuk simpanSkor berikutnya
+    const socket = window.socket;
+    if (socket) {
+        socket.emit("mulaiGame", "labirin");
+        window._activeGameSlug = "labirin";
+    }
+
     // Sembunyikan layar hasil
     const goModal = document.getElementById("game-over-modal");
     if (goModal) goModal.style.display = "none";
@@ -1001,8 +1025,6 @@ window.restartGame = window.restartLabirin = function() {
     if (phaserGameInstance && phaserGameInstance.registry) {
         const gameConfig = phaserGameInstance.registry.get("gameData");
         if (gameConfig) {
-            // Kita bisa menggunakan startPhaserGame lagi, tapi kita destroy dulu secara halus
-            // Scene restart is better for Phaser to prevent memory leaks over time
             const scene = phaserGameInstance.scene.getScene("LabirinScene");
             if(scene) {
                 scene.scene.restart(gameConfig);
@@ -1011,7 +1033,7 @@ window.restartGame = window.restartLabirin = function() {
         }
     }
     
-    // Fallback: If everything fails, invoke requestGame again (this might hit API again)
+    // Fallback: If everything fails, invoke requestGame again
     window.requestGame();
 };
 
@@ -1196,14 +1218,8 @@ window.confirmSkipObstacle = function () {
   }
 };
 
-window.tutupTutorLabirin = function () {
-  document.getElementById("tutor-overlay").style.display = "none";
-  // Resume Game / Unlock
-  if (phaserGameInstance) {
-    const scene = phaserGameInstance.scene.getScene("LabirinScene");
-    if (scene) scene.isQuizActive = false;
-  }
-};
+// Note: tutupTutorLabirin is defined above (line ~896) with the full fix.
+// This second definition is intentionally removed to avoid override.
 
 // UI HELPER: Calculate Size (Advanced)
 function calculateOptimalSize(cols) {

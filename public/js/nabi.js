@@ -132,6 +132,8 @@ function wireSocketEvents() {
 
           // CHECK MODE
           if (currentGameMode === "versus") {
+            // FIX: Stop any running solo timer before entering versus
+            clearInterval(timerInterval);
             if (typeof VersusNabi !== "undefined") {
               VersusNabi.init(questions);
             } else {
@@ -521,6 +523,12 @@ window.addEventListener("beforeunload", (e) => {
 
 // --- RESTART TANPA RELOAD ---
 window.restartGame = function () {
+  // FIX: Jika mode versus aktif, delegasikan ke VersusNabi
+  if (currentGameMode === "versus" && typeof VersusNabi !== "undefined") {
+    VersusNabi.rematch();
+    return;
+  }
+
   // 1. Stop semua timer
   clearInterval(timerInterval);
 
