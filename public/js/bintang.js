@@ -618,6 +618,11 @@ function endGame(scene) {
 
 // 🔧 FIX: Alias restartGame standar agar konsisten dengan game lain
 window.restartGame = function () {
+  // FIX: Re-emit mulaiGame agar sesi server diperbarui untuk simpanSkor berikutnya
+  if (socket) {
+    socket.emit("mulaiGame", "bintang");
+    window._activeGameSlug = "bintang";
+  }
   if (game) {
     game.scene.scenes[0].scene.restart();
     setTimeout(applyCanvasTopOffset, 200);
