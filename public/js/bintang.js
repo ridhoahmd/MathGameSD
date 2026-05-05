@@ -49,13 +49,14 @@ const config = {
     update: update,
   },
   scale: {
-    // FIT: Skalakan canvas agar muat di layar tanpa memotong, sambil menjaga aspek rasio
-    // CENTER_BOTH: Pastikan canvas selalu di tengah (horizontal & vertical)
+    // FIT: Skalakan canvas agar muat di container tanpa memotong aspek rasio
+    // CENTER_BOTH: Pastikan canvas selalu di tengah container (horizontal & vertical)
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    // parentIsWindow: true → Phaser center terhadap window viewport, bukan parent container
-    // Ini kunci supaya canvas selalu tepat di tengah layar laptop!
-    parentIsWindow: true,
+    // parentIsWindow: FALSE → Phaser gunakan #game-container sebagai batas area
+    // #game-container sudah di-offset 130px dari atas via CSS, sehingga canvas
+    // TIDAK pernah overlap dengan HUD maupun terpotong di bawah.
+    parentIsWindow: false,
     // Batas min/max supaya tidak terlalu kecil di mobile atau terlalu besar di 4K
     min: { width: 320, height: 320 },
     max: { width: 1200, height: 900 },
@@ -117,57 +118,23 @@ function startGame() {
 
   if (!game) {
     game = new Phaser.Game(config);
-    
-    // FIX HUD OVERLAP: Setelah Phaser ready, geser canvas ke bawah HUD menggunakan transform
-    // Alasan pakai transform bukan margin-top: Phaser bisa override margin tapi TIDAK override transform
-    game.events.once('ready', () => {
-      applyCanvasTopOffset();
-      
-      // Re-apply saat window resize (Phaser FIT akan recalculate posisi)
-      window.addEventListener('resize', applyCanvasTopOffset);
-    });
+    // CSS (#game-container top:130px + overflow:hidden) sudah menangani layout.
+    // Phaser dengan parentIsWindow:false akan FIT canvas dalam container secara otomatis.
   } else {
     // Kalo game udah ada, restart aja scenenya
     game.scene.scenes[0].scene.restart();
-    setTimeout(applyCanvasTopOffset, 200); // Delay kecil setelah restart
   }
   gameActive = true;
 }
 
-// Fungsi untuk menggeser canvas ke bawah area HUD
+// applyCanvasTopOffset — DEPRECATED
+// Sebelumnya dipakai untuk menggeser canvas agar tidak tertutup HUD via translateY.
+// Sekarang tidak diperlukan: CSS #game-container { top: 130px } menangani ini secara native.
+// Fungsi dipertahankan agar tidak ada ReferenceError jika ada kode lain yang memanggilnya.
 function applyCanvasTopOffset() {
-  const canvas = document.querySelector('#game-container canvas');
-  const topBar = document.querySelector('.top-bar');
-  if (!canvas) return;
-  
-  // Hitung tinggi area HUD (top-bar + question) secara dinamis
-  let hudBottom = 130; // fallback
-  if (topBar) {
-    const tbr = topBar.getBoundingClientRect();
-    const qCont = document.getElementById('question-container');
-    if (qCont) {
-      const qRect = qCont.getBoundingClientRect();
-      hudBottom = Math.ceil(qRect.bottom) + 10; // 10px margin bawah soal
-    } else {
-      hudBottom = Math.ceil(tbr.bottom) + 10;
-    }
-  }
-  
-  // Ambil posisi canvas saat ini dari Phaser (absolute top)
-  const canvasRect = canvas.getBoundingClientRect();
-  const currentTop = canvasRect.top;
-  
-  if (currentTop < hudBottom) {
-    // Geser canvas ke bawah menggunakan transform translateY
-    // Ini tidak diinterferensi oleh Phaser's internal centering logic
-    const shiftY = hudBottom - currentTop;
-    canvas.style.transform = `translateY(${shiftY}px)`;
-    canvas.style.transformOrigin = 'top center';
-  } else {
-    // Canvas sudah di bawah HUD, tidak perlu shift
-    canvas.style.transform = '';
-  }
+  // no-op: layout ditangani oleh CSS
 }
+
 
 // Load aset dulu
 function preload() {
@@ -625,7 +592,7 @@ window.restartGame = function () {
   }
   if (game) {
     game.scene.scenes[0].scene.restart();
-    setTimeout(applyCanvasTopOffset, 200);
+    // CSS (#game-container top:130px) menangani posisi canvas — tidak perlu offset manual
   } else {
     location.reload();
   }

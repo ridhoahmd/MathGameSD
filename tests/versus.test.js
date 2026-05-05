@@ -12,7 +12,7 @@ jest.mock("../src/config/prisma", () => ({
     create: jest.fn()
   },
   score: {
-    create: jest.fn()
+    create: jest.fn().mockResolvedValue({ id: 1 })
   },
   versusMatch: {
     create: jest.fn().mockResolvedValue(true),
@@ -33,6 +33,10 @@ describe("Versus Mode Socket Testing", () => {
     socketMock = {
       isAuth: true,
       activeUser: { username: "TestUser" },
+      // Simulasikan sesi bermain yang valid (mulaiGame sudah dipanggil sebelumnya)
+      // Property `game` WAJIB cocok dengan game yang dikirim, dan `startTime`
+      // harus >5000ms lalu agar lolos pengecekan speedhack di handler.
+      activeGameSession: { game: "math", startTime: Date.now() - 10000 },
       emit: jest.fn(),
       on: jest.fn(),
       handshake: { address: '127.0.0.1' }

@@ -15,7 +15,11 @@ body {
   min-height: 100vh;
   overflow: hidden;
   color: #fff;
+  /* Pastikan tidak ada scroll tersembunyi yang menyembunyikan canvas bawah */
+  height: 100vh;
+  max-height: 100vh;
 }
+
 
 /* ========== TOP BAR (TENGAH) ========== */
 .top-bar {
@@ -114,27 +118,44 @@ body {
 }
 
 /* ========== AREA GAME (BENAR-BENAR TENGAH) ========== */
-/* FIX CENTERING: parentIsWindow:true di Phaser config memastikan canvas center terhadap window.
-   Container ini hanya sebagai layer wrapper, Phaser urus sendiri posisi canvas-nya */
+/*
+  FIX CANVAS TERPOTONG:
+  Pendekatan sebelumnya: posisikan canvas dari top:0 dan geser pakai translateY
+  → Phaser CENTER_BOTH menghitung center dari FULL window (0..100vh)
+  → Canvas kelebihan di bawah karena HUD mendorong ke atas tapi batas bawah tetap 100vh
+
+  Pendekatan BARU:
+  - #game-container dimulai TEPAT di bawah HUD (top: 130px)
+  - Phaser dengan parentIsWindow:false & parent:#game-container akan FIT dalam container
+  - Canvas tidak pernah melewati batas bawah layar
+*/
 #game-container {
   position: fixed;
-  top: 0;
+  top: 130px;           /* Tinggi HUD: top-bar (70px) + question-container (~60px) */
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 1;
-  /* Pointer events none agar klik tetap sampai ke canvas Phaser di dalamnya */
-  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;     /* Potong apapun yang coba meluap ke luar area bermain */
 }
 
-/* Canvas Phaser diposisikan absolute oleh Phaser sendiri (CENTER_BOTH + parentIsWindow) */
+/* Canvas Phaser di-center oleh flex container di atas */
 #game-container canvas {
   pointer-events: all;
   border-radius: 15px;
   box-shadow: 0 0 50px rgba(0, 242, 255, 0.2),
               0 0 0 2px rgba(0, 242, 255, 0.15);
   display: block;
+  /* KUNCI: max-height 100% agar tidak meluap keluar container */
+  max-width: 100%;
+  max-height: 100%;
+  /* Pastikan aspek rasio terjaga saat canvas dikecilkan */
+  object-fit: contain;
 }
+
 
 /* ========== POP-UP MODAL ========== */
 .modal {
@@ -320,6 +341,11 @@ body {
     font-size: 1.1rem;
   }
 
+  /* HUD lebih kecil di tablet → sesuaikan offset game container */
+  #game-container {
+    top: 115px;   /* top-bar ~55px + question-container ~50px + margin 10px */
+  }
+
   .modal-content {
     padding: 25px 20px;
   }
@@ -338,6 +364,7 @@ body {
     font-size: 0.85rem;
   }
 }
+
 
 @media (max-width: 480px) {
   #game-hud {
@@ -360,4 +387,10 @@ body {
   #question-text {
     font-size: 0.95rem;
   }
+
+  /* HUD paling kecil di hp → offset minimal */
+  #game-container {
+    top: 105px;   /* top-bar ~48px + question-container ~44px + margin 13px */
+  }
 }
+

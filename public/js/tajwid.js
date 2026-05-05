@@ -39,6 +39,9 @@ let isRequestingQuestions = false;
 let lastRequestTime = 0;
 const REQUEST_COOLDOWN = 5000;
 
+// FIX BUG-1 & BUG-5: Flag to distinguish initial game load vs endless refill
+let isInitialLoad = false;
+
 // SOCKET RACE CONDITION FIX: guard agar listener tidak didaftarkan dua kali
 let _socketWired = false;
 
@@ -79,10 +82,11 @@ window.selectMode = function (mode) {
 function startGame() {
   const btnStart = document.querySelector(".btn-start");
 
-  // A. Lapor server
+  // A. Lapor server & set _activeGameSlug for reconnect handler (global.js)
   if (window.socket) {
     window.socket.emit("mulaiGame", "tajwid");
   }
+  window._activeGameSlug = "tajwid"; // FIX BUG-4: needed by global.js reconnect handler
 
   // B. Loading text
   if (btnStart) {
@@ -98,7 +102,8 @@ function startGame() {
     HintSystem.reset();
   }
 
-  // E. Minta Soal
+  // E. Minta Soal — tandai ini sebagai initial load (bukan endless refill)
+  isInitialLoad = true;
   if (window.socket) {
     window.socket.emit("mintaSoalAI", {
       kategori: "tajwid",
@@ -123,16 +128,21 @@ function wireSocketEvents() {
     // Cek data valid ga
     if (!response || !response.data) {
       console.error("Tajwid game: Data server error");
-      alert("Gagal memuat soal. Silakan coba lagi.");
 
-      if (btnStart) {
-        btnStart.innerText = "MULAI GAME";
-        btnStart.disabled = false;
-      }
+      // FIX BUG-2: Reset flag agar request berikutnya bisa jalan
+      isRequestingQuestions = false;
 
-      if (ui.start && ui.start.classList.contains("hidden")) {
-        ui.start.classList.remove("hidden");
-        ui.start.classList.add("active");
+      // Hanya tampilkan alert jika ini adalah initial load (bukan endless refill)
+      if (isInitialLoad) {
+        alert("Gagal memuat soal. Silakan coba lagi.");
+        if (btnStart) {
+          btnStart.innerText = "MULAI MAIN";
+          btnStart.disabled = false;
+        }
+        if (ui.start && ui.start.classList.contains("hidden")) {
+          ui.start.classList.remove("hidden");
+          ui.start.classList.add("active");
+        }
       }
       return;
     }
@@ -140,16 +150,39 @@ function wireSocketEvents() {
     let incomingData = response.data;
 
     // --- CHECK VERSUS MODE ---
+    // FIX BUG-5: Jangan re-init versus jika sudah aktif
     if (currentGameMode === "versus") {
-      // FIX: Stop any running solo timer before entering versus
       clearInterval(timerInterval);
       if (typeof VersusTajwid !== "undefined") {
         VersusTajwid.init(incomingData);
       } else {
         alert("Versus module not loaded!");
       }
+      isInitialLoad = false;
       return;
     }
+
+    // FIX BUG-1 & BUG-2: Jika game sudah berjalan (bukan initial load), ini adalah
+    // endless refill — cukup tambahkan soal ke queue, JANGAN reset sesi.
+    if (!isInitialLoad && ui.game && ui.game.classList.contains("active")) {
+      // Mode endless: append soal baru ke queue yang sudah ada
+      let newCards = [];
+      if (incomingData.data && Array.isArray(incomingData.data)) {
+        newCards = incomingData.data;
+      } else if (Array.isArray(incomingData)) {
+        newCards = incomingData;
+      }
+      queue = queue.concat(newCards);
+      isRequestingQuestions = false; // FIX BUG-2: buka blokir untuk request berikutnya
+      // Jika game sedang menunggu kartu, lanjutkan
+      if (ui.text && ui.text.innerText.includes("⏳")) {
+        nextCard();
+      }
+      return;
+    }
+
+    // Initial load: parse data dan mulai sesi baru
+    isInitialLoad = false; // Reset flag setelah dipakai
 
     // Label kategori
     if (incomingData.kategori_kiri && incomingData.kategori_kanan) {
@@ -179,8 +212,9 @@ function wireSocketEvents() {
 
     if (!queue || queue.length === 0) return; // Cegah array kosong
 
-    // Mulai sesi
+    // Mulai sesi baru: reset score
     score = 0;
+    cardCount = 0;
     if (ui.score) ui.score.innerText = "0";
 
     // Pindah Layar
@@ -392,7 +426,10 @@ window.tutupTutor = function () {
 };
 
 // 7. Selesai & Simpan
-function endGame() {
+// FIX BUG-3: Terima parameter opsional untuk label layar hasil
+function endGame(reason = "timeout") {
+  clearInterval(timerInterval); // Pastikan timer berhenti
+
   if (ui.game) {
     ui.game.classList.remove("active");
     ui.game.classList.add("hidden");
@@ -402,6 +439,16 @@ function endGame() {
     ui.result.classList.add("active");
   }
   if (ui.finalScore) ui.finalScore.innerText = score;
+
+  // FIX BUG-3: Judul layar hasil dinamis sesuai kondisi
+  const resultTitle = ui.result ? ui.result.querySelector(".result-title") : null;
+  if (resultTitle) {
+    if (reason === "saved") {
+      resultTitle.innerText = "SKOR TERSIMPAN! 💾";
+    } else {
+      resultTitle.innerText = "WAKTU HABIS! ⏱️";
+    }
+  }
 
   // Hide save button
   const btnSave = document.getElementById("btn-save-exit");
@@ -602,7 +649,7 @@ function requestMoreCards() {
 
   isRequestingQuestions = true;
   lastRequestTime = now;
-
+  isInitialLoad = false; // Pastikan flag menunjukkan ini adalah refill, bukan initial load
 
   if (window.socket) {
     window.socket.emit("mintaSoalAI", {
@@ -665,7 +712,7 @@ window.saveAndExit = function () {
   // Stop timer
   clearInterval(timerInterval);
 
-  // Save score
+  // Save score (endGame() juga emit simpanSkor, tapi dengan mode endless kita kirm data lengkap)
   if (window.socket) {
     window.socket.emit("simpanSkor", {
       nama: playerName,
@@ -676,8 +723,8 @@ window.saveAndExit = function () {
     });
   }
 
-  // Show result
-  endGame();
+  // FIX BUG-3: Teruskan reason "saved" agar judul layar benar
+  endGame("saved");
 };
 
 // Toast notification
@@ -729,6 +776,7 @@ window.restartGame = function () {
   tutorUsageCount = 0;
   timeLeft = 25;
   isRequestingQuestions = false;
+  isInitialLoad = false; // Reset flag
   lastRequestTime = 0;
   cardCount = 0;
 

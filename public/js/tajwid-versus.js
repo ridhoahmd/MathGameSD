@@ -20,10 +20,10 @@ const VersusTajwid = (function () {
 
   const sounds = {
     correct:
-      typeof AudioManager !== "undefined" ? AudioManager.playCorrect : () => {},
+      typeof AudioManager !== "undefined" ? () => AudioManager.playCorrect() : () => {},
     wrong:
-      typeof AudioManager !== "undefined" ? AudioManager.playWrong : () => {},
-    win: typeof AudioManager !== "undefined" ? AudioManager.playWin : () => {},
+      typeof AudioManager !== "undefined" ? () => AudioManager.playWrong() : () => {},
+    win: typeof AudioManager !== "undefined" ? () => AudioManager.playWin() : () => {},
   };
 
   // Shuffle helper
