@@ -523,9 +523,9 @@ window.addEventListener("beforeunload", (e) => {
 
 // --- RESTART TANPA RELOAD ---
 window.restartGame = function () {
-  // FIX: Jika mode versus aktif, delegasikan ke VersusNabi
-  if (currentGameMode === "versus" && typeof VersusNabi !== "undefined") {
-    VersusNabi.rematch();
+  // BUG-V2 FIX: Cek apakah layar hasil versus sedang tampil
+  if (typeof VersusNabi !== "undefined" && VersusNabi.isActive()) {
+    VersusNabi.restart();
     return;
   }
 
@@ -561,14 +561,14 @@ window.restartGame = function () {
     screens.start.classList.add("active");
   }
 
-  // 5. Reset tombol start — trim whitespace agar cocok dengan innerHTML HTML
+  // 5. Reset tombol start
   const btnStart = document.querySelector(".btn-start");
   if (btnStart) {
     btnStart.innerText = "BUKA GULUNGAN SEJARAH";
     btnStart.disabled = false;
   }
 
-  // 6. Sembunyikan btn-save-exit — gunakan class hidden agar konsisten dengan CSS
+  // 6. Sembunyikan btn-save-exit
   const btnSave = document.getElementById("btn-save-exit");
   if (btnSave) {
     btnSave.classList.add("hidden");
@@ -576,6 +576,7 @@ window.restartGame = function () {
   }
 
 };
+
 
 // Pastikan HTML siap baru kita jalankan listener
 if (document.readyState === "loading") {

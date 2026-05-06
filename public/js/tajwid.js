@@ -759,10 +759,20 @@ window.addEventListener("beforeunload", (e) => {
 
 // --- RESTART TANPA RELOAD ---
 window.restartGame = function () {
-  // FIX: Jika mode versus aktif, delegasikan ke VersusTajwid
-  if (currentGameMode === "versus" && typeof VersusTajwid !== "undefined") {
-    VersusTajwid.exitVersus(); // Close versus UI first
+  // BUG-V1 FIX: Cek apakah layar hasil versus sedang tampil
+  // (state bisa isActive=false saat di layar hasil, tapi versus-result belum hidden)
+  if (typeof VersusTajwid !== "undefined" && VersusTajwid.isActive()) {
+    VersusTajwid.restart();
     return;
+  }
+
+  // Jika mode versus tapi belum masuk game (mis. batalkan Swal), kembali ke solo start
+  if (currentGameMode === "versus") {
+    currentGameMode = "solo";
+    document.querySelectorAll(".btn-mode").forEach((btn) => {
+      btn.classList.remove("active");
+      if (btn.dataset.mode === "solo") btn.classList.add("active");
+    });
   }
 
   // 1. Stop semua timer
@@ -832,6 +842,7 @@ window.restartGame = function () {
   if (hintCount) hintCount.innerText = "2/2";
 
 };
+
 
 // Pastikan HTML siap baru jalankan listener
 if (document.readyState === "loading") {

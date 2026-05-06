@@ -392,21 +392,28 @@ const VersusTajwid = (function () {
     if (typeof AudioManager !== "undefined") AudioManager.playWin();
   }
 
-  // FIX #1 & #3: restartGame re-shuffles and does NOT trigger Swal prompt again
-  window.restartGame = function () {
+  // PUBLIC: Cek apakah versus sedang aktif (dipakai oleh tajwid.js restartGame)
+  function isActive() {
+    return state.isActive ||
+      (document.getElementById('versus-result') &&
+       !document.getElementById('versus-result').classList.contains('hidden'));
+  }
+
+  // PUBLIC: Restart versus tanpa Swal prompt (dipanggil dari tajwid.js restartGame)
+  function restart() {
     if (!state.questionsP1 || state.questionsP1.length === 0) {
       console.warn("VersusTajwid: No questions for restart.");
       exitVersus();
       return;
     }
-    // Use the original question pool (we keep a reference via questionsP1 which was already shuffled)
-    // Re-shuffle and start a new round without asking for P2 name again
     _startRound(state.questionsP1);
-  };
+  }
 
   return {
     init: init,
     handleInput: handleAnswer,
     exitVersus: exitVersus,
+    isActive: isActive,
+    restart: restart,
   };
 })();

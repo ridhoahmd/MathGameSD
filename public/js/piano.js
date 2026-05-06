@@ -249,7 +249,9 @@ function checkInput() {
 function flashScreen(color) {
   document.body.style.backgroundColor = color;
   setTimeout(() => {
-    document.body.style.backgroundColor = "#1e1e2e";
+    // ISU-4 FIX: Gunakan string kosong agar tema/CSS yang mengatur warna kembali
+    // (Sebelumnya hardcode ke '#1e1e2e' yang merusak tema non-default)
+    document.body.style.backgroundColor = "";
   }, 200);
 }
 
@@ -277,6 +279,13 @@ function endGame() {
 
 // --- RESTART TANPA RELOAD ---
 window.restartGame = function () {
+  // ISU-8 FIX: Emit mulaiGame agar server mencatat sesi bermain baru
+  // Tanpa ini, simpanSkor akan ditolak server dengan error "Sesi tidak valid"
+  if (window.socket) {
+    window.socket.emit("mulaiGame", "piano");
+    window._activeGameSlug = "piano";
+  }
+
   // 1. Stop timer & reset state
   gameActive = false;
   clearInterval(timerInterval);
@@ -303,8 +312,8 @@ window.restartGame = function () {
   // 6. Re-enable semua tuts piano
   disableInput(false);
 
-  // 7. Reset background ke warna normal
-  document.body.style.backgroundColor = "#1e1e2e";
+  // 7. Reset background ke warna normal (ISU-4: gunakan empty string)
+  document.body.style.backgroundColor = "";
 
 };
 

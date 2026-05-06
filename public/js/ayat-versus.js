@@ -351,19 +351,28 @@ const VersusAyat = (() => {
     return array;
   }
 
-  // FIX #4: restartGame calls _startRound() directly — no Swal prompt
-  window.restartGame = function () {
+  // PUBLIC: Cek apakah versus sedang aktif (versus result screen visible atau game berjalan)
+  function isActive() {
+    return state.isActive ||
+      (document.getElementById('versus-result') &&
+       !document.getElementById('versus-result').classList.contains('hidden'));
+  }
+
+  // PUBLIC: Restart versus tanpa Swal prompt
+  function restart() {
     if (!state._originalQuestions || state._originalQuestions.length === 0) {
       exitVersus();
       return;
     }
     _startRound();
-  };
+  }
 
   return {
     init,
     toggleRotation,
     exitVersus,
     rematch,
+    isActive,
+    restart,
   };
 })();

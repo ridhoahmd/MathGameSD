@@ -12,7 +12,9 @@ const XP_RATES = {
   nabi: 1.0,
   ayat: 1.0,
   tajwid: 1.1,
+  bintang: 0.9, // DB-ISU-3 FIX: Eksplisit agar tidak pakai fallback default 1.0 tanpa sadar
 };
+
 
 // Hitung XP dari skor
 function getXPFromScore(game, score) {
@@ -240,6 +242,10 @@ module.exports = (socket, io) => {
         level: updatedUser.level,
         xpGained: xpGained,
       });
+
+      // DB-ISU-1 FIX: Invalidate session setelah skor berhasil disimpan
+      // Mencegah user submit simpanSkor berkali-kali dalam satu sesi tanpa mulai game baru
+      socket.activeGameSession = null;
 
       // Notifikasi ke guru (Global Emit via io)
       if (io) io.emit("refreshDataGuru");

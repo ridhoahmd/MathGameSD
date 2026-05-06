@@ -140,6 +140,10 @@ const VersusNabi = (() => {
       startScreen.classList.remove("hidden");
       startScreen.classList.add("active");
     }
+
+    // BUG-V4 FIX: Kembalikan visibility solo game container
+    const soloGameContainer = document.querySelector(".game-container");
+    if (soloGameContainer) soloGameContainer.style.display = "";
   }
 
   // FIX #3: rematch no longer calls init() — directly starts new round
@@ -344,19 +348,28 @@ const VersusNabi = (() => {
     return array;
   }
 
-  // FIX #4: restartGame → _startRound() directly, no Swal
-  window.restartGame = function () {
+  // PUBLIC: Cek apakah versus sedang aktif
+  function isActive() {
+    return state.isActive ||
+      (document.getElementById('versus-result') &&
+       !document.getElementById('versus-result').classList.contains('hidden'));
+  }
+
+  // PUBLIC: Restart versus tanpa Swal prompt
+  function restart() {
     if (!state._originalQuestions || state._originalQuestions.length === 0) {
       exitVersus();
       return;
     }
     _startRound();
-  };
+  }
 
   return {
     init,
     toggleRotation,
     exitVersus,
     rematch,
+    isActive,
+    restart,
   };
 })();

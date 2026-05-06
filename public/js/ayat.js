@@ -560,9 +560,9 @@ window.addEventListener("beforeunload", (e) => {
 
 // --- RESTART TANPA RELOAD ---
 window.restartGame = function () {
-  // FIX: Jika mode versus aktif, delegasikan ke VersusAyat
-  if (currentGameMode === "versus" && typeof VersusAyat !== "undefined") {
-    VersusAyat.rematch();
+  // BUG-V2 FIX: Cek apakah layar hasil versus sedang tampil
+  if (typeof VersusAyat !== "undefined" && VersusAyat.isActive()) {
+    VersusAyat.restart();
     return;
   }
 
@@ -610,6 +610,7 @@ window.restartGame = function () {
   if (btnSave) btnSave.classList.add("hidden");
 
 };
+
 
 // Pastikan HTML siap baru kita jalankan listener
 if (document.readyState === "loading") {

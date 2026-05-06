@@ -208,8 +208,16 @@ function setupBoard(cardsArray) {
     board.style.maxWidth = "480px"; // Lebar banget
   }
 
-  // Kocok kartunya
-  cardsArray.sort(() => 0.5 - Math.random());
+  // ISU-6 FIX: Fisher-Yates shuffle — distribusi acak yang adil dan tidak bias
+  // sort(random) menghasilkan distribusi tidak seragam (kartu tertentu lebih sering di awal)
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  shuffleArray(cardsArray);
 
   cardsArray.forEach((item) => {
     const card = document.createElement("div");
@@ -347,8 +355,9 @@ function gameWon() {
     winScreen.style.display = "flex"; // Flex biar tengah
   }
 
-  // Reset Menu biar pas balik udah siap
-  document.getElementById("start-screen").style.display = "flex";
+  // ISU-3 FIX: Jangan tampilkan start-screen di sini.
+  // start-screen akan ditampilkan oleh restartGame() saat user klik "Main Lagi".
+  // Menampilkannya di sini menyebabkan start-screen terlihat di belakang win-screen.
 
   if (typeof AudioManager !== "undefined") AudioManager.playWin();
 
@@ -369,9 +378,12 @@ function startFlashSequence() {
   // A. Buka Semua Kartu
   allCards.forEach((card) => card.classList.remove("card-closed"));
 
-  // B. Hitung mundur
-  const titleEl = document.querySelector("h1");
+  // ISU-9 FIX: Gunakan ID spesifik, bukan querySelector('h1') yang bisa salah sasaran
+  // jika ada elemen h1 lain di DOM (misal dari overlay atau toast)
+  const titleEl = document.getElementById("memory-game-title") || document.querySelector("h1");
+  if (!titleEl) return;
   const originalTitle = titleEl.innerText;
+  const originalColor = titleEl.style.color;
 
   // Waktu flash beda2
   let timeLeft = 3;
@@ -396,6 +408,7 @@ function startFlashSequence() {
 
       setTimeout(() => {
         titleEl.innerText = originalTitle;
+        titleEl.style.color = originalColor || "";
         isFlashing = false; // Buka kunci
       }, 1000);
     }
