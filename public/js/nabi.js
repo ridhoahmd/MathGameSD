@@ -446,7 +446,6 @@ function checkAutoSave() {
 }
 
 function autoSaveProgress() {
-
   if (window.socket) {
     window.socket.emit("simpanProgress", {
       nama: playerName,
@@ -455,10 +454,12 @@ function autoSaveProgress() {
       soalDijawab: currentIndex,
       timestamp: Date.now(),
     });
-  }
 
-  // Visual feedback
-  showToast("💾 Progress tersimpan");
+    // FIX: Tunggu ACK dari server sebelum tampilkan toast (bukan asumsi berhasil)
+    window.socket.once("progressTersimpan", () => {
+      showToast("💾 Progress tersimpan");
+    });
+  }
 }
 
 // Save and exit

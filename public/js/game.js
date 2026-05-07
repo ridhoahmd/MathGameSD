@@ -74,6 +74,7 @@ class MathGame extends GameEngine {
     }
 
     this.socket.emit("mulaiGame", "math");
+    window._activeGameSlug = "math"; // FIX: Agar reconnect handler di global.js bisa re-register sesi
     this.socket.emit("mintaSoalAI", {
       kategori: "math",
       tingkat: this.selectedDifficulty,

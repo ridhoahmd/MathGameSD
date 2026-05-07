@@ -36,6 +36,11 @@ let levelConfig = {
   pola: "spiral",
 };
 
+// BUG-FIX: Konstanta ini dipakai oleh findSafeSpawnProgress() tapi belum dideklarasikan.
+// Tanpa ini, fungsi akan throw ReferenceError: MARBLE_MIN_DISTANCE is not defined.
+// Nilai 0.05 = jarak minimum 5% dari total panjang path antar marble.
+const MARBLE_MIN_DISTANCE = 0.05;
+
 // SCENE ZUMAs
 class ZumaScene extends Phaser.Scene {
   constructor() {

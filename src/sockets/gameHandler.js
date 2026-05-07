@@ -26,6 +26,34 @@ module.exports = (socket, io) => {
     };
   });
 
+  // FIX BUG-PROGRESS: Handler untuk auto-save checkpoint dari Tajwid, Nabi, Ayat.
+  // Sebelumnya event ini di-emit frontend setiap 5 soal, tapi server tidak punya listener
+  // sehingga toast "Progress Tersimpan" adalah bohong (silent fail).
+  // Handler ini menyimpan snapshot progress sementara di socket session
+  // dan mengirim ACK balik agar toast bermakna.
+  socket.on("simpanProgress", (data) => {
+    if (!data || !data.nama || !data.game) return;
+
+    // Simpan snapshot progress di session socket (in-memory checkpoint)
+    socket.lastProgress = {
+      nama: data.nama,
+      game: data.game,
+      skor: parseInt(data.skor) || 0,
+      soalDijawab: parseInt(data.soalDijawab) || 0,
+      savedAt: Date.now(),
+    };
+
+    logger.info(
+      `📊 [Progress Checkpoint] ${data.nama} | Game: ${data.game} | Skor: ${data.skor} | Soal: ${data.soalDijawab}`
+    );
+
+    // ACK balik ke client agar toast "Progress Tersimpan" bermakna
+    socket.emit("progressTersimpan", {
+      skor: socket.lastProgress.skor,
+      soalDijawab: socket.lastProgress.soalDijawab,
+    });
+  });
+
   socket.on("mintaSoalAI", async (reqData) => {
     const { kategori, tingkat } = reqData || {};
     const levelRequest = tingkat || "sedang";
