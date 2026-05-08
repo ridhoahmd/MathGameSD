@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../css/guru.css?v=final" />
+    <link rel="stylesheet" href="../css/guru.css?v=premium" />
 
     <!-- Library buat Print PDF & Bikin Tabel PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -18,7 +18,8 @@
     <!-- SweetAlert buat popup cantik -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/socket.io/socket.io.js"></script>
-  </head>
+      <link rel="stylesheet" href="../css/game-shared.css" />
+</head>
 
   <body>
     <div class="container">
@@ -115,7 +116,7 @@
       </div>
 
       <!-- === TABEL DATA NILAI SISWA === -->
-      <h1>📋 DATA SISWA & NILAI (V2.0)</h1>
+      <h2 class="section-title">📋 DATA SISWA & NILAI</h2>
 
       <div id="user-status-info" class="text-center mb-20"></div>
 
@@ -153,39 +154,48 @@
       </div>
 
       <!-- === MODAL RAPOR ANALITIK === -->
-      <div id="modal-rapor" class="container-input hidden" style="position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; max-width: 100%; border: none; border-radius: 0;">
-        <div style="background: #1a1a2e; padding: 25px; border-radius: 12px; border: 2px solid #00f2ff; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;">
-          <h2 style="color: #00f2ff; text-align: center; margin-bottom: 20px;">📊 Kartu Rapor: <span id="rapor-nama">-</span></h2>
-          
-          <div style="display: flex; justify-content: space-around; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <div style="text-align: center;">
-              <span style="font-size: 2rem;">🌟</span><br>
-              <strong style="color: #ffeb3b" id="rapor-level">Lvl -</strong>
+      <div id="modal-rapor">
+        <div class="modal-rapor-panel">
+          <div class="modal-rapor-header">
+            <h3 class="modal-rapor-title">📊 Kartu Rapor: <span id="rapor-nama">-</span></h3>
+            <button class="modal-rapor-close" onclick="document.getElementById('modal-rapor').style.display='none'" title="Tutup">✕</button>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="rapor-stats-grid">
+            <div class="rapor-stat-chip">
+              <div class="chip-label">🌟 Level</div>
+              <div class="chip-value" id="rapor-level">-</div>
             </div>
-            <div style="text-align: center;">
-              <span style="font-size: 2rem;">🏆</span><br>
-              <strong style="color: #00ff00" id="rapor-xp">- XP</strong>
+            <div class="rapor-stat-chip">
+              <div class="chip-label">🏆 Total XP</div>
+              <div class="chip-value" id="rapor-xp">-</div>
             </div>
-            <div style="text-align: center;">
-              <span style="font-size: 2rem;">💰</span><br>
-              <strong style="color: #ffd700" id="rapor-koin">- Koin</strong>
+            <div class="rapor-stat-chip">
+              <div class="chip-label">💰 Koin</div>
+              <div class="chip-value" id="rapor-koin">-</div>
+            </div>
+            <div class="rapor-stat-chip">
+              <div class="chip-label">📈 Rata-rata Skor</div>
+              <div class="chip-value" id="rapor-avg-score">-</div>
+            </div>
+            <div class="rapor-stat-chip">
+              <div class="chip-label">⏳ Keaktifan</div>
+              <div class="chip-value" id="rapor-frequency">-</div>
+            </div>
+            <div class="rapor-stat-chip">
+              <div class="chip-label">🔥 Topik Dominan</div>
+              <div class="chip-value" id="rapor-dominant">-</div>
             </div>
           </div>
 
-          <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; border: 1px solid #444;">
-            <p style="margin: 5px 0; color: #fff;"><strong>📈 Skor Rata-Rata: </strong> <span id="rapor-avg-score" style="color:#00f2ff">-</span> poin</p>
-            <p style="margin: 5px 0; color: #fff;"><strong>⏳ Tingkat Keaktifan: </strong> <span id="rapor-frequency" style="color:#00f2ff">-</span> penyelesaian kuis</p>
-            <p style="margin: 5px 0; color: #fff;"><strong>🔥 Topik Dominan: </strong> <span id="rapor-dominant" style="color:#00f2ff">-</span></p>
-          </div>
-
-          <h3 style="color: #ccc; font-size: 1.1rem; border-bottom: 1px solid #333; padding-bottom: 5px;">⚔️ Riwayat Duel Terakhir</h3>
-          <div id="rapor-versus" style="margin-bottom: 20px; font-size: 0.9rem;">
+          <div class="rapor-section-title">⚔️ Riwayat Duel Terakhir</div>
+          <div id="rapor-versus">
             <p class="text-muted-small">Memuat histori duel...</p>
           </div>
 
-          <button onclick="cetakRaporIndividu()" style="width: 100%; padding: 10px; background: #fff; color: #000; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 10px; transition: transform 0.2s;">🖨️ CETAK KARTU RAPOR PDF</button>
-
-          <button onclick="document.getElementById('modal-rapor').style.display='none'" style="width: 100%; padding: 12px; background: #2a2a4e; color: #fff; font-weight: bold; border: 1px solid #555; border-radius: 8px; cursor: pointer; margin-top: 5px;">TUTUP</button>
+          <button onclick="cetakRaporIndividu()" class="btn-primary" style="width:100%;margin-top:16px;">🖨️ CETAK KARTU RAPOR PDF</button>
+          <button onclick="document.getElementById('modal-rapor').style.display='none'" class="btn-back" style="width:100%;margin-top:10px;text-align:center;justify-content:center;">TUTUP</button>
         </div>
       </div>
     </div>
@@ -671,20 +681,20 @@
 
         let htmlVersus = "";
         data.versus.forEach(match => {
-          let color = match.status === "Win" ? "#00ff00" : (match.status === "Lose" ? "#ff4444" : "#ffeb3b");
-          let icon = match.status === "Win" ? "🏆" : (match.status === "Lose" ? "💀" : "🤝");
+          const statusClass = match.status === "Win" ? "win" : (match.status === "Lose" ? "lose" : "draw");
+          const icon = match.status === "Win" ? "🏆" : (match.status === "Lose" ? "💀" : "🤝");
           const d = new Date(match.playedAt);
           const tglStr = isNaN(d) ? "Waktu tidak valid" : d.toLocaleDateString("id-ID") + " " + d.toLocaleTimeString("id-ID", {hour: '2-digit', minute:'2-digit'});
           
           htmlVersus += `
-            <div style="background: rgba(255,255,255,0.05); padding: 8px 12px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid ${color};">
-              <div style="flex: 1">
-                <strong style="color: #00f2ff">${match.game}</strong> vs ${match.p2Name}<br>
-                <span style="font-size: 0.75rem; color: #888">${tglStr}</span>
+            <div class="versus-item ${statusClass}">
+              <div class="versus-item-left">
+                <div class="versus-item-game">${match.game}</div>
+                <div class="versus-item-meta">vs ${match.p2Name} · ${tglStr}</div>
               </div>
-              <div style="font-weight: bold; color: ${color}; text-align: right;">
-                ${icon} ${match.status.toUpperCase()} <br>
-                <span style="font-size: 0.8rem; color: #ccc">Skor: ${match.score}</span>
+              <div class="versus-item-right">
+                <div class="versus-item-status">${icon} ${match.status.toUpperCase()}</div>
+                <div class="versus-item-score">Skor: ${match.score}</div>
               </div>
             </div>
           `;

@@ -1,0 +1,337 @@
+/* =========================================
+   GAME SHARED - KONSISTENSI ANTAR HALAMAN
+   Wajib diload di semua halaman game HTML
+   ========================================= */
+
+/* ── Animasi Dasar ───────────────────────────── */
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseNeon {
+  0%, 100% { box-shadow: 0 0 5px rgba(0, 242, 255, 0.4); }
+  50%       { box-shadow: 0 0 20px rgba(0, 242, 255, 0.8), 0 0 40px rgba(0, 242, 255, 0.4); }
+}
+
+@keyframes scanline {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 100%; }
+}
+
+/* ── Reset & Base ────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* ── Tombol Kembali (Universal) ──────────────── */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #e0e0e0;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInDown 0.4s ease both;
+}
+
+.btn-back::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.btn-back:hover {
+  background: rgba(0, 242, 255, 0.1);
+  border-color: rgba(0, 242, 255, 0.4);
+  color: #00f2ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 242, 255, 0.15);
+}
+
+.btn-back:hover::before {
+  opacity: 1;
+}
+
+.btn-back:active {
+  transform: translateY(0);
+}
+
+/* ── Top Bar (Baris Navigasi Atas) ───────────── */
+.game-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: rgba(10, 10, 30, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  animation: fadeInDown 0.4s ease both;
+}
+
+/* ── HUD Stats (Skor, Timer, dll) ────────────── */
+.hud-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  font-family: "Orbitron", "Poppins", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.hud-stat.highlight {
+  border-color: rgba(0, 242, 255, 0.4);
+  color: #00f2ff;
+  animation: pulseNeon 3s ease-in-out infinite;
+}
+
+/* ── Tombol Aksi Game (Start, Restart, dll) ──── */
+.btn-game-action {
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #00b4d8, #0077b6);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-family: "Orbitron", "Poppins", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(0, 119, 182, 0.4);
+}
+
+.btn-game-action::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.5s ease, height 0.5s ease, opacity 0.5s ease;
+  opacity: 0;
+}
+
+.btn-game-action:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 8px 30px rgba(0, 119, 182, 0.5);
+}
+
+.btn-game-action:active::after {
+  width: 200px;
+  height: 200px;
+  opacity: 0;
+}
+
+/* ── Layar Loading Game (antar transisi) ─────── */
+.game-loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 5, 20, 0.92);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.4s ease;
+}
+
+.game-loading-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.game-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(0, 242, 255, 0.15);
+  border-top-color: #00f2ff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Badge Kategori Game ─────────────────────── */
+.game-category-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.game-category-tag.math   { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+.game-category-tag.islam  { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.game-category-tag.logic  { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+/* ── Modal Game (Popup Hasil, Konfirmasi, dll) ── */
+.game-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.game-modal-overlay.is-open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.game-modal-box {
+  background: rgba(15, 15, 40, 0.95);
+  border: 1px solid rgba(0, 242, 255, 0.2);
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 480px;
+  width: 90%;
+  text-align: center;
+  transform: scale(0.9) translateY(20px);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+              0 0 40px rgba(0, 242, 255, 0.1);
+}
+
+.game-modal-overlay.is-open .game-modal-box {
+  transform: scale(1) translateY(0);
+}
+
+.game-modal-title {
+  font-family: "Orbitron", sans-serif;
+  font-size: 1.4rem;
+  color: #00f2ff;
+  margin-bottom: 12px;
+  text-shadow: 0 0 20px rgba(0, 242, 255, 0.5);
+}
+
+.game-modal-score {
+  font-size: 3rem;
+  font-weight: 800;
+  font-family: "Orbitron", sans-serif;
+  background: linear-gradient(135deg, #00f2ff, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 12px 0;
+}
+
+/* ── Notifikasi Toast ────────────────────────── */
+.game-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 20px;
+  background: rgba(15, 15, 40, 0.95);
+  border: 1px solid rgba(0, 242, 255, 0.3);
+  border-radius: 12px;
+  color: #e0e0e0;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 9000;
+  max-width: 300px;
+}
+
+.game-toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.game-toast.success { border-color: rgba(52, 211, 153, 0.5); }
+.game-toast.error   { border-color: rgba(248, 113, 113, 0.5); }
+.game-toast.warning { border-color: rgba(251, 191, 36, 0.5); }
+
+/* ── Responsive Tweaks ───────────────────────── */
+@media (max-width: 768px) {
+  .game-topbar {
+    padding: 8px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .btn-game-action {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+
+  .game-modal-box {
+    padding: 24px 18px;
+  }
+
+  .game-modal-title {
+    font-size: 1.1rem;
+  }
+
+  .game-modal-score {
+    font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-back {
+    padding: 8px 12px;
+    font-size: 0.78rem;
+  }
+
+  .hud-stat {
+    font-size: 0.72rem;
+    padding: 5px 10px;
+  }
+}
