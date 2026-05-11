@@ -310,8 +310,14 @@ function answer(side) {
       multiplier = ComboManager.addStreak();
 
     // REBALANCED: Increased from 10 to 12 (line 192)
-    score += Math.round(12 * multiplier);
+    const points = Math.round(12 * multiplier);
+    score += points;
     if (ui.score) ui.score.innerText = score;
+
+    // P1: Floating score (+N ×M) melayang dari posisi score counter
+    if (typeof ComboManager !== "undefined") {
+      ComboManager.showFloatingScore(points, multiplier, ui.score);
+    }
 
     try {
       AudioManager.playCorrect();

@@ -152,7 +152,13 @@ class MathGame extends GameEngine {
       if (typeof ComboManager !== "undefined")
         multiplier = ComboManager.addStreak();
 
-      this.addScore(Math.round(10 * multiplier));
+      const points = Math.round(10 * multiplier);
+      this.addScore(points);
+
+      // P1: Tampilkan floating score (+N ×M) di atas score counter
+      if (typeof ComboManager !== "undefined") {
+        ComboManager.showFloatingScore(points, multiplier, document.getElementById('score'));
+      }
       document.body.classList.add("correct-anim");
       setTimeout(() => document.body.classList.remove("correct-anim"), 500);
 

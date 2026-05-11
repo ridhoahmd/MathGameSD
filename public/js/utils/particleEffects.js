@@ -109,10 +109,12 @@ class ParticleEffects {
   }
 
   // Confetti rain (untuk milestone combo)
+  // P3: Kurangi partikel max (30) & percepat decay (0.018) untuk performa HP low-end
   confettiRain(count = 50) {
+    const actualCount = Math.min(count, 30); // P3: cap di 30 partikel
     const colors = ["#00e676", "#ffd600", "#ff1744", "#00f2ff", "#ff00ff"];
 
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < actualCount; i++) {
       const x = Math.random() * this.canvas.width;
       const y = -20;
 
@@ -122,7 +124,7 @@ class ParticleEffects {
         gravity: 0.1,
         color: colors[Math.floor(Math.random() * colors.length)],
         size: Math.random() * 8 + 4,
-        decay: 0.005,
+        decay: 0.018, // P3: dari 0.005 → 0.018 (~1.1 detik, bukan 3.3 detik)
         rotation: Math.random() * Math.PI * 2,
         rotationSpeed: (Math.random() - 0.5) * 0.3,
       });
@@ -158,9 +160,11 @@ class ParticleEffects {
       this.ctx.translate(p.x, p.y);
       this.ctx.rotate(p.rotation);
 
-      // Draw as rounded rectangle (confetti-like)
+      // P5: Render sebagai lingkaran (arc) — lebih organik dari kotak (fillRect)
       this.ctx.fillStyle = p.color;
-      this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+      this.ctx.beginPath();
+      this.ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+      this.ctx.fill();
 
       this.ctx.restore();
     }

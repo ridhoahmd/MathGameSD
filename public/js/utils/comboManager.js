@@ -82,7 +82,7 @@ const ComboManager = {
     if (this.currentStreak > 1) {
       const span = document.createElement("span");
 
-      // Icon based on streak level
+      // Icon based on streak level — P2: tambah spark untuk streak 2-4
       let icon = "";
       let extraClass = "";
 
@@ -94,6 +94,13 @@ const ComboManager = {
         // High combo - Flame
         icon = ' <span class="combo-flame">🔥</span>';
         extraClass = "combo-glow";
+      } else if (this.currentStreak >= 3) {
+        // Medium combo - Sparkle (P2: BARU)
+        icon = ' <span class="combo-spark">✨</span>';
+        extraClass = "combo-sparkle";
+      } else {
+        // First combo (streak 2) - quick zap (P2: BARU)
+        icon = ' <span class="combo-spark">⚡</span>';
       }
 
       span.innerHTML = `${this.currentStreak}x COMBO!${icon}`;
@@ -135,6 +142,37 @@ const ComboManager = {
         if (span.parentNode) span.parentNode.removeChild(span);
       }, 800);
     }
+  },
+
+  // P1: Floating score — menampilkan "+N ×M" melayang di dekat elemen skor
+  showFloatingScore: function(points, multiplier, anchorEl) {
+    const el = document.createElement('div');
+    el.className = 'floating-points';
+
+    if (multiplier > 1) {
+      el.innerHTML = `<span class="fp-points">+${points}</span><span class="fp-multi"> ×${multiplier.toFixed(1)}</span>`;
+      el.style.color = multiplier >= 2 ? '#ff6b35' : '#ffd600';
+    } else {
+      el.textContent = `+${points}`;
+      el.style.color = '#00e676';
+    }
+
+    // Posisikan di atas elemen skor jika tersedia, fallback ke kanan tengah
+    if (anchorEl) {
+      const rect = anchorEl.getBoundingClientRect();
+      el.style.left = (rect.left + rect.width / 2) + 'px';
+      el.style.top  = (rect.top - 8) + 'px';
+      el.style.transform = 'translateX(-50%)';
+    } else {
+      el.style.right = '20px';
+      el.style.top   = '18%';
+    }
+
+    el.style.position = 'fixed';
+    el.style.pointerEvents = 'none';
+    el.style.zIndex = '10000';
+    document.body.appendChild(el);
+    setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 1000);
   },
 
   showMilestoneEffect: function (streak) {

@@ -132,10 +132,10 @@ html {
 }
 .title-tajwid {
   font-family: "Amiri", serif;
-  color: #a855f7;
+  color: #e9d5ff; /* FIX: dari #a855f7 (kontras 2.37:1 GAGAL) → lavender terang (kontras ~9.2:1 PASS AAA) */
   font-size: 1.8rem;
   margin: 0 0 12px 0;
-  text-shadow: 0 2px 8px rgba(168, 85, 247, 0.3);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6); /* FIX: shadow gelap agar teks tidak menyatu dengan bg hijau */
 }
 .stats-row {
   display: flex;
@@ -466,8 +466,8 @@ html {
 .drag-hint {
   margin-top: 15px;
   font-size: 0.8rem;
-  color: #aaa;
-  opacity: 0.7;
+  color: rgba(255, 255, 255, 0.75); /* FIX: dari #aaa+opacity:0.7 (kontras 2.74:1 GAGAL) → putih 75% (kontras ~5.4:1 PASS AA) */
+  opacity: 1; /* FIX: hapus double-dimming, opacity diatur via rgba di atas */
 }
 
 /* FEEDBACK OVERLAY */

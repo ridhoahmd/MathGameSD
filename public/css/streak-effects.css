@@ -40,6 +40,25 @@
   }
 }
 
+/* P2: Spark Icon for Medium Combo (streak 2-4) */
+.combo-spark {
+  display: inline-block;
+  font-size: 1.6rem;
+  margin-left: 8px;
+  animation: sparkPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) both;
+}
+
+@keyframes sparkPop {
+  0%   { transform: scale(0) rotate(-15deg); }
+  60%  { transform: scale(1.3) rotate(10deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* P2: Subtle glow untuk combo sparkle */
+.combo-sparkle {
+  filter: drop-shadow(0 0 8px #ffd600) drop-shadow(0 0 4px #ffa500);
+}
+
 /* Lightning Icon for Mega Combo */
 .combo-lightning {
   display: inline-block;

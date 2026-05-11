@@ -211,27 +211,33 @@ input.wrong-shake,
   }
 }
 
-/* Floating +points effect */
+/* Floating +points effect — P1: diperkuat dengan Orbitron, multi-badge, dan animasi lebih dramatik */
 .floating-points {
   position: fixed;
   pointer-events: none;
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #00f2ff;
-  text-shadow: 0 0 10px rgba(0, 242, 255, 0.8);
-  animation: floatUp 1s ease-out forwards;
-  z-index: 9999;
+  font-family: 'Orbitron', 'Poppins', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 900;
+  text-shadow: 0 0 12px currentColor, 0 2px 4px rgba(0,0,0,0.5);
+  animation: floatUp 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  z-index: 10000;
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
+
+.fp-multi {
+  font-size: 1rem;
+  opacity: 0.9;
+  vertical-align: super;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 @keyframes floatUp {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-80px) scale(1.5);
-  }
+  0%   { opacity: 1; transform: translateY(0)  scale(0.8); }
+  25%  { opacity: 1; transform: translateY(-18px) scale(1.25); }
+  60%  { opacity: 1; transform: translateY(-45px) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-75px) scale(0.9); }
 }
 
 /* ========================================

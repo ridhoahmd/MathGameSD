@@ -293,7 +293,8 @@ function checkAnswer(selectedRaw, correctRaw, btnElement) {
       multiplier = ComboManager.addStreak();
 
     let basePoints = 20 + Math.floor(timeLeft / 2);
-    score += Math.round(basePoints * multiplier);
+    const points = Math.round(basePoints * multiplier);
+    score += points;
     if (ui.score) {
       ui.score.innerText = score;
       // ISU-2-C: Trigger score bounce animation
@@ -301,6 +302,11 @@ function checkAnswer(selectedRaw, correctRaw, btnElement) {
       void ui.score.offsetWidth; // Force reflow agar animasi bisa di-restart
       ui.score.classList.add("score-bounce");
       setTimeout(() => ui.score.classList.remove("score-bounce"), 500);
+    }
+
+    // P1: Floating score (+N ×M) melayang dari score counter
+    if (typeof ComboManager !== "undefined") {
+      ComboManager.showFloatingScore(points, multiplier, ui.score);
     }
     setTimeout(() => {
       currentIndex++;
