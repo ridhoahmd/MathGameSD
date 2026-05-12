@@ -170,10 +170,25 @@ function renderShop() {
     }
 
     // HTML Kartu
-    let cardHtml = "";
+    let cardClass = "shop-card";
+    if (item.type === "badge") cardClass += " badge-card";
+
+    // Tambahan class indikator visual
+    if (isEquipped) {
+      cardClass += " card-equipped";
+    } else if (isOwned) {
+      cardClass += " card-owned";
+    } else if (canAfford) {
+      cardClass += " card-purchasable";
+    } else {
+      cardClass += " card-locked";
+    }
+
     if (item.type === "frame") {
       cardHtml = `
-        <div class="shop-card">
+        <div class="${cardClass}">
+          ${isEquipped ? '<div class="equipped-label">★ DIPAKAI</div>' : ''}
+          ${!isOwned && !canAfford ? '<div class="locked-icon">🔒</div>' : ''}
           <div class="preview-box ${item.class}">
             <img src="${avatarUrl}" class="preview-img" alt="Preview">
           </div>
@@ -189,7 +204,9 @@ function renderShop() {
     } else {
       // Kartu Badge
       cardHtml = `
-        <div class="shop-card badge-card">
+        <div class="${cardClass}">
+          ${isEquipped ? '<div class="equipped-label">★ DIPAKAI</div>' : ''}
+          ${!isOwned && !canAfford ? '<div class="locked-icon">🔒</div>' : ''}
           <div class="badge-preview">
             <span class="badge-emoji">${item.emoji}</span>
           </div>
@@ -269,31 +286,44 @@ window.equipItem = function (itemId, itemType) {
 // 6. Respon Server
 
 socket.on("transaksiSukses", (data) => {
-  // Efek Partikel WOW (Confetti)
+  // Mainkan efek suara pembelian premium
+  if (typeof window.safePlayPurchase === "function") {
+    window.safePlayPurchase();
+  } else if (typeof window.safePlayWin === "function") {
+    window.safePlayWin();
+  }
+
+  // Efek Partikel WOW (Confetti Premium)
   if (typeof confetti === "function") {
-    const end = Date.now() + 2500;
-    const colors = ["#ffeb3b", "#00f2ff", "#38ef7d", "#ff4444"];
-    (function frame() {
-      confetti({
-        particleCount: 5,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors: colors,
-        zIndex: 9999
-      });
-      confetti({
-        particleCount: 5,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors: colors,
-        zIndex: 9999
-      });
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+    function randomInRange(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    const interval = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
       }
-    }());
+
+      const particleCount = 50 * (timeLeft / duration);
+      // Confetti turun dari atas agak tengah
+      confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+      confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+    }, 250);
+
+    // Ledakan besar emas di tengah sebagai highlight
+    confetti({
+      particleCount: 150,
+      spread: 100,
+      origin: { y: 0.6 },
+      colors: ['#FFD700', '#FFA500', '#FF8C00', '#FFFFFF', '#00f2ff'],
+      zIndex: 10000
+    });
   }
 
   Swal.fire({

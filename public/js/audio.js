@@ -99,6 +99,48 @@ const AudioManager = {
     this.playTone(783.99, 0.3, 0.4);
   },
 
+  // 5. Bunyi pas beli barang di toko (Ka-ching / Magic)
+  playPurchase: function () {
+    if (this.isMuted) return;
+    this.init();
+    const ctx = this.getContext();
+    const now = ctx.currentTime;
+    
+    // Suara "Ka-ching" (Magic bell)
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.exponentialRampToValueAtTime(3000, now + 0.1);
+    
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.2, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start(now);
+    osc.stop(now + 0.5);
+    
+    // Add secondary tone
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = "triangle";
+    osc2.frequency.setValueAtTime(800, now + 0.1);
+    osc2.frequency.exponentialRampToValueAtTime(2000, now + 0.3);
+    
+    gain2.gain.setValueAtTime(0, now + 0.1);
+    gain2.gain.linearRampToValueAtTime(0.1, now + 0.15);
+    gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+    
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    
+    osc2.start(now + 0.1);
+    osc2.stop(now + 0.6);
+  },
+
   // Fungsi bantu buat mainin nada
   playTone: function (freq, delay, duration) {
     const ctx = this.getContext();
@@ -138,3 +180,4 @@ window.safePlayClick = () => safePlaySound("playClick");
 window.safePlayCorrect = () => safePlaySound("playCorrect");
 window.safePlayWrong = () => safePlaySound("playWrong");
 window.safePlayWin = () => safePlaySound("playWin");
+window.safePlayPurchase = () => safePlaySound("playPurchase");
