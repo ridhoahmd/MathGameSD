@@ -92,6 +92,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return;
   }
+
+  // FIX: Daftarkan sesi user ke server (set socket.activeUser) agar
+  // beliItem & pakaiItem di shopHandler tidak reject "harus login".
+  // mintaDataProfil adalah satu-satunya cara server men-set socket.activeUser.
+  socket.emit("mintaDataProfil", username);
+
+  // Minta data inventory setelah sesi terdaftar
   socket.emit("mintaInventory", username);
 });
 
