@@ -6,16 +6,6 @@
     "auditLog": "/home/ridho/Downloads/MathGameSD-main/logs/.2ff28af72d7a378b851abdf15e6308ed8825e4de-audit.json",
     "files": [
         {
-            "date": 1775449417056,
-            "name": "/home/ridho/Downloads/MathGameSD-main/logs/error-2026-04-06.log",
-            "hash": "8fcbd43fde8fac84f76962e050e5cd9ec8b4cd1015db3effe686c21246ca0720"
-        },
-        {
-            "date": 1776048899101,
-            "name": "/home/ridho/Downloads/MathGameSD-main/logs/error-2026-04-13.log",
-            "hash": "adbda22a4e3d07d521ace4feb944004098c84a20b4f9d7228802c00a67928304"
-        },
-        {
             "date": 1776140278662,
             "name": "/home/ridho/Downloads/MathGameSD-main/logs/error-2026-04-14.log",
             "hash": "b6ca40cff23e4227570e9d1a43e4b7d336acd7faf01add19537f810fbe35abcf"
@@ -39,6 +29,11 @@
             "date": 1777950861218,
             "name": "/home/ridho/Downloads/MathGameSD-main/logs/error-2026-05-05.log",
             "hash": "fe503d04f36f7bc4e001288a4d16a3c8c1534c57016ff22ae30030a882efe319"
+        },
+        {
+            "date": 1778647248462,
+            "name": "/home/ridho/Downloads/MathGameSD-main/logs/error-2026-05-13.log",
+            "hash": "d60fc97e78194e750ccf5606b2bd909fe31fe30967d9c6a880efa738b943d7a5"
         }
     ],
     "hashType": "sha256"
