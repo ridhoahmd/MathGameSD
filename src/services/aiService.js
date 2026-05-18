@@ -74,7 +74,7 @@ async function askAI(promptText) {
 
   try {
     const response = await fetchWithRetry(
-      "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+      "https://api.z.ai/api/paas/v4/chat/completions", // z.ai (domain baru bigmodel)
       {
         method: "POST",
         headers: {
@@ -82,7 +82,7 @@ async function askAI(promptText) {
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "glm-4-flash",
+          model: "glm-4.5-flash", // glm-4-flash sudah diganti nama di z.ai
           messages: [
             {
               role: "system",

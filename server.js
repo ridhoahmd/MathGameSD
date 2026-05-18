@@ -19,6 +19,10 @@ const server = http.createServer(app);
 
 // Middleware dasar
 app.use(compression());
+
+// 🔧 FIX: Trust Railway/Nginx reverse proxy
+// Tanpa ini, express-rate-limit error di production karena X-Forwarded-For header
+app.set('trust proxy', 1);
 app.use(
   helmet({
     contentSecurityPolicy: false,
