@@ -464,7 +464,9 @@ function endGame(reason = "timeout") {
     AudioManager.playWin();
   } catch (e) {}
 
-  if (window.socket) {
+  // CRIT-03 FIX: Jika reason="saved", simpanSkor sudah dikirim oleh saveAndExit()
+  // dengan data lebih lengkap (mode:"endless", soalDijawab). Jangan kirim 2x!
+  if (window.socket && reason !== "saved") {
     window.socket.emit("simpanSkor", {
       nama: playerName,
       skor: score,
@@ -719,7 +721,8 @@ window.saveAndExit = function () {
   // Stop timer
   clearInterval(timerInterval);
 
-  // Save score (endGame() juga emit simpanSkor, tapi dengan mode endless kita kirm data lengkap)
+  // CRIT-03 FIX: Hanya di sini yang emit simpanSkor saat save & exit.
+  // endGame("saved") TIDAK akan emit lagi — mencegah koin & XP berlipat ganda.
   if (window.socket) {
     window.socket.emit("simpanSkor", {
       nama: playerName,
@@ -730,7 +733,7 @@ window.saveAndExit = function () {
     });
   }
 
-  // FIX BUG-3: Teruskan reason "saved" agar judul layar benar
+  // Teruskan reason "saved" — endGame() akan skip emit simpanSkor
   endGame("saved");
 };
 
