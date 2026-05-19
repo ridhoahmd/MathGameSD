@@ -19,12 +19,33 @@ if (!JWT_SECRET) {
 }
 
 module.exports = (httpServer) => {
+
+  // CRIT-02 FIX: Batasi CORS hanya untuk domain yang diizinkan.
+  // Set ALLOWED_ORIGINS di .env (pisah dengan koma jika lebih dari 1 domain).
+  // Contoh: ALLOWED_ORIGINS=https://games.videaclass.com,https://mathgamesd.firebaseapp.com
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:3000")
+    .split(",")
+    .map(o => o.trim())
+    .filter(Boolean);
+
   const io = socketIo(httpServer, {
     cors: {
-      origin: "*",
+      origin: (origin, callback) => {
+        // Allow request tanpa origin (server-to-server, curl, Postman)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          logger.warn(`🚫 Socket.IO CORS DITOLAK: origin="${origin}" tidak ada di whitelist.`);
+          callback(new Error(`Origin "${origin}" tidak diizinkan oleh CORS policy.`));
+        }
+      },
       methods: ["GET", "POST"],
+      credentials: true,
     },
   });
+
 
   // Auth Middleware
   io.use((socket, next) => {
