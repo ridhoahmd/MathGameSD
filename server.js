@@ -32,6 +32,9 @@ app.use(
   }),
 );
 app.use(express.json());
+// CRIT-06: sendBeacon() mengirim Content-Type: text/plain — butuh text parser
+app.use(express.text({ type: "text/plain" }));
+
 
 // Hubungkan Morgan dengan Winston
 const morganFormat = process.env.NODE_ENV === "production" ? "combined" : "dev";
@@ -107,6 +110,66 @@ app.post("/api/ask-ai", async (req, res) => {
 // Endpoint untuk simulasi error testing uat
 app.get("/api/simulate-error", (req, res, next) => {
   next(new Error("Simulasi Error Fatal Server Database/Memori!"));
+});
+
+// CRIT-06 FIX: Endpoint /api/quick-save untuk navigator.sendBeacon()
+// Dipanggil saat user menutup tab (beforeunload event) sebagai emergency save.
+// sendBeacon() mengirim data sebagai text/plain, bukan JSON — harus di-parse manual.
+app.post("/api/quick-save", async (req, res) => {
+  try {
+    let body = req.body;
+
+    // sendBeacon mengirim sebagai text/plain, bukan JSON
+    if (typeof body === "string") {
+      try { body = JSON.parse(body); } catch { body = {}; }
+    }
+
+    const { nama, game, skor, soalDijawab } = body || {};
+
+    // Validasi minimal
+    if (!nama || !game || skor === undefined) {
+      return res.status(400).end();
+    }
+
+    // Sanitasi dasar
+    const safeName = String(nama).substring(0, 50).replace(/[^a-zA-Z0-9 _\-]/g, "");
+    const safeGame = String(game).substring(0, 20).replace(/[^a-z0-9\-]/g, "");
+    const safeScore = Math.min(Math.max(parseInt(skor) || 0, 0), 9999);
+
+    const prisma = require("./src/config/prisma");
+
+    // Cari user
+    const user = await prisma.user.findUnique({ where: { username: safeName } });
+    if (!user) return res.status(404).end();
+
+    // Cari atau buat game record
+    const gameRecord = await prisma.game.upsert({
+      where: { slug: safeGame },
+      update: {},
+      create: { slug: safeGame, title: safeGame.toUpperCase() }
+    });
+
+    // Simpan skor emergency (hanya jika > 0)
+    if (safeScore > 0) {
+      await prisma.score.create({
+        data: { userId: user.id, gameId: gameRecord.id, score: safeScore }
+      });
+
+      // Update total score user
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { totalScore: { increment: safeScore } }
+      });
+
+      logger.info(`📡 Quick-save: ${safeName} | ${safeGame} | skor:${safeScore} | soal:${soalDijawab || 0}`);
+    }
+
+    // sendBeacon tidak butuh response body
+    res.status(204).end();
+  } catch (e) {
+    logger.error(`Quick-save error: ${e.message}`);
+    res.status(500).end();
+  }
 });
 
 // Serve file statis (frontend) dengan Caching Pintar untuk Media

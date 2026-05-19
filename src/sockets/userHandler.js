@@ -606,6 +606,7 @@ module.exports = (socket, io) => {
           `   IP: ${socket.handshake.address}\n` +
           `   Time: ${new Date().toISOString()}`,
       );
+      socket.emit("resetError", "Akses ditolak. Hanya admin yang bisa melakukan reset.");
       return;
     }
 
@@ -616,6 +617,7 @@ module.exports = (socket, io) => {
           `   Admin: ${requestorUsername}\n` +
           `   IP: ${socket.handshake.address}`,
       );
+      socket.emit("resetError", "Password salah! Reset dibatalkan.");
       return;
     }
 
@@ -667,9 +669,19 @@ module.exports = (socket, io) => {
           `   Time: ${new Date().toISOString()}`,
       );
 
+      // CRIT-05 FIX: Kirim konfirmasi sukses ke admin sebelum forceRefresh
+      socket.emit("resetBerhasil", {
+        message: "✅ Sistem berhasil direset! Semua skor & koin dikembalikan ke 0.",
+        backup: backupFilename,
+        resetBy: requestorUsername,
+        timestamp: new Date().toISOString(),
+      });
+
       if (io) io.emit("forceRefresh");
     } catch (e) {
       logger.error(`Gagal Reset: ${e.message}`, { stack: e.stack });
+      // CRIT-05 FIX: Beritahu admin jika reset gagal
+      socket.emit("resetError", `Reset gagal: ${e.message}. Coba lagi atau hubungi developer.`);
     }
   });
 };

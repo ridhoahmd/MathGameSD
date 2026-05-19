@@ -501,3 +501,92 @@ socket.on("riwayatVersusData", (data) => {
   });
 });
 
+// ============================================================
+// CRIT-05 FIX: Fungsi adminReset() + Socket listeners
+// Sebelumnya fungsi ini tidak terdefinisi — tombol "Reset Sistem"
+// di index.html memanggil adminReset() yang tidak ada → TypeError
+// ============================================================
+
+window.adminReset = function () {
+  if (typeof Swal === "undefined") {
+    const pw = prompt("⚠️ KONFIRMASI RESET SISTEM\n\nSemua skor & koin siswa akan dikembalikan ke 0.\nMasukkan password admin untuk konfirmasi:");
+    if (!pw) return;
+    if (window.socket) {
+      window.socket.emit("adminResetSystem", { password: pw });
+    }
+    return;
+  }
+
+  Swal.fire({
+    title: "⚠️ Reset Sistem",
+    html: `
+      <p style="color:#ff6b6b;margin-bottom:12px">
+        <strong>PERINGATAN:</strong> Tindakan ini akan menghapus seluruh skor & koin semua siswa!
+      </p>
+      <p style="margin-bottom:16px">Data akan di-backup otomatis sebelum dihapus.</p>
+      <input type="password" id="swal-reset-pw" class="swal2-input" placeholder="Masukkan password admin">
+    `,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Ya, Reset!",
+    cancelButtonText: "Batal",
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    didOpen: () => {
+      document.getElementById("swal-reset-pw")?.focus();
+    },
+    preConfirm: () => {
+      const pw = document.getElementById("swal-reset-pw")?.value || "";
+      if (!pw) {
+        Swal.showValidationMessage("Password tidak boleh kosong!");
+        return false;
+      }
+      return pw;
+    }
+  }).then((result) => {
+    if (!result.isConfirmed || !result.value) return;
+
+    // Tampilkan loading — cegah double submit
+    Swal.fire({
+      title: "⏳ Memproses Reset...",
+      text: "Membuat backup & mereset data...",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    if (window.socket) {
+      window.socket.emit("adminResetSystem", { password: result.value });
+    }
+  });
+};
+
+// Listener: Reset berhasil
+if (window.socket) {
+  window.socket.on("resetBerhasil", (data) => {
+    if (typeof Swal !== "undefined") {
+      Swal.fire({
+        title: "✅ Reset Berhasil!",
+        html: `
+          <p>${data.message}</p>
+          <p style="font-size:0.85em;color:#888;margin-top:8px">
+            Backup: <code>${data.backup}</code><br>
+            Oleh: ${data.resetBy} — ${new Date(data.timestamp).toLocaleString("id-ID")}
+          </p>
+        `,
+        icon: "success",
+        confirmButtonText: "OK"
+      });
+    } else {
+      alert("✅ " + data.message);
+    }
+  });
+
+  window.socket.on("resetError", (msg) => {
+    if (typeof Swal !== "undefined") {
+      Swal.fire({ title: "❌ Reset Gagal", text: msg, icon: "error" });
+    } else {
+      alert("❌ " + msg);
+    }
+  });
+}
