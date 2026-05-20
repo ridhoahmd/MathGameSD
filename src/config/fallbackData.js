@@ -74,7 +74,6 @@ const fallbacks = {
       total_belanja: 2500,
       uang_bayar: 5000,
       kembalian: 2500,
-      kembalian: 2500,
     },
     {
       cerita: "Budi beli mainan 12.000, bayar dengan 20.000.",

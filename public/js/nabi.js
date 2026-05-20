@@ -382,7 +382,7 @@ window.tutupTutor = function () {
   loadQuestion();
 };
 
-function endGame() {
+function endGame(reason = "normal") {
   // Bersihin timer
   clearInterval(timerInterval);
 
@@ -394,7 +394,9 @@ function endGame() {
   try {
     AudioManager.playWin();
   } catch (e) {}
-  if (window.socket) {
+  // FIX: Jika reason="saved", simpanSkor sudah dikirim oleh saveAndExit().
+  // Jangan kirim 2x agar skor/koin tidak berlipat ganda.
+  if (window.socket && reason !== "saved") {
     window.socket.emit("mintaDataProfil", playerName);
     window.socket.emit("simpanSkor", {
       nama: playerName,
@@ -492,8 +494,8 @@ window.saveAndExit = function () {
     });
   }
 
-  // Show result
-  endGame();
+  // Show result — teruskan reason "saved" agar endGame() skip emit simpanSkor
+  endGame("saved");
 };
 
 // Toast notification
@@ -513,7 +515,8 @@ function showToast(message) {
 // Auto-save on page close (emergency backup)
 window.addEventListener("beforeunload", (e) => {
   if (score > 0 && currentIndex > 0) {
-    // Quick sync save attempt
+    // FIX: sendBeacon harus mengirim string (text/plain) agar server bisa parse
+    // Jangan gunakan Blob dengan type application/json — server menggunakan express.text()
     if (navigator.sendBeacon && window.socket) {
       const data = JSON.stringify({
         nama: playerName,
@@ -521,9 +524,7 @@ window.addEventListener("beforeunload", (e) => {
         skor: score,
         soalDijawab: currentIndex,
       });
-      const dataBlob = new Blob([data], { type: "application/json" });
-      // Note: This endpoint needs to be implemented server-side
-      navigator.sendBeacon("/api/quick-save", dataBlob);
+      navigator.sendBeacon("/api/quick-save", data);
     }
   }
 });

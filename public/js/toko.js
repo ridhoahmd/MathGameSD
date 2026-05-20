@@ -191,6 +191,7 @@ function renderShop() {
       cardClass += " card-locked";
     }
 
+    let cardHtml = "";
     if (item.type === "frame") {
       cardHtml = `
         <div class="${cardClass}">

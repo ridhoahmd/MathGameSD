@@ -405,7 +405,7 @@ window.toggleLatin = function () {
 };
 
 // --- 8. GAME SELESAI ---
-function endGame() {
+function endGame(reason = "normal") {
   // Stop timer
   clearInterval(timerInterval);
 
@@ -419,7 +419,9 @@ function endGame() {
   const btnSave = document.getElementById("btn-save-exit");
   if (btnSave) btnSave.classList.add("hidden");
 
-  if (window.socket) {
+  // FIX: Jika reason="saved", simpanSkor sudah dikirim oleh saveAndExit().
+  // Jangan kirim 2x agar skor/koin tidak berlipat ganda.
+  if (window.socket && reason !== "saved") {
     window.socket.emit("simpanSkor", {
       nama: playerName,
       skor: score,
@@ -525,8 +527,8 @@ window.saveAndExit = function () {
     });
   }
 
-  // Show result
-  endGame();
+  // Show result — teruskan reason "saved" agar endGame() skip emit simpanSkor
+  endGame("saved");
 };
 
 // Toast notification
