@@ -250,10 +250,8 @@ class DailyStreakSystem {
     document.body.appendChild(toast);
 
     if (celebration && typeof confetti !== "undefined") {
-      confetti.shower({
-        particleCount: 30,
-        startVelocity: 15,
-      });
+      // FIX: canvas-confetti tidak punya .shower(), gunakan confetti() langsung
+      confetti({ particleCount: 40, spread: 70, origin: { y: 0.6 }, colors: ['#ff6b6b', '#ffbe0b', '#00f2ff'] });
     }
 
     setTimeout(() => {

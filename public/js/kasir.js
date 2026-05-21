@@ -309,6 +309,11 @@ function endGame() {
       game: "kasir",
     });
   }
+
+  // FIX: Trigger achievement check — kasir sebelumnya tidak pernah cek achievement
+  if (typeof Achievements !== "undefined") {
+    Achievements.checkGameAchievements("kasir", score);
+  }
 }
 
 // 🔧 FIX: Function untuk lanjut endless mode

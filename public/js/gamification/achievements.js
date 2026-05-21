@@ -232,11 +232,8 @@ class AchievementSystem {
 
     // Trigger confetti
     if (typeof confetti !== "undefined") {
-      confetti.burst({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.6 },
-      });
+      // FIX: canvas-confetti tidak punya .burst(), gunakan confetti() langsung
+      confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
     }
 
     return achievement;

@@ -130,9 +130,13 @@ class LevelingSystem {
   onLevelUp(oldLevel, newLevel) {
     this.showLevelUpNotification(newLevel);
 
-    // Trigger confetti
+    // Trigger confetti level-up yang meriah
     if (typeof confetti !== "undefined") {
-      confetti.victory();
+      // FIX: canvas-confetti tidak punya .victory(), buat sendiri dengan 3 burst
+      const colors = ['#ffbe0b', '#ff006e', '#00f2ff', '#ffffff'];
+      confetti({ particleCount: 80, spread: 100, origin: { y: 0.6 }, colors });
+      setTimeout(() => confetti({ particleCount: 50, spread: 120, origin: { x: 0.2, y: 0.5 }, colors }), 200);
+      setTimeout(() => confetti({ particleCount: 50, spread: 120, origin: { x: 0.8, y: 0.5 }, colors }), 400);
     }
 
     // Play sound
