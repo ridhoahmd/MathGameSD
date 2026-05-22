@@ -50,10 +50,16 @@ body:not([class*="theme-"]) .bg-dot-grid {
   to   { opacity: 1; }
 }
 
-/* Pastikan konten utama di atas grid (z-index 0) */
+/*
+ * PERHATIAN — backdrop-filter & position:fixed:
+ * backdrop-filter menciptakan new stacking context.
+ * Elemen dengan position:fixed di dalam parent yang punya backdrop-filter
+ * akan kehilangan fixed positioning dan bergeser ke posisi yang salah.
+ * #chat-container TIDAK boleh ada di sini — ia butuh position:fixed global.
+ * Hanya .dashboard-container dan .main-header yang perlu z-index di atas dot-grid.
+ */
 .dashboard-container,
-.main-header,
-#chat-container {
+.main-header {
   position: relative;
   z-index: 1;
 }
