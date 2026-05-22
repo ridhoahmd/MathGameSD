@@ -110,21 +110,44 @@ window.selectDifficulty = function (level) {
 
 function startGame() {
   // 🔧 FIX: Emit mulaiGame agar server mencatat sesi bermain yang valid
-  // Tanpa ini, server akan menolak simpanSkor karena sesi dianggap tidak valid
   if (socket) {
     socket.emit("mulaiGame", "bintang");
-    window._activeGameSlug = "bintang"; // BUG-03 FIX: agar reconnect handler bisa re-register sesi
+    window._activeGameSlug = "bintang";
   }
 
   if (!game) {
     game = new Phaser.Game(config);
-    // CSS (#game-container top:130px + overflow:hidden) sudah menangani layout.
-    // Phaser dengan parentIsWindow:false akan FIT canvas dalam container secara otomatis.
+    // Setelah Phaser ready, pastikan canvas di tengah
+    game.events.once('ready', forceCenterCanvas);
   } else {
-    // Kalo game udah ada, restart aja scenenya
     game.scene.scenes[0].scene.restart();
   }
   gameActive = true;
+}
+
+/**
+ * FIX CANVAS CENTERING:
+ * Phaser kadang menghasilkan canvas dengan left/margin offset
+ * akibat perhitungan internal scale manager.
+ * Fungsi ini memaksa canvas kembali ke tengah secara CSS.
+ */
+function forceCenterCanvas() {
+  const container = document.getElementById('game-container');
+  if (!container) return;
+  const canvas = container.querySelector('canvas');
+  if (!canvas) {
+    // Coba lagi 100ms kemudian jika canvas belum ada di DOM
+    setTimeout(forceCenterCanvas, 100);
+    return;
+  }
+  // Reset semua offset yang mungkin ditambahkan Phaser
+  canvas.style.position = 'relative';
+  canvas.style.left = 'auto';
+  canvas.style.right = 'auto';
+  canvas.style.top = 'auto';
+  canvas.style.marginLeft = 'auto';
+  canvas.style.marginRight = 'auto';
+  canvas.style.display = 'block';
 }
 
 // applyCanvasTopOffset — DEPRECATED

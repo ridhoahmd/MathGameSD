@@ -136,9 +136,14 @@ body {
   right: 0;
   bottom: 0;
   z-index: 1;
+  /* FIX CENTERING: flex + explicit centering agar canvas selalu di tengah */
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Penting: reset semua properti yang bisa diwarisi dari halaman lain */
+  width: 100%;
+  margin: 0;
+  padding: 0;
   overflow: hidden;     /* Potong apapun yang coba meluap ke luar area bermain */
 }
 
@@ -148,12 +153,20 @@ body {
   border-radius: 15px;
   box-shadow: 0 0 50px rgba(0, 242, 255, 0.2),
               0 0 0 2px rgba(0, 242, 255, 0.15);
+  /* FIX CENTERING: explicit margin auto + display block sebagai fallback */
   display: block;
+  margin: 0 auto;
   /* KUNCI: max-height 100% agar tidak meluap keluar container */
   max-width: 100%;
   max-height: 100%;
   /* Pastikan aspek rasio terjaga saat canvas dikecilkan */
   object-fit: contain;
+  /* Reset positioning agar tidak ada offset tak terduga */
+  position: relative;
+  left: auto;
+  right: auto;
+  top: auto;
+  transform: none;
 }
 
 
