@@ -55,7 +55,7 @@ module.exports = (socket, io) => {
   });
 
   socket.on("mintaSoalAI", async (reqData) => {
-    const { kategori, tingkat } = reqData || {};
+    const { kategori, tingkat, kodeKelas } = reqData || {};
     const levelRequest = tingkat || "sedang";
 
     let finalData = [];
@@ -67,29 +67,62 @@ module.exports = (socket, io) => {
       else if (levelRequest.toLowerCase() === "sedang") levelAlt = "Medium";
       else if (levelRequest.toLowerCase() === "sulit") levelAlt = "Hard";
 
-      // 2. QUERY DATABASE
-      let questions = await prisma.gameQuestion.findMany({
-        where: {
-          AND: [
-            { category: { equals: kategori, mode: "insensitive" } },
-            {
-              OR: [
-                { level: { equals: levelRequest, mode: "insensitive" } },
-                { level: { equals: levelAlt, mode: "insensitive" } },
+      // BUG-M03 FIX: Cek CONTENT_SOURCE_PRIORITY
+      // Jika guru set ke AI_ONLY, langsung skip DB dan minta AI
+      const sourceMode = global.CONTENT_SOURCE_PRIORITY || "CACHE_FIRST";
+      let questions = [];
+
+      if (sourceMode !== "AI_ONLY") {
+        // BUG-M01 & BUG-M02 FIX: Filter soal berdasarkan kodeKelas
+        // Strategi: coba soal kelas tertentu dulu, fallback ke soal publik
+        const levelFilter = [
+          { level: { equals: levelRequest, mode: "insensitive" } },
+          { level: { equals: levelAlt, mode: "insensitive" } },
+        ];
+        const categoryFilter = { equals: kategori, mode: "insensitive" };
+
+        // STEP A: Jika ada kodeKelas, coba ambil soal khusus kelas itu dulu
+        if (kodeKelas) {
+          questions = await prisma.gameQuestion.findMany({
+            where: {
+              AND: [
+                { category: categoryFilter },
+                { OR: levelFilter },
+                { kodeKelas: { equals: kodeKelas, mode: "insensitive" } },
               ],
             },
-          ],
-        },
-        select: { content: true }, // Ambil isinya aja biar irit
-        take: 200,
-      });
+            select: { content: true },
+            take: 200,
+          });
+          if (questions.length > 0) {
+            logger.info(`[Game] 🎯 Menggunakan ${questions.length} soal khusus kelas '${kodeKelas}' untuk ${kategori}`);
+          }
+        }
 
-      // Logika Darurat buat Zuma kalo level spesifik kosong
-      if ((!questions || questions.length === 0) && kategori === "zuma") {
-        questions = await prisma.gameQuestion.findMany({
-          where: { category: { equals: "zuma", mode: "insensitive" } },
-          take: 50,
-        });
+        // STEP B: Jika tidak ada kodeKelas atau soal kelas kosong, ambil soal PUBLIK (kodeKelas = null)
+        if (questions.length === 0) {
+          questions = await prisma.gameQuestion.findMany({
+            where: {
+              AND: [
+                { category: categoryFilter },
+                { OR: levelFilter },
+                { kodeKelas: null }, // Hanya soal publik
+              ],
+            },
+            select: { content: true },
+            take: 200,
+          });
+        }
+
+        // STEP C: Logika darurat untuk Zuma jika semua level kosong
+        if (questions.length === 0 && kategori === "zuma") {
+          questions = await prisma.gameQuestion.findMany({
+            where: { category: { equals: "zuma", mode: "insensitive" }, kodeKelas: null },
+            take: 50,
+          });
+        }
+      } else {
+        logger.info(`[Game] 🤖 Mode AI_ONLY aktif untuk ${kategori} - skip DB`);
       }
 
       // 3. PROSES DATA

@@ -21,23 +21,27 @@ module.exports = (socket, io) => {
         return socket.emit("adminResponse", { success: false, message: "Data soal tidak lengkap!" });
       }
 
-      // Struktur data di DB kita: category, level, content
-      // Supaya gampang, content kita jadikan bentuk Array jika ini kumpulan soal,
-      // atau satu objek spesifik. GameHandler mengambil "data.opsi" atau "data" dalam content.
-      
+      // Normalisasi level ke format DB (Bahasa Indonesia → Inggris)
+      const levelMap = { mudah: "Easy", sedang: "Medium", sulit: "Hard" };
+      const levelNorm = levelMap[level.toLowerCase()] || level;
+
+      // BUG-M02 FIX: simpan kodeKelas sebagai field DB tersendiri (bukan hanya dalam JSON content)
+      // Soal dengan kodeKelas = null → soal publik (untuk semua siswa)
+      // Soal dengan kodeKelas = "IPA7A_UTS" → hanya untuk kelas tersebut
       const newQuestion = await prisma.gameQuestion.create({
         data: {
           category: kategori,
-          level: level.toLowerCase() === "mudah" ? "Easy" : level.toLowerCase() === "sedang" ? "Medium" : "Hard",
-          content: [soalData] // Format array seperti struktur kuis kita
+          level: levelNorm,
+          content: [soalData], // Format array konsisten dengan soal AI
+          kodeKelas: kodeKelas || null // null = soal publik
         }
       });
 
-      // Broadcast Soal Real-Time ke murid-murid
-      io.emit("soalBaruTersedia", { game: kategori, level: level });
+      // Broadcast real-time ke siswa yang sedang bermain
+      io.emit("soalBaruTersedia", { game: kategori, level: level, kodeKelas: kodeKelas || null });
 
-      logger.info(`[Admin] ✅ Soal manual '${kategori}' berhasil disimpan oleh ${socket.decoded.username}`);
-      socket.emit("adminResponse", { success: true, message: "Soal berhasil disimpan di database!" });
+      logger.info(`[Admin] ✅ Soal manual '${kategori}' level '${levelNorm}' kelas '${kodeKelas || "PUBLIK"}' disimpan oleh ${socket.decoded.username}`);
+      socket.emit("adminResponse", { success: true, message: `Soal berhasil disimpan! (Kelas: ${kodeKelas || "Publik"})` });
     } catch (err) {
       logger.error(`[Admin] ❌ Gagal menyimpan soal manual: ${err.message}`);
       socket.emit("adminResponse", { success: false, message: "Terjadi kesalahan server saat menyimpan." });

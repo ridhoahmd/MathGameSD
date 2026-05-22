@@ -51,12 +51,17 @@
 
         <!-- Kode Ujian Wajib -->
         <label>Kode Kelas/Ujian Khusus (Contoh: IPA7A_UTS):</label>
-        <input
-          type="text"
-          id="input-kode-kelas-manual"
-          class="soal-input mb-20"
-          placeholder="Masukkan kode kelas. WAJIB DIISI."
-        />
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:20px;">
+          <input
+            type="text"
+            id="input-kode-kelas-manual"
+            class="soal-input"
+            style="flex:1; margin-bottom:0;"
+            placeholder="Kosongkan untuk soal PUBLIK (semua siswa)"
+            oninput="updateKodeKelasLabel()"
+          />
+          <span id="kode-kelas-badge" style="font-size:0.75rem; padding:4px 10px; border-radius:20px; background:rgba(0,242,255,0.15); color:#00f2ff; border:1px solid #00f2ff; white-space:nowrap;">🌐 PUBLIK</span>
+        </div>
 
         <div class="input-row">
           <div class="col-half">
@@ -511,29 +516,45 @@
         document.getElementById("current-setting-display").innerText = `(Current: ${source})`;
       };
 
+      // Update badge kodeKelas secara real-time
+      window.updateKodeKelasLabel = function() {
+        const val = document.getElementById("input-kode-kelas-manual").value.trim();
+        const badge = document.getElementById("kode-kelas-badge");
+        if (!badge) return;
+        if (val) {
+          badge.innerHTML = `🏫 ${val.toUpperCase()}`;
+          badge.style.background = "rgba(255,190,11,0.15)";
+          badge.style.color = "#ffbe0b";
+          badge.style.borderColor = "#ffbe0b";
+        } else {
+          badge.innerHTML = `🌐 PUBLIK`;
+          badge.style.background = "rgba(0,242,255,0.15)";
+          badge.style.color = "#00f2ff";
+          badge.style.borderColor = "#00f2ff";
+        }
+      };
+
       // Simpan Soal Manual ke Server
       window.saveManualQuestion = function () {
-        const kodeKelas = document.getElementById("input-kode-kelas-manual").value;
+        const kodeKelas = document.getElementById("input-kode-kelas-manual").value.trim();
         const game = document.getElementById("input-game").value;
         const level = document.getElementById("input-level").value;
-        
-        if (!kodeKelas) {
-          Swal.fire("Error", "Kode Kelas Wajib Diisi!", "error");
-          return;
-        }
 
-        const soalStr = document.getElementById("manual-soal")?.value;
-        const opsiStr = document.getElementById("manual-opsi")?.value;
-        const jawabanStr = document.getElementById("manual-jawaban")?.value;
-        const penjelasanStr = document.getElementById("manual-penjelasan")?.value;
+        // BUG-M01 FIX: kodeKelas TIDAK wajib — kosong berarti soal PUBLIK
+        // (sebelumnya error jika tidak diisi, padahal soal publik valid)
+
+        const soalStr = document.getElementById("manual-soal")?.value.trim();
+        const opsiStr = document.getElementById("manual-opsi")?.value.trim();
+        const jawabanStr = document.getElementById("manual-jawaban")?.value.trim();
+        const penjelasanStr = document.getElementById("manual-penjelasan")?.value.trim();
 
         if (!soalStr || !opsiStr || !jawabanStr) {
            Swal.fire("Error", "Pertanyaan, Opsi, dan Jawaban Benar wajib diisi!", "error");
            return;
         }
 
-        const OpsiArray = opsiStr.split(",").map(i => i.trim());
-        if (!OpsiArray.includes(jawabanStr.trim())) {
+        const OpsiArray = opsiStr.split(",").map(i => i.trim()).filter(i => i);
+        if (!OpsiArray.includes(jawabanStr)) {
            Swal.fire("Peringatan", "Jawaban benar harus sama persis dengan salah satu opsi!", "warning");
            return;
         }
@@ -542,20 +563,20 @@
           id: Date.now(),
           soal: soalStr,
           opsi: OpsiArray,
-          jawabanBenar: jawabanStr.trim(),
+          jawabanBenar: jawabanStr,
           penjelasan: penjelasanStr || "Tidak ada penjelasan.",
-          kodeRef: kodeKelas // Untuk referensi khusus
         };
 
         socket.emit("simpanSoalManual", {
            kategori: game,
            level: level,
-           kodeKelas: kodeKelas,
+           kodeKelas: kodeKelas || null, // null = soal publik
            soalData: soalData
         });
         
         Swal.fire({
           title: "Menyimpan...",
+          text: kodeKelas ? `Soal untuk kelas: ${kodeKelas}` : "Soal publik untuk semua siswa",
           didOpen: () => Swal.showLoading()
         });
       };

@@ -56,9 +56,11 @@ model GameQuestion {
   category  String
   level     String
   content   Json
+  kodeKelas String?  // BUG-M02 FIX: field khusus untuk soal kelas tertentu (null = soal publik)
   createdAt DateTime @default(now())
 
   @@index([category, level])
+  @@index([category, level, kodeKelas]) // Index untuk query soal kelas spesifik
 }
 
 // Riwayat Duel (Mode Versus)
