@@ -31,6 +31,8 @@
     <link rel="stylesheet" href="css/visual-overhaul.css" />
     <link rel="stylesheet" href="css/chat-enhanced.css" />
     <link rel="stylesheet" href="css/login-panel.css" />
+    <!-- Opsi A: Identitas warna unik per game card + neon badge (additive only) -->
+    <link rel="stylesheet" href="css/card-identity.css?v=1" />
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
@@ -181,7 +183,7 @@
         <h2 class="misi-title">PILIH GAME</h2>
         <div class="grid-games">
           <!-- Game 1: Matematika Dasar -->
-          <a href="#" onclick="masukGame('html/math.html')" class="game-card">
+          <a href="#" onclick="masukGame('html/math.html')" class="game-card" data-game="math">
             <span class="game-badge badge-math">Matematika</span>
             <div class="game-icon">🚀</div>
             <div class="game-title">GESIT BERHITUNG</div>
@@ -190,7 +192,7 @@
           </a>
 
           <!-- Game 2: Zuma Phaser -->
-          <a href="#" onclick="masukGame('html/zuma-phaser.html')" class="game-card">
+          <a href="#" onclick="masukGame('html/zuma-phaser.html')" class="game-card" data-game="zuma">
             <span class="game-badge badge-math">Matematika</span>
             <div class="game-icon">☄️</div>
             <div class="game-title">TEMBAK ANGKA</div>
@@ -199,7 +201,7 @@
           </a>
 
           <!-- Game 3: Memory Match -->
-          <a href="#" onclick="masukGame('html/memory.html')" class="game-card">
+          <a href="#" onclick="masukGame('html/memory.html')" class="game-card" data-game="memory">
             <span class="game-badge badge-otak">Otak</span>
             <div class="game-icon">🧩</div>
             <div class="game-title">LAB MEMORI</div>
@@ -208,7 +210,7 @@
           </a>
 
           <!-- Game 4: Piano Matematika -->
-          <a href="#" onclick="masukGame('html/piano.html')" class="game-card">
+          <a href="#" onclick="masukGame('html/piano.html')" class="game-card" data-game="piano">
             <span class="game-badge badge-math">Matematika</span>
             <div class="game-icon">🎹</div>
             <div class="game-title">MATEMATIKA PIANO</div>
@@ -217,7 +219,7 @@
           </a>
 
           <!-- Game 5: Kasir Belanja -->
-          <a href="#" onclick="masukGame('html/kasir.html')" class="game-card">
+          <a href="#" onclick="masukGame('html/kasir.html')" class="game-card" data-game="kasir">
             <span class="game-badge badge-math">Matematika</span>
             <div class="game-icon">🏪</div>
             <div class="game-title">KASIR CILIK</div>
@@ -226,7 +228,7 @@
           </a>
 
           <!-- Game 6: Labirin -->
-          <a href="#" onclick="masukGame('html/labirin-phaser.html')" class="game-card">
+          <a href="#" onclick="masukGame('html/labirin-phaser.html')" class="game-card" data-game="labirin">
             <span class="game-badge badge-otak">Logika</span>
             <div class="game-icon">🌀</div>
             <div class="game-title">LABIRIN ILMU</div>
@@ -235,7 +237,7 @@
           </a>
 
           <!-- Game 7: Kisah Nabi -->
-          <a href="#" onclick="masukGame('html/nabi.html')" class="game-card">
+          <a href="#" onclick="masukGame('html/nabi.html')" class="game-card" data-game="nabi">
             <span class="game-badge badge-islam">Islam</span>
             <div class="game-icon">🕌</div>
             <div class="game-title">JEJAK NABI</div>
@@ -244,7 +246,7 @@
           </a>
 
           <!-- Game 8: Sambung Ayat -->
-          <a href="#" onclick="masukGame('html/ayat.html')" class="game-card">
+          <a href="#" onclick="masukGame('html/ayat.html')" class="game-card" data-game="ayat">
             <span class="game-badge badge-islam">Islam</span>
             <div class="game-icon">📖</div>
             <div class="game-title">SAMBUNG AYAT</div>
@@ -253,7 +255,7 @@
           </a>
 
           <!-- Game 9: Tajwid -->
-          <a href="#" onclick="masukGame('html/tajwid.html')" class="game-card">
+          <a href="#" onclick="masukGame('html/tajwid.html')" class="game-card" data-game="tajwid">
             <span class="game-badge badge-islam">Islam</span>
             <div class="game-icon">⚖️</div>
             <div class="game-title">PILAH HUKUM</div>
@@ -262,7 +264,7 @@
           </a>
 
           <!-- Game 10: Tangkap Bintang -->
-          <a href="#" onclick="masukGame('html/bintang.html')" class="game-card">
+          <a href="#" onclick="masukGame('html/bintang.html')" class="game-card" data-game="bintang">
             <span class="game-badge badge-math">Matematika</span>
             <div class="game-icon">🌟</div>
             <div class="game-title">TANGKAP BINTANG</div>
