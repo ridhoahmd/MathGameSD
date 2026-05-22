@@ -1,0 +1,103 @@
+/*
+ * card-hover.css — Opsi C: 3D Tilt Hover Effect
+ * =================================================
+ * CSS foundation untuk 3D perspective effect.
+ * Animasi tilt aktual dikendalikan JS (card-tilt.js)
+ * via inline style yang di-override saat mouse bergerak.
+ *
+ * KEAMANAN: Hanya aktif di default theme (body:not([class*="theme-"]))
+ * Tidak mengubah rule yang sudah ada di style.css atau card-identity.css
+ * =================================================
+ */
+
+/* ===================================================
+   1. PERSPECTIVE CONTAINER
+   Parent grid perlu perspective agar 3D transform
+   anak-anaknya terlihat depth yang benar
+   =================================================== */
+body:not([class*="theme-"]) .grid-games {
+  perspective: 1200px;
+  perspective-origin: center center;
+}
+
+/* ===================================================
+   2. BASE CARD — 3D Transform Ready
+   =================================================== */
+body:not([class*="theme-"]) .game-card[data-game] {
+  transform-style: preserve-3d;
+  /* Transition halus saat mouse masuk (override oleh JS saat move) */
+  will-change: transform;
+  cursor: pointer;
+}
+
+/* ===================================================
+   3. MOUSE-LEAVE TRANSITION
+   Saat mouse keluar, card kembali ke posisi awal
+   dengan easing yang smooth (ditambahkan via JS juga,
+   tapi ini sebagai CSS fallback)
+   =================================================== */
+body:not([class*="theme-"]) .game-card[data-game].tilt-reset {
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1) !important;
+  transform: perspective(1200px) rotateX(0deg) rotateY(0deg) translateY(0px) scale(1) !important;
+}
+
+/* ===================================================
+   4. INNER GLOW LAYER — menguat saat tilt (3D depth)
+   Pseudo element yang akan lebih terlihat saat card miring
+   =================================================== */
+body:not([class*="theme-"]) .game-card[data-game]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 255, 255, 0.08) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+body:not([class*="theme-"]) .game-card[data-game]:hover::after {
+  opacity: 1;
+}
+
+/* ===================================================
+   5. SHINE SWEEP — tambahan efek saat hover + tilt
+   =================================================== */
+body:not([class*="theme-"]) .game-card[data-game] .card-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.12) 0%,
+    rgba(255,255,255,0) 50%,
+    rgba(255,255,255,0.06) 100%
+  );
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+  transition: opacity 0.3s ease;
+}
+
+body:not([class*="theme-"]) .game-card[data-game]:hover .card-shine {
+  opacity: 1;
+}
+
+/* ===================================================
+   6. RESPONSIVE — Matikan 3D tilt di mobile
+   (touch device tidak punya mousemove, 3D tilt tidak relevan)
+   =================================================== */
+@media (max-width: 768px) {
+  body:not([class*="theme-"]) .grid-games {
+    perspective: none;
+  }
+  body:not([class*="theme-"]) .game-card[data-game] {
+    transform-style: flat;
+    will-change: auto;
+  }
+}
