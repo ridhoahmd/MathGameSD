@@ -33,6 +33,8 @@
     <link rel="stylesheet" href="css/login-panel.css" />
     <!-- Opsi A: Identitas warna unik per game card + neon badge (additive only) -->
     <link rel="stylesheet" href="css/card-identity.css?v=1" />
+    <!-- Opsi B: Glassmorphism sidebar + avatar ring + dot grid -->
+    <link rel="stylesheet" href="css/sidebar-glass.css?v=1" />
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
@@ -41,6 +43,8 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   </head>
   <body>
+    <!-- Dot grid background (Opsi B) — fixed, pointer-events none, z-index 0 -->
+    <div class="bg-dot-grid" aria-hidden="true"></div>
     <!-- === HEADER UTAMA === -->
     <header class="main-header">
       <div class="logo-area">
@@ -67,13 +71,16 @@
       <!-- SIDEBAR KIRI (Profil & Menu) -->
       <aside class="sidebar">
         <!-- Avatar User -->
-        <div class="avatar-container" id="avatar-box">
-          <img
-            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guest"
-            id="user-avatar"
-            class="avatar"
-            alt="Avatar"
-          />
+        <!-- Avatar Ring Wrapper (Opsi B) — spinning gradient ring di balik avatar -->
+        <div class="avatar-ring-wrapper">
+          <div class="avatar-container" id="avatar-box">
+            <img
+              src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guest"
+              id="user-avatar"
+              class="avatar"
+              alt="Avatar"
+            />
+          </div>
         </div>
 
         <div class="profile-name" id="display-name">Silakan Login</div>

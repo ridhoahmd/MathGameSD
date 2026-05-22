@@ -1,0 +1,257 @@
+/*
+ * sidebar-glass.css — Opsi B: Glassmorphism Sidebar + Avatar Ring + Dot Grid
+ * =============================================================================
+ * ATURAN KEAMANAN:
+ * 1. File ini HANYA additive — zero perubahan ke file CSS yang ada
+ * 2. avatar-container TIDAK pakai ::before/::after (sudah dipakai frame system)
+ *    → Avatar ring menggunakan wrapper .avatar-ring-wrapper yang ditambah via HTML
+ * 3. XP bar shimmer sudah ada di style.css → tidak diulang di sini
+ * 4. Dot grid menggunakan .bg-dot-grid div di body → bukan body::before/::after
+ *    (::before/::after body sudah dipakai tema obsidian/forest/dll)
+ * =============================================================================
+ */
+
+/* ===================================================
+   1. DOT GRID BACKGROUND (via dedicated element)
+   =================================================== */
+/*
+ * HTML: <div class="bg-dot-grid"></div> ada di body (ditambah via JS inline)
+ * Position: fixed, pointer-events: none — tidak ganggu klik/interaksi
+ */
+.bg-dot-grid {
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(0, 212, 255, 0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
+  /* Fade in agar tidak tiba-tiba muncul */
+  animation: bg-grid-fadein 1s ease forwards;
+}
+@keyframes bg-grid-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Pastikan konten di atas grid */
+.dashboard-container,
+.main-header,
+#chat-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* ===================================================
+   2. SIDEBAR GLASSMORPHISM
+   =================================================== */
+/*
+ * Override background sidebar dengan efek frosted glass.
+ * Menggunakan specificity yang sedikit lebih tinggi dari style.css (.sidebar)
+ * dengan menambah selector :not body(.theme-forest) dll agar tidak
+ * menimpa tema yang sudah punya sidebar styling sendiri.
+ * Cara paling aman: bungkus dengan :root yang tidak dipakai tema.
+ */
+:root .sidebar {
+  background: rgba(10, 12, 28, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px); /* Safari */
+  border-right: 1px solid rgba(0, 212, 255, 0.12);
+  box-shadow:
+    4px 0 40px rgba(0, 0, 0, 0.4),
+    inset -1px 0 0 rgba(0, 212, 255, 0.06);
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Stats box dalam sidebar: glass card effect */
+:root .stats-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(0, 212, 255, 0.1);
+  border-radius: 12px;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Menu section separator */
+:root .menu-section {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ===================================================
+   3. AVATAR RING ANIMASI
+   Menggunakan .avatar-ring-wrapper yang dibungkus di luar
+   .avatar-container di index.html (ditambah via HTML edit)
+   =================================================== */
+.avatar-ring-wrapper {
+  position: relative;
+  width: 118px;
+  height: 118px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-shrink: 0;
+}
+
+/* Ring gradient yang berputar — via conic-gradient + animation */
+.avatar-ring-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    #00d4ff 0%,
+    #a855f7 25%,
+    #f43f5e 50%,
+    #10b981 75%,
+    #00d4ff 100%
+  );
+  animation: ring-spin 3s linear infinite;
+  z-index: 0;
+}
+
+/* Mask hitam di dalam ring untuk memberi efek "cincin" */
+.avatar-ring-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 4px; /* Ketebalan ring = 4px */
+  border-radius: 50%;
+  /* Warna sama dengan sidebar glass untuk seamless look */
+  background: #0a0c1c;
+  z-index: 1;
+}
+
+@keyframes ring-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/*
+ * avatar-container di dalam wrapper:
+ * Hapus margin-bottom (sudah dihandle wrapper) dan sesuaikan z-index
+ */
+.avatar-ring-wrapper .avatar-container {
+  margin-bottom: 0; /* wrapper yang handle spacing */
+  position: relative;
+  z-index: 2; /* Avatar di atas mask hitam */
+}
+
+/* Avatar sendiri: tambahkan subtle inner glow */
+.avatar-ring-wrapper .avatar {
+  box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.2);
+}
+
+/* ===================================================
+   4. PROFILE NAME — Subtle gradient text
+   =================================================== */
+:root .profile-name {
+  background: linear-gradient(90deg, #e0e0ff, #a0c4ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  /* Fallback jika browser tidak support */
+  color: #e0e0ff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+/* ===================================================
+   5. SECTION TITLE "PILIH GAME" — Gradient text
+   =================================================== */
+:root .misi-title {
+  background: linear-gradient(90deg, #00d4ff 0%, #a855f7 60%, #f43f5e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: #00d4ff; /* fallback */
+  letter-spacing: 4px;
+  font-size: 1.8rem;
+  margin-bottom: 25px;
+  font-weight: 700;
+}
+
+/* ===================================================
+   6. STATS VALUES — Neon accent
+   =================================================== */
+:root .stat-value {
+  color: #00d4ff;
+  text-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
+  font-weight: 700;
+}
+
+:root .stat-value--level {
+  color: #a855f7;
+  text-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+}
+
+/* ===================================================
+   7. XP BAR — Upgrade gradient (shimmer sudah ada)
+   =================================================== */
+:root .stats-xp-fill {
+  background: linear-gradient(90deg, #00d4ff, #a855f7, #f43f5e);
+  background-size: 200% 100%;
+  animation: xp-gradient-shift 4s ease infinite;
+}
+
+@keyframes xp-gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ===================================================
+   8. SIDEBAR FOOTER — Login button upgrade
+   =================================================== */
+:root .btn-google {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+:root .btn-google:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(0, 212, 255, 0.4);
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.2);
+}
+
+/* ===================================================
+   9. SAFETY: Tema override tetap menang
+   =================================================== */
+/*
+ * Tema spesifik (theme-forest, theme-ocean, theme-hacker, dll)
+ * menggunakan selector body.theme-X .sidebar yang mana specificity-nya
+ * LEBIH TINGGI dari :root .sidebar → tema tetap menang secara otomatis.
+ * Tidak ada konflik.
+ *
+ * Jika kamu aktifkan tema lain, ring dan glass TIDAK akan bertabrakan
+ * karena ring wrapper adalah element baru yang tidak di-style tema lama.
+ */
+
+/* ===================================================
+   10. RESPONSIVE — Mobile: ring sedikit lebih kecil
+   =================================================== */
+@media (max-width: 768px) {
+  .avatar-ring-wrapper {
+    width: 100px;
+    height: 100px;
+    margin-top: 10px;
+  }
+  .avatar-ring-wrapper .avatar-container {
+    width: 92px;
+    height: 92px;
+  }
+  .avatar-ring-wrapper .avatar {
+    width: 84px;
+    height: 84px;
+  }
+  .avatar-ring-wrapper::after {
+    inset: 3px;
+  }
+}
