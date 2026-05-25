@@ -29,6 +29,16 @@
             "date": 1779346937360,
             "name": "/home/ridho/Downloads/MathGameSD-main/logs/error-2026-05-21.log",
             "hash": "c9df4b9d086a6119bef1226447004ff2cc227b65d271d767ab6cd9133b3a5bdb"
+        },
+        {
+            "date": 1779422069218,
+            "name": "/home/ridho/Downloads/MathGameSD-main/logs/error-2026-05-22.log",
+            "hash": "a58be801def145a2d4284a81551c6ef34f9627577162baa7aa48400e376d4d7a"
+        },
+        {
+            "date": 1779690073569,
+            "name": "/home/ridho/Downloads/MathGameSD-main/logs/error-2026-05-25.log",
+            "hash": "b0a019f953d366fb72e7497916ffa4fc60ef480b2d4b54ffd35e2e76ac2bd246"
         }
     ],
     "hashType": "sha256"

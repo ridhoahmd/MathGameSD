@@ -107,6 +107,42 @@ app.post("/api/ask-ai", async (req, res) => {
   }
 });
 
+// ─── Health Check Endpoint ──────────────────────────────────────
+// Digunakan oleh: PM2, Railway, Nginx upstream check, monitoring tools.
+// Return 200 = server sehat, 503 = ada masalah (DB down, dll).
+app.get("/api/health", async (req, res) => {
+  const startTime = Date.now();
+  const health = {
+    status:    "ok",
+    timestamp: new Date().toISOString(),
+    uptime:    Math.floor(process.uptime()), // detik
+    version:   process.env.npm_package_version || "1.0.0",
+    node:      process.version,
+    env:       process.env.NODE_ENV || "development",
+    database:  "ok",
+    memory: {
+      used:  Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB",
+      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + "MB",
+    },
+  };
+
+  // Cek koneksi database dengan query ringan
+  try {
+    const prisma = require("./src/config/prisma");
+    await prisma.$queryRaw`SELECT 1`;
+    health.database = "ok";
+  } catch (dbErr) {
+    health.status   = "degraded";
+    health.database = "error";
+    logger.error(`[Health] DB check failed: ${dbErr.message}`);
+  }
+
+  health.responseTimeMs = Date.now() - startTime;
+
+  const statusCode = health.status === "ok" ? 200 : 503;
+  return res.status(statusCode).json(health);
+});
+
 // Endpoint untuk simulasi error testing uat
 app.get("/api/simulate-error", (req, res, next) => {
   next(new Error("Simulasi Error Fatal Server Database/Memori!"));
