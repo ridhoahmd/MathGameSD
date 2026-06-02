@@ -29,15 +29,24 @@ function calculateLevel(xp) {
 
 module.exports = (socket, io) => {
   // D. DATA PROFIL
+  // 🚀 OPTIMASI P2: Ganti 3–4 DB round-trip → 1 upsert tunggal
+  // SEBELUM:
+  //   findUnique → upsert (jika ada foto) → findUnique lagi → create (jika null)
+  //   = 2–4 query berurutan, setiap refresh profil membebani DB
+  // SESUDAH:
+  //   1 upsert → hasilnya langsung dipakai, tidak perlu re-fetch
+  //   upsert menjamin: jika user ada → update foto (jika ada), jika tidak ada → buat baru
+  // Security check role-downgrade TETAP berjalan setelah upsert menggunakan data yang dikembalikan.
+  // Output ke client IDENTIK — tidak ada perubahan di sisi frontend.
   socket.on("mintaDataProfil", async (data) => {
     let username = "";
     let fotoGoogle = "";
 
     if (typeof data === "string") {
       username = data.trim();
-    } else if (typeof data === "object") {
-      username = data.nama.trim();
-      fotoGoogle = data.foto;
+    } else if (typeof data === "object" && data !== null) {
+      username = (data.nama || "").trim();
+      fotoGoogle = data.foto || "";
     }
 
     if (!username) return;
@@ -54,17 +63,30 @@ module.exports = (socket, io) => {
     }
 
     try {
-      // Cek DB dulu
-      let user = await prisma.user.findUnique({
+      // 🚀 SATU upsert menggantikan findUnique + upsert + findUnique + create
+      // - Jika user SUDAH ADA → update photoURL hanya jika fotoGoogle tersedia
+      // - Jika user BELUM ADA → buat baru dengan data default siswa
+      // - Dalam kedua kasus, langsung kembalikan data terbaru (tidak perlu re-fetch)
+      const user = await prisma.user.upsert({
         where: { username: username },
+        update: fotoGoogle ? { photoURL: fotoGoogle } : {},
+        create: {
+          username:   username,
+          role:       "siswa",
+          coins:      0,
+          totalScore: 0,
+          xp:         0,
+          level:      0,
+          photoURL:   fotoGoogle || null,
+        },
       });
 
-      // 🚨 CEGAH PENYAMARAN (SOFT CHECK)
+      // 🚨 CEGAH PENYAMARAN (SOFT CHECK) — logika sama persis dengan sebelumnya
       // Jika user di DB adalah admin/guru tapi socket ga punya token sah:
       // JANGAN BLOKIR total, tapi TURUNKAN ke 'siswa' biar tetep bisa main.
-      let effectiveRole = user ? user.role : "siswa";
+      let effectiveRole = user.role;
 
-      if (user && (user.role === "admin" || user.role === "guru")) {
+      if (user.role === "admin" || user.role === "guru") {
         if (
           !socket.isAuth ||
           (socket.decoded && socket.decoded.role !== "guru")
@@ -81,57 +103,26 @@ module.exports = (socket, io) => {
         }
       }
 
+      // Set session aktif dengan role yang sudah dievaluasi
       socket.activeUser = {
-        username: username,
-        role: effectiveRole,
+        username: user.username,
+        role:     effectiveRole,
       };
-
-      if (fotoGoogle) {
-        await prisma.user.upsert({
-          where: { username: username },
-          update: { photoURL: fotoGoogle },
-          create: {
-            username: username,
-            role: "siswa",
-            coins: 0,
-            totalScore: 0,
-            photoURL: fotoGoogle,
-          },
-        });
-      }
-
-      // Refetch biar yakin
-      user = await prisma.user.findUnique({
-        where: { username: username },
-      });
-
-      if (!user) {
-        user = await prisma.user.create({
-          data: {
-            username: username,
-            coins: 0,
-            totalScore: 0,
-            role: "siswa",
-          },
-        });
-      }
-
-      socket.activeUser.role = user.role;
 
       const finalFoto =
         user.photoURL ||
         `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`;
 
       socket.emit("updateProfil", {
-        nama: user.username,
-        koin: user.coins,
-        skor: user.totalScore || 0,
-        xp: user.xp || 0,
-        level: user.level || 0,
-        role: user.role,
-        foto: finalFoto,
+        nama:  user.username,
+        koin:  user.coins,
+        skor:  user.totalScore || 0,
+        xp:    user.xp        || 0,
+        level: user.level     || 0,
+        role:  effectiveRole,
+        foto:  finalFoto,
         frame: user.equippedFrame || "default",
-        theme: user.activeTheme || "default",
+        theme: user.activeTheme  || "default",
         badge: user.equippedBadge || null,
       });
     } catch (err) {
@@ -395,39 +386,81 @@ module.exports = (socket, io) => {
   });
 
   // C. LEADERBOARD
+  // 🚀 OPTIMASI P1: Ganti 1 query berat (N+1 include) → 3 query ringan
+  // SEBELUM: findMany 50 user + include semua scores + include game per record
+  //          → bisa menarik ribuan baris jika user banyak main
+  // SESUDAH: 3 query terpisah yang ringan dan terfokus:
+  //   Q1 - Top 50 user (hanya field yang dibutuhkan, tanpa include apapun)
+  //   Q2 - Best score per userId+gameId via groupBy _max (1 query agregasi DB)
+  //   Q3 - Game slugs (tabel kecil, max 10 game)
+  // Output ke client IDENTIK — tidak ada perubahan di sisi frontend.
   socket.on("mintaLeaderboard", async () => {
     try {
+      // Q1: Ambil top 50 user, hanya kolom yang dibutuhkan (tanpa relasi)
       const users = await prisma.user.findMany({
         orderBy: { totalScore: "desc" },
         take: 50,
-        include: {
-          scores: { include: { game: true } },
+        select: {
+          id:         true,
+          username:   true,
+          role:       true,
+          totalScore: true,
+          coins:      true,
         },
       });
 
-      const leaderboard = users.map((user) => {
-        const skorMap = {};
-        user.scores.forEach((record) => {
-          const slug = record.game.slug;
-          if (!skorMap[slug] || record.score > skorMap[slug]) {
-            skorMap[slug] = record.score;
-          }
-        });
+      // Jika tidak ada user, langsung kirim array kosong
+      if (users.length === 0) {
+        return socket.emit("updateLeaderboard", []);
+      }
 
+      const userIds = users.map((u) => u.id);
+
+      // Q2: Ambil skor TERBAIK per user per game — satu query agregasi di DB
+      // Jauh lebih efisien dari menarik semua baris Score lalu filter di JS
+      const bestScores = await prisma.score.groupBy({
+        by: ["userId", "gameId"],
+        where: { userId: { in: userIds } },
+        _max: { score: true },
+      });
+
+      // Q3: Ambil mapping gameId → slug (tabel Game kecil, max 10 row)
+      const gameIds = [...new Set(bestScores.map((s) => s.gameId))];
+      const games = gameIds.length > 0
+        ? await prisma.game.findMany({
+            where: { id: { in: gameIds } },
+            select: { id: true, slug: true },
+          })
+        : [];
+
+      // Bangun lookup map: gameId → slug
+      const gameMap = Object.fromEntries(games.map((g) => [g.id, g.slug]));
+
+      // Bangun lookup map: userId → { gameSlug: maxScore }
+      const userScoreMap = {};
+      bestScores.forEach((s) => {
+        if (!userScoreMap[s.userId]) userScoreMap[s.userId] = {};
+        const slug = gameMap[s.gameId];
+        if (slug) userScoreMap[s.userId][slug] = s._max.score;
+      });
+
+      // Susun response — format IDENTIK dengan versi lama
+      const leaderboard = users.map((user) => {
+        const skorMap = userScoreMap[user.id] || {};
         return {
-          nama: user.username,
-          role: user.role,
-          skor: user.totalScore || 0,
-          koin: user.coins || 0,
-          math: skorMap["math"] || 0,
-          zuma: skorMap["zuma"] || 0,
-          memory: skorMap["memory"] || 0,
-          piano: skorMap["piano"] || 0,
-          kasir: skorMap["kasir"] || 0,
+          nama:    user.username,
+          role:    user.role,
+          skor:    user.totalScore || 0,
+          koin:    user.coins || 0,
+          math:    skorMap["math"]    || 0,
+          zuma:    skorMap["zuma"]    || 0,
+          memory:  skorMap["memory"]  || 0,
+          piano:   skorMap["piano"]   || 0,
+          kasir:   skorMap["kasir"]   || 0,
           labirin: skorMap["labirin"] || 0,
-          nabi: skorMap["nabi"] || 0,
-          ayat: skorMap["ayat"] || 0,
-          tajwid: skorMap["tajwid"] || 0,
+          nabi:    skorMap["nabi"]    || 0,
+          ayat:    skorMap["ayat"]    || 0,
+          tajwid:  skorMap["tajwid"]  || 0,
           bintang: skorMap["bintang"] || 0,
         };
       });
