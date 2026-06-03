@@ -25,7 +25,45 @@ app.use(compression());
 app.set('trust proxy', 1);
 app.use(
   helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'", 
+          "'unsafe-inline'", 
+          "'unsafe-eval'", 
+          "https://www.gstatic.com",
+          "https://apis.google.com"
+        ],
+        scriptSrcAttr: ["'unsafe-inline'"],
+        styleSrc: [
+          "'self'", 
+          "'unsafe-inline'", 
+          "https://fonts.googleapis.com"
+        ],
+        fontSrc: [
+          "'self'", 
+          "https://fonts.gstatic.com"
+        ],
+        imgSrc: [
+          "'self'", 
+          "data:", 
+          "https://api.dicebear.com"
+        ],
+        connectSrc: [
+          "'self'", 
+          "ws:", 
+          "wss:", 
+          "https://*.firebaseio.com", 
+          "https://*.googleapis.com"
+        ],
+        frameSrc: [
+          "'self'",
+          "https://*.firebaseapp.com",
+          "https://apis.google.com"
+        ],
+      },
+    },
     crossOriginEmbedderPolicy: false,
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
     crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -87,10 +125,23 @@ app.post("/api/login-guru", apiLimiter, (req, res) => {
     const token = jwt.sign({ role: "guru", username: "admin" }, JWT_SECRET, {
       expiresIn: "1h",
     });
-    return res.json({ success: true, role: "guru", token });
+    // Set HTTP-Only Cookie
+    res.cookie("authToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 3600000 // 1 hour
+    });
+    return res.json({ success: true, role: "guru", token: token });
   } else {
     return res.status(401).json({ success: false, message: "Password salah!" });
   }
+});
+
+// Logout buat guru
+app.post("/api/logout-guru", (req, res) => {
+  res.clearCookie("authToken");
+  return res.json({ success: true });
 });
 
 // API buat nanya AI

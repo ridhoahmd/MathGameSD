@@ -626,7 +626,9 @@ class LabirinScene extends Phaser.Scene {
     // Reset Default Viewport
     this.cameras.main.setViewport(0, 0, width, height);
 
-    if (this.isVersus) {
+    const isMobileVersus = this.isVersus && width <= 500;
+
+    if (this.isVersus && !isMobileVersus) {
       // --- VERSUS SPLIT SCREEN ---
       const halfWidth = Math.floor(width / 2);
       const remainingWidth = width - halfWidth; // Ensure total width is filled
@@ -670,7 +672,7 @@ class LabirinScene extends Phaser.Scene {
       const dpadP2 = document.querySelector(".d-pad-p2");
       if (dpadP2) dpadP2.style.display = "grid";
     } else {
-      // --- SOLO SMART CAMERA ---
+      // --- SOLO SMART CAMERA / MOBILE VERSUS FALLBACK ---
       this.cameras.main.setViewport(0, 0, width, height);
 
       const mazeWidth = this.config.cols * this.config.size;
@@ -697,9 +699,15 @@ class LabirinScene extends Phaser.Scene {
         this.camP2.setViewport(0, 0, 0, 0);
       }
 
-      // Hide P2 D-Pad
+      // Manage P2 D-Pad visibility
       const dpadP2 = document.querySelector(".d-pad-p2");
-      if (dpadP2) dpadP2.style.display = "none";
+      if (dpadP2) {
+        if (this.isVersus) {
+          dpadP2.style.display = "grid"; // Keep it visible in mobile versus fallback
+        } else {
+          dpadP2.style.display = "none"; // Hide in pure solo
+        }
+      }
     }
   }
 }

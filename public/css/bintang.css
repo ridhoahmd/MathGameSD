@@ -407,3 +407,18 @@ body {
   }
 }
 
+@media (max-height: 600px) and (orientation: landscape) {
+  #game-container {
+    top: 80px; /* Compress the top spacing for landscape */
+  }
+  .top-bar {
+    padding: 5px 10px;
+  }
+  #question-container {
+    top: 40px;
+    padding: 5px 15px;
+  }
+  #question-text {
+    font-size: 0.9rem;
+  }
+}

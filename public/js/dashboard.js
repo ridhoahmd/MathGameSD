@@ -181,6 +181,14 @@ socket.on("updateProfil", (data) => {
   }, 100);
 });
 
+// --- 3B. FITUR SIDEBAR MOBILE ---
+function toggleSidebar() {
+  const sidebar = document.querySelector(".sidebar");
+  if (sidebar) {
+    sidebar.classList.toggle("active");
+  }
+}
+
 // --- 4. FITUR CHAT ---
 function toggleChat() {
   const chatBox = document.getElementById("chat-container");
@@ -302,6 +310,7 @@ async function loginGoogle() {
 
       if (adminToken) {
         alert(`Selamat datang MASTER ${originalName}! (Mode Admin Aktif)`);
+        window.location.reload(); // Wajib reload supaya global.js memulai ulang koneksi Socket.io dengan Token
       } else {
         alert(`Selamat datang, ${originalName}!`);
       }

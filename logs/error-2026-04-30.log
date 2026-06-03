@@ -1,8 +1,0 @@
-{"level":"error","message":"❌ Gagal ambil profil SQL: DB Down","timestamp":"2026-04-30T04:16:20.084Z"}
-{"level":"error","message":"❌ Gagal ambil leaderboard SQL: DB Error","timestamp":"2026-04-30T04:16:20.243Z"}
-{"level":"error","message":"❌ DB ERROR mintaSoalAI: DB Timeout","timestamp":"2026-04-30T04:16:20.519Z"}
-{"level":"error","message":"❌ Tutor Error: AI Timeout","timestamp":"2026-04-30T04:16:20.538Z"}
-{"level":"error","message":"❌ Gagal ambil profil SQL: DB Down","timestamp":"2026-04-30T04:17:03.705Z"}
-{"level":"error","message":"❌ Gagal ambil leaderboard SQL: DB Error","timestamp":"2026-04-30T04:17:03.910Z"}
-{"level":"error","message":"❌ DB ERROR mintaSoalAI: DB Timeout","timestamp":"2026-04-30T04:17:04.413Z"}
-{"level":"error","message":"❌ Tutor Error: AI Timeout","timestamp":"2026-04-30T04:17:04.430Z"}

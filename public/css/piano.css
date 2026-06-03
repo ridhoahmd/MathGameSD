@@ -353,12 +353,16 @@ body::before {
   .piano-container {
     gap: 2px;
     padding: 5px;
+    /* Allow scrolling horizontally if keys are too cramped */
+    overflow-x: auto;
+    justify-content: flex-start; 
   }
 
   .key {
-    min-width: 0;       /* Biarkan flex tentukan lebar */
-    flex: 1 1 0;        /* Fluid — tidak ada min-width kaku */
+    min-width: 35px;    /* Prevent keys from getting too narrow */
+    flex: 1 0 auto;     /* Allow it to keep min-width */
     height: 100px;
+    min-height: 50px;   /* WCAG tap target */
     font-size: 0.7rem;
     padding-bottom: 15px;
   }

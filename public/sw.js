@@ -148,7 +148,9 @@ self.addEventListener("fetch", (event) => {
     event.request.url.includes("/api/") ||
     event.request.url.includes("socket.io") ||
     event.request.url.includes("firebase") ||
-    event.request.url.includes("dicebear")
+    event.request.url.includes("dicebear") ||
+    event.request.url.includes("googleapis.com") ||
+    event.request.url.includes("gstatic.com")
   ) {
     return;
   }
@@ -169,9 +171,12 @@ self.addEventListener("fetch", (event) => {
         }
         return networkResponse;
       })
-      .catch(() => {
+      .catch(async () => {
         // Offline fallback: pakai cache
-        return caches.match(event.request);
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        // Wajib return Response object, tidak boleh undefined
+        return new Response("Offline or Network Error", { status: 503 });
       })
   );
 });

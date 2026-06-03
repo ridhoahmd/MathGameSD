@@ -263,3 +263,63 @@ input:focus {
   width: 0%;
   transition: width 0.3s ease;
 }
+
+/* =========================================
+   MOBILE RESPONSIVENESS
+   ========================================= */
+@media (max-width: 480px) {
+  .container {
+    padding: 20px 15px;
+    width: 95%;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  input {
+    font-size: 1rem;
+    padding: 10px;
+  }
+
+  #question-display {
+    font-size: 1.8rem;
+    margin: 15px 0;
+  }
+
+  .score-val {
+    font-size: 1.2rem;
+  }
+
+  .go-content {
+    padding: 25px 20px;
+  }
+
+  .go-score {
+    font-size: 2.2rem;
+  }
+
+  .btn-action, .btn-restart, .btn-home {
+    padding: 12px 20px;
+    font-size: 0.9rem;
+    min-height: 48px; /* WCAG touch target size */
+  }
+}
+
+@media (max-width: 360px) {
+  .container {
+    padding: 15px 10px;
+  }
+
+  h1 {
+    font-size: 1.2rem;
+  }
+
+  #question-display {
+    font-size: 1.5rem;
+  }
+
+  .go-score {
+    font-size: 1.8rem;
+  }
+}

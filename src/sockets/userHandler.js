@@ -67,7 +67,8 @@ module.exports = (socket, io) => {
       // - Jika user SUDAH ADA → update photoURL hanya jika fotoGoogle tersedia
       // - Jika user BELUM ADA → buat baru dengan data default siswa
       // - Dalam kedua kasus, langsung kembalikan data terbaru (tidak perlu re-fetch)
-      const user = await prisma.user.upsert({
+      
+      const dbPromise = prisma.user.upsert({
         where: { username: username },
         update: fotoGoogle ? { photoURL: fotoGoogle } : {},
         create: {
@@ -80,6 +81,13 @@ module.exports = (socket, io) => {
           photoURL:   fotoGoogle || null,
         },
       });
+
+      // Tambahkan timeout 3 detik agar user tidak ngestuck menunggu kalau DB mati
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Database timeout (DB sedang down/sleep)")), 3000)
+      );
+
+      const user = await Promise.race([dbPromise, timeoutPromise]);
 
       // 🚨 CEGAH PENYAMARAN (SOFT CHECK) — logika sama persis dengan sebelumnya
       // Jika user di DB adalah admin/guru tapi socket ga punya token sah:
@@ -125,8 +133,27 @@ module.exports = (socket, io) => {
         theme: user.activeTheme  || "default",
         badge: user.equippedBadge || null,
       });
-    } catch (err) {
-      logger.error(`❌ Gagal ambil profil SQL: ${err.message}`);
+    } catch (error) {
+      logger.error("❌ Gagal ambil profil SQL: \n" + error.message);
+      
+      // 🚀 FALLBACK DARURAT: Jika Database Railway Mati tapi user punya Token Guru
+      if (socket.isAuth && socket.decoded && socket.decoded.role === "guru") {
+        logger.info(`⚠️ Memberikan akses ADMIN darurat untuk ${username} karena DB down.`);
+        socket.emit("updateProfil", {
+          nama: username,
+          role: "admin",
+          koin: 9999,
+          skor: 9999,
+          xp: 9999,
+          level: 99,
+          foto: fotoGoogle || null,
+          frame: "default",
+          theme: "default",
+          badge: null
+        });
+        return;
+      }
+
       socket.emit("errorProfil", "Gagal memuat profil. Coba refresh.");
     }
   });
@@ -655,7 +682,7 @@ module.exports = (socket, io) => {
     }
 
     try {
-      const fs = require("fs");
+      const fs = require("fs").promises;
       const path = require("path");
 
       // 🛡️ AUTO-BACKUP SEBELUM RESET
@@ -670,22 +697,21 @@ module.exports = (socket, io) => {
       };
 
       const backupDir = path.join(process.cwd(), "backups");
-      if (!fs.existsSync(backupDir)) {
-        fs.mkdirSync(backupDir, { recursive: true });
-      }
+      await fs.mkdir(backupDir, { recursive: true });
 
       const backupFilename = `backup_reset_${Date.now()}.json`;
       const backupPath = path.join(backupDir, backupFilename);
-      fs.writeFileSync(backupPath, JSON.stringify(backupData, null, 2));
+      await fs.writeFile(backupPath, JSON.stringify(backupData, null, 2));
 
       // Limit Max 5 Backups Files
-      const files = fs.readdirSync(backupDir)
+      const files = await fs.readdir(backupDir);
+      const backupFiles = files
         .filter(f => f.startsWith('backup_reset_') && f.endsWith('.json'))
         .sort().reverse();
 
-      if (files.length > 5) {
-        for (let i = 5; i < files.length; i++) {
-          try { fs.unlinkSync(path.join(backupDir, files[i])); } catch(e){}
+      if (backupFiles.length > 5) {
+        for (let i = 5; i < backupFiles.length; i++) {
+          try { await fs.unlink(path.join(backupDir, backupFiles[i])); } catch(e){}
         }
       }
       logger.info(`✅ Data berhasil dicadangkan sebelum reset: ${backupFilename}`);

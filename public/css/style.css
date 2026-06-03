@@ -78,10 +78,17 @@ body {
     position: relative;
     border-right: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: none; /* Disembunyikan secara default di mobile */
+  }
+  .sidebar.active {
+    display: flex; /* Ditampilkan saat hamburger diklik */
   }
   .main-content {
     height: auto;
     overflow: visible;
+  }
+  .btn-sidebar-toggle {
+    display: flex !important;
   }
 }
 
@@ -944,6 +951,29 @@ body.theme-obsidian .menu-section {
   transform: rotate(180deg) scale(1.1); /* Efek Putar */
   box-shadow: 0 0 20px #00f2ff; /* Efek Cahaya */
   border-color: #00f2ff;
+}
+
+/* TOMBOL HAMBURGER MOBILE */
+.btn-sidebar-toggle {
+  display: none; /* Sembunyikan di desktop */
+  width: 45px;
+  height: 45px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+.btn-sidebar-toggle:hover {
+  background: #00f2ff;
+  color: #000;
+  box-shadow: 0 0 15px #00f2ff;
 }
 
 /* DASHBOARD CONTAINER */
