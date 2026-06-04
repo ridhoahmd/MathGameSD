@@ -701,7 +701,11 @@ function autoSaveProgress() {
       timestamp: Date.now(),
     });
 
-    // FIX: Tunggu ACK dari server sebelum tampilkan toast (bukan asumsi berhasil)
+    // BUG-C2 FIX: Hapus listener lama sebelum daftarkan yang baru.
+    // Tanpa ini, jika server lambat dan autoSaveProgress() terpanggil lagi
+    // sebelum ACK pertama diterima, listener menumpuk dan satu ACK
+    // bisa memicu semua listener sekaligus → multiple toast muncul berurutan.
+    window.socket.off("progressTersimpan");
     window.socket.once("progressTersimpan", () => {
       showToast("💾 Progress tersimpan");
     });

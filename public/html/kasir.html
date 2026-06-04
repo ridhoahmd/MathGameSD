@@ -76,15 +76,21 @@
       <div id="game-screen" class="panel hidden">
         <div class="receipt-paper">
           <div class="receipt-header">
-            <h3>TOKO VIDEA</h3>
+            <h3>🏪 TOKO VIDEA</h3>
             <p>Jl. Pendidikan No. 1</p>
+            <p id="receipt-meta" class="receipt-meta"></p>
             <hr />
           </div>
 
           <!-- Isi Transaksi -->
           <div class="receipt-body">
+            <!-- Pelanggan & Konteks -->
             <p id="story-text" class="story">Pelanggan membeli...</p>
 
+            <!-- Daftar Barang Bergambar (diisi oleh kasir.js) -->
+            <div id="receipt-items" class="receipt-items"></div>
+
+            <hr />
             <div class="price-row">
               <span>Total Belanja:</span>
               <span id="display-total" class="price">Rp 0</span>

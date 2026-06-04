@@ -2,6 +2,74 @@
 // Game Maze pake Phaser 3 dengan Class Architecture
 // ============================================
 
+// ==========================================
+// 0. UI HELPERS (DOM-based, non-blocking)
+// ==========================================
+
+/**
+ * UI-FIX: Pengganti alert() untuk jawaban salah.
+ * Menampilkan toast animasi in-game yang tidak memblokir Phaser loop.
+ * @param {number} remaining - Sisa kesempatan jawab
+ * @param {string} playerKey - "p1" atau "p2" (untuk warna toast)
+ */
+function showWrongAnswerToast(remaining, playerKey) {
+  // Hapus toast lama jika masih ada (avoid stacking)
+  const old = document.getElementById("wrong-answer-toast");
+  if (old) old.remove();
+
+  const isP2 = playerKey === "p2";
+  const accentColor = isP2 ? "#ff00cc" : "#ff4444";
+  const label = isP2 ? "PLAYER 2" : "PLAYER 1";
+
+  const toast = document.createElement("div");
+  toast.id = "wrong-answer-toast";
+  toast.className = "wrong-answer-toast";
+  toast.innerHTML = `
+    <div class="wrong-toast-icon">❌</div>
+    <div class="wrong-toast-body">
+      <div class="wrong-toast-title" style="color:${accentColor}">${label}: Jawaban Salah!</div>
+      <div class="wrong-toast-sub">Kesempatan tersisa: <strong>${remaining}</strong> kali lagi</div>
+    </div>
+  `;
+
+  // Posisi: kiri untuk P1, kanan untuk P2 (agar tidak overlap di versus)
+  toast.style.cssText = `
+    position: fixed;
+    ${isP2 ? "right: 20px" : "left: 20px"};
+    top: 80px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, rgba(20,5,5,0.97), rgba(40,0,0,0.97));
+    border: 2px solid ${accentColor};
+    border-radius: 14px;
+    padding: 14px 22px;
+    box-shadow: 0 0 30px ${accentColor}55, 0 8px 20px rgba(0,0,0,0.6);
+    font-family: Poppins, sans-serif;
+    color: white;
+    max-width: 280px;
+    transform: translateX(${isP2 ? "130%" : "-130%"});
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
+    opacity: 0;
+    pointer-events: none;
+  `;
+
+  document.body.appendChild(toast);
+
+  // Slide in
+  requestAnimationFrame(() => {
+    toast.style.transform = "translateX(0)";
+    toast.style.opacity = "1";
+  });
+
+  // Slide out after 2.2s
+  setTimeout(() => {
+    toast.style.transform = `translateX(${isP2 ? "130%" : "-130%"})`;
+    toast.style.opacity = "0";
+    setTimeout(() => toast.remove(), 350);
+  }, 2200);
+}
 
 // ==========================================
 // 1. CLASS DEFINITION: LabirinScene
@@ -572,8 +640,15 @@ class LabirinScene extends Phaser.Scene {
       // Reset this player's wrong-attempt counter (avoid spam)
       this.wrongAttempts[playerKey] = 0;
     } else {
+      // UI-FIX: Ganti alert() browser yang memblokir dengan toast in-game
+      // alert() membekukan seluruh tab & tidak bisa dikustomisasi tampilan.
+      // showWrongAnswerToast() tetap di-dalam game, tidak blokir Phaser loop.
       const remaining = this.maxWrongAttempts - this.wrongAttempts[playerKey];
-      alert(`Jawaban Salah! Kesempatan tersisa: ${remaining}`);
+      showWrongAnswerToast(remaining, playerKey);
+
+      // Tambahan feedback visual di Phaser: camera shake merah
+      this.cameras.main.shake(300, 0.012);
+      this.cameras.main.flash(200, 255, 60, 60, false); // Red flash
     }
   }
 
@@ -583,21 +658,130 @@ class LabirinScene extends Phaser.Scene {
     // Sound Win
     if (window.safePlayWin) window.safePlayWin();
 
-    this.events.emit("gameFinished", {
-      winner: playerKey,
-      score: this.score,
-      isVersus: this.isVersus,
+    // ANIM-FIX: Animasi kemenangan dramatis sebelum emit gameFinished
+    this._playFinishAnimation(playerKey);
+
+    // Delay showing result modal agar animasi keburu tampil dulu
+    this.time.delayedCall(1800, () => {
+      this.events.emit("gameFinished", {
+        winner: playerKey,
+        score: this.score,
+        isVersus: this.isVersus,
+      });
+    });
+  }
+
+  _playFinishAnimation(playerKey) {
+    const player = this.players[playerKey];
+    if (!player) return;
+
+    const size = this.config.size;
+    const px = player.x;
+    const py = player.y;
+
+    // --- 1. KAMERA: Shake keras lalu zoom ke player ---
+    this.cameras.main.shake(400, 0.02);
+    this.cameras.main.flash(300, 255, 230, 0, false); // Golden flash
+
+    // Zoom in ke posisi pemain secara dramatis
+    this.tweens.add({
+      targets: this.cameras.main,
+      zoom: this.cameras.main.zoom * 1.5,
+      duration: 600,
+      ease: "Cubic.easeOut",
+      yoyo: true,
+      hold: 400,
     });
 
-    // Celebrate
-    const player = this.players[playerKey];
+    // --- 2. PLAYER: Scale up → burst → fade ---
     this.tweens.add({
       targets: player,
-      scale: 2,
+      scaleX: 3,
+      scaleY: 3,
       alpha: 0,
-      duration: 1000,
-      yoyo: true,
+      duration: 800,
+      ease: "Expo.easeOut",
     });
+
+    // --- 3. PARTIKEL: Ledakan bintang warna-warni dari posisi player ---
+    const colors = [0xffd700, 0x00f2ff, 0xff00cc, 0x00ff88, 0xff6600];
+    colors.forEach((color, i) => {
+      this.time.delayedCall(i * 80, () => {
+        // Buat lingkaran kecil sebagai partikel ledakan
+        const numDots = 12;
+        for (let d = 0; d < numDots; d++) {
+          const angle = (d / numDots) * Math.PI * 2;
+          const speed = Phaser.Math.Between(80, 180);
+          const dot = this.add.circle(px, py, Phaser.Math.Between(3, 7), color, 1);
+          dot.setDepth(20);
+
+          this.tweens.add({
+            targets: dot,
+            x: px + Math.cos(angle) * speed,
+            y: py + Math.sin(angle) * speed,
+            alpha: 0,
+            scaleX: 0,
+            scaleY: 0,
+            duration: Phaser.Math.Between(500, 900),
+            ease: "Cubic.easeOut",
+            onComplete: () => dot.destroy(),
+          });
+        }
+      });
+    });
+
+    // --- 4. TEKS: "BERHASIL!" melayang dari posisi player ---
+    const winLabel = this.add.text(px, py - size, "🏆 BERHASIL!", {
+      fontFamily: "Orbitron, sans-serif",
+      fontSize: Math.max(16, size * 0.8) + "px",
+      fontStyle: "bold",
+      color: "#FFD700",
+      stroke: "#000",
+      strokeThickness: 4,
+      shadow: { blur: 15, color: "#ffd700", fill: true },
+    }).setOrigin(0.5).setDepth(25).setAlpha(0);
+
+    this.tweens.add({
+      targets: winLabel,
+      y: py - size * 4,
+      alpha: 1,
+      scaleX: 1.4,
+      scaleY: 1.4,
+      duration: 700,
+      ease: "Back.easeOut",
+      onComplete: () => {
+        this.tweens.add({
+          targets: winLabel,
+          alpha: 0,
+          y: py - size * 6,
+          duration: 600,
+          delay: 600,
+          onComplete: () => winLabel.destroy(),
+        });
+      },
+    });
+
+    // --- 5. FINISH SPRITE: Pulse bersinar golden ---
+    if (this.finishSprite) {
+      this.tweens.add({
+        targets: this.finishSprite,
+        scaleX: 3,
+        scaleY: 3,
+        alpha: 0,
+        duration: 800,
+        ease: "Expo.easeOut",
+      });
+    }
+
+    // --- 6. KONFETI via canvas-confetti (jika tersedia di DOM) ---
+    if (typeof confetti === "function") {
+      confetti({
+        particleCount: 120,
+        spread: 90,
+        origin: { y: 0.5 },
+        colors: ["#FFD700", "#00F2FF", "#FF00CC", "#00FF88", "#FF6600"],
+      });
+    }
   }
 
   addScore(playerKey, points) {

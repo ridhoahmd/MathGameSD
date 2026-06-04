@@ -367,3 +367,117 @@ body::before {
     padding-bottom: 15px;
   }
 }
+
+/* =========================================
+   MELODY NAME LABEL
+   Tampil di bawah question-box, sebelum indicator.
+   Menunjukkan nama melodi yang sedang dimainkan.
+   ========================================= */
+.melody-name-label {
+  font-family: "Poppins", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(255, 235, 59, 0.85);
+  text-shadow: 0 0 12px rgba(255, 235, 59, 0.4);
+  letter-spacing: 1.5px;
+  text-align: center;
+  min-height: 24px;
+  margin-bottom: 12px;
+  transition: opacity 0.3s ease;
+}
+
+/* =========================================
+   SEQUENCE INDICATOR — Dot Tracker
+   Satu dot per nada dalam sequence.
+   Menunjukkan: posisi saat diputar, benar, salah.
+   ========================================= */
+.sequence-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  padding: 0 10px;
+}
+
+/* Dot default: abu-abu transparan */
+.seq-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+/* State: sedang diputar saat playback — cyan berdenyut */
+.seq-dot.playing {
+  background: #00f2ff;
+  border-color: #00f2ff;
+  box-shadow:
+    0 0 12px #00f2ff,
+    0 0 24px rgba(0, 242, 255, 0.5);
+  transform: scale(1.35);
+  animation: dot-pulse 0.55s ease-in-out infinite alternate;
+}
+
+/* State: player menjawab BENAR — hijau solid */
+.seq-dot.correct {
+  background: #00e676;
+  border-color: #00e676;
+  box-shadow: 0 0 10px rgba(0, 230, 118, 0.6);
+  transform: scale(1.1);
+  animation: dot-pop 0.2s ease-out;
+}
+
+/* State: player menjawab SALAH — merah solid */
+.seq-dot.wrong {
+  background: #ff1744;
+  border-color: #ff1744;
+  box-shadow: 0 0 10px rgba(255, 23, 68, 0.6);
+  transform: scale(1.1);
+  animation: dot-shake 0.3s ease-out;
+}
+
+/* Animasi denyut saat playback */
+@keyframes dot-pulse {
+  from { transform: scale(1.25); box-shadow: 0 0 8px #00f2ff; }
+  to   { transform: scale(1.45); box-shadow: 0 0 20px #00f2ff, 0 0 40px rgba(0,242,255,0.3); }
+}
+
+/* Animasi pop saat benar */
+@keyframes dot-pop {
+  0%   { transform: scale(1.5); }
+  100% { transform: scale(1.1); }
+}
+
+/* Animasi goyang saat salah */
+@keyframes dot-shake {
+  0%   { transform: translateX(-4px) scale(1.1); }
+  33%  { transform: translateX(4px)  scale(1.1); }
+  66%  { transform: translateX(-2px) scale(1.1); }
+  100% { transform: translateX(0)    scale(1.1); }
+}
+
+/* Mobile: dot lebih kecil agar cukup di layar sempit */
+@media (max-width: 480px) {
+  .seq-dot {
+    width: 11px;
+    height: 11px;
+    gap: 5px;
+  }
+  .sequence-indicator {
+    gap: 5px;
+  }
+  .melody-name-label {
+    font-size: 0.8rem;
+  }
+}
+

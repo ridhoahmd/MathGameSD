@@ -372,3 +372,108 @@ body::after {
     text-shadow: 0 0 12px #d63031, 0 0 24px rgba(214, 48, 49, 0.5);
   }
 }
+
+/* =========================================
+   RECEIPT META — Nomor & Waktu Struk
+   ========================================= */
+.receipt-meta {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 0.75rem;
+  color: #636e72;
+  margin: 2px 0;
+  letter-spacing: 0.5px;
+}
+
+/* =========================================
+   RECEIPT ITEMS — Daftar Barang Bergambar
+   ========================================= */
+.receipt-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+/* Satu baris item */
+.receipt-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  background: rgba(0, 184, 148, 0.06);
+  border-radius: 8px;
+  border-left: 3px solid rgba(0, 184, 148, 0.35);
+  /* Animasi diatur via JS (staggered) */
+}
+
+/* Sisi kiri: emoji + detail teks */
+.item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0; /* Allow flex shrink */
+}
+
+/* Emoji produk — besar & jelas */
+.item-emoji {
+  font-size: 1.8rem;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
+}
+
+/* Detail nama + harga satuan */
+.item-detail {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.item-name {
+  font-family: "VT323", monospace;
+  font-size: 1.1rem;
+  color: #2d3436;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.item-unit {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 0.72rem;
+  color: #636e72;
+  line-height: 1;
+}
+
+/* Harga total di sisi kanan */
+.item-price {
+  font-family: "VT323", monospace;
+  font-size: 1.15rem;
+  font-weight: bold;
+  color: #d63031;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+/* Efek hover pada baris item */
+.receipt-item:hover {
+  background: rgba(0, 184, 148, 0.12);
+  border-left-color: #00b894;
+}
+
+/* Mobile: kurangi ukuran sedikit */
+@media (max-width: 480px) {
+  .item-emoji {
+    font-size: 1.5rem;
+  }
+  .item-name {
+    font-size: 0.95rem;
+  }
+  .item-price {
+    font-size: 1rem;
+  }
+}
+

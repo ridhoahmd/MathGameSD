@@ -373,6 +373,11 @@ module.exports = (socket, io) => {
         isVersusWin: status === "Win"
       });
 
+      // DB-ISU-1 FIX (VERSUS): Invalidate session setelah skor versus berhasil disimpan.
+      // Sama seperti simpanSkor — mencegah user submit laporSkorVersusLokal berkali-kali
+      // dalam satu sesi game tanpa mulai ulang, yang bisa dipakai untuk farming XP & koin.
+      socket.activeGameSession = null;
+
       if (io) io.emit("refreshDataGuru");
     } catch (err) {
       logger.error(`❌ DB Error Versus Lokal: ${err.message}`);
