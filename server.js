@@ -121,16 +121,16 @@ app.post("/api/login-guru", apiLimiter, (req, res) => {
 
   const inputKode = kode ? String(kode).trim() : "";
   if (inputKode === passwordBenar) {
-    // Bikin token sejam aja
+    // Bikin token 8 jam (cukup untuk satu hari mengajar)
     const token = jwt.sign({ role: "guru", username: "admin" }, JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "8h",
     });
     // Set HTTP-Only Cookie
     res.cookie("authToken", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 3600000 // 1 hour
+      maxAge: 28800000 // 8 jam
     });
     return res.json({ success: true, role: "guru", token: token });
   } else {

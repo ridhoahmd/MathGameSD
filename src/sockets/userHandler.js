@@ -89,7 +89,7 @@ module.exports = (socket, io) => {
 
       const user = await Promise.race([dbPromise, timeoutPromise]);
 
-      // 🚨 CEGAH PENYAMARAN (SOFT CHECK) — logika sama persis dengan sebelumnya
+      // 🚨 CEGAH PENYAMARAN (SOFT CHECK)
       // Jika user di DB adalah admin/guru tapi socket ga punya token sah:
       // JANGAN BLOKIR total, tapi TURUNKAN ke 'siswa' biar tetep bisa main.
       let effectiveRole = user.role;
@@ -97,12 +97,16 @@ module.exports = (socket, io) => {
       if (user.role === "admin" || user.role === "guru") {
         if (
           !socket.isAuth ||
-          (socket.decoded && socket.decoded.role !== "guru")
+          // FIX: Cek role token harus guru ATAU admin (bukan hanya guru)
+          // Sebelumnya hanya cek !== "guru" → user admin bisa ter-downgrade
+          (socket.decoded &&
+            socket.decoded.role !== "guru" &&
+            socket.decoded.role !== "admin")
         ) {
           // Hanya log WARNING sekali per socket session
           if (!socket.downgradedWarningShown) {
             logger.warn(
-              `⚠️ Unauthorized access to ADMIN account ${username}. Downgrading to SISWA.`,
+              `⚠️ Unauthorized access to privileged account ${username}. Downgrading to SISWA.`,
             );
             socket.downgradedWarningShown = true; // Flag agar ga spam log
           }
