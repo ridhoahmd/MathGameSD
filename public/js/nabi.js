@@ -321,9 +321,9 @@ function checkAnswer(selectedRaw, correctRaw, btnElement) {
       AudioManager.playWrong();
     } catch (e) {}
 
-    // Kasih tau jawaban bener
+    // Kasih tau jawaban bener (exact match — cegah false positive seperti "10" match "100")
     allButtons.forEach((b) => {
-      if (cleanStr(b.innerText).includes(correct))
+      if (cleanStr(b.innerText) === correct)
         b.style.background = "#2ecc71";
     });
 

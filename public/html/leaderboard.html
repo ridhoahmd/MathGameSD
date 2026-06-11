@@ -205,6 +205,11 @@
         });
       });
 
+      // Auto-refresh saat ada skor baru masuk dari game manapun
+      socket.on("refreshDataGuru", () => {
+        socket.emit("mintaLeaderboard");
+      });
+
       // Helper buat amanin HTML
       function escapeHtml(text) {
         const div = document.createElement("div");

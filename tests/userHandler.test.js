@@ -15,10 +15,12 @@ jest.mock("../src/config/prisma", () => ({
   game: {
     findUnique: jest.fn().mockResolvedValue({ id: 1, slug: "math", title: "MATH" }),
     create:     jest.fn().mockResolvedValue({ id: 1, slug: "math", title: "MATH" }),
+    findMany:   jest.fn().mockResolvedValue([]),  // Dibutuhkan oleh mintaLeaderboard Q3
   },
   score: {
     create:     jest.fn().mockResolvedValue({ id: 1 }),
     deleteMany: jest.fn().mockResolvedValue({}),
+    groupBy:    jest.fn().mockResolvedValue([]),  // Dibutuhkan oleh mintaLeaderboard Q2
   },
   versusMatch: {
     create:   jest.fn().mockResolvedValue(true),
@@ -73,7 +75,8 @@ describe("userHandler.js — tambahan coverage", () => {
   describe("mintaDataProfil", () => {
 
     it("✅ harus emit updateProfil jika user ada di DB", async () => {
-      prisma.user.findUnique.mockResolvedValue(baseUserDb);
+      // userHandler kini pakai upsert (bukan findUnique + create terpisah)
+      prisma.user.upsert.mockResolvedValue(baseUserDb);
       const fn = getCallback(socket, "mintaDataProfil");
       await fn("TestUser");
       expect(socket.emit).toHaveBeenCalledWith(
@@ -83,19 +86,19 @@ describe("userHandler.js — tambahan coverage", () => {
     });
 
     it("✅ harus membuat user baru jika belum ada di DB", async () => {
-      // findUnique dipanggil 2x (cek + refetch). Pertama null, kedua null → create
-      prisma.user.findUnique.mockResolvedValue(null);
-      prisma.user.create.mockResolvedValue(baseUserDb);
+      // upsert menangani create & update sekaligus — kembalikan baseUserDb
+      prisma.user.upsert.mockResolvedValue(baseUserDb);
       const fn = getCallback(socket, "mintaDataProfil");
       await fn("UserBaru");
-      expect(prisma.user.create).toHaveBeenCalled();
+      expect(prisma.user.upsert).toHaveBeenCalled();
       expect(socket.emit).toHaveBeenCalledWith(
         "updateProfil", expect.objectContaining({ nama: "TestUser" })
       );
     });
 
     it("✅ harus emit errorProfil jika DB error", async () => {
-      prisma.user.findUnique.mockRejectedValueOnce(new Error("DB Down"));
+      // upsert reject → masuk catch → emit errorProfil
+      prisma.user.upsert.mockRejectedValueOnce(new Error("DB Down"));
       const fn = getCallback(socket, "mintaDataProfil");
       await fn("TestUser");
       expect(socket.emit).toHaveBeenCalledWith(
@@ -106,12 +109,11 @@ describe("userHandler.js — tambahan coverage", () => {
     it("✅ harus return awal jika username kosong", async () => {
       const fn = getCallback(socket, "mintaDataProfil");
       await fn(""); // string kosong
-      expect(prisma.user.findUnique).not.toHaveBeenCalled();
+      expect(prisma.user.upsert).not.toHaveBeenCalled();
     });
 
     it("✅ harus accept data object {nama, foto}", async () => {
-      prisma.user.findUnique.mockResolvedValue(baseUserDb);
-      prisma.user.upsert = jest.fn().mockResolvedValue(baseUserDb);
+      prisma.user.upsert.mockResolvedValue(baseUserDb);
       const fn = getCallback(socket, "mintaDataProfil");
       await fn({ nama: "TestUser", foto: "https://foto.example.com/avatar.png" });
       expect(socket.emit).toHaveBeenCalledWith(
@@ -184,15 +186,20 @@ describe("userHandler.js — tambahan coverage", () => {
   describe("mintaLeaderboard", () => {
 
     it("✅ harus emit updateLeaderboard dengan data terformat", async () => {
+      // Implementasi baru: 3 query terpisah (findMany users → score.groupBy → game.findMany)
+      // Q1: Top 50 users
       prisma.user.findMany.mockResolvedValueOnce([
-        {
-          username: "Andi", role: "siswa", totalScore: 800, coins: 80, xp: 400, level: 2,
-          scores: [
-            { score: 250, game: { slug: "math" } },
-            { score: 100, game: { slug: "zuma" } }
-          ]
-        }
+        { id: 1, username: "Andi", role: "siswa", totalScore: 800, coins: 80 }
       ]);
+      // Q2: groupBy best score per user per game
+      prisma.score.groupBy = jest.fn().mockResolvedValueOnce([
+        { userId: 1, gameId: 10, _max: { score: 250 } }
+      ]);
+      // Q3: Game slugs lookup
+      prisma.game.findMany.mockResolvedValueOnce([
+        { id: 10, slug: "math" }
+      ]);
+
       const fn = getCallback(socket, "mintaLeaderboard");
       await fn();
       expect(socket.emit).toHaveBeenCalledWith(

@@ -145,12 +145,16 @@ socket.on("updateProfil", (data) => {
 
   // Kalo user blm pilih sendiri, pake tema dari server
   if (!savedTheme && data.theme && data.theme !== "default") {
-    document.body.className = ""; // Reset classes
+    Array.from(document.body.classList)
+      .filter(c => c.startsWith("theme-"))
+      .forEach(c => document.body.classList.remove(c));
     document.body.classList.add("theme-" + data.theme);
   }
   // Kalo ada settingan lokal, pake yang lokal
   else if (savedTheme && savedTheme !== "default") {
-    document.body.className = "";
+    Array.from(document.body.classList)
+      .filter(c => c.startsWith("theme-"))
+      .forEach(c => document.body.classList.remove(c));
     document.body.classList.add("theme-" + savedTheme);
   }
 
@@ -408,8 +412,10 @@ function cycleTheme() {
   let nextIndex = (currentThemeIndex + 1) % themes.length;
   let nextTheme = themes[nextIndex];
 
-  // Terapkan
-  body.className = ""; // Reset
+  // Terapkan: hapus HANYA class theme-*, jangan hapus class lain
+  Array.from(body.classList)
+    .filter(c => c.startsWith("theme-"))
+    .forEach(c => body.classList.remove(c));
   if (nextTheme !== "default") {
     body.classList.add("theme-" + nextTheme);
   }

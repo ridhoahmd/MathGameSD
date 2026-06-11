@@ -1,4 +1,4 @@
-const CACHE_NAME = "videa-class-master-v9";
+const CACHE_NAME = "videa-class-master-v10";
 
 const urlsToCache = [
   "/",
@@ -35,6 +35,11 @@ const urlsToCache = [
   "/css/visual-enhancements.css",
   "/css/visual-overhaul.css",
   "/css/chat-enhanced.css",
+  "/css/game-shared.css",
+  "/css/login-panel.css",
+  "/css/card-identity.css",
+  "/css/card-hover.css",
+  "/css/sidebar-glass.css",
   "/css/decorative-objects.css",
   "/css/streak-effects.css",
 
@@ -60,6 +65,7 @@ const urlsToCache = [
   // --- JavaScript Logic (Core & Utils) ---
   "/js/config.js",
   "/js/global.js",
+  "/js/card-tilt.js",
   "/js/audio.js",
   "/js/dashboard.js",
   "/js/classes/GameEngine.js",  // BUG-07 FIX: wajib untuk game.js (ES Module import)

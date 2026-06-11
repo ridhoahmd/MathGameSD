@@ -146,6 +146,8 @@
               <th>Labirin</th>
               <th class="agama">Nabi</th>
               <th class="agama">Ayat</th>
+              <th class="agama">Tajwid</th>
+              <th>Bintang</th>
               <th>TOTAL</th>
               <th>Role</th>
             </tr>
@@ -209,8 +211,8 @@
     <script>
       // --- 1. INISIALISASI & GLOBAL VARS ---
       // Kirim JWT Token saat koneksi agar server bisa verifikasi role guru/admin
-      const guruToken = localStorage.getItem("guruToken") || "";
-      const socket = io({ auth: { token: guruToken || undefined } });
+      const authToken = localStorage.getItem("authToken") || "";
+      const socket = io({ auth: { token: authToken || undefined } });
       const currentUserName = localStorage.getItem("playerName") || "";
       let currentUserRole = "siswa";
 
@@ -279,7 +281,7 @@
 
         if (!users || users.length === 0) {
           tbody.innerHTML =
-            "<tr><td colspan='11' class='text-center'>Belum ada data siswa.</td></tr>";
+            "<tr><td colspan='13' class='text-center'>Belum ada data siswa.</td></tr>";
           return;
         }
 
@@ -331,6 +333,8 @@
                         <td>${user.labirin}</td>
                         <td class="text-teal-bold">${user.nabi}</td>
                         <td class="text-teal-bold">${user.ayat}</td>
+                        <td class="text-teal-bold">${user.tajwid || 0}</td>
+                        <td>${user.bintang || 0}</td>
                         <td class="score-val">${(
                           user.skor || 0
                         ).toLocaleString()}</td>
@@ -370,12 +374,12 @@
         doc.setFontSize(10);
         doc.text("Tanggal Cetak: " + new Date().toLocaleDateString("id-ID"), 14, 28);
         
-        const tableColumn = ["Nama", "Math", "Zuma", "Memory", "Piano", "Kasir", "Labirin", "Nabi", "Ayat", "Total XP", "Role"];
+        const tableColumn = ["Nama", "Math", "Zuma", "Memory", "Piano", "Kasir", "Labirin", "Nabi", "Ayat", "Tajwid", "Bintang", "Total XP", "Role"];
         const tableRows = [];
 
         window.currentLeaderboardData.forEach(user => {
           const rowData = [
-            user.nama, user.math, user.zuma, user.memory, user.piano, user.kasir, user.labirin, user.nabi, user.ayat, user.skor || 0, user.role || "siswa"
+            user.nama, user.math, user.zuma, user.memory, user.piano, user.kasir, user.labirin, user.nabi, user.ayat, user.tajwid || 0, user.bintang || 0, user.skor || 0, user.role || "siswa"
           ];
           tableRows.push(rowData);
         });
@@ -562,8 +566,10 @@
         const soalData = {
           id: Date.now(),
           soal: soalStr,
+          tanya: soalStr,        // Alias: digunakan oleh nabi.js, ayat.js (q.tanya)
           opsi: OpsiArray,
           jawabanBenar: jawabanStr,
+          jawab: jawabanStr,     // Alias: digunakan oleh nabi.js, ayat.js (q.jawab)
           penjelasan: penjelasanStr || "Tidak ada penjelasan.",
         };
 

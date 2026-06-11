@@ -79,6 +79,14 @@ let serverData = null;
 
 // 1. Ambil data pas loading
 document.addEventListener("DOMContentLoaded", () => {
+  // Guard: pastikan socket tersedia sebelum digunakan
+  if (!socket) {
+    console.error("[Toko] window.socket tidak tersedia. Pastikan global.js sudah dimuat.");
+    document.getElementById("shop-container").innerHTML =
+      "<p style='color:#ff4444;text-align:center;padding:40px'>⚠️ Koneksi gagal. Coba refresh halaman.</p>";
+    return;
+  }
+
   if (!username) {
     if (typeof Swal !== "undefined") {
       Swal.fire(
@@ -237,14 +245,11 @@ function renderShop() {
 
 // Belanja item
 window.buyItem = function (itemId, displayPrice) {
+  if (!socket) return;
+
   if (typeof Swal === "undefined") {
     if (confirm(`Yakin beli ${itemId} seharga ${displayPrice} koin?`)) {
-      socket.emit("beliItem", {
-        username: username,
-        itemId: itemId,
-        // FIX: Hapus pengiriman harga dari sisi client, karena rawan IDOR/manipulasi harga!
-        // Harga harus ditentukan absolute oleh server
-      });
+      socket.emit("beliItem", { username, itemId });
     }
     return;
   }
@@ -260,17 +265,24 @@ window.buyItem = function (itemId, displayPrice) {
     color: "#fff",
   }).then((result) => {
     if (result.isConfirmed) {
-      socket.emit("beliItem", {
-        username: username,
-        itemId: itemId,
-        // FIX: Hapus pengiriman harga dari client
+      // Loading state — cegah double klik
+      Swal.fire({
+        title: "Memproses...",
+        text: "Transaksi sedang diproses oleh server",
+        didOpen: () => Swal.showLoading(),
+        allowOutsideClick: false,
+        background: "#1e1e2e",
+        color: "#fff",
       });
+      socket.emit("beliItem", { username, itemId });
     }
   });
 };
 
 // Pakai item
 window.equipItem = function (itemId, itemType) {
+  if (!socket) return;
+
   let tipe = itemType || "frame";
 
   // Cek tipe otomatis
@@ -283,12 +295,7 @@ window.equipItem = function (itemId, itemType) {
     }
   }
 
-
-  socket.emit("pakaiItem", {
-    username: username,
-    tipe: tipe,
-    itemId: itemId,
-  });
+  socket.emit("pakaiItem", { username, tipe, itemId });
 };
 
 // 6. Respon Server
