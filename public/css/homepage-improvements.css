@@ -1,0 +1,412 @@
+/* ============================================================
+   homepage-improvements.css
+   Visual Improvements — MathGameSD Portal
+   ─────────────────────────────────────────────────────────
+   Priority 2 : Header Enhancement (Greeting + Tagline)
+   Priority 3 : Card XP Preview + Difficulty Dots
+   Priority 5 : Sidebar Streak Visual Display
+   ============================================================ */
+
+
+/* ============================================================
+   PRIORITY 2 — HEADER: Greeting + Tagline Subtitle
+   ============================================================ */
+
+/* Regroup logo area agar title + subtitle menumpuk vertikal */
+.logo-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* Row bawah judul: greeting + separator + tagline */
+.portal-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 18px;
+  overflow: hidden;
+}
+
+/* Kata greeting (Selamat Pagi / Siang / Sore / Malam) */
+.greeting-word {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #00f2ff;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(0, 242, 255, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+  /* Typewriter: dimulai dari lebar 0, melebar sesuai karakter */
+  width: 0;
+  border-right: 2px solid rgba(0, 242, 255, 0.7);
+  animation:
+    greeting-type 1s steps(20, end) 0.4s forwards,
+    greeting-cursor 0.6s step-end 0.4s 5;
+}
+
+@keyframes greeting-type {
+  from { width: 0; }
+  to   { width: 13ch; } /* cukup untuk "Selamat Malam" */
+}
+
+@keyframes greeting-cursor {
+  0%, 100% { border-color: transparent; }
+  50%       { border-color: rgba(0, 242, 255, 0.7); }
+}
+
+/* Titik pemisah tengah */
+.greeting-separator {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 0.65rem;
+  opacity: 0;
+  animation: subtitle-fadein 0.4s ease 1.4s forwards;
+}
+
+/* Tagline statis kanan */
+.portal-tagline {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+  opacity: 0;
+  animation: subtitle-fadein 0.5s ease 1.5s forwards;
+}
+
+@keyframes subtitle-fadein {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive: sembunyikan tagline di layar kecil */
+@media (max-width: 900px) {
+  .portal-tagline,
+  .greeting-separator { display: none; }
+  .greeting-word { font-size: 0.65rem; }
+}
+@media (max-width: 600px) {
+  .portal-subtitle { display: none; }
+}
+
+
+/* ============================================================
+   PRIORITY 3 — CARD META: XP Badge + Difficulty Dots
+   ============================================================ */
+
+/* Wrapper baris di antara deskripsi dan tombol MULAI */
+.card-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px 0 4px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 8px;
+}
+
+/* XP Badge */
+.card-xp-badge {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.card-xp-badge::before {
+  content: '⚡';
+  font-size: 0.75rem;
+}
+
+/* Difficulty dots container */
+.card-diff-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Label teks difficulty (Mudah/Sedang/Susah) */
+.card-diff-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.7;
+  color: rgba(255, 255, 255, 0.6);
+  margin-right: 2px;
+}
+
+/* 3 titik indikator kesulitan */
+.card-diff-dots {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.diff-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: background 0.3s ease;
+}
+
+/* Isi dot sesuai level dan warna card (pakai --card-color dari card-identity.css) */
+.card-diff-dots[data-diff="1"] .diff-dot:nth-child(1) {
+  background: var(--card-color, #00d4ff);
+  box-shadow: 0 0 4px var(--card-color, #00d4ff);
+  border-color: var(--card-color, #00d4ff);
+}
+
+.card-diff-dots[data-diff="2"] .diff-dot:nth-child(1),
+.card-diff-dots[data-diff="2"] .diff-dot:nth-child(2) {
+  background: var(--card-color, #00d4ff);
+  box-shadow: 0 0 4px var(--card-color, #00d4ff);
+  border-color: var(--card-color, #00d4ff);
+}
+
+.card-diff-dots[data-diff="3"] .diff-dot {
+  background: var(--card-color, #00d4ff);
+  box-shadow: 0 0 5px var(--card-color, #00d4ff);
+  border-color: var(--card-color, #00d4ff);
+}
+
+/* Saat card di-hover, dots menyala lebih terang */
+.game-card:hover .diff-dot {
+  filter: brightness(1.3);
+}
+
+/* Tema-tema lain: warna dot fallback ke warna netral agar tidak aneh */
+body[class*="theme-"] .diff-dot:not([style]) {
+  --card-color: rgba(255, 255, 255, 0.6);
+}
+
+/* Responsive: meta row sedikit lebih kecil di mobile */
+@media (max-width: 600px) {
+  .card-meta-row {
+    padding: 5px 8px;
+  }
+  .card-xp-badge {
+    font-size: 0.62rem;
+  }
+  .diff-dot {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+
+/* ============================================================
+   PRIORITY 5 — SIDEBAR: Streak Visual Display
+   ============================================================ */
+
+/* Container utama streak di bawah stats-box */
+.streak-visual-section {
+  width: 100%;
+  margin-bottom: 18px;
+  background: rgba(255, 100, 0, 0.06);
+  border: 1px solid rgba(255, 120, 0, 0.2);
+  border-radius: 12px;
+  padding: 14px 16px 12px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.streak-visual-section:hover {
+  border-color: rgba(255, 140, 0, 0.4);
+  box-shadow: 0 4px 20px rgba(255, 100, 0, 0.1);
+}
+
+/* Glow latar belakang subtle di sudut kiri atas */
+.streak-visual-section::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle, rgba(255, 120, 0, 0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Baris atas: api + angka streak */
+.streak-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* Emoji api dengan animasi flicker */
+.streak-fire-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+  display: inline-block;
+  animation: fire-flicker 1.5s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 6px rgba(255, 120, 0, 0.6));
+}
+
+@keyframes fire-flicker {
+  0%   { transform: scale(1)    rotate(-2deg); filter: drop-shadow(0 0 5px rgba(255, 120, 0, 0.6)); }
+  33%  { transform: scale(1.05) rotate(1deg);  filter: drop-shadow(0 0 8px rgba(255, 80, 0, 0.8));  }
+  66%  { transform: scale(0.97) rotate(-1deg); filter: drop-shadow(0 0 6px rgba(255, 150, 0, 0.7));}
+  100% { transform: scale(1.03) rotate(2deg);  filter: drop-shadow(0 0 10px rgba(255, 60, 0, 0.9));}
+}
+
+/* Grup angka + label */
+.streak-count-group {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+/* Angka besar streak */
+.streak-number-big {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ff8c00;
+  text-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
+  line-height: 1;
+}
+
+.streak-number-big.streak-zero {
+  color: rgba(255, 255, 255, 0.35);
+  text-shadow: none;
+  font-size: 1.3rem;
+}
+
+/* Label "hari berturut-turut" */
+.streak-unit-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: rgba(255, 140, 0, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-top: 1px;
+}
+
+/* 7 dot hari (Senin – Minggu) */
+.streak-week-row {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.streak-day-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+/* Hari yang sudah main (aktif) */
+.streak-day-dot.is-played {
+  background: rgba(255, 120, 0, 0.25);
+  border-color: rgba(255, 140, 0, 0.6);
+  color: #ff8c00;
+  box-shadow: 0 0 8px rgba(255, 120, 0, 0.3);
+}
+
+.streak-day-dot.is-played::after {
+  content: '✓';
+  position: absolute;
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: #ffa040;
+}
+
+/* Hari ini (highlighted) */
+.streak-day-dot.is-today {
+  border-color: rgba(0, 242, 255, 0.6);
+  color: #00f2ff;
+  box-shadow: 0 0 8px rgba(0, 242, 255, 0.25);
+  animation: today-pulse 2s ease-in-out infinite;
+}
+
+.streak-day-dot.is-today.is-played {
+  background: rgba(255, 120, 0, 0.3);
+  border-color: #ff8c00;
+  box-shadow:
+    0 0 10px rgba(255, 120, 0, 0.4),
+    0 0 4px rgba(0, 242, 255, 0.2);
+}
+
+@keyframes today-pulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(0, 242, 255, 0.2); }
+  50%       { box-shadow: 0 0 14px rgba(0, 242, 255, 0.5); }
+}
+
+/* Teks motivasi di bawah */
+.streak-motivasi-text {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  font-style: italic;
+  line-height: 1.4;
+  margin: 0;
+  padding: 0 2px;
+}
+
+/* Saat streak tinggi (7+), teks lebih bersemangat */
+.streak-motivasi-text.streak-hot {
+  color: rgba(255, 160, 0, 0.8);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* === Adaptasi tema ===
+   Di tema lain, warna streak tetap orange (sudah spesifik),
+   tapi container border disesuaikan agar tidak clash */
+body[class*="theme-"] .streak-visual-section {
+  background: rgba(0, 0, 0, 0.2);
+}
+body.theme-hacker .streak-fire-icon {
+  filter: drop-shadow(0 0 6px rgba(0, 255, 65, 0.6)) hue-rotate(90deg);
+}
+body.theme-royal .streak-visual-section {
+  border-color: rgba(255, 215, 0, 0.25);
+  background: rgba(255, 215, 0, 0.05);
+}
+
+
+/* ============================================================
+   RESPONSIF SIDEBAR STREAK — Mobile compact
+   ============================================================ */
+@media (max-width: 768px) {
+  .streak-visual-section {
+    padding: 12px 14px 10px;
+  }
+  .streak-number-big {
+    font-size: 1.3rem;
+  }
+  .streak-day-dot {
+    width: 20px;
+    height: 20px;
+  }
+}

@@ -63,6 +63,8 @@
     <link rel="stylesheet" href="css/sidebar-glass.css?v=3" />
     <!-- Opsi C: 3D card tilt hover CSS foundation (default theme only) -->
     <link rel="stylesheet" href="css/card-hover.css?v=1" />
+    <!-- Improvement Visual: Header Greeting, Card XP/Difficulty, Sidebar Streak -->
+    <link rel="stylesheet" href="css/homepage-improvements.css?v=1" />
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
@@ -77,7 +79,14 @@
     <header class="main-header">
       <div class="logo-area">
         <img src="/logo-videa.png" class="logo-img" alt="Logo" />
-        <span class="portal-title">PORTAL GAME EDUKASI VIDEA CLASS</span>
+        <div class="logo-text-group">
+          <span class="portal-title">PORTAL GAME EDUKASI VIDEA CLASS</span>
+          <div class="portal-subtitle">
+            <span id="time-greeting-text" class="greeting-word">Selamat Pagi</span>
+            <span class="greeting-separator">·</span>
+            <span class="portal-tagline">Belajar Seru Setiap Hari 🚀</span>
+          </div>
+        </div>
       </div>
 
       <div class="header-right">
@@ -144,6 +153,32 @@
               <span id="stat-xp-pct">0%</span>
             </div>
           </div>
+        </div>
+
+        <!-- Streak Visual Section (Priority 5) -->
+        <div class="streak-visual-section">
+          <!-- Baris atas: api + angka -->
+          <div class="streak-header-row">
+            <span class="streak-fire-icon">🔥</span>
+            <div class="streak-count-group">
+              <span class="streak-number-big streak-zero" id="sidebar-streak-num">0</span>
+              <span class="streak-unit-label">hari berturut-turut</span>
+            </div>
+          </div>
+          <!-- Titik 7 hari (Sen–Min) -->
+          <div class="streak-week-row" id="streak-week-row">
+            <span class="streak-day-dot" title="Senin">S</span>
+            <span class="streak-day-dot" title="Selasa">S</span>
+            <span class="streak-day-dot" title="Rabu">R</span>
+            <span class="streak-day-dot" title="Kamis">K</span>
+            <span class="streak-day-dot" title="Jumat">J</span>
+            <span class="streak-day-dot" title="Sabtu">S</span>
+            <span class="streak-day-dot is-today" title="Minggu">M</span>
+          </div>
+          <!-- Teks motivasi -->
+          <p class="streak-motivasi-text" id="sidebar-streak-motivasi">
+            Main hari ini untuk mulai streak! 🚀
+          </p>
         </div>
 
         <!-- Menu Khusus Siswa -->
@@ -227,6 +262,13 @@
             <div class="game-icon">🚀</div>
             <div class="game-title">GESIT BERHITUNG</div>
             <div class="game-desc">Matematika cepat antar galaksi!</div>
+            <div class="card-meta-row">
+              <span class="card-xp-badge">+60 XP</span>
+              <div class="card-diff-wrap">
+                <span class="card-diff-label">Sedang</span>
+                <div class="card-diff-dots" data-diff="2"><span class="diff-dot"></span><span class="diff-dot"></span><span class="diff-dot"></span></div>
+              </div>
+            </div>
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
@@ -236,6 +278,13 @@
             <div class="game-icon">☄️</div>
             <div class="game-title">TEMBAK ANGKA</div>
             <div class="game-desc">Hancurkan bola angka sebelum meledak!</div>
+            <div class="card-meta-row">
+              <span class="card-xp-badge">+80 XP</span>
+              <div class="card-diff-wrap">
+                <span class="card-diff-label">Susah</span>
+                <div class="card-diff-dots" data-diff="3"><span class="diff-dot"></span><span class="diff-dot"></span><span class="diff-dot"></span></div>
+              </div>
+            </div>
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
@@ -245,6 +294,13 @@
             <div class="game-icon">🧩</div>
             <div class="game-title">LAB MEMORI</div>
             <div class="game-desc">Aktifkan sel otakmu dengan kartu memori.</div>
+            <div class="card-meta-row">
+              <span class="card-xp-badge">+50 XP</span>
+              <div class="card-diff-wrap">
+                <span class="card-diff-label">Mudah</span>
+                <div class="card-diff-dots" data-diff="1"><span class="diff-dot"></span><span class="diff-dot"></span><span class="diff-dot"></span></div>
+              </div>
+            </div>
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
@@ -254,6 +310,13 @@
             <div class="game-icon">🎹</div>
             <div class="game-title">MATEMATIKA PIANO</div>
             <div class="game-desc">Tekan tuts piano sesuai hasil hitungan.</div>
+            <div class="card-meta-row">
+              <span class="card-xp-badge">+70 XP</span>
+              <div class="card-diff-wrap">
+                <span class="card-diff-label">Sedang</span>
+                <div class="card-diff-dots" data-diff="2"><span class="diff-dot"></span><span class="diff-dot"></span><span class="diff-dot"></span></div>
+              </div>
+            </div>
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
@@ -262,7 +325,14 @@
             <span class="game-badge badge-math">Matematika</span>
             <div class="game-icon">🏪</div>
             <div class="game-title">KASIR CILIK</div>
-            <div class="game-desc">Simulasi belanja & hitung kembalian.</div>
+            <div class="game-desc">Simulasi belanja &amp; hitung kembalian.</div>
+            <div class="card-meta-row">
+              <span class="card-xp-badge">+65 XP</span>
+              <div class="card-diff-wrap">
+                <span class="card-diff-label">Sedang</span>
+                <div class="card-diff-dots" data-diff="2"><span class="diff-dot"></span><span class="diff-dot"></span><span class="diff-dot"></span></div>
+              </div>
+            </div>
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
@@ -271,7 +341,14 @@
             <span class="game-badge badge-otak">Logika</span>
             <div class="game-icon">🌀</div>
             <div class="game-title">LABIRIN ILMU</div>
-            <div class="game-desc">Cari jalan keluar & jawab rintangan!</div>
+            <div class="game-desc">Cari jalan keluar &amp; jawab rintangan!</div>
+            <div class="card-meta-row">
+              <span class="card-xp-badge">+90 XP</span>
+              <div class="card-diff-wrap">
+                <span class="card-diff-label">Susah</span>
+                <div class="card-diff-dots" data-diff="3"><span class="diff-dot"></span><span class="diff-dot"></span><span class="diff-dot"></span></div>
+              </div>
+            </div>
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
@@ -280,7 +357,14 @@
             <span class="game-badge badge-islam">Islam</span>
             <div class="game-icon">🕌</div>
             <div class="game-title">JEJAK NABI</div>
-            <div class="game-desc">Petualangan menelusuri kisah 25 Nabi & Rasul.</div>
+            <div class="game-desc">Petualangan menelusuri kisah 25 Nabi &amp; Rasul.</div>
+            <div class="card-meta-row">
+              <span class="card-xp-badge">+55 XP</span>
+              <div class="card-diff-wrap">
+                <span class="card-diff-label">Mudah</span>
+                <div class="card-diff-dots" data-diff="1"><span class="diff-dot"></span><span class="diff-dot"></span><span class="diff-dot"></span></div>
+              </div>
+            </div>
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
@@ -290,6 +374,13 @@
             <div class="game-icon">📖</div>
             <div class="game-title">SAMBUNG AYAT</div>
             <div class="game-desc">Lanjutkan potongan ayat Juz Amma (Juz 30).</div>
+            <div class="card-meta-row">
+              <span class="card-xp-badge">+75 XP</span>
+              <div class="card-diff-wrap">
+                <span class="card-diff-label">Sedang</span>
+                <div class="card-diff-dots" data-diff="2"><span class="diff-dot"></span><span class="diff-dot"></span><span class="diff-dot"></span></div>
+              </div>
+            </div>
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
@@ -299,6 +390,13 @@
             <div class="game-icon">⚖️</div>
             <div class="game-title">PILAH HUKUM</div>
             <div class="game-desc">Geser kata sesuai hukum tajwidnya!</div>
+            <div class="card-meta-row">
+              <span class="card-xp-badge">+85 XP</span>
+              <div class="card-diff-wrap">
+                <span class="card-diff-label">Susah</span>
+                <div class="card-diff-dots" data-diff="3"><span class="diff-dot"></span><span class="diff-dot"></span><span class="diff-dot"></span></div>
+              </div>
+            </div>
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
 
@@ -308,6 +406,13 @@
             <div class="game-icon">🌟</div>
             <div class="game-title">TANGKAP BINTANG</div>
             <div class="game-desc">Tangkap bintang dengan jawaban benar!</div>
+            <div class="card-meta-row">
+              <span class="card-xp-badge">+45 XP</span>
+              <div class="card-diff-wrap">
+                <span class="card-diff-label">Mudah</span>
+                <div class="card-diff-dots" data-diff="1"><span class="diff-dot"></span><span class="diff-dot"></span><span class="diff-dot"></span></div>
+              </div>
+            </div>
             <div class="btn-play btn-start-math">MULAI</div>
           </a>
         </div>
@@ -398,6 +503,125 @@
             .catch((err) => console.log("SW Gagal:", err));
         });
       }
+    </script>
+
+    <!-- ==========================================
+         Visual Improvements — Inline Init Script
+         Priority 2 : Header Greeting (time-based)
+         Priority 5 : Sidebar Streak Visual
+         ========================================== -->
+    <script>
+    (function () {
+      /* ── Priority 2: Greeting berdasarkan jam ── */
+      function initGreeting() {
+        var hour    = new Date().getHours();
+        var greeting = 'Selamat Datang';
+        if      (hour >= 4  && hour < 11) greeting = 'Selamat Pagi';
+        else if (hour >= 11 && hour < 15) greeting = 'Selamat Siang';
+        else if (hour >= 15 && hour < 19) greeting = 'Selamat Sore';
+        else                              greeting = 'Selamat Malam';
+
+        var el = document.getElementById('time-greeting-text');
+        if (!el) return;
+
+        // Typewriter effect (JS-driven agar lebar akurat)
+        el.textContent = '';
+        el.style.width = 'auto';
+        el.style.borderRight = '2px solid rgba(0,242,255,0.7)';
+        var i = 0;
+        var speed = 55;
+        var timer = setInterval(function () {
+          el.textContent += greeting[i];
+          i++;
+          if (i >= greeting.length) {
+            clearInterval(timer);
+            // Cursor berkedip 4x lalu hilang
+            var blink = 0;
+            var blinkTimer = setInterval(function () {
+              el.style.borderColor = (blink % 2 === 0)
+                ? 'transparent'
+                : 'rgba(0,242,255,0.7)';
+              blink++;
+              if (blink > 7) {
+                clearInterval(blinkTimer);
+                el.style.borderRight = 'none';
+              }
+            }, 350);
+          }
+        }, speed);
+      }
+
+      /* ── Priority 5: Streak visual di sidebar ── */
+      function initStreakVisual() {
+        // Coba baca streak dari berbagai kemungkinan key localStorage
+        var streak = 0;
+        var possibleKeys = ['streak_count', 'streakCount', 'daily_streak',
+                            'userStreak', 'streak', 'loginStreak'];
+        for (var k = 0; k < possibleKeys.length; k++) {
+          var val = localStorage.getItem(possibleKeys[k]);
+          if (val && !isNaN(parseInt(val))) {
+            streak = parseInt(val);
+            break;
+          }
+        }
+
+        // Update angka streak
+        var numEl = document.getElementById('sidebar-streak-num');
+        if (numEl) {
+          numEl.textContent = streak;
+          if (streak > 0) numEl.classList.remove('streak-zero');
+        }
+
+        // Update teks motivasi
+        var motivEl = document.getElementById('sidebar-streak-motivasi');
+        if (motivEl) {
+          if      (streak === 0) motivEl.textContent = 'Main hari ini untuk mulai streak! 🚀';
+          else if (streak === 1) motivEl.textContent = 'Hari pertama! Terus mainkan ya 💪';
+          else if (streak < 4)   motivEl.textContent = streak + ' hari berturut-turut! Bagus! 🌟';
+          else if (streak < 7) {
+            motivEl.textContent = streak + ' hari streak! Mengesankan! 🔥';
+            motivEl.classList.add('streak-hot');
+          } else {
+            motivEl.textContent = streak + ' hari streak! Kamu luar biasa! ⭐🔥';
+            motivEl.classList.add('streak-hot');
+          }
+        }
+
+        // Tandai hari-hari aktif di week row
+        // Coba baca data hari aktif jika ada
+        var todayKey = 'played_' + new Date().toISOString().slice(0, 10);
+        var playedToday = localStorage.getItem(todayKey) === 'true';
+        var dots = document.querySelectorAll('#streak-week-row .streak-day-dot');
+        var today = new Date().getDay(); // 0=Min, 1=Sen, ..., 6=Sab
+        // Urutan dots: S(1) S(2) R(3) K(4) J(5) S(6) M(0)
+        var dayMap = [1, 2, 3, 4, 5, 6, 0]; // index dot → JS getDay value
+
+        dots.forEach(function (dot, idx) {
+          dot.classList.remove('is-today');
+          if (dayMap[idx] === today) {
+            dot.classList.add('is-today');
+            if (playedToday || streak > 0) dot.classList.add('is-played');
+          } else {
+            // Tandai hari sebelumnya sesuai streak length (visual)
+            var daysBack = (today - dayMap[idx] + 7) % 7;
+            if (daysBack > 0 && daysBack <= streak && daysBack <= 6) {
+              dot.classList.add('is-played');
+            }
+          }
+        });
+      }
+
+      // Jalankan setelah DOM siap
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+          initGreeting();
+          initStreakVisual();
+        });
+      } else {
+        initGreeting();
+        initStreakVisual();
+      }
+    })();
     </script>
   </body>
 </html>
