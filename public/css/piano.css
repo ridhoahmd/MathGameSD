@@ -351,20 +351,22 @@ body::before {
    Gunakan flex:1 1 0 agar tuts melebar/menyempit secara fluid */
 @media (max-width: 360px) {
   .piano-container {
-    gap: 2px;
-    padding: 5px;
+    gap: 3px;
+    padding: 6px;
     /* Allow scrolling horizontally if keys are too cramped */
     overflow-x: auto;
-    justify-content: flex-start; 
+    -webkit-overflow-scrolling: touch;
+    justify-content: flex-start;
   }
 
   .key {
-    min-width: 35px;    /* Prevent keys from getting too narrow */
-    flex: 1 0 auto;     /* Allow it to keep min-width */
+    min-width: 32px;    /* Prevent keys from getting too narrow */
+    max-width: 48px;    /* Prevent keys from getting too wide */
+    flex: 1 0 32px;     /* grow allowed, shrink disabled, base 32px */
     height: 100px;
     min-height: 50px;   /* WCAG tap target */
-    font-size: 0.7rem;
-    padding-bottom: 15px;
+    font-size: 0.75rem;
+    padding-bottom: 12px;
   }
 }
 

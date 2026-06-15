@@ -1,4 +1,4 @@
-const CACHE_NAME = "videa-class-master-v10";
+const CACHE_NAME = "videa-class-master-v11";
 
 const urlsToCache = [
   "/",
@@ -39,6 +39,7 @@ const urlsToCache = [
   "/css/login-panel.css",
   "/css/card-identity.css",
   "/css/card-hover.css",
+  "/css/homepage-improvements.css",
   "/css/sidebar-glass.css",
   "/css/decorative-objects.css",
   "/css/streak-effects.css",
@@ -116,7 +117,7 @@ self.addEventListener("install", (event) => {
       if (failed > 0) {
         console.warn(`⚠️ SW: ${failed} file gagal dicache, tapi SW tetap aktif.`);
       } else {
-        console.log("✅ SW v9: Semua file berhasil dicache.");
+        console.log("✅ SW v11: Semua file berhasil dicache.");
       }
     })
   );

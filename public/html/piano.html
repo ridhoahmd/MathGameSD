@@ -16,6 +16,9 @@
       "
     />
 
+    <!-- Preconnect biar font Google lebih cepat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap"
       rel="stylesheet"
@@ -71,10 +74,11 @@
     </div>
 
     <!-- === TUTS PIANO === -->
-    <div class="piano-container">
+    <div class="piano-container" role="group" aria-label="Tuts Piano">
       <button
         class="key"
         data-val="1"
+        aria-label="Nada 1 (Do)"
         ontouchstart="event.preventDefault(); playNote(1)"
         onclick="playNote(1)"
       >
@@ -83,6 +87,7 @@
       <button
         class="key"
         data-val="2"
+        aria-label="Nada 2 (Re)"
         ontouchstart="event.preventDefault(); playNote(2)"
         onclick="playNote(2)"
       >
@@ -91,6 +96,7 @@
       <button
         class="key"
         data-val="3"
+        aria-label="Nada 3 (Mi)"
         ontouchstart="event.preventDefault(); playNote(3)"
         onclick="playNote(3)"
       >
@@ -99,6 +105,7 @@
       <button
         class="key"
         data-val="4"
+        aria-label="Nada 4 (Fa)"
         ontouchstart="event.preventDefault(); playNote(4)"
         onclick="playNote(4)"
       >
@@ -107,6 +114,7 @@
       <button
         class="key"
         data-val="5"
+        aria-label="Nada 5 (Sol)"
         ontouchstart="event.preventDefault(); playNote(5)"
         onclick="playNote(5)"
       >
@@ -115,6 +123,7 @@
       <button
         class="key"
         data-val="6"
+        aria-label="Nada 6 (La)"
         ontouchstart="event.preventDefault(); playNote(6)"
         onclick="playNote(6)"
       >
@@ -123,6 +132,7 @@
       <button
         class="key"
         data-val="7"
+        aria-label="Nada 7 (Si)"
         ontouchstart="event.preventDefault(); playNote(7)"
         onclick="playNote(7)"
       >
@@ -131,6 +141,7 @@
       <button
         class="key"
         data-val="8"
+        aria-label="Nada 8 (Do Tinggi)"
         ontouchstart="event.preventDefault(); playNote(8)"
         onclick="playNote(8)"
       >
@@ -139,6 +150,7 @@
       <button
         class="key"
         data-val="9"
+        aria-label="Nada 9 (Re Tinggi)"
         ontouchstart="event.preventDefault(); playNote(9)"
         onclick="playNote(9)"
       >
@@ -147,6 +159,7 @@
       <button
         class="key"
         data-val="0"
+        aria-label="Nada 0 (La Rendah)"
         ontouchstart="event.preventDefault(); playNote(0)"
         onclick="playNote(0)"
       >
@@ -171,6 +184,7 @@
 
     <!-- === SCRIPTS === -->
     <script src="/socket.io/socket.io.js"></script>
+    <script src="../js/audio.js"></script>
     <script src="../js/global.js"></script>
     <!-- Sistem Gamifikasi -->
     <script src="../js/gamification/achievements.js"></script>

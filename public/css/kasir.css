@@ -254,10 +254,13 @@ body {
   width: 100%;
   padding: 10px;
   font-size: 1.5rem;
+  /* ⚠️ iOS FIX: font-size minimum 16px pada input mencegah auto-zoom saat focus */
+  min-font-size: 16px;
   font-family: "VT323", monospace;
   border: 2px solid #2d3436;
   border-radius: 5px;
   text-align: right;
+  -webkit-appearance: none; /* Remove iOS default styling */
 }
 .btn-enter {
   background: #00b894;

@@ -2,10 +2,13 @@
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <meta name="description" content="Leaderboard Top 50 - Lihat peringkat siswa terbaik dari semua game di Portal Videa Class" />
     <title>🏆 Top 50 Global Ranking - Videa Class</title>
 
+    <!-- Preconnect biar font Google lebih cepat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
       rel="stylesheet"
@@ -39,26 +42,28 @@
         </div>
       </div>
 
-      <!-- === TABEL PERINGKAT (Top 50) === -->
-      <table class="rank-table">
-        <thead>
-          <tr>
-            <th width="10%">Rank</th>
-            <th>Pemain</th>
-            <th class="th-right" width="25%">Total Skor</th>
-          </tr>
-        </thead>
-        <tbody id="rank-list">
-          <tr>
-            <td colspan="3">
-              <div class="loading-state">
-                <div class="loading-spinner"></div>
-                <p>Memuat data ranking...</p>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- === TABEL PERINGKAT (Top 50) - wrapped for mobile scroll === -->
+      <div class="leaderboard-table">
+        <table class="rank-table">
+          <thead>
+            <tr>
+              <th width="10%">Rank</th>
+              <th>Pemain</th>
+              <th class="th-right" width="25%">Total Skor</th>
+            </tr>
+          </thead>
+          <tbody id="rank-list">
+            <tr>
+              <td colspan="3">
+                <div class="loading-state">
+                  <div class="loading-spinner"></div>
+                  <p>Memuat data ranking...</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <!-- === FOOTER & WAKTU UPDATE === -->
       <div class="leaderboard-footer">

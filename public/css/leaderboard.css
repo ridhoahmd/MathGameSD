@@ -157,8 +157,18 @@ h1 {
 }
 
 /* 5. GAYA TABEL */
+/* Wrapper: scrollable di mobile agar kolom tidak terpotong */
+.leaderboard-table {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth scroll di iOS */
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
 .rank-table {
   width: 100%;
+  min-width: 400px; /* Minimum agar kolom tidak terlalu sempit */
   border-collapse: separate;
   border-spacing: 0 8px;
 }
