@@ -1,0 +1,25 @@
+name: Auto Deploy to IDCloudHost
+
+on:
+  push:
+    branches:
+      - main # Akan berjalan otomatis setiap ada push ke branch main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VM_HOST }}
+        username: ${{ secrets.VM_USERNAME }}
+        password: ${{ secrets.VM_PASSWORD }}
+        port: 22
+        script: |
+          cd /home/videa_games/MathGameSD
+          git pull origin main
+          npm install --omit=dev
+          npx prisma generate
+          pm2 restart math-game-sd
