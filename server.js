@@ -25,6 +25,9 @@ app.use(compression());
 app.set('trust proxy', 1);
 app.use(
   helmet({
+    // FIX: Disable HSTS & upgrade-insecure-requests saat belum pakai HTTPS
+    // Aktifkan kembali setelah SSL/Certbot terpasang
+    hsts: false,
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
@@ -62,6 +65,7 @@ app.use(
           "https://*.firebaseapp.com",
           "https://apis.google.com"
         ],
+        upgradeInsecureRequests: null, // Jangan paksa HTTPS saat belum ada SSL
       },
     },
     crossOriginEmbedderPolicy: false,
