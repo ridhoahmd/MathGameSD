@@ -105,7 +105,38 @@ describe("gameHandler.js", () => {
       );
     });
 
-    it("✅ harus gunakan fallback dinamis untuk piano", async () => {
+    // BUG-05 FIX: Piano dari DB — harus pakai config sequence langsung dari rawContent
+    it("✅ piano dari DB harus emit soalDariAI dengan sequence dari DB", async () => {
+      prisma.gameQuestion.findMany.mockResolvedValueOnce([
+        { content: { sequence: [1, 3, 5, 2, 7] } }
+      ]);
+      const fn = getCallback(socket, "mintaSoalAI");
+      await fn({ kategori: "piano", tingkat: "mudah" });
+      expect(socket.emit).toHaveBeenCalledWith(
+        "soalDariAI",
+        expect.objectContaining({
+          kategori: "piano",
+          data: expect.objectContaining({ sequence: expect.any(Array) })
+        })
+      );
+    });
+
+    // BUG-05 FIX: Piano tanpa DB — harus gunakan fallback inline (3–5 nada), bukan dead code lama
+    it("✅ piano tanpa DB harus gunakan fallback dinamis inline (3–5 nada)", async () => {
+      prisma.gameQuestion.findMany.mockResolvedValueOnce([]);
+      const fn = getCallback(socket, "mintaSoalAI");
+      await fn({ kategori: "piano", tingkat: "sedang" });
+      const emitCall = socket.emit.mock.calls.find(c => c[0] === "soalDariAI");
+      expect(emitCall).toBeDefined();
+      const emittedData = emitCall[1];
+      expect(emittedData.kategori).toBe("piano");
+      expect(emittedData.data).toHaveProperty("sequence");
+      expect(Array.isArray(emittedData.data.sequence)).toBe(true);
+      expect(emittedData.data.sequence.length).toBeGreaterThanOrEqual(3);
+      expect(emittedData.data.sequence.length).toBeLessThanOrEqual(8); // bisa 3–5 inline atau 4–8 fallback luar
+    });
+
+    it("✅ harus gunakan fallback dinamis untuk piano (DB kosong via getFallbackData path)", async () => {
       prisma.gameQuestion.findMany.mockResolvedValueOnce([]);
       const fn = getCallback(socket, "mintaSoalAI");
       await fn({ kategori: "piano", tingkat: "sedang" });
@@ -126,6 +157,7 @@ describe("gameHandler.js", () => {
       );
     });
   });
+
 
   // ─────────────────────────────────────────────────────────────
   describe("mintaPenjelasan", () => {

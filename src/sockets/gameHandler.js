@@ -130,15 +130,26 @@ module.exports = (socket, io) => {
         let rawContent = questions.map((q) => q.content);
 
         // --- KELOMPOK 1: CONFIG GAME (Zuma, Labirin, Piano) ---
-        if (["zuma", "labirin", "piano"].includes(kategori)) {
-          if (kategori === "piano" && (!questions || questions.length === 0)) {
-            // Generate nada piano dinamis jika DB kosong
+        if (kategori === "piano") {
+          // Piano punya format data berbeda (object config), bukan array soal.
+          // BUG-05 FIX: Kondisi sebelumnya `!questions || questions.length === 0`
+          // tidak pernah bisa true di sini (sudah di dalam blok `questions.length > 0`).
+          // Pisahkan piano ke branch sendiri agar logika jelas dan benar.
+          if (rawContent.length > 0) {
+            // Gunakan config sequence dari DB (format: { sequence: [...] })
+            const randomIndex = Math.floor(Math.random() * rawContent.length);
+            finalData = rawContent[randomIndex];
+          } else {
+            // Fallback inline: generate urutan nada dinamis 3–5 nada
             const randomSeq = [];
-            const len = 3 + Math.floor(Math.random() * 3); // 3-5 nada
+            const len = 3 + Math.floor(Math.random() * 3);
             for (let i = 0; i < len; i++)
               randomSeq.push(Math.floor(Math.random() * 8) + 1);
             finalData = { sequence: randomSeq };
-          } else if (rawContent.length > 0) {
+          }
+        } else if (["zuma", "labirin"].includes(kategori)) {
+          // Zuma & Labirin: ambil satu config secara acak dari rawContent
+          if (rawContent.length > 0) {
             const randomIndex = Math.floor(Math.random() * rawContent.length);
             finalData = rawContent[randomIndex];
           }
