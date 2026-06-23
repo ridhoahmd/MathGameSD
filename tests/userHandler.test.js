@@ -3,30 +3,48 @@
 // (simpanSkor, mintaLeaderboard, mintaDataProfil)
 
 // ─── Mock: prisma ───────────────────────────────────────────────
-jest.mock("../src/config/prisma", () => ({
-  user: {
-    findUnique: jest.fn(),
-    update:     jest.fn(),
-    upsert:     jest.fn(),
-    create:     jest.fn(),
-    updateMany: jest.fn(),
-    findMany:   jest.fn(),
-  },
-  game: {
-    findUnique: jest.fn().mockResolvedValue({ id: 1, slug: "math", title: "MATH" }),
-    create:     jest.fn().mockResolvedValue({ id: 1, slug: "math", title: "MATH" }),
-    findMany:   jest.fn().mockResolvedValue([]),  // Dibutuhkan oleh mintaLeaderboard Q3
-  },
-  score: {
-    create:     jest.fn().mockResolvedValue({ id: 1 }),
-    deleteMany: jest.fn().mockResolvedValue({}),
-    groupBy:    jest.fn().mockResolvedValue([]),  // Dibutuhkan oleh mintaLeaderboard Q2
-  },
-  versusMatch: {
-    create:   jest.fn().mockResolvedValue(true),
-    findMany: jest.fn().mockResolvedValue([]),
-  },
-}));
+jest.mock("../src/config/prisma", () => {
+  // txMock dipakai oleh $transaction callback (BUG-04 fix: simpanSkor kini atomic)
+  const txMock = {
+    user: {
+      findUnique: jest.fn(),
+      upsert:     jest.fn(),
+    },
+    score: {
+      create: jest.fn().mockResolvedValue({ id: 1 }),
+    },
+  };
+
+  return {
+    // $transaction menjalankan callback dengan txMock sebagai argumen tx
+    $transaction: jest.fn(async (cb) => cb(txMock)),
+    _txMock: txMock, // expose agar test bisa configure per-skenario
+
+    user: {
+      findUnique: jest.fn(),
+      update:     jest.fn(),
+      upsert:     jest.fn(),
+      create:     jest.fn(),
+      updateMany: jest.fn(),
+      findMany:   jest.fn(),
+    },
+    game: {
+      findUnique: jest.fn().mockResolvedValue({ id: 1, slug: "math", title: "MATH" }),
+      create:     jest.fn().mockResolvedValue({ id: 1, slug: "math", title: "MATH" }),
+      findMany:   jest.fn().mockResolvedValue([]),  // Dibutuhkan oleh mintaLeaderboard Q3
+    },
+    score: {
+      create:     jest.fn().mockResolvedValue({ id: 1 }),
+      deleteMany: jest.fn().mockResolvedValue({}),
+      findMany:   jest.fn().mockResolvedValue([]),   // Dibutuhkan adminResetSystem (backup)
+      groupBy:    jest.fn().mockResolvedValue([]),   // Dibutuhkan mintaLeaderboard Q2
+    },
+    versusMatch: {
+      create:   jest.fn().mockResolvedValue(true),
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+  };
+});
 
 const userHandler = require("../src/sockets/userHandler");
 const prisma      = require("../src/config/prisma");
@@ -153,9 +171,10 @@ describe("userHandler.js — tambahan coverage", () => {
     });
 
     it("✅ harus cap skor melebihi MAX dan emit info", async () => {
+      // BUG-04 FIX: simpanSkor kini pakai $transaction → mock tx.user.findUnique & tx.user.upsert
       socket.activeGameSession = { game: "math", startTime: Date.now() - 60000 };
-      prisma.user.findUnique.mockResolvedValue(baseUserDb);
-      prisma.user.upsert.mockResolvedValue({ ...baseUserDb, totalScore: 3000, coins: 510 });
+      prisma._txMock.user.findUnique.mockResolvedValueOnce({ xp: 300 });
+      prisma._txMock.user.upsert.mockResolvedValueOnce({ ...baseUserDb, totalScore: 3000, coins: 510 });
       const fn = getCallback(socket, "simpanSkor");
       await fn({ nama: "TestUser", game: "math", skor: 99999 }); // jauh di atas max 3000
       expect(socket.emit).toHaveBeenCalledWith(
@@ -164,15 +183,27 @@ describe("userHandler.js — tambahan coverage", () => {
     });
 
     it("✅ harus simpan skor dan emit skorTersimpan jika valid", async () => {
+      // BUG-04 FIX: mock $transaction path — tx.user.findUnique + tx.user.upsert + tx.score.create
       socket.activeGameSession = { game: "math", startTime: Date.now() - 30000 };
-      prisma.user.findUnique.mockResolvedValue(baseUserDb);
-      prisma.user.upsert.mockResolvedValue({ ...baseUserDb, totalScore: 600, coins: 210 });
+      prisma._txMock.user.findUnique.mockResolvedValueOnce({ xp: 300 });
+      prisma._txMock.user.upsert.mockResolvedValueOnce({ ...baseUserDb, totalScore: 600, coins: 210 });
       const fn = getCallback(socket, "simpanSkor");
       await fn({ nama: "TestUser", game: "math", skor: 100 });
       expect(socket.emit).toHaveBeenCalledWith(
         "skorTersimpan", expect.objectContaining({ totalScore: 600 })
       );
-      expect(prisma.score.create).toHaveBeenCalled();
+      // score.create sekarang dipanggil di dalam tx, bukan di prisma langsung
+      expect(prisma._txMock.score.create).toHaveBeenCalled();
+    });
+
+    it("✅ harus invalidate activeGameSession setelah skor tersimpan", async () => {
+      // Verifikasi DB-ISU-1 FIX: session di-null setelah simpan sukses (anti-farming)
+      socket.activeGameSession = { game: "math", startTime: Date.now() - 30000 };
+      prisma._txMock.user.findUnique.mockResolvedValueOnce({ xp: 300 });
+      prisma._txMock.user.upsert.mockResolvedValueOnce({ ...baseUserDb, totalScore: 600, coins: 210 });
+      const fn = getCallback(socket, "simpanSkor");
+      await fn({ nama: "TestUser", game: "math", skor: 100 });
+      expect(socket.activeGameSession).toBeNull();
     });
 
     it("✅ harus return awal jika data tidak lengkap (no nama/game)", async () => {
@@ -254,6 +285,111 @@ describe("userHandler.js — tambahan coverage", () => {
       await fn({ targetUser: "Murid1", newRole: "guru" });
       expect(socket.emit).toHaveBeenCalledWith(
         "roleUpdateSuccess", expect.objectContaining({ newRole: "guru" })
+      );
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // BUG-11 FIX: Test untuk adminResetSystem (sebelumnya 0% coverage)
+  // Fungsi ini sangat berbahaya (hapus semua skor & reset koin) sehingga
+  // wajib memiliki test yang komprehensif untuk semua jalur validasi.
+  // ─────────────────────────────────────────────────────────────
+  describe("adminResetSystem", () => {
+    // Setup env password untuk test
+    const RESET_PASSWORD = "rahasia-admin-123";
+
+    beforeEach(() => {
+      process.env.GURU_PASSWORD = RESET_PASSWORD;
+    });
+
+    it("❌ harus diam (tidak emit apa-apa) jika socket tidak terautentikasi", async () => {
+      // isAuth = false → handler langsung return tanpa emit
+      socket.isAuth = false;
+      socket.decoded = null;
+      const fn = getCallback(socket, "adminResetSystem");
+      await fn({ password: RESET_PASSWORD });
+      expect(socket.emit).not.toHaveBeenCalled();
+      expect(prisma.score.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it("❌ harus emit resetError jika role bukan admin (guru biasa)", async () => {
+      // Guru tidak punya hak reset sistem
+      socket.isAuth  = true;
+      socket.decoded = { role: "guru", username: "BuAni" };
+      const fn = getCallback(socket, "adminResetSystem");
+      await fn({ password: RESET_PASSWORD });
+      expect(socket.emit).toHaveBeenCalledWith(
+        "resetError",
+        expect.stringContaining("Hanya admin")
+      );
+      expect(prisma.score.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it("❌ harus emit resetError jika password salah", async () => {
+      socket.isAuth  = true;
+      socket.decoded = { role: "admin", username: "SuperAdmin" };
+      const fn = getCallback(socket, "adminResetSystem");
+      await fn({ password: "password-yang-salah" });
+      expect(socket.emit).toHaveBeenCalledWith(
+        "resetError",
+        expect.stringContaining("Password salah")
+      );
+      expect(prisma.score.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it("✅ harus berhasil reset: hapus score, reset user, emit resetBerhasil", async () => {
+      socket.isAuth  = true;
+      socket.decoded = { role: "admin", username: "SuperAdmin" };
+
+      // Mock backup reads — adminResetSystem memanggil user.findMany & score.findMany
+      prisma.user.findMany.mockResolvedValueOnce([
+        { id: 1, username: "Andi", coins: 500, totalScore: 1000 }
+      ]);
+      prisma.score.findMany.mockResolvedValueOnce([
+        { id: 1, userId: 1, gameId: 1, score: 200 }
+      ]);
+      prisma.score.deleteMany.mockResolvedValueOnce({ count: 5 });
+      prisma.user.updateMany.mockResolvedValueOnce({ count: 1 });
+
+      const fn = getCallback(socket, "adminResetSystem");
+      await fn({ password: RESET_PASSWORD });
+
+      // Harus hapus semua skor
+      expect(prisma.score.deleteMany).toHaveBeenCalledWith({});
+
+      // Harus reset semua user ke 0
+      expect(prisma.user.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ coins: 0, totalScore: 0, xp: 0, level: 0 })
+        })
+      );
+
+      // Harus emit resetBerhasil dengan metadata
+      expect(socket.emit).toHaveBeenCalledWith(
+        "resetBerhasil",
+        expect.objectContaining({
+          resetBy: "SuperAdmin",
+          backup:  expect.stringContaining("backup_reset_"),
+          message: expect.stringContaining("berhasil")
+        })
+      );
+    });
+
+    it("❌ harus emit resetError jika DB error saat reset", async () => {
+      socket.isAuth  = true;
+      socket.decoded = { role: "admin", username: "SuperAdmin" };
+
+      // findMany untuk backup berhasil (user & score), tapi deleteMany gagal
+      prisma.user.findMany.mockResolvedValueOnce([]);
+      prisma.score.findMany.mockResolvedValueOnce([]);
+      prisma.score.deleteMany.mockRejectedValueOnce(new Error("DB Connection Lost"));
+
+      const fn = getCallback(socket, "adminResetSystem");
+      await fn({ password: RESET_PASSWORD });
+
+      expect(socket.emit).toHaveBeenCalledWith(
+        "resetError",
+        expect.stringContaining("Reset gagal")
       );
     });
   });

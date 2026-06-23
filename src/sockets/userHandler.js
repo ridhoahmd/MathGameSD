@@ -211,6 +211,8 @@ module.exports = (socket, io) => {
     const xpGained = getXPFromScore(gameSlug, skor);
 
     try {
+      // gameDb lookup di luar transaksi karena hanya baca/create game record,
+      // tidak memengaruhi konsistensi data XP user.
       let gameDb = await prisma.game.findUnique({ where: { slug: gameSlug } });
       if (!gameDb) {
         gameDb = await prisma.game.create({
@@ -218,42 +220,47 @@ module.exports = (socket, io) => {
         });
       }
 
-      // Hitung XP dan level baru
-      let existingUser = await prisma.user.findUnique({
-        where: { username: safeName },
-      });
-      const currentXP = existingUser ? existingUser.xp : 0;
-      const newTotalXP = currentXP + xpGained;
-      const newLevel = calculateLevel(newTotalXP);
+      // 🔧 BUG-04 FIX: Bungkus kalkulasi XP + upsert + score.create dalam satu
+      // $transaction agar atomic. Sebelumnya findUnique + upsert berjalan terpisah
+      // sehingga jika dua request tiba bersamaan, currentXP bisa stale → XP salah hitung.
+      const updatedUser = await prisma.$transaction(async (tx) => {
+        // Baca XP terkini di dalam transaksi agar dapat snapshot konsisten
+        const existingUser = await tx.user.findUnique({
+          where: { username: safeName },
+          select: { xp: true },
+        });
+        const currentXP = existingUser ? existingUser.xp : 0;
+        const newTotalXP = currentXP + xpGained;
+        const newLevel = calculateLevel(newTotalXP);
 
-      const updatedUser = await prisma.user.upsert({
-        where: { username: safeName },
-        update: {
-          coins: { increment: koin },
-          totalScore: { increment: skor },
-          xp: newTotalXP,
-          level: newLevel,
-        },
-        create: {
-          username: safeName,
-          role: "siswa",
-          coins: koin,
-          totalScore: skor,
-          xp: xpGained,
-          level: calculateLevel(xpGained),
-        },
-      });
+        const saved = await tx.user.upsert({
+          where: { username: safeName },
+          update: {
+            coins: { increment: koin },
+            totalScore: { increment: skor },
+            xp: newTotalXP,
+            level: newLevel,
+          },
+          create: {
+            username: safeName,
+            role: "siswa",
+            coins: koin,
+            totalScore: skor,
+            xp: xpGained,
+            level: calculateLevel(xpGained),
+          },
+        });
 
-      await prisma.score.create({
-        data: {
-          score: skor,
-          game: {
-            connect: { id: gameDb.id },
+        // score.create ikut masuk transaksi agar rollback otomatis jika upsert gagal
+        await tx.score.create({
+          data: {
+            score: skor,
+            game:  { connect: { id: gameDb.id } },
+            user:  { connect: { id: saved.id } },
           },
-          user: {
-            connect: { id: updatedUser.id },
-          },
-        },
+        });
+
+        return saved;
       });
 
       // Konfirmasi sukses ke client
