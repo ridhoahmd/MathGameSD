@@ -57,8 +57,11 @@ app.use(
           "'self'", 
           "ws:", 
           "wss:", 
-          "https://*.firebaseio.com", 
-          "https://*.googleapis.com"
+          "https://*.firebaseio.com",
+          "https://*.googleapis.com",
+          "https://apis.google.com",       // FIX: firebase-auth membutuhkan ini (beda dari *.googleapis.com)
+          "https://*.gstatic.com",         // FIX: Firebase source maps & assets
+          "https://*.firebaseapp.com"       // FIX: Firebase Auth popup/redirect flow
         ],
         frameSrc: [
           "'self'",
