@@ -37,7 +37,8 @@ app.use(
           "'unsafe-eval'", 
           "https://www.gstatic.com",
           "https://apis.google.com",
-          "https://cdnjs.cloudflare.com"
+          "https://cdnjs.cloudflare.com",
+          "https://cdn.jsdelivr.net"
         ],
         scriptSrcAttr: ["'unsafe-inline'"],
         styleSrc: [
