@@ -21,8 +21,10 @@ model User {
   inventory     Json     @default("[\"default\"]") // Barang yang dimiliki
   activeTheme   String   @default("default")
   equippedFrame String   @default("default")
-  equippedBadge String?
-  createdAt     DateTime @default(now())
+  equippedBadge     String?
+  equippedMascot    String?  // ID maskot yang sedang dipakai (null = tidak ada)
+  equippedAccessory String?  // ID aksesori avatar yang sedang dipakai (null = tidak ada)
+  createdAt         DateTime @default(now())
   updatedAt     DateTime @updatedAt
   scores        Score[]
   versusMatches VersusMatch[]

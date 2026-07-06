@@ -1098,6 +1098,40 @@ body.theme-obsidian .menu-section {
   }
 }
 
+/* === MASKOT COMPANION DI SIDEBAR === */
+.profile-mascot-companion {
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+  animation: profile-mascot-bounce 2s ease-in-out infinite;
+  cursor: default;
+  user-select: none;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+}
+
+@keyframes profile-mascot-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-5px) scale(1.08); }
+}
+
+/* === AKSESORI OVERLAY DI ATAS AVATAR (SIDEBAR) === */
+.profile-acc-overlay {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5rem;
+  z-index: 5;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.7));
+  animation: profile-acc-float 2.5s ease-in-out infinite;
+  display: none; /* hidden by default, shown via JS */
+}
+
+@keyframes profile-acc-float {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(-3px); }
+}
+
 .stats-box {
   background: rgba(255, 255, 255, 0.05);
   width: 100%;

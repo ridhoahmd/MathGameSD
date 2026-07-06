@@ -139,12 +139,18 @@
           new Date().toLocaleTimeString("id-ID");
 
         // Render Baris Tabel
+        const MASCOT_EMOJIS = {
+          mascot_cat: "🐱", mascot_fox: "🦊", mascot_robot: "🤖",
+          mascot_dragon: "🐉", mascot_unicorn: "🦄",
+        };
+
         top50.forEach((player, index) => {
           const rank = index + 1;
           const score = player.skor || player.totalScore || 0;
           const koin = player.koin || 0;
           const role = player.role || "siswa";
           const scorePercent = (score / maxScore) * 100;
+          const mascotEmoji = player.mascot ? (MASCOT_EMOJIS[player.mascot] || "") : "";
 
           // Style khusus buat Top 3
           let rowClass = "row-highlight";
@@ -193,6 +199,7 @@
                   >
                   <span class="player-name">
                     ${escapeHtml(player.nama)}
+                    ${mascotEmoji ? `<span class="lb-mascot" title="Maskot">${mascotEmoji}</span>` : ""}
                     <span class="${roleClass}">${roleIcon} ${capitalizeFirst(role)}</span>
                   </span>
                 </div>

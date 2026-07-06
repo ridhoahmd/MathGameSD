@@ -126,16 +126,18 @@ module.exports = (socket, io) => {
         `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`;
 
       socket.emit("updateProfil", {
-        nama:  user.username,
-        koin:  user.coins,
-        skor:  user.totalScore || 0,
-        xp:    user.xp        || 0,
-        level: user.level     || 0,
-        role:  effectiveRole,
-        foto:  finalFoto,
-        frame: user.equippedFrame || "default",
-        theme: user.activeTheme  || "default",
-        badge: user.equippedBadge || null,
+        nama:      user.username,
+        koin:      user.coins,
+        skor:      user.totalScore || 0,
+        xp:        user.xp        || 0,
+        level:     user.level     || 0,
+        role:      effectiveRole,
+        foto:      finalFoto,
+        frame:     user.equippedFrame    || "default",
+        theme:     user.activeTheme     || "default",
+        badge:     user.equippedBadge   || null,
+        mascot:    user.equippedMascot   || null,
+        accessory: user.equippedAccessory || null,
       });
     } catch (error) {
       logger.error("❌ Gagal ambil profil SQL: \n" + error.message);
@@ -144,16 +146,18 @@ module.exports = (socket, io) => {
       if (socket.isAuth && socket.decoded && socket.decoded.role === "guru") {
         logger.info(`⚠️ Memberikan akses ADMIN darurat untuk ${username} karena DB down.`);
         socket.emit("updateProfil", {
-          nama: username,
-          role: "admin",
-          koin: 9999,
-          skor: 9999,
-          xp: 9999,
-          level: 99,
-          foto: fotoGoogle || null,
-          frame: "default",
-          theme: "default",
-          badge: null
+          nama:      username,
+          role:      "admin",
+          koin:      9999,
+          skor:      9999,
+          xp:        9999,
+          level:     99,
+          foto:      fotoGoogle || null,
+          frame:     "default",
+          theme:     "default",
+          badge:     null,
+          mascot:    null,
+          accessory: null,
         });
         return;
       }
@@ -444,11 +448,12 @@ module.exports = (socket, io) => {
         orderBy: { totalScore: "desc" },
         take: 50,
         select: {
-          id:         true,
-          username:   true,
-          role:       true,
-          totalScore: true,
-          coins:      true,
+          id:             true,
+          username:       true,
+          role:           true,
+          totalScore:     true,
+          coins:          true,
+          equippedMascot: true,
         },
       });
 
@@ -495,6 +500,7 @@ module.exports = (socket, io) => {
           role:    user.role,
           skor:    user.totalScore || 0,
           koin:    user.coins || 0,
+          mascot:  user.equippedMascot || null,
           math:    skorMap["math"]    || 0,
           zuma:    skorMap["zuma"]    || 0,
           memory:  skorMap["memory"]  || 0,

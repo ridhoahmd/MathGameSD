@@ -115,6 +115,8 @@
         <!-- Avatar Ring Wrapper (Opsi B) — spinning gradient ring di balik avatar -->
         <div class="avatar-ring-wrapper">
           <div class="avatar-container" id="avatar-box">
+            <!-- Aksesori di atas avatar -->
+            <span class="profile-acc-overlay" id="profile-acc-overlay" aria-hidden="true"></span>
             <img
               src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guest"
               id="user-avatar"
@@ -126,6 +128,8 @@
 
         <div class="profile-name" id="display-name">Silakan Login</div>
         <div class="badge-display hidden" id="user-badge"></div>
+        <!-- Maskot companion di profil (hidden sampai data tiba) -->
+        <div class="profile-mascot-companion hidden" id="profile-mascot" aria-label="Maskot"></div>
 
         <!-- Kotak Statistik Player -->
         <div class="stats-box">

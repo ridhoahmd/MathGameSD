@@ -65,7 +65,7 @@ fi
 echo ""
 echo "🖥️  Menghubungkan ke VPS dan update server..."
 sshpass -p "$VPS_PASS" ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_IP} \
-  "cd ${VPS_DIR} && git pull origin ${BRANCH} && pm2 restart math-game-sd && pm2 status" 2>&1 | grep -v "warning\|perl\|LC_\|LANG\|locale\|Falling back\|Terminated\|AUTHORIZED\|monitored\|idcloudhost\|Aspire"
+  "cd ${VPS_DIR} && git pull origin ${BRANCH} && npx prisma migrate deploy && pm2 restart math-game-sd && pm2 status" 2>&1 | grep -v "warning\|perl\|LC_\|LANG\|locale\|Falling back\|Terminated\|AUTHORIZED\|monitored\|idcloudhost\|Aspire"
 
 if [[ ${PIPESTATUS[0]} -eq 0 ]]; then
   echo ""

@@ -290,3 +290,63 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+// ============================================
+// 🐾 MASKOT HUD — Tampilkan maskot di halaman game
+// ============================================
+(function injectMascotHUD() {
+  // Jangan tampilkan di portal utama atau halaman toko
+  const path = window.location.pathname;
+  const isPortal = path === "/" || path.endsWith("index.html");
+  const isShop   = path.endsWith("toko.html");
+  if (isPortal || isShop) return;
+
+  const MASCOT_MAP = {
+    mascot_cat:     { emoji: "🐱", name: "Kucing Ajaib",    cls: "mascot-cat"     },
+    mascot_fox:     { emoji: "🦊", name: "Rubah Cerdik",    cls: "mascot-fox"     },
+    mascot_robot:   { emoji: "🤖", name: "Robot Pintar",    cls: "mascot-robot"   },
+    mascot_dragon:  { emoji: "🐉", name: "Naga Emas",       cls: "mascot-dragon"  },
+    mascot_unicorn: { emoji: "🦄", name: "Unicorn Pelangi", cls: "mascot-unicorn" },
+  };
+
+  function mountHUD() {
+    // Jangan buat double
+    if (document.getElementById("game-mascot-hud")) return;
+
+    const mascotId = localStorage.getItem("equippedMascot");
+    if (!mascotId) return; // User belum pakai maskot
+
+    const m = MASCOT_MAP[mascotId];
+    if (!m) return;
+
+    const hud = document.createElement("div");
+    hud.id        = "game-mascot-hud";
+    hud.className = `game-mascot-hud ${m.cls}`;
+    hud.setAttribute("data-name", m.name);
+    hud.setAttribute("aria-label", `Maskot: ${m.name}`);
+    hud.textContent = m.emoji;
+    document.body.appendChild(hud);
+  }
+
+  // Mount saat DOM siap
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", mountHUD);
+  } else {
+    mountHUD();
+  }
+
+  // Sinkron jika server kirim profil terbaru (emit updateProfil)
+  if (window.socket) {
+    window.socket.on("updateProfil", (data) => {
+      if (data.mascot !== undefined) {
+        if (data.mascot) localStorage.setItem("equippedMascot", data.mascot);
+        else             localStorage.removeItem("equippedMascot");
+
+        // Refresh HUD
+        const old = document.getElementById("game-mascot-hud");
+        if (old) old.remove();
+        mountHUD();
+      }
+    });
+  }
+})();

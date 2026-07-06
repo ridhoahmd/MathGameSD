@@ -13,6 +13,18 @@ const ITEM_PRICES = {
   badge_quran: 1000,
   badge_speed: 1200,
   badge_vip: 2500,
+  // Mascots
+  mascot_cat: 600,
+  mascot_fox: 1200,
+  mascot_robot: 2000,
+  mascot_dragon: 1800,
+  mascot_unicorn: 3500,
+  // Accessories
+  acc_glasses: 700,
+  acc_crown: 900,
+  acc_wizard_hat: 1400,
+  acc_halo: 2200,
+  acc_fire_aura: 4000,
 };
 
 module.exports = (socket, io) => {
@@ -155,6 +167,18 @@ module.exports = (socket, io) => {
           where: { username },
           data: { equippedBadge: itemId },
         });
+      } else if (tipe === "mascot") {
+        // itemId === null berarti lepas maskot
+        await prisma.user.update({
+          where: { username },
+          data: { equippedMascot: itemId || null },
+        });
+      } else if (tipe === "accessory") {
+        // itemId === null berarti lepas aksesori
+        await prisma.user.update({
+          where: { username },
+          data: { equippedAccessory: itemId || null },
+        });
       }
       socket.emit("itemTerpasang", { tipe, itemId });
     } catch (err) {
@@ -182,6 +206,8 @@ module.exports = (socket, io) => {
           activeTheme: true,
           equippedFrame: true,
           equippedBadge: true,
+          equippedMascot: true,
+          equippedAccessory: true,
           coins: true,
         },
       });
@@ -192,6 +218,8 @@ module.exports = (socket, io) => {
           activeTheme: user.activeTheme,
           activeFrame: user.equippedFrame,
           activeBadge: user.equippedBadge,
+          activeMascot: user.equippedMascot || null,
+          activeAccessory: user.equippedAccessory || null,
           koin: user.coins,
         });
       }

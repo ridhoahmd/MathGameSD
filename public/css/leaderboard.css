@@ -368,6 +368,21 @@ h1 {
   color: #ff6b6b;
 }
 
+/* Emoji maskot kecil di baris leaderboard */
+.lb-mascot {
+  display: inline-block;
+  font-size: 1rem;
+  margin-right: 4px;
+  vertical-align: middle;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4));
+  animation: lb-mascot-float 2s ease-in-out infinite;
+}
+
+@keyframes lb-mascot-float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-2px); }
+}
+
 /* 10. SEL SKOR */
 .total-score {
   text-align: right;

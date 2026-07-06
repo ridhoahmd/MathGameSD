@@ -73,6 +73,24 @@ const badgeItems = [
   },
 ];
 
+// Daftar maskot
+const mascotItems = [
+  { id: "mascot_cat",     name: "Kucing Ajaib",     price: 600,  emoji: "🐱", animClass: "mascot-bounce",   type: "mascot" },
+  { id: "mascot_fox",     name: "Rubah Cerdik",     price: 1200, emoji: "🦊", animClass: "mascot-pulse",    type: "mascot" },
+  { id: "mascot_robot",   name: "Robot Pintar",     price: 2000, emoji: "🤖", animClass: "mascot-spin",     type: "mascot" },
+  { id: "mascot_dragon",  name: "Naga Emas",        price: 1800, emoji: "🐉", animClass: "mascot-float",    type: "mascot" },
+  { id: "mascot_unicorn", name: "Unicorn Pelangi",  price: 3500, emoji: "🦄", animClass: "mascot-sparkle",  type: "mascot" },
+];
+
+// Daftar aksesori
+const accessoryItems = [
+  { id: "acc_glasses",    name: "Kacamata Keren",   price: 700,  emoji: "🕶️",  type: "accessory" },
+  { id: "acc_crown",      name: "Mahkota Emas",     price: 900,  emoji: "👑",  type: "accessory" },
+  { id: "acc_wizard_hat", name: "Topi Penyihir",    price: 1400, emoji: "🎩",  type: "accessory" },
+  { id: "acc_halo",       name: "Lingkaran Cahaya", price: 2200, emoji: "😇",  type: "accessory" },
+  { id: "acc_fire_aura",  name: "Aura Api",         price: 4000, emoji: "🔥",  type: "accessory" },
+];
+
 // Tab aktif
 let activeTab = "frame";
 let serverData = null;
@@ -118,7 +136,13 @@ socket.on("dataInventory", (data) => {
   const coinEl = document.getElementById("user-coins");
   if (coinEl) coinEl.innerText = (data.koin || 0).toLocaleString();
 
-  // B. Tampilkan toko
+  // B. Simpan maskot & aksesori ke localStorage biar bisa dibaca halaman game
+  if (data.activeMascot)    localStorage.setItem("equippedMascot",    data.activeMascot);
+  else                      localStorage.removeItem("equippedMascot");
+  if (data.activeAccessory) localStorage.setItem("equippedAccessory", data.activeAccessory);
+  else                      localStorage.removeItem("equippedAccessory");
+
+  // C. Tampilkan toko
   renderTabs();
   renderShop();
 });
@@ -128,14 +152,16 @@ function renderTabs() {
   const tabContainer = document.getElementById("shop-tabs");
   if (!tabContainer) return;
 
-  tabContainer.innerHTML = `
-    <button class="tab-btn ${activeTab === "frame" ? "active" : ""}" onclick="switchTab('frame')">
-      🖼️ Bingkai Avatar
-    </button>
-    <button class="tab-btn ${activeTab === "badge" ? "active" : ""}" onclick="switchTab('badge')">
-      🏆 Lencana Profil
-    </button>
-  `;
+  const tabs = [
+    { id: "frame",     label: "🖼️ Bingkai Avatar" },
+    { id: "badge",     label: "🏆 Lencana Profil" },
+    { id: "mascot",    label: "🐾 Maskot" },
+    { id: "accessory", label: "🧢 Aksesori" },
+  ];
+
+  tabContainer.innerHTML = tabs
+    .map(t => `<button class="tab-btn ${activeTab === t.id ? "active" : ""}" onclick="switchTab('${t.id}')">${t.label}</button>`)
+    .join("");
 }
 
 // Ganti tab
@@ -153,26 +179,26 @@ function renderShop() {
   if (!container || !serverData) return;
   container.innerHTML = "";
 
-  const items = activeTab === "frame" ? frameItems : badgeItems;
+  let items;
+  if (activeTab === "frame")     items = frameItems;
+  else if (activeTab === "badge")     items = badgeItems;
+  else if (activeTab === "mascot")    items = mascotItems;
+  else if (activeTab === "accessory") items = accessoryItems;
+  else items = [];
 
   items.forEach((item) => {
-    // Cek inventory
-    const inventory = serverData.owned || ["default"];
-    const isOwned = inventory.includes(item.id) || item.id === "default";
+    const inventory  = serverData.owned || ["default"];
+    const isOwned    = inventory.includes(item.id) || item.id === "default";
 
-    // Cek apa lagi dipake
     let isEquipped = false;
-    if (item.type === "frame") {
-      isEquipped = serverData.activeFrame === item.id;
-    } else if (item.type === "badge") {
-      isEquipped = serverData.activeBadge === item.id;
-    }
+    if (item.type === "frame")     isEquipped = serverData.activeFrame === item.id;
+    else if (item.type === "badge")     isEquipped = serverData.activeBadge === item.id;
+    else if (item.type === "mascot")    isEquipped = serverData.activeMascot === item.id;
+    else if (item.type === "accessory") isEquipped = serverData.activeAccessory === item.id;
 
     const canAfford = serverData.koin >= item.price;
 
     let btnHtml = "";
-
-    // Logika tombol
     if (isEquipped) {
       btnHtml = `<button class="btn-equipped" disabled>SEDANG DIPAKAI</button>`;
     } else if (isOwned) {
@@ -184,60 +210,56 @@ function renderShop() {
       btnHtml = `<button class="btn-poor" disabled>Kurang ${kurang}</button>`;
     }
 
-    // HTML Kartu
     let cardClass = "shop-card";
-    if (item.type === "badge") cardClass += " badge-card";
+    if (item.type === "badge")     cardClass += " badge-card";
+    if (item.type === "mascot")    cardClass += " mascot-card";
+    if (item.type === "accessory") cardClass += " accessory-card";
+    if (isEquipped)   cardClass += " card-equipped";
+    else if (isOwned) cardClass += " card-owned";
+    else if (canAfford) cardClass += " card-purchasable";
+    else              cardClass += " card-locked";
 
-    // Tambahan class indikator visual
-    if (isEquipped) {
-      cardClass += " card-equipped";
-    } else if (isOwned) {
-      cardClass += " card-owned";
-    } else if (canAfford) {
-      cardClass += " card-purchasable";
-    } else {
-      cardClass += " card-locked";
-    }
+    const priceLine = !isOwned
+      ? `<span class="item-price">Harga: ${item.price} 🪙</span>`
+      : `<span class="item-price text-owned">SUDAH DIMILIKI</span>`;
 
-    let cardHtml = "";
+    let previewHtml = "";
+
     if (item.type === "frame") {
-      cardHtml = `
-        <div class="${cardClass}">
-          ${isEquipped ? '<div class="equipped-label">★ DIPAKAI</div>' : ''}
-          ${!isOwned && !canAfford ? '<div class="locked-icon">🔒</div>' : ''}
-          <div class="preview-box ${item.class}">
-            <img src="${avatarUrl}" class="preview-img" alt="Preview">
-          </div>
-          <span class="item-name">${item.name}</span>
-          ${
-            !isOwned
-              ? `<span class="item-price">Harga: ${item.price}</span>`
-              : `<span class="item-price text-owned">SUDAH DIMILIKI</span>`
-          }
-          ${btnHtml}
-        </div>
-      `;
-    } else {
-      // Kartu Badge
-      cardHtml = `
-        <div class="${cardClass}">
-          ${isEquipped ? '<div class="equipped-label">★ DIPAKAI</div>' : ''}
-          ${!isOwned && !canAfford ? '<div class="locked-icon">🔒</div>' : ''}
-          <div class="badge-preview">
-            <span class="badge-emoji">${item.emoji}</span>
-          </div>
-          <span class="item-name">${item.name}</span>
-          ${
-            !isOwned
-              ? `<span class="item-price">Harga: ${item.price}</span>`
-              : `<span class="item-price text-owned">SUDAH DIMILIKI</span>`
-          }
-          ${btnHtml}
-        </div>
-      `;
+      previewHtml = `
+        <div class="preview-box ${item.class}">
+          <img src="${avatarUrl}" class="preview-img" alt="Preview">
+        </div>`;
+    } else if (item.type === "badge") {
+      previewHtml = `
+        <div class="badge-preview">
+          <span class="badge-emoji">${item.emoji}</span>
+        </div>`;
+    } else if (item.type === "mascot") {
+      previewHtml = `
+        <div class="mascot-preview">
+          <span class="mascot-emoji ${item.animClass}">${item.emoji}</span>
+        </div>`;
+    } else if (item.type === "accessory") {
+      previewHtml = `
+        <div class="preview-box acc-preview-box">
+          <span class="acc-overlay-emoji">${item.emoji}</span>
+          <img src="${avatarUrl}" class="preview-img" alt="Preview">
+        </div>`;
     }
 
-    container.innerHTML += cardHtml;
+    const equippedLabel = isEquipped ? `<div class="equipped-label">★ DIPAKAI</div>` : "";
+    const lockedIcon   = !isOwned && !canAfford ? `<div class="locked-icon">🔒</div>` : "";
+
+    container.innerHTML += `
+      <div class="${cardClass}">
+        ${equippedLabel}
+        ${lockedIcon}
+        ${previewHtml}
+        <span class="item-name">${item.name}</span>
+        ${priceLine}
+        ${btnHtml}
+      </div>`;
   });
 }
 
@@ -285,10 +307,14 @@ window.equipItem = function (itemId, itemType) {
 
   let tipe = itemType || "frame";
 
-  // Cek tipe otomatis
+  // Deteksi tipe otomatis jika tidak disertakan
   if (!itemType) {
     if (itemId.startsWith("badge_")) {
       tipe = "badge";
+    } else if (itemId.startsWith("mascot_")) {
+      tipe = "mascot";
+    } else if (itemId.startsWith("acc_")) {
+      tipe = "accessory";
     } else {
       const frameList = ["default", "neon", "gold", "royal", "fire"];
       tipe = frameList.includes(itemId) ? "frame" : "theme";

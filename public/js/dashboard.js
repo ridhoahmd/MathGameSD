@@ -173,6 +173,46 @@ socket.on("updateProfil", (data) => {
     }
   }
 
+  // UPDATE MASKOT COMPANION di profil
+  const MASCOT_EMOJIS = {
+    mascot_cat: "🐱", mascot_fox: "🦊", mascot_robot: "🤖",
+    mascot_dragon: "🐉", mascot_unicorn: "🦄",
+  };
+  const MASCOT_NAMES = {
+    mascot_cat: "Kucing Ajaib", mascot_fox: "Rubah Cerdik", mascot_robot: "Robot Pintar",
+    mascot_dragon: "Naga Emas", mascot_unicorn: "Unicorn Pelangi",
+  };
+  const mascotEl = document.getElementById("profile-mascot");
+  if (mascotEl) {
+    if (data.mascot && MASCOT_EMOJIS[data.mascot]) {
+      mascotEl.textContent = MASCOT_EMOJIS[data.mascot];
+      mascotEl.title = MASCOT_NAMES[data.mascot] || data.mascot;
+      mascotEl.classList.remove("hidden");
+      localStorage.setItem("equippedMascot", data.mascot);
+    } else {
+      mascotEl.classList.add("hidden");
+      localStorage.removeItem("equippedMascot");
+    }
+  }
+
+  // UPDATE AKSESORI AVATAR di profil
+  const ACC_EMOJIS = {
+    acc_glasses: "🕶️", acc_crown: "👑", acc_wizard_hat: "🎩",
+    acc_halo: "😇", acc_fire_aura: "🔥",
+  };
+  const accOverlay = document.getElementById("profile-acc-overlay");
+  if (accOverlay) {
+    if (data.accessory && ACC_EMOJIS[data.accessory]) {
+      accOverlay.textContent = ACC_EMOJIS[data.accessory];
+      accOverlay.style.display = "block";
+      localStorage.setItem("equippedAccessory", data.accessory);
+    } else {
+      accOverlay.textContent = "";
+      accOverlay.style.display = "none";
+      localStorage.removeItem("equippedAccessory");
+    }
+  }
+
   // UPDATE LEVEL & XP (Gamification Client Side)
   // Tunggu bentar biar script lain siap
   setTimeout(() => {
@@ -184,6 +224,7 @@ socket.on("updateProfil", (data) => {
     }
   }, 100);
 });
+
 
 // --- 3B. FITUR SIDEBAR MOBILE ---
 function toggleSidebar() {
