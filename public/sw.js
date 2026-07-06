@@ -1,4 +1,4 @@
-const CACHE_NAME = "videa-class-master-v11";
+const CACHE_NAME = "videa-class-master-v12";
 
 const urlsToCache = [
   "/",
@@ -150,14 +150,16 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Jangan intercept socket.io, firebase, atau API calls
+  // Jangan intercept socket.io, firebase, API calls, atau CDN eksternal
   if (
     event.request.url.includes("/api/") ||
     event.request.url.includes("socket.io") ||
     event.request.url.includes("firebase") ||
     event.request.url.includes("dicebear") ||
     event.request.url.includes("googleapis.com") ||
-    event.request.url.includes("gstatic.com")
+    event.request.url.includes("gstatic.com") ||
+    event.request.url.includes("jsdelivr.net") ||
+    event.request.url.includes("cdnjs.cloudflare.com")
   ) {
     return;
   }
